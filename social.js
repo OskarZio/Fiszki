@@ -141,7 +141,7 @@ function msgBodyHTML(m, mine) {
   if (m.kind === 'nudge') return `<div>🔔 <b>Przypomnienie:</b> ${esc(b.text || 'Czas na fiszki! 📚')}</div>${mine ? '' : '<button class="sm primary" data-go="#/study/all/flip">▶ Ucz się teraz</button>'}`;
   if (m.kind === 'challenge') {
     const open = challengeOpen(m);
-    return `<div>⚔️ <b>Wyzwanie na bitwę</b>${b.deck ? ` · ${esc(b.deck)}` : ''}${b.n ? ` · ${+b.n} pytań` : ''}</div>
+    return `<div>⚔️ <b>Wyzwanie na bitwę</b>${b.deck ? ` · ${esc(b.deck)}` : ''}${b.n ? ` · ${+b.n} ${String(b.deck || '').startsWith('🧠') ? 'el.' : 'pytań'}` : ''}</div>
       ${!open ? '<small class="muted">wygasło</small>' : mine ? (typeof B !== 'undefined' && B?.code === b.code ? '<button class="sm" data-go="#/battle">Wróć do poczekalni</button>' : '<small class="muted">czeka na przeciwnika</small>')
         : `<button class="sm primary" data-act="chat-accept" data-id="${m.id}">⚔️ Przyjmij wyzwanie</button>`}`;
   }
@@ -228,13 +228,45 @@ Object.assign(ACTIONS, {
     const m = await sendMsg(CHAT.fid, 'nudge', { text: texts[Math.random() * texts.length | 0] });
     if (m) { socialCount(); toast('🔔 Przypomnienie wysłane'); render(); }
   },
-  'chat-challenge': async () => {
-    const f = friendById(CHAT.fid); if (!f) return;
-    if (typeof friendSetup !== 'function') return;
+  // wyzwanie: najpierw okienko wyboru – fiszki, quiz ABCD czy gra pamięciowa
+  'chat-challenge': () => {
+    const f = friendById(CHAT.fid); if (!f || typeof friendSetup !== 'function') return;
+    const ms = memSettings(), o = btOpts(); ms.btMode = ms.btMode || 'cards';
+    document.querySelector('.chpick')?.remove();
+    const el = document.createElement('div'); el.className = 'chpick';
+    const draw = () => {
+      const mode = ms.btMode, deck = deckById(ms.btDeck) || S.decks[0], disc = ms.btDisc || 'numbers';
+      el.innerHTML = `<div class="card chpick-box"><h3 style="margin-top:0" class="nm">⚔️ Wyzwanie dla ${esc(f.nick || 'znajomego')}</h3>
+        <div class="seg" style="display:flex">${[['cards', '📚 Fiszki'], ['quiz', '🅰️ ABCD'], ['mem', '🧠 Pamięć']].map(([k, l]) => `<button class="grow ${mode === k ? 'on' : ''}" data-act="chp-mode" data-m="${k}">${l}</button>`).join('')}</div>
+        <p class="small muted">${mode === 'cards' ? 'Nauka fiszek, potem wpisujecie odpowiedzi – liczy się poprawność i czas.' : mode === 'quiz' ? 'Nauka fiszek, potem pytania z 4 odpowiedziami – wygrywa więcej poprawnych.' : 'Ten sam zestaw do zapamiętania dla obu – wygrywa ten, kto odtworzy więcej.'}</p>
+        ${mode === 'mem'
+          ? `<div class="grid2"><label class="field"><span>Dyscyplina</span><select id="chp-disc">${Object.keys(MEM_DEFAULT).map(k => `<option value="${k}" ${disc === k ? 'selected' : ''}>${DISC[k].icon} ${DISC[k].name}</option>`).join('')}</select></label>
+             <label class="field"><span>Ile elementów</span><input id="chp-n" type="number" inputmode="numeric" min="3" max="${MAX_ITEMS[disc]}" value="${o.memN || MEM_DEFAULT[disc][0]}"></label></div>`
+          : `<div class="grid2"><label class="field"><span>Talia</span><select id="chp-deck">${S.decks.map(d => `<option value="${d.id}" ${deck?.id === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>
+             <label class="field"><span>Ile fiszek</span><input id="chp-n" type="number" inputmode="numeric" min="3" max="50" value="${o.n}"></label></div>`}
+        <p class="small muted" style="margin-top:0">Czasy i sabotaże jak w „⚙️ Zasady bitwy”.</p>
+        <div class="row"><button class="primary grow" data-act="chp-send">⚔️ Wyślij wyzwanie</button><button class="grow" data-act="chp-x">Anuluj</button></div></div>`;
+    };
+    // zapamiętaj wybory z pól przed przerysowaniem / wysłaniem
+    el.keep = () => {
+      const bt = ms.bt = ms.bt || {}, n = +el.querySelector('#chp-n')?.value;
+      if (ms.btMode === 'mem') { const d = el.querySelector('#chp-disc')?.value; if (d && d !== ms.btDisc) { ms.btDisc = d; delete bt.memN; } else if (n) bt.memN = n; }
+      else { const d = el.querySelector('#chp-deck')?.value; if (d) ms.btDeck = d; if (n) bt.n = n; }
+    };
+    el.draw = draw; el.addEventListener('change', e => { if (e.target.id === 'chp-disc') { el.keep(); draw(); } });
+    el.addEventListener('click', e => { if (e.target === el) el.remove(); });
+    draw(); document.body.append(el);
+  },
+  'chp-mode': b => { const el = b.closest('.chpick'); el.keep(); memSettings().btMode = b.dataset.m; save(); el.draw(); },
+  'chp-x': b => b.closest('.chpick').remove(),
+  'chp-send': async b => {
+    const el = b.closest('.chpick'), f = friendById(CHAT.fid); if (!f) return el.remove();
+    el.keep(); save();
+    const sel = document.getElementById('bt-deck'); if (sel && memSettings().btDeck) sel.value = memSettings().btDeck;   // zasady na stronie Bitew mają własny wybór talii
     const st = friendSetup(); if (!st) return;
-    if (!confirm(`Wyzwać ${f.nick || 'znajomego'} na bitwę? (ustawienia jak w zakładce Bitwy${st.deckName ? ', talia: ' + st.deckName : ''})`)) return;
-    hostRoom(st);
-    const m = await sendMsg(f.id, 'challenge', { code: B.code, deck: st.deckName || (st.mode === 'mem' ? 'Gra pamięciowa' : ''), n: st.cards?.length || st.n || 0 });
+    el.remove(); hostRoom(st);
+    const label = st.mode === 'mem' ? `🧠 ${DISC[st.disc]?.name || 'Pamięć'}` : `${st.opts?.abcd ? '🅰️ ABCD · ' : '📚 '}${st.deckName || 'fiszki'}`;
+    const m = await sendMsg(f.id, 'challenge', { code: B.code, deck: label, n: st.cards?.length || st.n || 0 });
     if (m) toast(`⚔️ Wyzwanie wysłane – czekaj na ${f.nick || 'znajomego'} w poczekalni`, 4000);
   },
   'chat-accept': el => {
