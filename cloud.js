@@ -188,14 +188,16 @@ function accountCardHTML() {
       <input id="acc-pass" type="password" placeholder="Hasło (min. 6 znaków)" autocomplete="current-password">
       <div class="spacer"></div>
       <div class="row"><button class="primary grow" data-act="acc-login">Zaloguj</button><button class="grow" data-act="acc-signup">Załóż konto</button></div>
-      <p class="small muted">Twoje obecne fiszki zostaną dołączone do konta przy pierwszym logowaniu.</p></div>`;
+      <p class="small muted">Twoje obecne fiszki zostaną dołączone do konta przy pierwszym logowaniu.</p>
+      <button class="ghost sm" data-act="cloud-check">🩺 Sprawdź połączenie z bazą</button>${cloudCheckHTML()}</div>`;
   return `<div class="card"><h2 style="margin-top:0">☁️ Konto</h2>
     <div class="kv"><span>Zalogowano jako</span><b>${esc(SB_USER.email || '')}</b></div>
     <div class="kv"><span>Ostatnia synchronizacja</span><b>${ago(S.settings.lastSync)}</b></div>
     ${SB_PROFILE?.code ? `<div class="kv"><span>Kod znajomego</span><b>${SB_PROFILE.code}</b></div>` : ''}
     <div class="spacer"></div>
     <button class="primary block" data-act="sync">🔄 Synchronizuj teraz</button>
-    <div class="row" style="margin-top:8px"><button class="grow" data-go="#/rank">👥 Ranking znajomych</button><button class="ghost" data-act="acc-logout">Wyloguj</button></div></div>`;
+    <div class="row" style="margin-top:8px"><button class="grow" data-go="#/rank">👥 Ranking znajomych</button><button class="ghost" data-act="acc-logout">Wyloguj</button></div>
+    <button class="ghost sm" data-act="cloud-check">🩺 Sprawdź połączenie z bazą</button>${cloudCheckHTML()}</div>`;
 }
 
 ROUTES['cloud-help'] = () => {
@@ -213,7 +215,29 @@ ROUTES['cloud-help'] = () => {
     <textarea id="sql-box" rows="10" readonly style="font-family:ui-monospace,monospace;font-size:12px;margin-top:8px"></textarea></div>` };
 };
 
+// Diagnostyka: czy baza odpowiada, czy są tabele ze skryptu SQL i jak ustawione jest logowanie
+let CLOUD_CHECK = null;
+const cloudCheckHTML = () => CLOUD_CHECK ? `<div class="checklist">${CLOUD_CHECK.map(x => `<div class="${x.ok ? 'c-rev' : 'c-lrn'}">${x.ok ? '✓' : '✗'} ${esc(x.text)}</div>`).join('')}</div>` : '';
+async function cloudCheck() {
+  const res = []; const step = (ok, text) => { res.push({ ok, text }); CLOUD_CHECK = [...res]; render(); };
+  CLOUD_CHECK = []; render();
+  if (!SB) return step(false, 'Brak konfiguracji – host musi zapisać adres i klucz Supabase w Panelu hosta.');
+  try {
+    const r = await fetch(SB_CFG.url + '/auth/v1/settings', { headers: { apikey: SB_CFG.key } });
+    if (!r.ok) return step(false, `Serwer Supabase odpowiada błędem ${r.status} – sprawdź adres i klucz (czy projekt nie jest wstrzymany).`);
+    const st = await r.json();
+    step(true, `Połączono z ${SB_CFG.url.replace('https://', '')}`);
+    step(st.external?.email !== false, st.external?.email === false ? 'Logowanie e-mailem jest wyłączone – włącz Authentication → Providers → Email.' : 'Logowanie e-mailem włączone');
+    step(true, st.mailer_autoconfirm ? 'Potwierdzanie e-maila wyłączone – konto działa od razu' : 'Po rejestracji trzeba kliknąć link w mailu (Confirm email włączone)');
+  } catch (e) { return step(false, 'Brak połączenia z Supabase: ' + e.message); }
+  for (const t of ['profiles', 'user_data', 'user_images', 'friends']) {
+    const { error } = await SB.from(t).select('*', { count: 'exact', head: true });
+    step(!error, error ? `Brak tabeli „${t}” (${error.message}) – uruchom skrypt SQL w SQL Editor.` : `Tabela „${t}” jest`);
+  }
+}
+
 Object.assign(ACTIONS, {
+  'cloud-check': () => cloudCheck(),
   'acc-login': async () => {
     const email = $('#acc-email').value.trim(), password = $('#acc-pass').value;
     if (!email || !password) return toast('Wpisz e-mail i hasło');
