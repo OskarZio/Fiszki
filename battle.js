@@ -40,6 +40,30 @@ const ELO_START = 1000;
 const myElo = () => ELO_START + S.battles.reduce((a, b) => a + (b.elo || 0), 0);
 const ELO_TIERS = [[0, '🥉', 'Brąz'], [1000, '🥈', 'Srebro'], [1150, '🥇', 'Złoto'], [1300, '💠', 'Platyna'], [1450, '💎', 'Diament'], [1600, '👑', 'Mistrz']];
 const eloTier = e => [...ELO_TIERS].reverse().find(t => e >= t[0]);
+// wiersz historii: na wierzchu wynik i zmiana Elo, po najechaniu / stuknięciu – szczegóły meczu
+const fmtMs = ms => ms ? (ms >= 60000 ? `${Math.floor(ms / 60000)} min ${Math.round(ms % 60000 / 1000)} s` : `${Math.round(ms / 1000)} s`) : '—';
+function battleRowHTML(b) {
+  const res = b.won === 1 ? ['🏆', 'Wygrana', 'win'] : b.won === 0 ? ['🤝', 'Remis', 'draw'] : ['💪', 'Porażka', 'loss'];
+  const what = b.mode === 'cards' ? `${b.abcd ? '🅰️ Quiz ABCD' : '📚 Fiszki'} · ${esc(b.deck || 'talia')}` : `🧠 ${DISC[b.disc]?.name || 'Pamięć'}`;
+  const elo = b.elo != null ? `<b class="elo-d ${b.elo > 0 ? 'up' : b.elo < 0 ? 'down' : ''}">${b.elo > 0 ? '+' : ''}${b.elo} Elo</b>` : `<b class="elo-d">${b.bot ? 'bot' : '—'}</b>`;
+  const acc = b.n ? Math.round(b.my / b.n * 100) : 0, oacc = b.n ? Math.round(b.them / b.n * 100) : 0;
+  return `<details class="bth ${res[2]}"><summary><span class="bth-r">${res[0]}</span>
+      <span class="grow" style="min-width:0"><b class="nm" style="display:block">${esc(b.oppAvatar || '')} ${esc(b.opp || 'Bot')}</b><small class="muted nm" style="display:block">${b.my}:${b.them} · ${new Date(b.t).toLocaleDateString('pl', { day: 'numeric', month: 'short' })}</small></span>${elo}</summary>
+    <div class="bth-d">
+      <div class="kv"><span>Wynik</span><b>${res[1]} ${b.my}:${b.them}</b></div>
+      <div class="kv"><span>Tryb</span><b>${what}</b></div>
+      <div class="kv"><span>Twoja skuteczność</span><b>${acc}% (${b.my}/${b.n})</b></div>
+      <div class="kv"><span>Przeciwnik</span><b>${oacc}% (${b.them}/${b.n})</b></div>
+      ${b.myMs || b.oppMs ? `<div class="kv"><span>Czas: Ty / rywal</span><b>${fmtMs(b.myMs)} / ${fmtMs(b.oppMs)}</b></div>` : ''}
+      ${b.oppElo ? `<div class="kv"><span>Elo rywala</span><b>${eloTier(b.oppElo)[1]} ${b.oppElo}</b></div>` : ''}
+      <div class="kv"><span>Elo</span><b>${b.elo != null ? `${b.elo > 0 ? '+' : ''}${b.elo}` : b.bot ? 'bez wpływu (bot)' : '—'}</b></div>
+      <div class="kv"><span>Nagroda</span><b>+${battleReward(b)} 💎</b></div>
+      ${b.blur ? `<div class="kv"><span>Wyjścia z aplikacji</span><b>${b.blur}</b></div>` : ''}
+      <div class="kv"><span>Data</span><b>${new Date(b.t).toLocaleString('pl', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</b></div></div></details>`;
+}
+// komputer: rozwijanie po najechaniu myszą
+document.addEventListener('mouseover', e => { const d = e.target.closest?.('.bth'); if (d && matchMedia('(hover: hover)').matches) d.open = true; });
+document.addEventListener('mouseout', e => { const d = e.target.closest?.('.bth'); if (d && matchMedia('(hover: hover)').matches && !d.contains(e.relatedTarget)) d.open = false; });
 const eloHTML = e => { const t = eloTier(e); return `<span class="elo">${t[1]} ${e} <small>${t[2]}</small></span>`; };
 function eloDelta(mine, theirs, won, games) {
   const exp = 1 / (1 + 10 ** ((theirs - mine) / 400)), score = won === 1 ? 1 : won === 0 ? .5 : 0;
@@ -630,7 +654,8 @@ ROUTES.battles = (parts, q) => {
   </details>
   ${bs.length ? `<details class="card"><summary><b>📊 Historia</b> <span class="small muted">(${bs.length})</span></summary>
     ${Object.keys(heads).length ? `<h3>Bilans ze znajomymi</h3>${Object.entries(heads).map(([n, h]) => `<div class="kv"><span>${esc(h.av || '')} ${esc(n)}</span><b><span class="c-rev">${h.w}</span> : <span class="c-lrn">${h.l}</span>${h.d ? ` (${h.d} rem.)` : ''}</b></div>`).join('')}` : ''}
-    <h3>Ostatnie bitwy</h3>${bs.slice(-10).reverse().map(b => `<div class="kv"><span>${b.won === 1 ? '🏆' : b.won === 0 ? '🤝' : '💪'} ${esc(b.oppAvatar || '')} ${esc(b.opp || 'Bot')} · ${b.mode === 'cards' ? (b.abcd ? '🅰️ ' : '') + esc(b.deck || 'fiszki') : DISC[b.disc]?.name}</span><b>${b.my}:${b.them}</b></div>`).join('')}</details>` : ''}
+    <h3>Ostatnie bitwy</h3><p class="small muted" style="margin-top:-6px">Najedź albo stuknij, żeby zobaczyć szczegóły meczu.</p>
+    ${bs.slice(-20).reverse().map(battleRowHTML).join('')}</details>` : ''}
   <div class="row"><button class="grow sm" data-go="#/shop">🛒 Sklep</button><button class="grow sm" data-go="#/theme">🎨 Motywy</button></div>` };
 };
 document.addEventListener('toggle', e => { if (e.target.classList?.contains('rules')) { memSettings().rulesOpen = e.target.open; save(); } }, true);

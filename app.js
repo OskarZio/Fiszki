@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '30';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '31';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -356,6 +356,13 @@ function startSession(deckId, mode, cramIds = null) {
   };
   nextCard();
 }
+// Talia „mieszana”: nowe karty w losowej (ale stałej) kolejności – terminy, luki i obrazy przeplatają się
+const idHash = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
+function newOrderKey(cards) {
+  const rng = {};
+  for (const c of cards) { if (!deckById(c.deckId)?.mix) continue; const r = rng[c.deckId] = rng[c.deckId] || [Infinity, -Infinity]; r[0] = Math.min(r[0], c.pos); r[1] = Math.max(r[1], c.pos); }
+  return c => { const r = rng[c.deckId]; return r ? r[0] + idHash(c.id) * (r[1] - r[0] + 1) : c.pos; };
+}
 function pickNext(sess) {
   if (sess.cram) return S.cards.find(c => c.id === sess.cram[0]) || null;
   const now = Date.now();
@@ -366,7 +373,8 @@ function pickNext(sess) {
   if (lrn.length) return lrn[0];
   const rev = pool.filter(c => c.srs.state === 'review' && c.srs.due <= now).sort(byDue);
   const intro = introducedToday();
-  const nw = pool.filter(c => c.srs.state === 'new' && (intro[c.deckId] || 0) < S.settings.newPerDay).sort((a, b) => a.pos - b.pos);
+  const nwAll = pool.filter(c => c.srs.state === 'new' && (intro[c.deckId] || 0) < S.settings.newPerDay), key = newOrderKey(nwAll);
+  const nw = nwAll.sort((a, b) => key(a) - key(b));
   if (rev.length && (!nw.length || sess.done % 3 !== 2)) return choose(rev);
   if (nw.length) return choose(nw);
   return pool.filter(c => isLearning(c) && c.srs.due <= now + 20 * MIN).sort(byDue)[0] || null;
@@ -573,6 +581,8 @@ function viewDeck(id, q) {
       <button class="grow" data-act="cram-deck" data-id="${id}" ${cards.length ? '' : 'disabled'}>🔁 Przejrzyj całą talię</button>
       <button class="grow" data-act="cram-hard" data-id="${id}" ${hard.length ? '' : 'disabled'}>🧠 Trudne (${hard.length})</button>
     </div>
+    <div class="spacer"></div>
+    <button class="block sm${d.mix ? ' primary' : ''}" data-act="deck-mix" data-id="${id}">🔀 Przeplatanie: ${d.mix ? 'włączone – nowe karty w losowej kolejności' : 'wyłączone (stuknij, by mieszać terminy z obrazami)'}</button>
   </div>
   <div class="card">
     <div class="row nowrap"><h2 class="grow" style="margin:0">Fiszki (${notes.length})</h2>
@@ -772,7 +782,7 @@ function viewAdd(editId, q) {
       ${pal ? `<button class="primary block" data-go="#/palace/${pal.id}">🏛️ Otwórz pałac</button>` : ''}</div>
       <button class="danger block" data-act="delete-note">Usuń te fiszki</button>`;
   }
-  const types = [['basic', 'Fiszka'], ['cloze', 'Luki'], ['occl', 'Obraz'], ['bulk', 'Lista'], ['scan', '📷 Skan']];
+  const types = [['basic', 'Fiszka'], ['cloze', 'Luki'], ['occl', 'Obraz'], ['bulk', 'Lista'], ['mix', '🔀 Mix'], ['scan', '📷']];
   const tabs = editId ? '' : `<div class="seg" style="display:flex">${types.map(([t, l]) =>
     `<button class="grow ${D.type === t ? 'on' : ''}" data-act="draft-type" data-t="${t}">${l}</button>`).join('')}</div>`;
   let form = '';
@@ -780,6 +790,7 @@ function viewAdd(editId, q) {
   else if (D.type === 'cloze') form = formCloze(D);
   else if (D.type === 'occl') form = formOccl(D);
   else if (D.type === 'scan') { form = formScan(D); onMount(mountScan); }
+  else if (D.type === 'mix') form = formMix(D);
   else form = formBulk(D);
   onMount(() => {
     $$('[data-bind]').forEach(el => el.addEventListener('input', () => {
@@ -793,10 +804,11 @@ function viewAdd(editId, q) {
   <div class="row nowrap">${editId ? `<button class="iconbtn" data-act="cancel-edit">‹</button>` : ''}
     <h1 class="grow">${editId ? 'Edycja' : 'Dodaj fiszki'}</h1></div>
   ${tabs}
+  ${D.mixBack && D.type === 'occl' ? `<div class="banner row nowrap"><span class="grow">🔀 Dodajesz obraz do zestawu mieszanego – po „Dodaj” wrócisz do listy terminów.</span><button class="sm" data-act="mix-back">‹ Wróć</button></div>` : ''}
   <label class="field"><span>Talia</span>${deckSelect(D.deckId)}</label>
   ${form}
   <div class="spacer"></div>
-  ${D.type === 'scan' ? '' : `<button class="primary block" data-act="save-draft">${editId ? 'Zapisz zmiany' : D.type === 'bulk' ? 'Importuj' : 'Dodaj'}</button>`}
+  ${D.type === 'scan' ? '' : `<button class="primary block" data-act="save-draft">${editId ? 'Zapisz zmiany' : D.type === 'bulk' ? 'Importuj' : D.type === 'mix' ? '💾 Zapisz zestaw' : 'Dodaj'}</button>`}
   ${editId ? `<div class="spacer"></div><button class="danger block" data-act="delete-note">Usuń fiszkę</button>` : ''}`;
 }
 const field = (label, bind, val, opts = {}) => `<label class="field"><span>${label}</span>${opts.area
@@ -926,6 +938,20 @@ function bulkPreview(D) {
     : `<tr style="${x.bad ? 'opacity:.4' : ''}"><td>${esc(x.front)}</td><td>${esc(x.back)}</td><td class="muted">${esc(x.hint)}</td></tr>`).join('')}</table>
     ${items.length > 30 ? `<p class="small muted">…i ${items.length - 30} więcej</p>` : ''}`;
 }
+// Zestaw mieszany: lista terminów + obrazy z lukami w jednej talii, przeplatane w nauce
+function formMix(D) {
+  const imgs = S.notes.filter(n => n.deckId === D.deckId && n.type === 'occl').slice(-12);
+  return `<p class="small muted" style="margin-top:0">Terminy i obrazy z lukami w jednej talii. W nauce przeplatają się losowo – raz termin, a nagle obraz z lukami do uzupełnienia.</p>
+  <label class="field"><span>📝 Terminy – jeden w linii (<code>termin - definicja</code>)</span>
+  <textarea data-bind="bulk" rows="7" placeholder="kość udowa - os femoris
+mięsień dwugłowy - biceps brachii
+Stolicą Francji jest {{c1::Paryż}}">${esc(D.bulk)}</textarea></label>
+  <div class="card tight" id="bulk-prev">${bulkPreview(D)}</div>
+  <div class="row nowrap"><h3 class="grow" style="margin:6px 0">🖼️ Obrazy z lukami w tej talii</h3><span class="small muted">${S.notes.filter(n => n.deckId === D.deckId && n.type === 'occl').length}</span></div>
+  ${imgs.length ? `<div class="mix-imgs">${imgs.map(n => `<div data-go="#/edit/${n.id}">${IMG[n.imageId] ? `<img src="${IMG[n.imageId]}" alt="">` : '🖼️'}<small>${n.boxes.length} ${plural(n.boxes.length, 'luka', 'luki', 'luk')}</small></div>`).join('')}</div>` : '<p class="small muted">Jeszcze żadnego – dodaj zdjęcie (atlas, schemat) i zaznacz luki.</p>'}
+  <button class="block" data-act="mix-add-img">➕ Dodaj obraz z lukami</button>
+  <label class="check"><input type="checkbox" data-bind="mixOn" ${D.mixOn !== false ? 'checked' : ''}> 🔀 Przeplataj w nauce (losowa kolejność nowych kart)</label>`;
+}
 function formBulk(D) {
   return `
   <label class="field"><span>Wklej listę – jedna fiszka w linii</span>
@@ -943,13 +969,20 @@ Stolicą Francji jest {{c1::Paryż}}">${esc(D.bulk)}</textarea></label>
 async function saveDraft() {
   const D = DRAFT, deckId = D.deckId;
   S.settings.lastDeck = deckId;
-  if (D.type === 'bulk') {
+  if (D.type === 'bulk' || D.type === 'mix') {
     const { items } = parseBulk(D); let n = 0; const t0 = Date.now();
     items.forEach((x, i) => {
       const base = { deckId, created: t0 + i };
       if (x.cloze) { addNote({ ...base, type: 'cloze', text: x.cloze, hint: '', extra: '' }); n++; }
       else if (!x.bad) { addNote({ ...base, type: 'basic', front: x.front, back: x.back, hint: x.hint, extra: '', reverse: D.bulkReverse }); n++; }
     });
+    if (D.type === 'mix') {
+      const deck = deckById(deckId), imgs = S.notes.filter(x => x.deckId === deckId && x.type === 'occl').length;
+      if (!n && !imgs) return toast('Dodaj terminy albo obraz z lukami');
+      if (deck) { deck.mix = D.mixOn !== false; touch(deck); }
+      save(); if (n) emit('cardsAdded', n); DRAFT = null;
+      toast(`Zestaw zapisany ✓ ${n ? `+${n} ${plural(n, 'termin', 'terminy', 'terminów')}` : ''}${deck?.mix ? ' · przeplatanie włączone 🔀' : ''}`, 3500); return go(`#/deck/${deckId}`);
+    }
     if (!n) return toast('Nie rozpoznano żadnej fiszki');
     save(); emit('cardsAdded', n); DRAFT.bulk = ''; toast(`Dodano ${n} ${plural(n, 'fiszkę', 'fiszki', 'fiszek')} ✓`); return go(`#/deck/${deckId}`);
   }
@@ -975,6 +1008,10 @@ async function saveDraft() {
   } else {
     addNote({ ...fields, deckId }); save(); emit('cardsAdded', 1);
     const keep = { type: D.type, deckId, reverse: D.reverse, hideAll: D.hideAll };
+    if (D.mixBack) {   // obraz do zestawu mieszanego → wracamy do listy terminów
+      DRAFT = { ...freshDraft('mix', deckId), bulk: D.mixBack.bulk, mixOn: D.mixBack.mixOn };
+      toast('Obraz dodany do zestawu ✓'); return render();
+    }
     DRAFT = { ...freshDraft(D.type, deckId), ...keep };
     toast('Dodano ✓'); render();
     if (D.type !== 'occl') setTimeout(() => $('textarea[data-bind]')?.focus(), 50);
@@ -1413,7 +1450,16 @@ const ACTIONS = {
     save(); toast(n ? `Dodano ${n} do dzisiejszych powtórek` : 'Te karty są nowe lub już czekają na powtórkę');
   },
 
-  'draft-type': el => { if (DRAFT.type !== el.dataset.t) { DRAFT.type = el.dataset.t; DRAFT.imageId = null; DRAFT.boxes = []; } render(); },
+  'draft-type': el => {
+    if (DRAFT.type !== el.dataset.t) {
+      if (el.dataset.t === 'mix' && DRAFT.mixBack) { DRAFT.bulk = DRAFT.mixBack.bulk; DRAFT.mixOn = DRAFT.mixBack.mixOn; }
+      delete DRAFT.mixBack; DRAFT.type = el.dataset.t; DRAFT.imageId = null; DRAFT.boxes = [];
+    }
+    render();
+  },
+  'mix-add-img': () => { DRAFT.mixBack = { bulk: DRAFT.bulk, mixOn: DRAFT.mixOn }; DRAFT.type = 'occl'; DRAFT.imageId = null; DRAFT.boxes = []; render(); scrollTo(0, 0); },
+  'mix-back': () => { const m = DRAFT.mixBack || {}; DRAFT = { ...freshDraft('mix', DRAFT.deckId), bulk: m.bulk || '', mixOn: m.mixOn }; render(); },
+  'deck-mix': el => { const d = deckById(el.dataset.id); if (!d) return; d.mix = !d.mix; touch(d); save(); render(); toast(d.mix ? '🔀 Nowe karty będą się przeplatać losowo' : 'Nowe karty w kolejności dodania'); },
   'cancel-edit': () => { DRAFT = null; history.back(); },
   'save-draft': () => saveDraft(),
   'delete-note': () => { const n = noteById(DRAFT.editId); if (n && confirm('Usunąć tę fiszkę?')) { const d = n.deckId; deleteNote(n); save(); gcImages(); DRAFT = null; go(`#/deck/${d}`); } },

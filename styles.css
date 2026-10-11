@@ -771,3 +771,18 @@ body.minimal #tabs .min-only { display: flex; }
 .gifuse { gap: 4px; } .gifuse .sm { flex: 1; padding: 5px 0; min-height: 0; }
 .gifitem select { font-size: 13px; padding: 4px 6px; min-height: 0; }
 .gifgrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+/* Historia bitew */
+.bth { border-bottom: 1px solid var(--line); }
+.bth summary { display: flex; align-items: center; gap: 10px; padding: 9px 2px; cursor: pointer; list-style: none; }
+.bth summary::-webkit-details-marker { display: none; }
+.bth-r { font-size: 22px; flex: none; }
+.elo-d { flex: none; font-size: 14px; padding: 3px 9px; border-radius: 99px; background: var(--card2); color: var(--muted); }
+.elo-d.up { background: color-mix(in srgb, #10b981 18%, transparent); color: #059669; }
+.elo-d.down { background: color-mix(in srgb, #ef4444 15%, transparent); color: #dc2626; }
+.bth-d { padding: 2px 4px 10px 36px; font-size: 14px; animation: slideup .2s ease; }
+.bth[open] { background: var(--card2); border-radius: 12px; }
+/* Zestaw mieszany */
+.mix-imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.mix-imgs > div { border-radius: 10px; overflow: hidden; background: var(--card2); cursor: pointer; text-align: center; }
+.mix-imgs img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.mix-imgs small { display: block; padding: 3px; font-size: 11px; }
