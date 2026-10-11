@@ -332,6 +332,7 @@ Object.assign(ACTIONS, {
     const keep = $('#anki-progress') ? $('#anki-progress').checked : true;
     try {
       const r = await importAnki(f, keep, msg => toast(msg, 60000));
+      emit('ankiImport', r.done);
       toast(`Zaimportowano ${r.done} ${plural(r.done, 'notatkę', 'notatki', 'notatek')}${r.skipped ? ` (pominięto ${r.skipped})` : ''} ✓`, 4000);
       go('#/');
     } catch (e) { console.error(e); toast('Błąd importu z Anki: ' + e.message, 5000); }

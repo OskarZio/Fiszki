@@ -95,11 +95,20 @@ const IMG = {};   // id -> dataURL
 let saveTimer;
 
 function blankState() {
-  return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS) };
+  return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS), ...extraState() };
 }
+// pola dodane w kolejnych wersjach (tematy, znajomi, gry, osiągnięcia, system liczbowy)
+function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 } }; }
+
+// Proste zdarzenia, na które reagują moduły (osiągnięcia, ranking…)
+const HOOKS = {};
+const on = (name, fn) => (HOOKS[name] || (HOOKS[name] = [])).push(fn);
+const emit = (name, ...a) => (HOOKS[name] || []).forEach(fn => { try { fn(...a); } catch (e) { console.error(e); } });
+// Dodatkowe ekrany rejestrowane przez moduły: ROUTES.nazwa = parts => ({ html, tab, focus })
+const ROUTES = {};
 function save() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { DB.set('state', S); updateBadge(); scheduleSync(); }, 200);
+  saveTimer = setTimeout(() => { DB.set('state', S); updateBadge(); scheduleSync(); emit('save'); }, 200);
 }
 function touch(o) { o.mod = Date.now(); return o; }
 async function putImage(dataUrl) {
@@ -361,9 +370,11 @@ function answer(g) {
     s.undo = { cardId: c.id, srs: c.srs, logId: entry.id, mod: c.mod };
     c.srs = schedule(c.srs, g); touch(c); S.log.push(entry); s.done++;
     save();
+    emit('review', c, g, wasNew);
   }
   s.lastNote = c.noteId;
   nextCard(); render();
+  if (!s.card) emit('sessionEnd', s);
 }
 function undo() {
   const s = SESSION, u = s && s.undo; if (!u) return;
@@ -402,12 +413,14 @@ function render() {
       case 'quiz': html = viewQuiz(parts[1], q); focus = true; break;
       case 'add': html = viewAdd(null, q); tab = 'add'; break;
       case 'edit': html = viewAdd(parts[1], q); tab = 'add'; break;
-      case 'palaces': html = viewPalaces(); tab = 'palaces'; break;
-      case 'palace': html = viewPalace(parts[1]); tab = 'palaces'; break;
-      case 'station': html = viewStation(parts[1], parts[2]); tab = 'palaces'; break;
+      case 'palaces': html = viewPalaces(); tab = 'train'; break;
+      case 'palace': html = viewPalace(parts[1]); tab = 'train'; break;
+      case 'station': html = viewStation(parts[1], parts[2]); tab = 'train'; break;
       case 'walk': html = viewWalk(parts[1]); focus = true; break;
       case 'more': html = viewMore(); onMount(mountMore); tab = 'more'; break;
-      default: html = viewHome(); tab = 'home';
+      default:
+        if (ROUTES[r]) { const v = ROUTES[r](parts, q); html = v.html; tab = v.tab || ''; focus = !!v.focus; }
+        else { html = viewHome(); tab = 'home'; }
     }
   } catch (e) {
     console.error(e); html = `<div class="card"><h2>Ups, błąd</h2><p>${esc(e.message)}</p><a href="#/">Wróć na start</a></div>`;
@@ -463,6 +476,7 @@ function viewHome() {
       ? `<button class="primary block" data-go="#/study/all/flip">▶ Ucz się wszystkiego (${all.total})</button>`
       : `<div class="center muted">${S.cards.length ? '🎉 Na dziś wszystko powtórzone!' + nextDueText() : 'Dodaj pierwsze fiszki, aby zacząć.'}</div>`}
   </div>
+  ${typeof homeExtrasHTML === 'function' ? homeExtrasHTML() : ''}
   ${hard ? `<div class="banner row nowrap"><span class="grow">🧠 <b>${hard}</b> ${plural(hard, 'trudna fiszka', 'trudne fiszki', 'trudnych fiszek')} – powtórz bez wpływu na harmonogram</span><button class="sm" data-act="cram-hard">Powtórz</button></div>` : ''}
   <div class="card">
     <div class="row nowrap"><h2 class="grow" style="margin:0">Talie</h2>
@@ -648,6 +662,7 @@ function viewQuiz(deckId, q) {
   if (Z.i >= total) {
     const good = Z.items.filter(x => x.ok).length, pct = Math.round(good / Math.max(1, total) * 100);
     const wrong = Z.items.filter(x => !x.ok);
+    if (!Z.reported) { Z.reported = true; setTimeout(() => emit('quiz', pct, total)); }
     const list = wrong.map(x => { const c = S.cards.find(y => y.id === x.cardId); if (!c) return ''; const v = cardView(c);
       return `<div class="kv"><span class="grow">${esc(v.label).slice(0, 120)}</span><b class="c-rev" style="margin-left:8px">${esc(v.ans)}</b></div>`; }).join('');
     return head + `<div class="card center"><div class="score">${pct}%</div><p>${good} / ${total} poprawnych ${pct >= 90 ? '🏆' : pct >= 60 ? '👍' : '💪'}</p></div>
@@ -1206,7 +1221,8 @@ function exportData() { const { settings, ...rest } = S; return { ...rest, expor
 function mergeState(R) {
   const tomb = { ...S.tomb };
   for (const k in R.tomb || {}) tomb[k] = Math.max(R.tomb[k], tomb[k] || 0);
-  for (const key of ['decks', 'notes', 'cards', 'palaces']) {
+  for (const key of ['decks', 'notes', 'cards', 'palaces', 'topics', 'friends']) {
+    S[key] = S[key] || [];
     const map = new Map(S[key].map(x => [x.id, x]));
     for (const r of R[key] || []) { const l = map.get(r.id); if (!l || (r.mod || 0) > (l.mod || 0)) map.set(r.id, r); }
     S[key] = [...map.values()].filter(x => !tomb[x.id]);
@@ -1219,6 +1235,12 @@ function mergeState(R) {
   const ids = new Set(S.log.map(l => l.id));
   for (const l of R.log || []) if (!ids.has(l.id)) S.log.push(l);
   S.log.sort((a, b) => a.t - b.t);
+  const gids = new Set(S.games.map(g => g.id));
+  for (const g of R.games || []) if (!gids.has(g.id)) S.games.push(g);
+  for (const k in R.ach || {}) S.ach[k] = Math.min(R.ach[k], S.ach[k] || Infinity);
+  for (const k in R.stats || {}) S.stats[k] = Math.max(R.stats[k] || 0, S.stats[k] || 0);
+  if (R.major && (R.major.mod || 0) > (S.major.mod || 0)) S.major = R.major;
+  if (R.profile && (R.profile.mod || 0) > (S.profile.mod || 0)) S.profile = R.profile;
   S.tomb = tomb;
 }
 async function syncNow(manual) {
@@ -1251,6 +1273,7 @@ async function syncNow(manual) {
     cfg.gistId = gist.id; S.settings.lastSync = Date.now();
     await DB.set('state', S); updateBadge();
     if (manual) toast('Zsynchronizowano ✓');
+    emit('synced');
     const r = parseRoute().parts[0];
     if (!['study', 'quiz', 'add', 'edit', 'station', 'walk'].includes(r)) render();
   } catch (e) {
@@ -1426,11 +1449,14 @@ async function init() {
     console.error(e); $('#view').innerHTML = '<div class="card">Nie udało się otworzyć bazy danych. Wyłącz tryb prywatny w Safari.</div>'; return;
   }
   if (!S) { S = blankState(); seed(); await DB.set('state', S); }
+  S.games = S.games || [];
+  for (const [k, v] of Object.entries(extraState())) if (S[k] == null) S[k] = v;
   S.settings = { ...structuredClone(DEFAULT_SETTINGS), ...S.settings, sync: { ...DEFAULT_SETTINGS.sync, ...(S.settings?.sync || {}) } };
   navigator.storage?.persist?.();
   window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
   render();
   updateBadge();
+  emit('start');
   if (S.settings.autoSync && S.settings.sync.token) syncNow(false);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') { DB.set('state', S); if (S.settings.autoSync && S.settings.sync.token) { clearTimeout(syncTimer); syncNow(false); } }

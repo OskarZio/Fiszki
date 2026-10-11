@@ -73,7 +73,7 @@ Zasady:
 - ${count}${opts.extra ? `\n\nDodatkowe polecenia od ucznia: ${opts.extra}` : ''}`;
 }
 
-async function aiCards(files, opts) {
+async function aiCards(files, opts, material = '') {
   const key = S.settings.aiKey;
   if (!key) throw new Error('Dodaj klucz API w zakładce Więcej → AI');
   const { default: Anthropic } = await import('./vendor/anthropic-sdk.mjs');
@@ -81,6 +81,7 @@ async function aiCards(files, opts) {
   const content = files.map(f => f.type === 'pdf'
     ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.data.split(',')[1] } }
     : { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: f.data.split(',')[1] } });
+  if (material) content.push({ type: 'text', text: 'Materiał do nauki (notatki ucznia):\n\n' + material });
   content.push({ type: 'text', text: aiPrompt(opts) });
   const model = S.settings.aiModel || 'claude-opus-5-5';
   const params = {
@@ -256,7 +257,7 @@ Object.assign(ACTIONS, {
       if (c.type === 'cloze') addNote({ ...base, type: 'cloze', text: c.text.trim() });
       else addNote({ ...base, type: 'basic', front: c.front.trim(), back: c.back.trim(), reverse: false });
     });
-    S.settings.lastDeck = deckId; save();
+    S.settings.lastDeck = deckId; save(); emit('aiCards', sel.length);
     SCAN = { files: [], cards: null, busy: '' };
     toast(`Dodano ${sel.length} ${plural(sel.length, 'fiszkę', 'fiszki', 'fiszek')} ✓`); go(`#/deck/${deckId}`);
   },
