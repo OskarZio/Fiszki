@@ -85,8 +85,6 @@ ROUTES.train = () => {
     <p class="small muted">Każdej liczbie 00–99 przypisz obraz (np. 37 = <b>mak</b>). Dzięki temu długi ciąg cyfr zamieniasz w historyjkę obrazów w pałacu pamięci.</p>
     <div class="row small"><span class="grow">Uzupełnione obrazy: <b>${filled}/100</b></span></div>${progress(filled / 100, true)}
     <div class="spacer"></div><div class="row"><button class="primary grow" data-go="#/major">Otwórz system</button><button class="grow" data-go="#/major?drill=1" ${filled ? '' : 'disabled'}>⚡ Szybki trening</button></div></div>
-  <div class="card row nowrap" data-go="#/atlas" style="cursor:pointer"><span style="font-size:34px">🫀</span><div class="grow"><b>Atlas – ryciny</b>
-    <div class="small muted">nazywanie, wskazywanie i rysowanie struktur z pamięci</div></div><span>›</span></div>
   <div class="card"><h2 style="margin-top:0">🏛️ Pałace pamięci</h2>
     <p class="small muted">${S.palaces.length} ${plural(S.palaces.length, 'pałac', 'pałace', 'pałaców')} · ${pins} ${plural(pins, 'pinezka', 'pinezki', 'pinezek')}. Pinezki możesz wykorzystać jako trasę (loci) w grach – w ustawieniach gry wybierz pałac.</p>
     <button class="block" data-go="#/palaces">Otwórz pałace</button></div>

@@ -45,6 +45,7 @@ ROUTES.me = () => {
     <a class="lnk" href="#/calendar"><span>📅</span><b class="grow">Terminarz</b><small class="muted">${typeof upcoming === 'function' ? upcoming().length || '' : ''}</small><i>›</i></a>
     <a class="lnk" href="#/quests"><span>📋</span><b class="grow">Zadania dnia</b>${segBadge('quests')}<i>›</i></a>
     <a class="lnk" href="#/shop"><span>🎁</span><b class="grow">Skrzynki i album naklejek</b><i>›</i></a>
+    <a class="lnk" href="#/more" data-anchor="anki"><span>🔁</span><b class="grow">Import / eksport Anki</b><i>›</i></a>
     <a class="lnk" href="#/more"><span>⚙️</span><b class="grow">Ustawienia, motyw, dźwięki, kopie</b><i>›</i></a></div>
   ${typeof accountCardHTML === 'function' ? accountCardHTML() : ''}
   ${typeof profileCardHTML === 'function' ? profileCardHTML() : ''}` };
@@ -122,3 +123,8 @@ function updateTabBadges() {
 const hubRender0 = render;
 render = function (...a) { const out = hubRender0.apply(this, a); try { updateTabBadges(); } catch (e) { console.warn(e); } return out; };
 if (typeof updateMsgBadge === 'function') { const um0 = updateMsgBadge; updateMsgBadge = function () { um0(); try { updateTabBadges(); } catch { /* */ } }; }
+
+// płynne wejście ekranu – tylko przy zmianie strony (nie przy każdym odświeżeniu)
+window.addEventListener('hashchange', () => { const v = $('#view'); if (!v || S?.settings?.anim === false) return; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); setTimeout(() => v.classList.remove('enter'), 450); });
+// linki z kotwicą (np. Profil → „Import / eksport Anki”) przewijają do sekcji po otwarciu strony
+document.addEventListener('click', e => { const a = e.target.closest?.('a[data-anchor]'); if (a) setTimeout(() => document.getElementById(a.dataset.anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); });

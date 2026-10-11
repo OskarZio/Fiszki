@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '32';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '35';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -494,6 +494,12 @@ function viewHomeZen() {
     ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
     <div class="card">${decks || '<p class="muted">Brak talii.</p>'}</div>`;
 }
+// powitanie zależne od pory dnia
+function greeting() {
+  const h = new Date().getHours(), nick = (S.profile?.nick || '').trim();
+  const g = h >= 5 && h < 11 ? 'Dzień dobry' : h < 18 && h >= 11 ? 'Cześć' : h < 23 && h >= 18 ? 'Dobry wieczór' : 'Nocna nauka 🦉';
+  return `${g}${nick ? ', ' + esc(nick) : ''} 👋`;
+}
 function viewHome() {
   if (appMode() === 'zen') return viewHomeZen();
   const all = deckCounts('all'), today = reviewsToday(), st = streak(), hard = difficultCards().length;
@@ -510,7 +516,7 @@ function viewHome() {
   }).join('');
   const sync = S.settings.sync.token ? `<button class="iconbtn" data-act="sync" title="Synchronizuj">🔄</button>` : '';
   return `
-  <div class="row nowrap"><h1 class="grow">Fiszki</h1>${sync}${typeof homeChipHTML === 'function' ? homeChipHTML() : ''}</div>
+  <div class="row nowrap home-head"><div class="grow"><div class="greet">${greeting()}</div><h1>Fiszki</h1></div>${sync}${typeof homeChipHTML === 'function' ? homeChipHTML() : ''}</div>
   <div class="card">
     <div class="hero">
       <div class="stat"><b>${st ? '🔥 ' + st : '0'}</b><small>${plural(st, 'dzień', 'dni', 'dni')} z rzędu</small></div>
@@ -1094,8 +1100,9 @@ function viewPalace(id) {
       <button class="grow" data-act="station-add" data-src="paste" data-id="${id}">📋 Wklej</button></div>
   </div>
   <div class="card">${st || '<p class="muted">Brak miejsc. Dodaj pierwszy zrzut ekranu.</p>'}</div>
+  ${p.stations.length >= 2 || p.stations.some(s => s.pins.length) ? `<button class="primary block big-btn" data-act="pt-open" data-id="${id}">🎯 Trenuj ten pałac</button><div class="spacer"></div>` : ''}
   ${p.stations.some(s => s.pins.length) ? `<div class="row">
-    <button class="primary grow" data-go="#/walk/${id}">🚶 Spacer po pałacu</button>
+    <button class="grow" data-go="#/walk/${id}">🚶 Spacer po pałacu</button>
     <button class="grow" data-act="palace-cards" data-id="${id}">🃏 Zrób fiszki</button></div>` : ''}
   <div class="spacer"></div><button class="danger" data-act="palace-del" data-id="${id}">Usuń pałac</button>`;
 }
@@ -1212,6 +1219,7 @@ function viewMore() {
   ${!full && typeof accountCardHTML === 'function' ? accountCardHTML() : ''}
   ${!full && typeof profileCardHTML === 'function' ? profileCardHTML() : ''}
   ${modeCard}
+  <div id="anki">${ankiSectionHTML()}</div>
   <div class="card"><h2 style="margin-top:0">📊 Statystyki</h2>
     <div class="heat">${cells}</div><div class="spacer"></div>
     <div class="kv"><span>Seria dni nauki</span><b>🔥 ${streak()}</b></div>
@@ -1282,7 +1290,6 @@ function viewMore() {
 
   ${aiSectionHTML()}
 
-  ${ankiSectionHTML()}
 
   <div class="card"><h2 style="margin-top:0">Dane</h2>
     <button class="danger" data-act="wipe">Usuń wszystkie dane z tego urządzenia</button></div>
