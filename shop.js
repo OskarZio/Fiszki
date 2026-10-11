@@ -90,13 +90,13 @@ ROUTES.shop = () => {
       <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}</div>
       <button class="primary block" data-go="#/case/${k}">Otwórz · ${c.price} 💎</button></div>`).join('')}</div></div>
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">Album naklejek</h2><span class="small muted">${owned}/${STICKERS.length}</span></div>
-    <ul class="small muted perks"><li>Wysyłasz je przeciwnikowi w bitwie (legendarne i złote mają specjalną animację).</li>
+    <ul class="small muted perks"><li>Wysyłasz je przeciwnikowi w bitwie albo <b>podarujesz znajomemu</b> (💬 w rankingu). Stuknij naklejkę, żeby zobaczyć animację i usłyszeć jej dźwięk.</li>
       <li><b>3 duplikaty → złota wersja ✨</b> – błyszczy w albumie, profilu i bitwach.</li>
       <li>Wystaw do 3 naklejek w <b>gablocie</b> – widzą je znajomi w rankingu i przeciwnicy w bitwie.</li>
       <li>Komplet danej rzadkości daje premię: ${Object.entries(SET_BONUS).map(([r, v]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name.toLowerCase()} +${v}💎${setComplete(r) ? ' ✓' : ''}</span>`).join(', ')}.</li></ul>
     <div class="row small showcase-row"><b class="grow">Gablota:</b><span class="showcase">${showcaseHTML(showcase) || '<span class="muted">pusta – stuknij ☆ przy naklejce</span>'}</span></div>
     <div class="album">${STICKERS.map(s => { const n = itemCount('sticker', s.id), sh = isShiny(s.id), have = n || sh, inSc = showcase.includes(s.id);
-      return `<div class="stk ${s.r}${have ? '' : ' locked'}${sh ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span>${have ? s.e : '❔'}</span><small>${have ? esc(s.name) + (sh ? ' ✨' : '') : RARITY[s.r].name}</small>
+      return `<div class="stk ${s.r}${have ? '' : ' locked'}${sh ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span${have ? ` data-act="st-preview" data-id="${s.id}" style="cursor:pointer" title="Stuknij – animacja i dźwięk"` : ''}>${have ? s.e : '❔'}</span><small>${have ? esc(s.name) + (sh ? ' ✨' : '') : RARITY[s.r].name}</small>
         ${have ? `<button class="sm ghost" data-act="showcase" data-id="${s.id}">${inSc ? '★ w gablocie' : '☆ do gabloty'}</button>` : ''}
         ${n >= 3 && !sh ? `<button class="sm primary" data-act="upgrade" data-id="${s.id}">✨ Ulepsz (3 szt.)</button>` : ''}
         ${n > 1 ? `<button class="sm ghost" data-act="sell-dup" data-id="${s.id}">×${n} · sprzedaj +${RARITY[s.r].sell}💎</button>` : ''}</div>`; }).join('')}</div></div>
@@ -146,6 +146,8 @@ function spinCase(k, free, test) {
   else if (free) { if (!hasItem('case', k)) return; addItem('case', k, -1); }
   else if (!spend(c.price, 'case-' + k)) return;
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch { /* */ }
+  const sfx = typeof CASE_SFX !== 'undefined' ? CASE_SFX : null;
+  if (sfx) { if (typeof fxUnlock === 'function') fxUnlock(); sfx.open(); }
   const won = rollSticker(test && test !== 'any' ? { [test]: 100 } : c.odds), WIN = 52;
   const strip = Array.from({ length: 60 }, (_, i) => i === WIN ? won : rollSticker(c.odds));
   SPIN = { k, phase: 'spinning', strip, won, dup: hasItem('sticker', won.id), test };
@@ -160,7 +162,7 @@ function spinCase(k, free, test) {
   const watch = () => {
     if (SPIN.phase !== 'spinning') return;
     const m = new DOMMatrixReadOnly(getComputedStyle(el).transform), idx = Math.floor((-m.m41 + box / 2) / tile);
-    if (idx !== last) { last = idx; tick(1200 + Math.random() * 400); }
+    if (idx !== last) { last = idx; sfx ? sfx.tick(idx) : tick(1200 + Math.random() * 400); }
     requestAnimationFrame(watch);
   };
   requestAnimationFrame(watch);
@@ -171,7 +173,8 @@ function spinCase(k, free, test) {
     }
     SPIN.phase = 'done'; save(); render();
     const tr = $('#strip'); if (tr) { tr.style.transition = 'none'; tr.style.transform = `translateX(${-target}px)`; }
-    tick(880, .15, .12); setTimeout(() => tick(1320, .25, .12), 120);
+    if (sfx) sfx.reveal(won.r); else { tick(880, .15, .12); setTimeout(() => tick(1320, .25, .12), 120); }
+    if (typeof playStickerSound === 'function') setTimeout(() => playStickerSound(won.id), won.r === 'legendary' ? 1700 : 900);
     if (won.r === 'legendary' || won.r === 'epic') celebrate(`${won.e} ${RARITY[won.r].name}!`, won.name); else confetti(50);
   }, 6400);
 }
