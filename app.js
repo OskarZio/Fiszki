@@ -1183,6 +1183,8 @@ function viewMore() {
 
   <div class="card row nowrap"><span style="font-size:30px">🛡️</span><div class="grow"><b>Bezpieczeństwo danych</b><div class="small muted">Kopie, kosz, wersje w chmurze</div></div><button class="primary sm" data-go="#/safety">Otwórz</button></div>
 
+  ${typeof reactionsSectionHTML === 'function' ? reactionsSectionHTML() : ''}
+
   ${typeof soundsSectionHTML === 'function' ? soundsSectionHTML() : ''}
 
   <div class="card row nowrap"><span style="font-size:30px">🎨</span><div class="grow"><b>Wygląd</b><div class="small muted">Motyw, kolor tła i akcentu (paleta lub HEX)</div></div><button class="primary sm" data-go="#/theme">Zmień</button></div>

@@ -133,7 +133,7 @@ on('review', (c, g, wasNew) => {
   const xp = wasNew ? 3 : g > 1 ? 2 : 1;
   floatText(`+${xp} XP${combo >= 5 ? `  🔥×${combo}` : ''}`, combo >= 10 && combo % 10 === 0);
   const today = reviewsToday(), goal = S.settings.goal || 50;
-  if (today === goal) { setTimeout(() => celebrate('🎯 Cel dzienny osiągnięty!', `${goal} powtórek – świetna robota!`), 300); grantDailyCase(); }
+  if (today === goal) { emit('goal'); setTimeout(() => celebrate('🎯 Cel dzienny osiągnięty!', `${goal} powtórek – świetna robota!`), 300); grantDailyCase(); }
 });
 on('sessionEnd', s => { combo = 0; if (!s.cram && s.done >= 5) grantDailyCase(); if (s.done >= 10) setTimeout(() => confetti(80), 200); });
 // Codzienna skrzynka: raz dziennie za ukończony zestaw (sesję) albo cel dzienny

@@ -544,3 +544,17 @@ details.more-opts { margin: 8px 0 12px; }
 .atmodes button { flex-direction: column; gap: 0; min-height: 50px; padding: 4px 2px; background: transparent; }
 .atmodes button span { font-size: 20px; } .atmodes button small { font-size: 11px; }
 .atmodes button.on { background: var(--card); box-shadow: var(--shadow); font-weight: 600; }
+
+/* Reakcje GIF */
+.reaction { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35);
+  animation: rxin .25s ease-out; cursor: pointer; }
+.reaction.out { opacity: 0; transition: opacity .3s; }
+.rx-card { display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--card); padding: 14px; border-radius: 22px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4); animation: rxpop .45s cubic-bezier(.2,1.6,.4,1); max-width: 82vw; }
+.rx-card img { max-width: 68vw; max-height: 52vh; border-radius: 14px; }
+.rx-card b { font-size: 20px; } .rx-card small { color: var(--muted); font-size: 12px; }
+.rx-default { animation: rxdance .5s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes rxdance { 0%, 100% { transform: rotate(-6deg) translateY(0); } 50% { transform: rotate(6deg) translateY(-10px); } }
+@keyframes rxpop { from { transform: scale(.4); opacity: 0; } }
+@keyframes rxin { from { opacity: 0; } }
+.rx-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 10px; }
