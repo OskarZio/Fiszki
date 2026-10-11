@@ -80,6 +80,19 @@ function rollRarity(odds) {
   return 'common';
 }
 const rollSticker = odds => { const r = rollRarity(odds), pool = STICKERS.filter(s => s.r === r); return pool[Math.random() * pool.length | 0]; };
+// Poza naklejkami w skrzynce mogą wypaść kryształy (różne kwoty, rzadko „jackpot”) albo darmowe ponowne losowanie
+const CASE_EXTRA = { gems: 20, respin: 7 };   // % szans
+const GEM_PRIZES = { basic: [[20, 50], [50, 30], [100, 15], [300, 5]], epic: [[60, 50], [150, 30], [300, 15], [800, 5]] };
+function rollPrize(k, odds, force) {
+  const x = Math.random() * 100;
+  if (force === 'gems' || (!force && x < CASE_EXTRA.gems)) {
+    const t = GEM_PRIZES[k] || GEM_PRIZES.basic; let y = Math.random() * 100;
+    for (let i = 0; i < t.length; i++) { const [n, p] = t[i]; if (y < p || i === t.length - 1) return { kind: 'gems', id: 'gems' + n, n, e: '💎', name: `+${n} 💎`, r: ['common', 'rare', 'epic', 'legendary'][i] }; y -= p; }
+  }
+  if (force === 'respin' || (!force && x < CASE_EXTRA.gems + CASE_EXTRA.respin)) return { kind: 'respin', id: 'respin', e: '🔁', name: 'Jeszcze raz!', r: 'epic' };
+  return rollSticker(force && RARITY[force] ? { [force]: 100 } : odds);
+}
+const prizeTile = s => `<div class="tile${s.kind ? ' prize-' + s.kind : ''}" style="--rc:${RARITY[s.r].color}"><span>${s.e}</span><small>${esc(s.name)}</small></div>`;
 
 // ---------- sklep
 ROUTES.shop = () => {
@@ -95,7 +108,7 @@ ROUTES.shop = () => {
   <p class="small muted">🌞 <b>Codzienna skrzynka</b> (lepsze szanse!) – za ukończenie jednego zestawu fiszek albo celu dziennego każdego dnia.</p>
   <div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2><div class="cases">${Object.entries(CASES).filter(([, c]) => !c.freeOnly).map(([k, c]) => `
     <div class="case ${k}"><div class="ci">${c.icon}</div><b>${c.name}</b>
-      <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}</div>
+      <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}<span style="color:#0369a1">💎 do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} · 🔁 jeszcze raz</span></div>
       <button class="primary block" data-go="#/case/${k}">Otwórz · ${c.price} 💎</button></div>`).join('')}</div></div>
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">Album naklejek</h2><span class="small muted">${owned}/${STICKERS.length}</span></div>
     <ul class="small muted perks"><li>Wysyłasz je przeciwnikowi w bitwie albo <b>podarujesz znajomemu</b> (💬 w rankingu). Stuknij naklejkę, żeby zobaczyć animację i usłyszeć jej dźwięk.</li>
@@ -120,20 +133,21 @@ let SPIN = null;
 ROUTES.case = (parts, q) => {
   const k = parts[1], c = CASES[k]; if (!c) return { html: '<a href="#/shop">Wróć</a>' };
   // tryb testowy (panel hosta): bez kosztu, nic nie trafia do albumu
-  const test = q.get('test') && typeof hostUnlocked === 'function' && hostUnlocked() ? (RARITY[q.get('r')] ? q.get('r') : 'any') : '';
+  const test = q.get('test') && typeof hostUnlocked === 'function' && hostUnlocked() ? (RARITY[q.get('r')] || ['gems', 'respin'].includes(q.get('r')) ? q.get('r') : 'any') : '';
   const free = !test && q.get('free') && hasItem('case', k);
   if (!SPIN || SPIN.k !== k) SPIN = { k, phase: 'ready' };
-  const tiles = SPIN.strip ? SPIN.strip.map(s => `<div class="tile" style="--rc:${RARITY[s.r].color}"><span>${s.e}</span><small>${esc(s.name)}</small></div>`).join('')
-    : Array.from({ length: 9 }, () => { const s = STICKERS[Math.random() * STICKERS.length | 0]; return `<div class="tile" style="--rc:${RARITY[s.r].color}"><span>${s.e}</span><small>${esc(s.name)}</small></div>`; }).join('');
+  const tiles = (SPIN.strip || (SPIN.idle = SPIN.idle || Array.from({ length: 9 }, () => rollPrize(k, c.odds)))).map(prizeTile).join('');
   const won = SPIN.won;
   return { focus: true, html: `
   <div class="studybar"><button class="iconbtn" data-act="case-close">✕</button><div class="title">${c.icon} ${c.name}</div>${coinsHTML()}</div>
   <div class="roulette"><div class="marker"></div><div class="strip" id="strip">${tiles}</div></div>
   ${SPIN.phase === 'done' && won ? `<div class="card center reveal" style="--rc:${RARITY[won.r].color}">
-      <div class="big-st">${won.e}</div><b style="font-size:22px">${esc(won.name)}</b><div style="color:${RARITY[won.r].color};font-weight:700">${RARITY[won.r].name}</div>
-      <p class="small muted">${SPIN.test ? '🧪 Tryb testowy – naklejka nie trafia do albumu.' : SPIN.dup ? `Duplikat – masz już ${itemCount('sticker', won.id)} szt. ${itemCount('sticker', won.id) >= 3 ? 'Możesz ją ulepszyć do złotej wersji ✨ w albumie!' : `Przy 3 sztukach ulepszysz ją do złotej ✨ (albo sprzedasz za ${RARITY[won.r].sell} 💎).`}` : 'Nowa naklejka w albumie! Wyślij ją w następnej bitwie.'}</p>
-      <div class="row"><button class="primary grow" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">Otwórz kolejną</button><button class="grow" data-go="${SPIN.test ? '#/host' : '#/shop'}">${SPIN.test ? 'Panel hosta' : 'Album'}</button></div></div>`
-    : `<div class="odds center">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join(' ')}</div>
+      <div class="big-st">${won.e}</div><b style="font-size:22px">${won.kind === 'gems' ? `+${won.n} kryształów` : won.kind === 'respin' ? 'Losuj jeszcze raz!' : esc(won.name)}</b>
+      <div style="color:${RARITY[won.r].color};font-weight:700">${won.kind === 'gems' ? (won.r === 'legendary' ? '💰 JACKPOT' : 'Kryształy') : won.kind === 'respin' ? 'Darmowe losowanie' : RARITY[won.r].name}</div>
+      <p class="small muted">${SPIN.test ? '🧪 Tryb testowy – nic nie trafia na konto.' : won.kind === 'gems' ? 'Kryształy dodane do salda 💎' : won.kind === 'respin' ? 'Otwierasz tę skrzynkę jeszcze raz – za darmo!' : SPIN.dup ? `Duplikat – masz już ${itemCount('sticker', won.id)} szt. ${itemCount('sticker', won.id) >= 3 ? 'Możesz ją ulepszyć do złotej wersji ✨ w albumie!' : `Przy 3 sztukach ulepszysz ją do złotej ✨ (albo sprzedasz za ${RARITY[won.r].sell} 💎).`}` : 'Nowa naklejka w albumie! Wyślij ją w następnej bitwie.'}</p>
+      <div class="row"><button class="primary grow${won.kind === 'respin' ? ' pulse' : ''}" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">${won.kind === 'respin' ? '🔁 Losuj jeszcze raz' : 'Otwórz kolejną'}</button><button class="grow" data-go="${SPIN.test ? '#/host' : '#/shop'}">${SPIN.test ? 'Panel hosta' : 'Album'}</button></div></div>`
+    : `<div class="odds center"><span>💎 Kryształy ${CASE_EXTRA.gems}% (do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} 💎)</span> <span>🔁 Jeszcze raz ${CASE_EXTRA.respin}%</span><br>
+       <small class="muted">Naklejki (${100 - CASE_EXTRA.gems - CASE_EXTRA.respin}%):</small> ${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join(' ')}</div>
        <button class="primary block" data-act="case-spin" data-k="${k}" data-free="${free ? 1 : ''}" data-test="${test}" ${SPIN.phase === 'spinning' ? 'disabled' : ''} style="min-height:58px;font-size:18px">
        ${SPIN.phase === 'spinning' ? 'Losowanie…' : test ? '🧪 Otwórz testowo' : free ? '🎁 Otwórz za darmo' : c.freeOnly ? 'Brak skrzynki – ucz się codziennie 🌞' : `Otwórz za ${c.price} 💎`}</button>`}` };
 };
@@ -156,9 +170,9 @@ function spinCase(k, free, test) {
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch { /* */ }
   const sfx = typeof CASE_SFX !== 'undefined' ? CASE_SFX : null;
   if (sfx) { if (typeof fxUnlock === 'function') fxUnlock(); sfx.open(); }
-  const won = rollSticker(test && test !== 'any' ? { [test]: 100 } : c.odds), WIN = 52;
-  const strip = Array.from({ length: 60 }, (_, i) => i === WIN ? won : rollSticker(c.odds));
-  SPIN = { k, phase: 'spinning', strip, won, dup: hasItem('sticker', won.id), test };
+  const won = rollPrize(k, c.odds, test && test !== 'any' ? test : null), WIN = 52;
+  const strip = Array.from({ length: 60 }, (_, i) => i === WIN ? won : rollPrize(k, c.odds));
+  SPIN = { k, phase: 'spinning', strip, won, dup: !won.kind && hasItem('sticker', won.id), test };
   render();
   const el = $('#strip'), tile = el.firstElementChild.getBoundingClientRect().width + 8, box = el.parentElement.getBoundingClientRect().width;
   const target = WIN * tile + tile / 2 - box / 2 + (Math.random() - .5) * tile * .7;
@@ -176,14 +190,19 @@ function spinCase(k, free, test) {
   requestAnimationFrame(watch);
   setTimeout(() => {
     if (!test) {
-      addItem('sticker', won.id); S.stats.cases = (S.stats.cases || 0) + 1;
-      if (won.r === 'legendary') S.stats.legendary = 1;
+      if (won.kind === 'gems') S.wallet.push({ id: uid(), n: won.n, why: 'case-gems', t: Date.now() });
+      else if (won.kind === 'respin') addItem('case', k, 1, 'respin-' + uid());   // darmowa skrzynka tego samego rodzaju
+      else { addItem('sticker', won.id); if (won.r === 'legendary') S.stats.legendary = 1; }
+      S.stats.cases = (S.stats.cases || 0) + 1;
     }
     SPIN.phase = 'done'; save(); render();
     const tr = $('#strip'); if (tr) { tr.style.transition = 'none'; tr.style.transform = `translateX(${-target}px)`; }
     if (sfx) sfx.reveal(won.r); else { tick(880, .15, .12); setTimeout(() => tick(1320, .25, .12), 120); }
-    if (typeof playStickerSound === 'function') setTimeout(() => playStickerSound(won.id), won.r === 'legendary' ? 1700 : 900);
-    if (won.r === 'legendary' || won.r === 'epic') celebrate(`${won.e} ${RARITY[won.r].name}!`, won.name); else confetti(50);
+    if (!won.kind && typeof playStickerSound === 'function') setTimeout(() => playStickerSound(won.id), won.r === 'legendary' ? 1700 : 900);
+    if (won.kind === 'gems' && typeof FX !== 'undefined') setTimeout(() => { const ac = fxCtxGet(); if (ac) FX.sparkle(ac); }, 500);
+    if (won.kind === 'respin') celebrate('🔁 Losuj jeszcze raz!', 'Darmowe ponowne otwarcie skrzynki');
+    else if (won.kind === 'gems') { if (won.r === 'legendary' || won.r === 'epic') celebrate(`💎 +${won.n}!`, won.r === 'legendary' ? 'JACKPOT!' : 'Kryształy'); else confetti(50); }
+    else if (won.r === 'legendary' || won.r === 'epic') celebrate(`${won.e} ${RARITY[won.r].name}!`, won.name); else confetti(50);
   }, 6400);
 }
 

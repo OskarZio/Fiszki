@@ -715,3 +715,9 @@ button.case { border: 0; font: inherit; cursor: pointer; }
 .evcustom input[type=color] { width: 48px; height: 44px; padding: 2px; flex: none; }
 .evmore { margin-top: 10px; }
 .evmore summary { cursor: pointer; padding: 6px 0; }
+/* Skrzynki: kryształy i „jeszcze raz” na ruletce */
+.tile.prize-gems { background: linear-gradient(160deg, #e0f2fe, #a5f3fc); }
+.tile.prize-gems small { font-weight: 800; color: #0369a1; }
+.tile.prize-respin { background: linear-gradient(160deg, #fae8ff, #ddd6fe); }
+.tile.prize-respin span { animation: spinz 2.4s linear infinite; display: inline-block; }
+.odds small { font-size: 11px; }
