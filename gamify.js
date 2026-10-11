@@ -46,10 +46,30 @@ function achContext() {
     games: S.games.length, disciplines: new Set(S.games.map(g => g.d)).size,
     numbers: best('numbers'), words: best('words'), images: best('images'), pcards: best('cards'),
     major: Object.values(S.major.words || {}).filter(w => w && w.trim()).length,
-    friends: S.friends.length, ...S.stats,
+    friends: S.friends.length, ...S.stats, ...hardContext(),
   };
 }
-const A = (id, icon, name, desc, v, goal) => ({ id, icon, name, desc, v, goal });
+// dane do trudnych osiągnięć (naklejki, bitwy, kryształy…) – liczone z historii, więc działają też wstecz
+function hardContext() {
+  const st = typeof STICKERS !== 'undefined' ? STICKERS : [], has = id => typeof hasItem === 'function' && (hasItem('sticker', id) || hasItem('shiny', id));
+  const shiny = st.filter(x => typeof isShiny === 'function' && isShiny(x.id));
+  const b = S.battles || [];
+  return {
+    stickersOwned: st.filter(x => has(x.id)).length,
+    legendsOwned: st.filter(x => x.r === 'legendary' && has(x.id)).length,
+    shinyCount: shiny.length, shinyLegend: shiny.some(x => x.r === 'legendary') ? 1 : 0,
+    elo: typeof myElo === 'function' ? myElo() : 1000,
+    perfectBattle: b.filter(x => x.mode === 'cards' && x.won === 1 && x.n >= 10 && x.my === x.n && !x.bot).length,
+    perfectAbcd: b.filter(x => x.abcd && x.won === 1 && x.n >= 10 && x.my === x.n).length,
+    typedOk: S.log.filter(l => l.m === 'type' && l.v === 'ok').length,
+    questDays: (S.wallet || []).filter(w => /^q-.*-all$/.test(w.id)).length,
+    gemsEarned: (typeof earnedCoins === 'function' ? earnedCoins() : 0) + (S.wallet || []).filter(w => w.n > 0).reduce((a, w) => a + w.n, 0),
+    events: (S.events || []).length,
+    others: Object.keys(S.ach).filter(k => k !== 'platinum').length,
+  };
+}
+const A = (id, icon, name, desc, v, goal, hard) => ({ id, icon, name, desc, v, goal, hard: !!hard, reward: hard ? 150 : 30 });
+const H = (id, icon, name, desc, v, goal) => A(id, icon, name, desc, v, goal, true);
 const ACHIEVEMENTS = [
   A('first_review', '🌱', 'Pierwszy krok', 'Zrób pierwszą powtórkę', c => c.reviews, 1),
   A('rev_100', '💯', 'Setka', '100 powtórek', c => c.reviews, 100),
@@ -105,7 +125,32 @@ const ACHIEVEMENTS = [
   A('daily_7', '📅', 'Codzienny rytuał', 'Zdobądź 7 codziennych skrzynek', c => c.dailyCases || 0, 7),
   A('shiny_1', '✨', 'Błyszczy!', 'Ulepsz naklejkę do wersji złotej', c => c.shiny || 0, 1),
   A('saboteur', '🧊', 'Sabotażysta', 'Użyj 10 sabotaży w bitwach', c => c.sabUsed || 0, 10),
+  // ---- 💀 trudne (po 150 💎)
+  H('album_full', '🗂️', 'Komplet albumu', 'Zdobądź wszystkie naklejki', c => c.stickersOwned, typeof STICKERS !== 'undefined' ? STICKERS.length : 37),
+  H('legends_all', '🌌', 'Panteon', 'Zdobądź wszystkie legendarne naklejki', c => c.legendsOwned, 4),
+  H('shiny_10', '💛', 'Skarbiec', 'Miej 10 złotych naklejek', c => c.shinyCount, 10),
+  H('shiny_legend', '👑', 'Złota legenda', 'Ulepsz legendarną naklejkę do złotej', c => c.shinyLegend, 1),
+  H('cases_100', '🎰', 'Nałogowiec skrzynek', 'Otwórz 100 skrzynek', c => c.cases || 0, 100),
+  H('jackpot', '💰', 'Jackpot!', 'Wylosuj najwyższą pulę kryształów w skrzynce', c => c.jackpot || 0, 1),
+  H('gems_5000', '🤑', 'Krezus', 'Zarób łącznie 5000 💎', c => c.gemsEarned, 5000),
+  H('battle_100', '🐉', 'Niezwyciężony', 'Wygraj 100 bitew', c => c.battleWins || 0, 100),
+  H('winstreak_10', '⚡', 'Burza', '10 wygranych bitew z rzędu', c => c.winStreak || 0, 10),
+  H('elo_1500', '🥇', 'Mistrz areny', 'Osiągnij 1500 Elo', c => c.elo, 1500),
+  H('elo_2000', '💠', 'Arcymistrz', 'Osiągnij 2000 Elo', c => c.elo, 2000),
+  H('perfect_battle', '🎯', 'Bez skazy', 'Wygraj bitwę z człowiekiem (min. 10 fiszek) bez żadnego błędu', c => c.perfectBattle, 1),
+  H('perfect_abcd', '🅰️', 'Quiz idealny', 'Wygraj quiz ABCD (min. 10 pytań) bez błędu', c => c.perfectAbcd, 1),
+  H('typed_1000', '⌨️', 'Pióro mistrza', '1000 poprawnie wpisanych odpowiedzi', c => c.typedOk, 1000),
+  H('quests_30', '📋', 'Sumienny', 'Zalicz komplet zadań dnia 30 razy', c => c.questDays, 30),
+  H('rev_25000', '🧬', 'Nieśmiertelna pamięć', '25 000 powtórek', c => c.reviews, 25000),
+  H('day_500', '🏃', 'Ultramaraton', '500 powtórek jednego dnia', c => c.bestDay, 500),
+  H('mature_1000', '📚', 'Encyklopedia', '1000 kart opanowanych', c => c.mature, 1000),
+  H('streak_200', '🌞', 'Żelazna wola', '200 dni nauki z rzędu', c => c.streak, 200),
+  H('numbers_160', '🧠', 'Liczby – mistrz świata', 'Bezbłędnie 160 cyfr', c => c.numbers, 160),
+  H('gifts_10', '🎁', 'Hojne serce', 'Podaruj znajomym 10 naklejek', c => c.giftsSent || 0, 10),
 ];
+// Platyna: wszystkie pozostałe osiągnięcia
+ACHIEVEMENTS.push(H('platinum', '🏆', 'Platyna', 'Zdobądź wszystkie pozostałe osiągnięcia', c => c.others, ACHIEVEMENTS.length));
+const achReward = id => ACHIEVEMENTS.find(a => a.id === id)?.reward || 30;
 
 let achTimer, lastLevel = null;
 function checkAchievements(quiet) {
@@ -115,7 +160,7 @@ function checkAchievements(quiet) {
   const levelUp = lastLevel != null && lvl > lastLevel; lastLevel = lvl;
   if (fresh.length) { DB.set('state', S); }
   if (quiet) return;
-  if (fresh.length === 1) celebrate(`${fresh[0].icon} ${fresh[0].name}`, fresh[0].desc);
+  if (fresh.length === 1) celebrate(`${fresh[0].hard ? '💀 ' : ''}${fresh[0].icon} ${fresh[0].name}`, `${fresh[0].desc} · +${fresh[0].reward} 💎`);
   else if (fresh.length > 1) celebrate(`🏆 ${fresh.length} nowe osiągnięcia!`, fresh.map(a => a.icon + ' ' + a.name).join(' · '));
   else if (levelUp) celebrate(`⭐ Poziom ${lvl}!`, levelTitle(lvl));
 }
@@ -214,11 +259,12 @@ ROUTES.ach = () => {
   <div class="card center"><div class="lvl big">${lvl}</div><b>${levelTitle(lvl)}</b><p class="small muted">${xp} XP · do poziomu ${lvl + 1}: ${levelStart(lvl + 1) - xp} XP</p>
     <p class="small muted">XP: 1 za powtórkę, 2 za poprawną, 3 za nową kartę, punkty z gier i 25 za każde osiągnięcie.</p>
     ${progress(got.length / ACHIEVEMENTS.length)}<p class="small">${got.length} z ${ACHIEVEMENTS.length} odblokowanych</p></div>
-  <div class="badges">${ACHIEVEMENTS.map(a => {
+  ${[['', ACHIEVEMENTS.filter(a => !a.hard)], ['💀 Trudne osiągnięcia · po 150 💎', ACHIEVEMENTS.filter(a => a.hard)]].map(([title, list]) => `${title ? `<h2 style="margin:22px 0 4px">${title}</h2><p class="small muted" style="margin:0 0 10px">Zdobyte ${list.filter(a => S.ach[a.id]).length} z ${list.length}. Na prawdziwych kolekcjonerów i mistrzów.</p>` : ''}
+  <div class="badges">${list.map(a => {
     const done = !!S.ach[a.id], cur = Math.min(a.goal, a.v(ctx));
-    return `<div class="badge${done ? ' on' : ''}"><div class="bi">${a.icon}</div><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>
+    return `<div class="badge${done ? ' on' : ''}${a.hard ? ' hard' : ''}"><div class="bi">${a.icon}</div><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>${a.hard ? '<small class="hardtag">💀 +150 💎</small>' : ''}
       ${done ? `<small class="c-rev">✓ ${new Date(S.ach[a.id]).toLocaleDateString('pl')}</small>` : a.goal > 1 ? `${progress(cur / a.goal, true)}<small>${cur}/${a.goal}</small>` : ''}</div>`;
-  }).join('')}</div>` };
+  }).join('')}</div>`).join('')}` };
 };
 
 // ============================================================ Ranking

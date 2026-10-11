@@ -24,6 +24,8 @@ const STICKERS = [
 ];
 const FREE_STICKERS = ['wave', 'thumb', 'phew'];
 const stickerById = id => STICKERS.find(s => s.id === id);
+// cele osiągnięć kolekcjonerskich = aktualna liczba naklejek
+if (typeof ACHIEVEMENTS !== 'undefined') for (const [id, n] of [['album_full', STICKERS.length], ['legends_all', STICKERS.filter(x => x.r === 'legendary').length]]) { const a = ACHIEVEMENTS.find(x => x.id === id); if (a) a.goal = n; }
 const CASES = {
   basic: { name: 'Skrzynka nauki', icon: '📦', price: 120, odds: { common: 70, rare: 22, epic: 6.5, legendary: 1.5 } },
   epic: { name: 'Skrzynka mistrza', icon: '🎁', price: 350, odds: { common: 38, rare: 36, epic: 20, legendary: 6 } },
@@ -51,7 +53,7 @@ const studyPoints = l => !l.m ? 1 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .1 :
 const studyGems = l => !l.m ? 0 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .05 : 0) : ({ ok: .5, close: .3 }[l.v] ?? .1);   // 💎 za samą naukę
 const QUIZ_GEM_CAP = 30;   // max 💎 dziennie z testów ABCD / pisemnych
 function earnedCoins() {
-  let c = Object.keys(S.ach).length * 30;
+  let c = Object.keys(S.ach).reduce((a, id) => a + (typeof achReward === 'function' ? achReward(id) : 30), 0);   // trudne osiągnięcia: 150
   const perDay = {}; let study = 0;
   for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); study += studyGems(l); }
   c += Object.values(perDay).filter(n => n >= (S.settings.goal || 50)).length * 20 + Math.floor(study);
@@ -102,7 +104,7 @@ ROUTES.shop = () => {
   const showcase = S.profile.showcase || [];
   return { tab: 'train', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/battles">‹</button><h1 class="grow">Sklep</h1>${coinsHTML()}</div>
-  <p class="small muted" style="margin-top:-6px">Kryształy zdobywasz za bitwy, osiągnięcia (30 💎), dni z osiągniętym celem (20 💎) i gry pamięciowe.</p>
+  <p class="small muted" style="margin-top:-6px">Kryształy zdobywasz za bitwy, osiągnięcia (30 💎, trudne 💀 150 💎), dni z osiągniętym celem (20 💎), zadania dnia, testy i gry pamięciowe.</p>
   ${freeN ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${freeN}</b> darmowe ${plural(freeN, 'skrzynkę', 'skrzynki', 'skrzynek')}: ${freeKinds.map(k => `${CASES[k].icon} ${CASES[k].name} ×${itemCount('case', k)}`).join(', ')}</span>
     <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}
   <p class="small muted">🌞 <b>Codzienna skrzynka</b> (lepsze szanse!) – za ukończenie jednego zestawu fiszek albo celu dziennego każdego dnia.</p>
@@ -190,7 +192,7 @@ function spinCase(k, free, test) {
   requestAnimationFrame(watch);
   setTimeout(() => {
     if (!test) {
-      if (won.kind === 'gems') S.wallet.push({ id: uid(), n: won.n, why: 'case-gems', t: Date.now() });
+      if (won.kind === 'gems') { S.wallet.push({ id: uid(), n: won.n, why: 'case-gems', t: Date.now() }); if (won.r === 'legendary') S.stats.jackpot = 1; }
       else if (won.kind === 'respin') addItem('case', k, 1, 'respin-' + uid());   // darmowa skrzynka tego samego rodzaju
       else { addItem('sticker', won.id); if (won.r === 'legendary') S.stats.legendary = 1; }
       S.stats.cases = (S.stats.cases || 0) + 1;

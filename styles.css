@@ -723,3 +723,7 @@ button.case { border: 0; font: inherit; cursor: pointer; }
 .odds small { font-size: 11px; }
 #tabs a { position: relative; }
 #tabs .tabbadge { position: absolute; top: 4px; left: calc(50% + 6px); font-style: normal; margin: 0; }
+/* Trudne osiągnięcia */
+.badge.hard { border: 2px solid #1f2937; background: linear-gradient(160deg, var(--card), color-mix(in srgb, #7c3aed 10%, var(--card))); }
+.badge.hard.on { border-color: #f59e0b; box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 30%, transparent), 0 8px 24px rgba(245,158,11,.25); }
+.badge .hardtag { font-weight: 700; color: #7c3aed; }

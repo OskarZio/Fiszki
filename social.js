@@ -218,7 +218,7 @@ Object.assign(ACTIONS, {
     const m = await sendMsg(f.id, 'gift', { st: s.id }); if (!m) return render();
     addItem('sticker', s.id, -1, 'gift-out-' + m.id);
     if ((S.profile.showcase || []).includes(s.id) && !hasItem('sticker', s.id) && !isShiny(s.id)) { S.profile.showcase = S.profile.showcase.filter(x => x !== s.id); S.profile.mod = Date.now(); }
-    socialCount(); CHAT.pick = false; save();
+    S.stats.giftsSent = (S.stats.giftsSent || 0) + 1; socialCount(); CHAT.pick = false; save();
     stickerFx(s.id, `Dla ${f.nick || 'znajomego'}`); toast(`🎁 Wysłano ${s.name} ✓`); render();
   },
   'chat-nudge': async () => {
