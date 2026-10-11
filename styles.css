@@ -422,7 +422,7 @@ input[type=range] { padding: 0; border: 0; background: transparent; accent-color
 
 /* Tryb skupienia (minimalistyczny) */
 body.minimal { --accent2: var(--accent); }
-body.minimal #tabs [data-tab=train], body.minimal .coins, body.minimal .battle-cta, body.minimal .floatxp, body.minimal .celebrate { display: none !important; }
+body.minimal #tabs [data-tab=train], body.minimal #tabs .full-tab, body.minimal .coins, body.minimal .battle-cta, body.minimal .floatxp, body.minimal .celebrate { display: none !important; }
 body.minimal button.primary, body.minimal .btn.primary { background: var(--accent); box-shadow: none; }
 body.minimal .progress > div { background: var(--accent); }
 body.minimal .card { box-shadow: none; border: 1px solid var(--line); }
@@ -721,3 +721,5 @@ button.case { border: 0; font: inherit; cursor: pointer; }
 .tile.prize-respin { background: linear-gradient(160deg, #fae8ff, #ddd6fe); }
 .tile.prize-respin span { animation: spinz 2.4s linear infinite; display: inline-block; }
 .odds small { font-size: 11px; }
+#tabs a { position: relative; }
+#tabs .tabbadge { position: absolute; top: 4px; left: calc(50% + 6px); font-style: normal; margin: 0; }

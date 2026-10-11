@@ -69,6 +69,9 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 function updateMsgBadge() {
   const n = cloudOn() ? unreadMsgs().length : 0;
+  // czerwony licznik wyzwań na zakładce „Bitwy”
+  const ch = cloudOn() ? MSGS.filter(m => m.to_id === myId() && challengeOpen(m) && !m.read_at).length : 0, tab = document.querySelector('#tabs [data-tab=battles]');
+  if (tab) { let bd = tab.querySelector('.unread'); if (ch) { if (!bd) { bd = document.createElement('i'); bd.className = 'unread tabbadge'; tab.append(bd); } bd.textContent = ch; } else bd?.remove(); }
   try { if (navigator.setAppBadge) n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } catch { /* */ }
 }
 async function markRead(fid) {
@@ -258,3 +261,19 @@ ROUTES.rank = (...a) => {
   });
   return { ...r, html };
 };
+
+// Bitwy: znajomi z kontem – wyzwanie jednym kliknięciem
+const soBattles0 = ROUTES.battles;
+ROUTES.battles = (...a) => {
+  const r = soBattles0(...a); if (!r?.html || !cloudOn()) return r;
+  const open = MSGS.filter(m => m.to_id === myId() && challengeOpen(m));
+  const card = `<div class="card"><div class="row nowrap"><h3 class="grow" style="margin:0">👥 Znajomi</h3><button class="sm ghost" data-go="#/inbox">💬 Wiadomości${unreadMsgs().length ? ` <span class="unread">${unreadMsgs().length}</span>` : ''}</button></div>
+    ${open.map(m => `<div class="banner row nowrap"><span class="grow">⚔️ <b>${esc(friendName(m.from_id))}</b> wyzywa Cię${m.body?.deck ? ` · ${esc(m.body.deck)}` : ''}</span><button class="sm primary" data-act="chat-accept" data-id="${m.id}">Przyjmij</button></div>`).join('')}
+    ${CLOUD_FRIENDS.length ? CLOUD_FRIENDS.map(f => `<div class="rankrow"><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img }, 32)}</span>
+        <b class="grow nm">${esc(f.nick || 'Znajomy')}</b><button class="sm" data-go="#/chat/${f.id}">💬</button><button class="sm primary" data-act="bt-challenge-friend" data-fid="${f.id}">⚔️ Wyzwij</button></div>`).join('')
+      : '<p class="small muted">Dodaj znajomych w <a href="#/rank">rankingu</a> – potem wyzwiesz ich tutaj jednym kliknięciem.</p>'}
+    <p class="small muted" style="margin-bottom:0">Wyzwanie używa zasad z „⚙️ Zasady bitwy” poniżej – znajomy dostanie powiadomienie.</p></div>`;
+  const i = r.html.indexOf('<details class="card rules"');
+  return { ...r, html: i < 0 ? r.html + card : r.html.slice(0, i) + card + r.html.slice(i) };
+};
+ACTIONS['bt-challenge-friend'] = el => { CHAT = { fid: el.dataset.fid, pick: false, draft: '' }; ACTIONS['chat-challenge'](); };

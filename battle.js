@@ -595,7 +595,7 @@ ROUTES.battles = (parts, q) => {
   const summary = mode !== 'mem'
     ? `${mode === 'quiz' ? '🅰️ Quiz ABCD · ' : '📚 '}${esc(deck?.name || 'talia')} · ${o.n} fiszek · nauka ${o.learnSec ? o.learnSec / 60 + ' min' : '∞'} · odp. ${o.ansSec ? o.ansSec + ' s' : '∞'}${o.sab ? ' · sabotaże' : ''}`
     : `🧠 ${DISC[memDisc].name} · ${o.memN || MEM_DEFAULT[memDisc][0]} el. · ${o.memSec ? o.memSec + ' s' : 'bez limitu'}${o.sab ? ' · sabotaże' : ''}`;
-  return { tab: 'train', html: `
+  return { tab: 'battles', html: `
   <div class="row nowrap"><h1 class="grow">⚔️ Bitwy</h1>${coinsHTML()}</div>
   <div class="row nowrap elo-row">${eloHTML(myElo())}<span class="grow"></span></div>
   <p class="small muted">🏆 ${w} · 🤝 ${d} · 💪 ${l}${bs.length ? ` · ${Math.round(w / bs.length * 100)}% wygranych` : ''}</p>
