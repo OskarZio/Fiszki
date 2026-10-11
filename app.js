@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '21';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '22';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -389,7 +389,8 @@ function answer(g) {
     else s.done++;
   } else {
     const wasNew = c.srs.state === 'new';
-    const entry = { id: uid(), c: c.id, d: c.deckId, t: Date.now(), g, n: wasNew ? 1 : 0, ms: Math.min(60000, Date.now() - s.shownAt) };
+    const typed = s.mode === 'type' && s.verdict;   // m/v: tryb i wynik – wpisywane odpowiedzi są warte więcej niż przewijane
+    const entry = { id: uid(), c: c.id, d: c.deckId, t: Date.now(), g, n: wasNew ? 1 : 0, ms: Math.min(60000, Date.now() - s.shownAt), m: typed ? 'type' : 'flip', ...(typed ? { v: s.verdict } : {}) };
     s.undo = { cardId: c.id, srs: c.srs, logId: entry.id, mod: c.mod };
     c.srs = schedule(c.srs, g); touch(c); S.log.push(entry); s.done++;
     save();
@@ -512,8 +513,9 @@ function viewHome() {
     <div class="row small muted"><span class="grow">Postęp dnia</span><span>${Math.round(dayFrac * 100)}%</span></div>
     ${progress(dayFrac)}
     <div class="spacer"></div>
-    <div class="row small muted"><span class="grow">Cel dzienny (${goal})</span><span>${Math.min(today, goal)}/${goal}</span></div>
-    ${progress(today / goal, true)}
+    ${(() => { const pts = typeof studyPoints === 'function' ? Math.floor(S.log.filter(l => l.t >= dayStart()).reduce((a, l) => a + studyPoints(l), 0)) : today;
+      return `<div class="row small muted"><span class="grow">Cel dzienny (${goal} pkt nauki)</span><span>${Math.min(pts, goal)}/${goal}</span></div>
+    ${progress(pts / goal, true)}`; })()}
     <div class="spacer"></div>
     ${all.total
       ? `<button class="primary block" data-go="#/study/all/flip">▶ Ucz się wszystkiego (${all.total})</button>`

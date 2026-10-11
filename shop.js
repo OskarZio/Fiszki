@@ -43,10 +43,18 @@ const EFFECTS = [
 ];
 
 // ---------- saldo i ekwipunek
+// Ochrona przed „przeklikiwaniem”: przewinięta fiszka (tryb Fiszki) jest warta 10× mniej niż odpowiedź
+// wpisana albo wybrana w teście, a przewinięta szybciej niż w 1,5 s – nic. Stare wpisy (sprzed tej zmiany,
+// bez pola m) liczą się po staremu, żeby nikomu nie zmalało saldo.
+const FLIP_MIN_MS = 1500;
+const studyPoints = l => !l.m ? 1 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .1 : 0) : 1;                 // do celu dziennego
+const studyGems = l => !l.m ? 0 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .05 : 0) : ({ ok: .5, close: .3 }[l.v] ?? .1);   // 💎 za samą naukę
+const QUIZ_GEM_CAP = 30;   // max 💎 dziennie z testów ABCD / pisemnych
 function earnedCoins() {
   let c = Object.keys(S.ach).length * 30;
-  const perDay = {}; for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + 1; }
-  c += Object.values(perDay).filter(n => n >= (S.settings.goal || 50)).length * 20;
+  const perDay = {}; let study = 0;
+  for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); study += studyGems(l); }
+  c += Object.values(perDay).filter(n => n >= (S.settings.goal || 50)).length * 20 + Math.floor(study);
   for (const g of S.games) if (!g.practice) c += Math.floor((g.correct || 0) / 4);
   for (const b of S.battles) c += battleReward(b);
   for (const r in SET_BONUS) if (setComplete(r)) c += SET_BONUS[r];

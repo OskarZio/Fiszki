@@ -4,11 +4,13 @@
    i na komputerze nie liczy się podwójnie (synchronizacja łączy wpisy po id). */
 
 const todayLog = () => { const t0 = dayStart(); return S.log.filter(l => l.t >= t0); };
+const todayPoints = () => Math.floor(todayLog().reduce((a, l) => a + studyPoints(l), 0));
+const todayGood = () => todayLog().filter(l => l.m === 'type' && l.v === 'ok').length + (S.stats['quizok_' + dayKey(Date.now())] || 0);
 const todayOf = arr => { const t0 = dayStart(); return (arr || []).filter(x => (x.t || x.created || 0) >= t0); };
 const QUESTS = [
-  { id: 'rev20', icon: '🔁', name: 'Zrób 20 powtórek', goal: 20, reward: 15, v: () => todayLog().length },
-  { id: 'rev50', icon: '🔥', name: 'Zrób 50 powtórek', goal: 50, reward: 30, v: () => todayLog().length },
-  { id: 'good15', icon: '✅', name: '15 dobrych odpowiedzi', goal: 15, reward: 15, v: () => todayLog().filter(l => l.g >= 3).length },
+  { id: 'rev20', icon: '🔁', name: 'Zdobądź 20 pkt nauki', goal: 20, reward: 15, v: todayPoints },
+  { id: 'rev50', icon: '🔥', name: 'Zdobądź 50 pkt nauki', goal: 50, reward: 30, v: todayPoints },
+  { id: 'good15', icon: '✅', name: '15 poprawnie wpisanych lub w teście', goal: 15, reward: 15, v: todayGood },
   { id: 'new5', icon: '🌱', name: 'Naucz się 5 nowych kart', goal: 5, reward: 15, v: () => todayLog().filter(l => l.n).length },
   { id: 'add5', icon: '➕', name: 'Dodaj 5 nowych fiszek', goal: 5, reward: 15, v: () => todayOf(S.notes).length },
   { id: 'game', icon: '🧠', name: 'Zagraj w grę pamięciową', goal: 1, reward: 10, v: () => todayOf(S.games).length },
@@ -39,6 +41,10 @@ function questsCardHTML() {
   const st = questState();
   return `<div class="card" id="quests"><div class="row nowrap"><h2 class="grow" style="margin:0">📋 Zadania dnia</h2><span class="small muted">${st.list.filter(q => q.claimed).length}/3</span></div>
     <p class="small muted">Nowe zadania codziennie o północy. Za komplet: +${QUEST_BONUS} 💎.</p>
+    <details class="small muted"><summary>Jak liczą się punkty nauki i 💎?</summary>
+      <ul class="perks"><li><b>Wpisz</b> albo <b>test ABCD / pisemny</b>: 1 pkt za odpowiedź, 💎 za każdą poprawną.</li>
+      <li><b>Przewijanie fiszek</b>: 10 fiszek = tyle co 1 wpisana. Przewinięte w mniej niż 1,5 s nie liczą się wcale.</li>
+      <li>Z testów max ${QUIZ_GEM_CAP} 💎 dziennie. Cel dzienny i jego premia liczą się w punktach nauki.</li></ul></details>
     ${st.list.map(q => `<div class="quest${q.claimed ? ' got' : ''}"><span class="qi">${q.icon}</span>
       <div class="grow"><div class="row nowrap"><b class="grow">${esc(q.name)}</b><small class="muted">${q.cur}/${q.goal}</small></div>${progress(q.cur / q.goal, true)}</div>
       ${q.claimed ? '<span class="c-rev">✓</span>' : `<button class="sm${q.done ? ' primary pulse' : ''}" data-act="quest-claim" data-id="${q.id}" ${q.done ? '' : 'disabled'}>+${q.reward} 💎</button>`}</div>`).join('')}
@@ -66,3 +72,14 @@ homeExtrasHTML = function () {
 // Sklep: karta zadań na górze
 const qShop0 = ROUTES.shop;
 ROUTES.shop = (...a) => { const r = qShop0(...a); return { ...r, html: r.html.replace('<div class="card">', questsCardHTML() + '<div class="card">') }; };
+
+// Testy ABCD / pisemne: 💎 za poprawne odpowiedzi (min. 5 pytań, limit dzienny)
+on('quiz', (pct, total) => {
+  if (total < 5) return;
+  const good = Math.round(pct * total / 100), day = dayKey(Date.now()), t0 = dayStart();
+  S.stats['quizok_' + day] = (S.stats['quizok_' + day] || 0) + good;
+  const already = S.wallet.filter(w => w.why === 'quiz' && w.t >= t0).reduce((a, w) => a + w.n, 0);
+  const n = Math.min(Math.floor(good * .5), QUIZ_GEM_CAP - already);
+  if (n > 0) { S.wallet.push({ id: uid(), n, why: 'quiz', t: Date.now() }); toast(`+${n} 💎 za test`); }
+  save();
+});

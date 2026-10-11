@@ -132,8 +132,10 @@ on('review', (c, g, wasNew) => {
   S.stats.combo = Math.max(S.stats.combo || 0, combo);
   const xp = wasNew ? 3 : g > 1 ? 2 : 1;
   floatText(`+${xp} XP${combo >= 5 ? `  🔥×${combo}` : ''}`, combo >= 10 && combo % 10 === 0);
-  const today = reviewsToday(), goal = S.settings.goal || 50;
-  if (today === goal) { emit('goal'); setTimeout(() => celebrate('🎯 Cel dzienny osiągnięty!', `${goal} powtórek – świetna robota!`), 300); grantDailyCase(); }
+  // cel dzienny liczony w punktach nauki (przewijanie 10× mniej) – przekroczenie progu tą powtórką
+  const goal = S.settings.goal || 50, pf = typeof studyPoints === 'function' ? studyPoints : () => 1;
+  const pts = S.log.filter(l => l.t >= dayStart()).reduce((a, l) => a + pf(l), 0), last = S.log[S.log.length - 1];
+  if (pts >= goal && pts - (last ? pf(last) : 1) < goal) { emit('goal'); setTimeout(() => celebrate('🎯 Cel dzienny osiągnięty!', `${goal} pkt nauki – świetna robota!`), 300); grantDailyCase(); }
 });
 on('sessionEnd', s => { combo = 0; if (!s.cram && s.done >= 5) grantDailyCase(); if (s.done >= 10) setTimeout(() => confetti(80), 200); });
 // Codzienna skrzynka: raz dziennie za ukończony zestaw (sesję) albo cel dzienny

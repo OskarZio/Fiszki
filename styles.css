@@ -661,3 +661,10 @@ button.case { border: 0; font: inherit; cursor: pointer; }
 .msgpop > .grow { min-width: 0; }
 .nickrow > .nm.lt { flex: 0 100 auto; min-width: 0; }
 .nickrow > .nm.nk { flex-shrink: 0; max-width: 62%; }
+/* Bitwa: quiz ABCD */
+.abcd { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.abcd button { display: flex; align-items: center; gap: 10px; text-align: left; min-height: 64px; padding: 10px 12px; overflow-wrap: anywhere; }
+.abcd button b { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-size: 14px; }
+@media (max-width: 380px) { .abcd { grid-template-columns: 1fr; } .abcd button { min-height: 52px; } }
+.card.flash.short { min-height: 0; padding-top: 22px; padding-bottom: 22px; }
+.abcd button { justify-content: flex-start; }

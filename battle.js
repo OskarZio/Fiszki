@@ -102,7 +102,7 @@ function memItems(disc, n, seed) {
 }
 const memNT = st => [st.n || MEM_DEFAULT[st.disc][0], st.memo ?? MEM_DEFAULT[st.disc][1]];
 // Zestaw fiszek do bitwy – tylko tekst (bez obrazów), z kart talii
-function battleCards(deckId, n, dir) {
+function battleCards(deckId, n, dir, abcd) {
   const out = [];
   for (const c of shuffle(S.cards.filter(c => c.deckId === deckId))) {
     const note = noteById(c.noteId); if (!note) continue;
@@ -115,10 +115,26 @@ function battleCards(deckId, n, dir) {
     out.push(flip ? { q: a, a: q } : { q, a });
     if (out.length >= n) break;
   }
+  if (abcd) addChoices(out, deckId, dir);
   return out;
 }
+// Quiz ABCD: 3 błędne odpowiedzi z innych fiszek tej talii (te same dla obu graczy – lecą w ustawieniach bitwy)
+function addChoices(cards, deckId, dir = 'qa') {
+  const pool = new Set(cards.map(c => c.a));
+  for (const c of S.cards.filter(c => c.deckId === deckId)) {
+    const note = noteById(c.noteId); if (!note) continue;
+    if (note.type === 'basic') { for (const x of [dir !== 'aq' && note.back, dir !== 'qa' && note.front]) if (x && x.trim() && x.length <= 80) pool.add(x); }
+    else if (note.type === 'cloze') { const v = cardView(c); if (v.ans?.trim() && v.ans.length <= 80) pool.add(v.ans); }
+  }
+  const all = [...pool], norm = x => String(x).trim().toLowerCase();
+  for (const c of cards) {
+    // podobna długość = trudniej zgadnąć po wyglądzie
+    const wrong = shuffle(all.filter(x => norm(x) !== norm(c.a))).sort((x, y) => Math.abs(x.length - c.a.length) - Math.abs(y.length - c.a.length)).slice(0, 8);
+    c.opts = shuffle([c.a, ...shuffle(wrong).slice(0, 3)]);
+  }
+}
 const clozePlainQ = (text, ord) => text.replace(CLOZE_RE, (m, num, ans, hint) => num === ord ? `[${hint || '…'}]` : ans);
-const judge = (given, correct) => !!given && checkAnswer(given, correct, B.setup.opts?.tol || 'normal') !== 'wrong';
+const judge = (given, correct) => !!given && (B.setup.opts?.abcd ? given === correct : checkAnswer(given, correct, B.setup.opts?.tol || 'normal') !== 'wrong');
 
 // ============================================================ Start bitwy
 function newBattle(o) {
@@ -235,7 +251,7 @@ function finishBattle() {
   if (won === 0 && B.myTotalMs && B.oppTotalMs) won = B.myTotalMs < B.oppTotalMs ? 1 : B.myTotalMs > B.oppTotalMs ? -1 : 0;
   B.phase = 'end'; B.result = { ...sc, won };
   const rec = { id: B.id, t: Date.now(), mode: B.setup.mode, disc: B.setup.disc, deck: B.setup.deckName, opp: B.opp?.nick, oppAvatar: B.opp?.avatar,
-    my: sc.my, them: sc.opp, n: sc.n, won, bot: B.role === 'bot', myMs: B.myTotalMs, oppMs: B.oppTotalMs, blur: B.myBlur };
+    my: sc.my, them: sc.opp, n: sc.n, won, abcd: !!B.setup.opts?.abcd, bot: B.role === 'bot', myMs: B.myTotalMs, oppMs: B.oppTotalMs, blur: B.myBlur };
   if (B.role !== 'bot' && Number.isFinite(B.opp?.elo)) { rec.oppElo = B.opp.elo; rec.elo = eloDelta(myElo(), clamp(B.opp.elo, 100, 3000), won, S.battles.filter(b => b.elo != null).length); }
   S.battles.push(rec);
   if (won === 1) {
@@ -253,7 +269,7 @@ function maybeRematch() {
   const st = B.setup, o = st.opts || {};
   let fresh;
   if (st.mode === 'mem') fresh = { ...st, seed: Math.random() * 1e9 | 0 };
-  else { const c = st.deckId && deckById(st.deckId) ? battleCards(st.deckId, st.cards.length, o.dir || 'qa') : []; fresh = { ...st, cards: c.length >= 3 ? c : shuffle([...st.cards]) }; }
+  else { const c = st.deckId && deckById(st.deckId) ? battleCards(st.deckId, st.cards.length, o.dir || 'qa', o.abcd) : []; fresh = { ...st, cards: c.length >= 3 ? c : shuffle([...st.cards]) }; }
   B.ch.send({ t: 'rs', setup: fresh });
   restartBattle(fresh);
 }
@@ -408,7 +424,7 @@ ROUTES.battle = () => {
     const link = APP_URL() + '#/battles?join=' + B.code;
     return { focus: true, html: `<div class="studybar">${close}<div class="title">⚔️ Pokój bitwy</div></div>
       <div class="card center"><p>Podaj znajomemu kod:</p><div class="code">${B.code}</div>
-      <p class="small muted">${B.setup.mode === 'cards' ? `Fiszki: ${esc(B.setup.deckName)} · ${B.setup.cards.length} kart` : `Pamięć: ${DISC[B.setup.disc].name} · ${memNT(B.setup)[0]}`}</p>
+      <p class="small muted">${B.setup.mode === 'cards' ? `${B.setup.opts?.abcd ? '🅰️ Quiz ABCD' : 'Fiszki'}: ${esc(B.setup.deckName)} · ${B.setup.cards.length} kart` : `Pamięć: ${DISC[B.setup.disc].name} · ${memNT(B.setup)[0]}`}</p>
       ${rulesHTML(B.setup)}
       <button class="primary block" data-act="bt-share" data-link="${esc(link)}">📤 Wyślij zaproszenie</button>
       <div class="spinner"></div><p class="small muted">Czekam na przeciwnika…</p></div>` };
@@ -420,7 +436,7 @@ ROUTES.battle = () => {
   }
   if (B.phase === 'countdown') {
     const el = Math.max(0, 3.5 - (B.goAt - Date.now()) / 1000).toFixed(2);
-    return { focus: true, html: hpBars() + `<div class="getready"><b>Przygotuj się…</b><div class="readybar"><div style="animation-delay:-${el}s"></div></div></div><p class="center">${B.setup.mode === 'cards' ? `📖 Przejrzyj ${B.setup.cards.length} fiszek, potem test z pamięci` : `🧠 ${DISC[B.setup.disc].name}: zapamiętaj i odtwórz`}</p>${rulesHTML(B.setup)}` };
+    return { focus: true, html: hpBars() + `<div class="getready"><b>Przygotuj się…</b><div class="readybar"><div style="animation-delay:-${el}s"></div></div></div><p class="center">${B.setup.mode === 'cards' ? `📖 Przejrzyj ${B.setup.cards.length} fiszek, potem ${B.setup.opts?.abcd ? 'quiz ABCD – liczą się poprawne odpowiedzi' : 'test z pamięci'}` : `🧠 ${DISC[B.setup.disc].name}: zapamiętaj i odtwórz`}</p>${rulesHTML(B.setup)}` };
   }
   const head = `<div class="studybar">${close}<div class="title">⚔️ Bitwa</div><b class="timer" id="btimer"></b></div>` + hpBars();
   if (B.setup.mode === 'mem' && (B.phase === 'learn' || B.phase === 'recall') && GAME?.battle) {
@@ -444,7 +460,7 @@ ROUTES.battle = () => {
     const frozen = B.frozenUntil > Date.now();
     onMount(() => {
       battleTimer();
-      const inp = $('#bt-in');
+      const inp = $('#bt-in'); if (!inp) return;
       // odświeżenie ekranu (np. trafienie przeciwnika) nie kasuje tego, co wpisujesz
       if (B.draft?.i === i) inp.value = B.draft.v;
       inp.addEventListener('input', () => { B.draft = { i, v: inp.value }; });
@@ -454,10 +470,12 @@ ROUTES.battle = () => {
     });
     const hasSpeech = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
     return { focus: true, html: head + `<div class="row small muted"><span class="grow">Pytanie ${B.cur + 1}/${B.order.length}</span><span id="cardleft"></span></div>
-      <div class="card flash${B.fogUntil > Date.now() ? ' fog' : ''}"><div class="ctext">${fmt(it.q)}</div></div>
-      <div class="row nowrap"><input id="bt-in" class="grow" placeholder="Odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" ${frozen ? 'disabled' : ''}>
+      <div class="card flash${it.opts ? ' short' : ''}${B.fogUntil > Date.now() ? ' fog' : ''}"><div class="ctext">${fmt(it.q)}</div></div>
+      ${it.opts ? `<div class="abcd">${it.opts.map((x, k) => `<button data-act="bt-abcd" data-k="${k}" ${frozen ? 'disabled' : ''}><b>${'ABCD'[k]}</b><span>${fmt(x)}</span></button>`).join('')}</div>
+      <div class="spacer"></div><button class="block" data-act="bt-skip">Nie wiem</button>`
+      : `<div class="row nowrap"><input id="bt-in" class="grow" placeholder="Odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" ${frozen ? 'disabled' : ''}>
         ${hasSpeech ? `<button data-act="bt-mic" class="${speech ? 'primary' : ''}" title="Powiedz odpowiedź">🎤</button>` : ''}</div>
-      <div class="spacer"></div><div class="row nowrap"><button class="grow" data-act="bt-skip">Nie wiem</button><button class="primary grow" data-act="bt-submit">Odpowiedz ➤</button></div>
+      <div class="spacer"></div><div class="row nowrap"><button class="grow" data-act="bt-skip">Nie wiem</button><button class="primary grow" data-act="bt-submit">Odpowiedz ➤</button></div>`}
       ${sabotageBar()}${stickerBar()}${overlays()}` };
   }
   if (B.phase === 'waitopp') {
@@ -574,8 +592,8 @@ ROUTES.battles = (parts, q) => {
   const sel = (id, list, cur) => `<select data-btopt="${id}">${list.map(([v, l]) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   const memDisc = ms.btDisc || 'numbers';
   const deck = deckById(ms.btDeck) || S.decks[0];
-  const summary = mode === 'cards'
-    ? `📚 ${esc(deck?.name || 'talia')} · ${o.n} fiszek · nauka ${o.learnSec ? o.learnSec / 60 + ' min' : '∞'} · odp. ${o.ansSec ? o.ansSec + ' s' : '∞'}${o.sab ? ' · sabotaże' : ''}`
+  const summary = mode !== 'mem'
+    ? `${mode === 'quiz' ? '🅰️ Quiz ABCD · ' : '📚 '}${esc(deck?.name || 'talia')} · ${o.n} fiszek · nauka ${o.learnSec ? o.learnSec / 60 + ' min' : '∞'} · odp. ${o.ansSec ? o.ansSec + ' s' : '∞'}${o.sab ? ' · sabotaże' : ''}`
     : `🧠 ${DISC[memDisc].name} · ${o.memN || MEM_DEFAULT[memDisc][0]} el. · ${o.memSec ? o.memSec + ' s' : 'bez limitu'}${o.sab ? ' · sabotaże' : ''}`;
   return { tab: 'train', html: `
   <div class="row nowrap"><h1 class="grow">⚔️ Bitwy</h1>${coinsHTML()}</div>
@@ -588,15 +606,16 @@ ROUTES.battles = (parts, q) => {
     <div class="row nowrap" style="margin-top:10px"><input id="bt-code" class="grow" placeholder="Kod od znajomego" maxlength="6" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"><button data-act="bt-join">Dołącz</button></div>
   </div>
   <details class="card rules"${ms.rulesOpen ? ' open' : ''}><summary><b>⚙️ Zasady bitwy</b><div class="small muted">${summary}</div></summary>
-    <div class="seg" style="display:flex;margin-top:10px"><button class="grow ${mode === 'cards' ? 'on' : ''}" data-act="bt-mode" data-m="cards">📚 Fiszki</button><button class="grow ${mode === 'mem' ? 'on' : ''}" data-act="bt-mode" data-m="mem">🧠 Pamięć</button></div>
-    ${mode === 'cards' ? `
+    <div class="seg" style="display:flex;margin-top:10px"><button class="grow ${mode === 'cards' ? 'on' : ''}" data-act="bt-mode" data-m="cards">📚 Fiszki</button><button class="grow ${mode === 'quiz' ? 'on' : ''}" data-act="bt-mode" data-m="quiz">🅰️ ABCD</button><button class="grow ${mode === 'mem' ? 'on' : ''}" data-act="bt-mode" data-m="mem">🧠 Pamięć</button></div>
+    ${mode === 'quiz' ? '<p class="small muted" style="margin:8px 0 0">Każde pytanie ma 4 odpowiedzi do wyboru – wygrywa ten, kto ma więcej poprawnych (przy remisie: szybszy).</p>' : ''}
+    ${mode !== 'mem' ? `
       <label class="field"><span>Talia</span><select id="bt-deck">${S.decks.map(dk => `<option value="${dk.id}" ${deck?.id === dk.id ? 'selected' : ''}>${esc(dk.name)}</option>`).join('')}</select></label>
       <div class="grid2">
         <label class="field"><span>Liczba fiszek</span><input type="number" inputmode="numeric" min="3" max="50" data-btopt="n" value="${o.n}"></label>
         <label class="field"><span>Kierunek</span>${sel('dir', [['qa', 'pytanie → odp.'], ['aq', 'odp. → pytanie'], ['mix', 'mieszany']], o.dir)}</label>
         <label class="field"><span>Czas na naukę</span>${sel('learnSec', [[0, 'bez limitu'], [60, '1 min'], [120, '2 min'], [180, '3 min'], [300, '5 min'], [600, '10 min']], o.learnSec)}</label>
         <label class="field"><span>Czas na odpowiedź</span>${sel('ansSec', [[0, 'bez limitu'], [10, '10 s'], [15, '15 s'], [25, '25 s'], [45, '45 s'], [60, '60 s']], o.ansSec)}</label>
-        <label class="field"><span>Sprawdzanie</span>${sel('tol', [['strict', 'dokładne'], ['normal', 'normalne'], ['lenient', 'łagodne']], o.tol)}</label>
+        ${mode === 'quiz' ? '' : `<label class="field"><span>Sprawdzanie</span>${sel('tol', [['strict', 'dokładne'], ['normal', 'normalne'], ['lenient', 'łagodne']], o.tol)}</label>`}
         <label class="field"><span>Wynik rywala</span>${sel('live', [['1', 'na żywo'], ['0', 'ukryty do końca']], o.live ? '1' : '0')}</label>
       </div>`
       : `<div class="grid2">
@@ -611,7 +630,7 @@ ROUTES.battles = (parts, q) => {
   </details>
   ${bs.length ? `<details class="card"><summary><b>📊 Historia</b> <span class="small muted">(${bs.length})</span></summary>
     ${Object.keys(heads).length ? `<h3>Bilans ze znajomymi</h3>${Object.entries(heads).map(([n, h]) => `<div class="kv"><span>${esc(h.av || '')} ${esc(n)}</span><b><span class="c-rev">${h.w}</span> : <span class="c-lrn">${h.l}</span>${h.d ? ` (${h.d} rem.)` : ''}</b></div>`).join('')}` : ''}
-    <h3>Ostatnie bitwy</h3>${bs.slice(-10).reverse().map(b => `<div class="kv"><span>${b.won === 1 ? '🏆' : b.won === 0 ? '🤝' : '💪'} ${esc(b.oppAvatar || '')} ${esc(b.opp || 'Bot')} · ${b.mode === 'cards' ? esc(b.deck || 'fiszki') : DISC[b.disc]?.name}</span><b>${b.my}:${b.them}</b></div>`).join('')}</details>` : ''}
+    <h3>Ostatnie bitwy</h3>${bs.slice(-10).reverse().map(b => `<div class="kv"><span>${b.won === 1 ? '🏆' : b.won === 0 ? '🤝' : '💪'} ${esc(b.oppAvatar || '')} ${esc(b.opp || 'Bot')} · ${b.mode === 'cards' ? (b.abcd ? '🅰️ ' : '') + esc(b.deck || 'fiszki') : DISC[b.disc]?.name}</span><b>${b.my}:${b.them}</b></div>`).join('')}</details>` : ''}
   <div class="row"><button class="grow sm" data-go="#/shop">🛒 Sklep</button><button class="grow sm" data-go="#/theme">🎨 Motywy</button></div>` };
 };
 document.addEventListener('toggle', e => { if (e.target.classList?.contains('rules')) { memSettings().rulesOpen = e.target.open; save(); } }, true);
@@ -656,9 +675,11 @@ function friendSetup() {
     return { mode: 'mem', disc, seed: Math.random() * 1e9 | 0, n: clamp(o.memN || MEM_DEFAULT[disc][0], 3, MAX_ITEMS[disc]), memo: o.memSec, opts: { sab: o.sab } };
   }
   const deckId = $('#bt-deck')?.value || (deckById(ms.btDeck) || S.decks[0])?.id;
-  const cards = battleCards(deckId, clamp(o.n, 3, 50), o.dir);
+  const abcd = ms.btMode === 'quiz';
+  const cards = battleCards(deckId, clamp(o.n, 3, 50), o.dir, abcd);
   if (cards.length < 3) { toast('W tej talii jest za mało fiszek tekstowych (min. 3)'); return null; }
-  return { mode: 'cards', deckId, deckName: deckById(deckId)?.name, cards, opts: { learnSec: o.learnSec, ansSec: o.ansSec, tol: o.tol, live: o.live, sab: o.sab } };
+  if (abcd && cards.some(c => c.opts.length < 2)) { toast('Do quizu ABCD talia potrzebuje kilku różnych odpowiedzi'); return null; }
+  return { mode: 'cards', deckId, deckName: deckById(deckId)?.name, cards, opts: { learnSec: o.learnSec, ansSec: o.ansSec, tol: o.tol, live: o.live, sab: o.sab, abcd } };
 }
 
 Object.assign(ACTIONS, {
@@ -677,6 +698,7 @@ Object.assign(ACTIONS, {
   'bt-flip': () => { B.lflip = !B.lflip; render(); },
   'bt-lnav': el => { const n = B.setup.cards.length; B.li = (B.li + +el.dataset.d + n) % n; B.lflip = false; B.seen.add(B.li); render(); },
   'bt-submit': () => submitAnswer($('#bt-in').value.trim()),
+  'bt-abcd': el => { const it = B?.setup?.cards[B.order[B.cur]]; if (it?.opts) submitAnswer(it.opts[+el.dataset.k]); },
   'bt-skip': () => submitAnswer(''),
   'bt-sab': el => { useSabotage(el.dataset.k); renderBattle(); },
   'bt-cram-mistakes': () => {
