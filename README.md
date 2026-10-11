@@ -28,6 +28,12 @@ Aplikacja webowa (PWA) do nauki z powtórkami rozłożonymi w czasie. Działa of
 - **⚙️ Własne ustawienia**: kroki nauki, maks. odstęp, premia „Łatwe”, dokładność sprawdzania odpowiedzi, animacje, dźwięki; w grach pamięciowych dowolna liczba elementów i czas (także bez limitu); w bitwach: liczba fiszek, kierunek, czas na naukę i odpowiedź (lub bez limitu), dokładność, ukryty/na żywo wynik, sabotaże.
 - **🔊 Własne dźwięki**: wgraj piosenkę na wygraną albo efekt na poprawną fiszkę, dodanie fiszki czy osiągnięcie – każdy osobno.
 - **🛡️ Bezpieczeństwo danych**: codzienne kopie lokalne, kosz (30 dni), historia wersji w chmurze, kopia do pliku/iCloud i przypomnienie, gdy dane nie są zabezpieczone.
+- **🫀 Atlas (anatomia)**: własne ryciny ze strukturami – przegląd, nazywanie (wpisując lub mówiąc), wskazywanie na obrazie i rysowanie z pamięci z porównaniem (nałożenie / obok siebie) i historią prób.
+- **🖼️ Galerie zdjęć** w tematach (podgląd pełnoekranowy, podpisy, zdjęcie → fiszka z lukami albo atlas).
+- **📌 Karteczki-przypominajki** na ekranie startowym (kolory, terminy) i eksport jako tapeta / ekran blokady.
+- **3 tryby**: Pełny, Skupienie (bez grywalizacji, z pałacami pamięci) i Pełne skupienie (tylko nauka).
+- **Personalizacja**: rozmiar i czcionka fiszek, wyrównanie, narożniki, 2 lub 4 przyciski ocen, czytanie na głos, gradienty lub jednolite kolory, układ kompaktowy, animacje naklejek.
+- **Elo i rangi** w bitwach (Brąz → Mistrz), bot dopasowujący się do Twojego poziomu, własne zdjęcie jako awatar.
 - **Synchronizacja telefon ⇄ komputer** przez prywatny GitHub Gist (token z zakresem `gist`) albo eksport/import pliku.
 
 ## Uruchomienie (GitHub Pages)

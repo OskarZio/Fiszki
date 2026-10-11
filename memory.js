@@ -85,6 +85,8 @@ ROUTES.train = () => {
     <p class="small muted">Każdej liczbie 00–99 przypisz obraz (np. 37 = <b>mak</b>). Dzięki temu długi ciąg cyfr zamieniasz w historyjkę obrazów w pałacu pamięci.</p>
     <div class="row small"><span class="grow">Uzupełnione obrazy: <b>${filled}/100</b></span></div>${progress(filled / 100, true)}
     <div class="spacer"></div><div class="row"><button class="primary grow" data-go="#/major">Otwórz system</button><button class="grow" data-go="#/major?drill=1" ${filled ? '' : 'disabled'}>⚡ Szybki trening</button></div></div>
+  <div class="card row nowrap" data-go="#/atlas" style="cursor:pointer"><span style="font-size:34px">🫀</span><div class="grow"><b>Atlas – ryciny</b>
+    <div class="small muted">nazywanie, wskazywanie i rysowanie struktur z pamięci</div></div><span>›</span></div>
   <div class="card"><h2 style="margin-top:0">🏛️ Pałace pamięci</h2>
     <p class="small muted">${S.palaces.length} ${plural(S.palaces.length, 'pałac', 'pałace', 'pałaców')} · ${pins} ${plural(pins, 'pinezka', 'pinezki', 'pinezek')}. Pinezki możesz wykorzystać jako trasę (loci) w grach – w ustawieniach gry wybierz pałac.</p>
     <button class="block" data-go="#/palaces">Otwórz pałace</button></div>
@@ -117,11 +119,13 @@ function gameSetup(d, D) {
     ${lv === 4 ? `<div class="row nowrap"><label class="field grow"><span>Ile ${D.unit} (1–${MAX_ITEMS[d]})</span><input type="number" inputmode="numeric" min="1" max="${MAX_ITEMS[d]}" data-memcustom="n" value="${cu.n ?? n}"></label>
       <label class="field grow"><span>Czas (s, 0 = bez limitu)</span><input type="number" inputmode="numeric" min="0" max="3600" data-memcustom="t" value="${cu.t ?? t}"></label></div>` : ''}
     <p class="small muted">Zapamiętaj <b>${n} ${D.unit}</b> ${t ? `w <b>${t} s</b>` : '<b>bez limitu czasu</b> (liczy się, jak szybko skończysz)'}, potem odtwórz je w tej samej kolejności.</p>
+    <details class="more-opts"><summary>Więcej opcji</summary>
     <label class="field"><span>Grupuj po (ile elementów na jeden obraz/locus)</span>
       <select data-memopt="group">${[1, 2, 3, 4, 6].map(g => `<option value="${g}" ${(ms.group?.[d] ?? D.group) === g ? 'selected' : ''}>${g}</option>`).join('')}</select></label>
     <label class="field"><span>Trasa z pałacu pamięci (opcjonalnie)</span>
       <select data-memopt="palace"><option value="">— bez pałacu —</option>${S.palaces.map(p => `<option value="${p.id}" ${palId === p.id ? 'selected' : ''}>${esc(p.name)} (${palaceLoci(p.id).length} pinezek)</option>`).join('')}</select></label>
     ${d === 'numbers' ? `<label class="check"><input type="checkbox" data-memopt="hints" ${ms.hints ? 'checked' : ''}> Pokazuj podpowiedzi z systemu liczbowego (tryb nauki – bez rekordu)</label>` : ''}
+    </details>
     <button class="primary block" data-act="game-start" data-d="${d}" style="min-height:54px">▶ Start</button>
     ${pb ? `<p class="center small">🏆 Rekord: <b>${pb.correct}/${n}</b> w ${fmtTime(pb.memoMs)}</p>` : ''}
   </div>

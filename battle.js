@@ -11,7 +11,40 @@ const RELAY = 'https://ntfy.sh';
 const LOBBY = 'fiszki-lobby-v1';
 const MY_ID = uid() + uid();
 let B = null;            // bieżąca bitwa
-const BOT_LEVELS = [['Łatwy', .55, [5, 10]], ['Średni', .75, [3, 7]], ['Trudny', .92, [2, 4.5]]];
+// Bot: [nazwa, bazowa skuteczność (null = dopasowany do Ciebie), czas odpowiedzi w s]
+const BOT_LEVELS = [['Dopasowany', null, [3, 8]], ['Łatwy', .4, [5, 11]], ['Średni', .58, [4, 9]], ['Trudny', .74, [3, 7]], ['Ekspert', .88, [2, 5]]];
+function myBattleAccuracy() {
+  const recent = S.battles.slice(-10).filter(b => b.n);
+  return recent.length ? recent.reduce((a, b) => a + b.my / b.n, 0) / recent.length : .6;
+}
+function botParams(level) {
+  const [name, base, speed] = BOT_LEVELS[level] || BOT_LEVELS[0];
+  const acc = base ?? clamp(myBattleAccuracy() + (Math.random() - .5) * .16, .3, .9);
+  return { name, acc, a: speed[0], b: speed[1] };
+}
+// Bot „zapomina” jak człowiek: im więcej materiału i im krócej się uczył, tym więcej błędów
+function botCardChance(acc, n, learnMs, answerLen) {
+  const load = 1 - Math.min(.35, Math.max(0, n - 5) * .012);
+  const time = clamp(learnMs / (n * 7000), .55, 1.05);
+  const len = answerLen > 25 ? .8 : answerLen > 12 ? .92 : 1;
+  return clamp(acc * load * time * len, .05, .97);
+}
+function typo(s) {
+  if (!s || s.length < 3 || Math.random() < .35) return Math.random() < .5 ? '' : 'nie wiem';
+  const a = [...s], i = 1 + (Math.random() * (a.length - 2) | 0);
+  Math.random() < .5 ? a.splice(i, 1) : ([a[i], a[i - 1]] = [a[i - 1], a[i]]);
+  return a.join('').slice(0, Math.max(2, a.length - (Math.random() < .3 ? 3 : 0)));
+}
+// ============================================================ Elo
+const ELO_START = 1000;
+const myElo = () => ELO_START + S.battles.reduce((a, b) => a + (b.elo || 0), 0);
+const ELO_TIERS = [[0, '🥉', 'Brąz'], [1000, '🥈', 'Srebro'], [1150, '🥇', 'Złoto'], [1300, '💠', 'Platyna'], [1450, '💎', 'Diament'], [1600, '👑', 'Mistrz']];
+const eloTier = e => [...ELO_TIERS].reverse().find(t => e >= t[0]);
+const eloHTML = e => { const t = eloTier(e); return `<span class="elo">${t[1]} ${e} <small>${t[2]}</small></span>`; };
+function eloDelta(mine, theirs, won, games) {
+  const exp = 1 / (1 + 10 ** ((theirs - mine) / 400)), score = won === 1 ? 1 : won === 0 ? .5 : 0;
+  return Math.round((games < 10 ? 40 : 24) * (score - exp));
+}
 const MEM_DEFAULT = { numbers: [40, 60], words: [20, 60], images: [20, 60], cards: [26, 120] };
 const SABOTAGE = {
   freeze: { icon: '❄️', name: 'Zamrożenie', desc: 'przeciwnik nic nie może zrobić przez 5 s', cost: 30 },
@@ -55,7 +88,7 @@ function channel(topic, onMsg) {
     close: () => { closed = true; es?.close(); },
   };
 }
-const me = () => ({ nick: S.profile.nick || 'Gracz', avatar: S.profile.avatar || '🦊', level: levelOf(xpTotal()), showcase: S.profile.showcase || [] });
+const me = () => ({ elo: myElo(), nick: S.profile.nick || 'Gracz', avatar: S.profile.avatar || '🦊', avatarImg: safeImg(S.profile.avatarImg), level: levelOf(xpTotal()), showcase: S.profile.showcase || [] });
 const roomCode = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random() * 32 | 0]).join('');
 const rngFrom = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 function seededShuffle(a, rnd) { for (let i = a.length - 1; i > 0; i--) { const j = rnd() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -111,7 +144,7 @@ function onRoomMsg(m) {
     if (B.opp && B.opp.id !== m.from) return B.ch.send({ t: 'full', to: m.from });
     if (B.opp) { if (B.phase === 'countdown') B.ch.send({ t: 'setup', to: m.from, setup: B.setup, host: me() }); return; }
     if (B.phase === 'seeking') stopSeek();
-    B.opp = { id: m.from, nick: m.nick, avatar: m.avatar, level: m.level, showcase: m.showcase };
+    B.opp = { id: m.from, nick: m.nick, avatar: m.avatar, avatarImg: m.avatarImg, level: m.level, showcase: m.showcase, elo: m.elo };
     B.ch.send({ t: 'setup', to: m.from, setup: B.setup, host: me() });
     startCountdown(); return;
   }
@@ -140,7 +173,7 @@ function onRoomMsg(m) {
 }
 function startCountdown() {
   B.phase = 'countdown'; B.goAt = Date.now() + 3500; renderBattle();
-  const t = setInterval(() => { if (!B || B.phase !== 'countdown') return clearInterval(t); if (Date.now() >= B.goAt) { clearInterval(t); beginLearn(); } else renderBattle(); }, 250);
+  const t = setInterval(() => { if (!B || B.phase !== 'countdown') return clearInterval(t); if (Date.now() >= B.goAt) { clearInterval(t); beginLearn(); } }, 200);
 }
 function beginLearn() {
   const st = B.setup;
@@ -199,6 +232,7 @@ function finishBattle() {
   B.phase = 'end'; B.result = { ...sc, won };
   const rec = { id: B.id, t: Date.now(), mode: B.setup.mode, disc: B.setup.disc, deck: B.setup.deckName, opp: B.opp?.nick, oppAvatar: B.opp?.avatar,
     my: sc.my, them: sc.opp, n: sc.n, won, bot: B.role === 'bot', myMs: B.myTotalMs, oppMs: B.oppTotalMs, blur: B.myBlur };
+  if (B.role !== 'bot' && Number.isFinite(B.opp?.elo)) { rec.oppElo = B.opp.elo; rec.elo = eloDelta(myElo(), clamp(B.opp.elo, 100, 3000), won, S.battles.filter(b => b.elo != null).length); }
   S.battles.push(rec);
   if (won === 1) {
     addItem('case', B.setup.mode === 'cards' && sc.n >= 10 && B.role !== 'bot' ? 'epic' : 'basic', 1, 'case-' + B.id);
@@ -254,20 +288,25 @@ function receiveSabotage(k) {
 // ============================================================ Bot
 function botAfter(ms, fn) { const t = setTimeout(() => { if (B && B.role === 'bot' && B.phase !== 'end') fn(); }, ms); (B.botTimers = B.botTimers || []).push(t); }
 function botPlay() {
-  const [, acc, [a, b]] = BOT_LEVELS[B.botLevel];
+  const { acc, a, b } = B.botP;
   const st = B.setup;
   if (st.mode === 'mem') {
     const items = GAME.items, n = items.length;
-    const learn = Math.min((GAME.t || 90) * 1000, (20 + n * (1.6 - acc)) * 1000);
+    const want = (15 + n * 2.2 * (1.3 - acc)) * 1000, learn = GAME.t ? Math.min(GAME.t * 1000, want) : want;
+    // pamięć: im dłuższy ciąg i krótszy czas, tym więcej pomyłek; błędy często „seriami” (zgubiony obraz = kilka elementów)
+    const p = clamp(acc * (1 - Math.min(.5, n / 250)) * clamp(learn / (n * 2500), .5, 1.05), .05, .97);
+    const ans = []; let lost = 0;
+    items.forEach(x => { if (lost > 0) { lost--; ans.push(null); } else if (Math.random() < p) ans.push(x); else { ans.push(null); lost = Math.random() < .5 ? 1 + (Math.random() * 2 | 0) : 0; } });
+    const rec = n * (700 + Math.random() * 600);
     botAfter(learn, () => { B.oppReady = true; B.oppLearnMs = learn; renderBattle(); });
-    botAfter(learn + n * 900, () => { B.oppMem = items.map(x => Math.random() < acc ? x : null); B.oppDone = true; B.oppTotalMs = learn + n * 900; maybeFinish(); renderBattle(); });
+    botAfter(learn + rec, () => { B.oppMem = ans; B.oppDone = true; B.oppTotalMs = learn + rec; maybeFinish(); renderBattle(); });
     return;
   }
-  const n = st.cards.length, cap = (st.opts?.learnSec || 999) * 1000;
-  const learn = Math.min(cap, clamp(n * (10 - acc * 6), 15, 200) * 1000 * (0.8 + Math.random() * .4));
+  const n = st.cards.length, cap = (st.opts?.learnSec || 0) * 1000;
+  const want = n * (5 + 7 * (1 - acc)) * 1000 * (0.8 + Math.random() * .4), learn = cap ? Math.min(cap, want) : want;
   B.bot = { queue: shuffle(st.cards.map((_, i) => i)), t: 0, acc, a, b, learn };
   botAfter(learn, () => { B.oppReady = true; B.oppLearnMs = learn; renderBattle(); botNext(); });
-  if (st.opts?.sab && B.botLevel > 0) [learn + 9000, learn + 20000].slice(0, B.botLevel).forEach(t => botAfter(t + Math.random() * 6000, () => {
+  if (st.opts?.sab && acc > .5) [learn + 9000, learn + 20000].slice(0, acc > .75 ? 2 : 1).forEach(t => botAfter(t + Math.random() * 6000, () => {
     if (B.phase === 'recall') { receiveSabotage(Math.random() < .5 ? 'freeze' : 'fog'); renderBattle(); } }));
 }
 function botNext() {
@@ -275,9 +314,10 @@ function botNext() {
   const ansLimit = (B.setup.opts?.ansSec || 999) * 1000;
   const d = Math.min(ansLimit, (bt.a + Math.random() * (bt.b - bt.a)) * 1000 + (bt.frozen || 0)); bt.frozen = 0;
   botAfter(d, () => {
-    const i = bt.queue.shift(), ok = Math.random() < bt.acc;
+    const i = bt.queue.shift(), card = B.setup.cards[i];
+    const ok = Math.random() < botCardChance(bt.acc, B.setup.cards.length, bt.learn, card.a.length);
     B.oppAns = B.oppAns.filter(x => x.i !== i);
-    B.oppAns.push({ i, given: ok ? B.setup.cards[i].a : '…', ok, ms: d }); if (ok && B.setup.opts?.live !== false) hitFx('me');
+    B.oppAns.push({ i, given: ok ? card.a : typo(card.a), ok, ms: d }); if (ok && B.setup.opts?.live !== false) hitFx('me');
     renderBattle(); botNext();
   });
 }
@@ -300,7 +340,7 @@ function hitFx(who) {
 }
 function stickerFx(k, from, shiny) {
   const s = stickerById(k); if (!s) return;
-  const el = document.createElement('div'); el.className = `stfly ${s.r}${shiny ? ' shiny' : ''}`; el.style.setProperty('--rc', RARITY[s.r].color);
+  const el = document.createElement('div'); el.className = `stfly ${s.r}${shiny ? ' shiny' : ''}${S.settings.stickerAnim !== false ? ' anim st-' + s.id : ''}`; el.style.setProperty('--rc', RARITY[s.r].color);
   el.innerHTML = `<span>${s.e}</span><small>${esc(from || 'Ty')}: ${esc(s.name)}${shiny ? ' ✨' : ''}</small>`;
   document.body.append(el); setTimeout(() => el.remove(), 2600);
   if (s.r === 'legendary' || shiny) confetti(60);
@@ -317,9 +357,9 @@ function hpBars() {
   const state = (ready, done) => done ? '✅ skończył' : ready ? '⚔️ odpowiada' : ['learn', 'recall', 'waitopp'].includes(B.phase) ? '📖 uczy się' : '';
   const sc2 = ids => typeof showcaseHTML === 'function' ? `<span class="showcase">${showcaseHTML(ids)}</span>` : '';
   return `<div class="arena">
-    <div class="fighter"><div class="row nowrap"><span class="av">${esc(m.avatar)}</span>${sc2(m.showcase)}</div><b>${esc(m.nick)}${B.shieldOn ? ' 🛡️' : ''}</b><div class="hp" id="hp-me"><div style="width:${myHp}%"></div></div><small>${reveal ? Math.round(myHp) + ' HP · ' : ''}${state(B.phase !== 'learn', B.myDone)}</small></div>
+    <div class="fighter"><div class="row nowrap"><span class="av">${avatarHTML(m, 34)}</span>${sc2(m.showcase)}</div><b>${esc(m.nick)}${B.shieldOn ? ' 🛡️' : ''}</b><div class="hp" id="hp-me"><div style="width:${myHp}%"></div></div><small>${reveal ? Math.round(myHp) + ' HP · ' : ''}${state(B.phase !== 'learn', B.myDone)}</small></div>
     <div class="vs">VS</div>
-    <div class="fighter r"><div class="row nowrap">${sc2(op.showcase)}<span class="av">${esc(op.avatar)}</span></div><b>${esc(op.nick)}</b><div class="hp opp" id="hp-opp"><div style="width:${oppHp}%"></div></div><small>${reveal ? Math.round(oppHp) + ' HP · ' : ''}${state(B.oppReady, B.oppDone)}</small></div>
+    <div class="fighter r"><div class="row nowrap">${sc2(op.showcase)}<span class="av">${avatarHTML(op, 34)}</span></div><b>${esc(op.nick)}</b><div class="hp opp" id="hp-opp"><div style="width:${oppHp}%"></div></div><small>${reveal ? Math.round(oppHp) + ' HP · ' : ''}${state(B.oppReady, B.oppDone)}</small></div>
   </div><div class="tug"><div class="tugfill" style="width:${tug}%"></div><span class="knot" style="left:${tug}%">⚔️</span></div>
   ${reveal ? '' : '<p class="small muted center" style="margin-top:-8px">Wynik przeciwnika zobaczysz na końcu 🤫</p>'}`;
 }
@@ -358,8 +398,8 @@ ROUTES.battle = () => {
       ${B.phase === 'seeking' && Date.now() - B.seekStart > 25000 ? `<p class="small muted">Nikogo jeszcze nie ma.</p><button class="block" data-act="bt-bot-now">🤖 Zagraj z botem</button>` : ''}</div>` };
   }
   if (B.phase === 'countdown') {
-    const s = Math.max(1, Math.ceil((B.goAt - Date.now()) / 1000));
-    return { focus: true, html: hpBars() + `<div class="countdown">${s}</div><p class="center">${B.setup.mode === 'cards' ? `📖 Przejrzyj ${B.setup.cards.length} fiszek, potem test z pamięci` : `🧠 ${DISC[B.setup.disc].name}: zapamiętaj i odtwórz`}</p>${rulesHTML(B.setup)}` };
+    const el = Math.max(0, 3.5 - (B.goAt - Date.now()) / 1000).toFixed(2);
+    return { focus: true, html: hpBars() + `<div class="getready"><b>Przygotuj się…</b><div class="readybar"><div style="animation-delay:-${el}s"></div></div></div><p class="center">${B.setup.mode === 'cards' ? `📖 Przejrzyj ${B.setup.cards.length} fiszek, potem test z pamięci` : `🧠 ${DISC[B.setup.disc].name}: zapamiętaj i odtwórz`}</p>${rulesHTML(B.setup)}` };
   }
   const head = `<div class="studybar">${close}<div class="title">⚔️ Bitwa</div><b class="timer" id="btimer"></b></div>` + hpBars();
   if (B.setup.mode === 'mem' && (B.phase === 'learn' || B.phase === 'recall') && GAME?.battle) {
@@ -411,7 +451,7 @@ ROUTES.battle = () => {
       <h2 style="margin:4px 0">${r.won === 1 ? 'Zwycięstwo!' : r.won === 0 ? 'Remis' : 'Porażka'}</h2>
       <p><b>${r.my}</b> : <b>${r.opp}</b> <span class="muted">(z ${r.n})</span></p>
       <p class="small muted">Twój czas: ${fmtTime(B.myTotalMs || 0)}${B.oppTotalMs ? ` · przeciwnik: ${fmtTime(B.oppTotalMs)}` : ''}${B.myBlur || B.oppBlur ? ` · wyjścia z aplikacji: Ty ${B.myBlur}, przeciwnik ${B.oppBlur}` : ''}</p>
-      <p><b class="coins">+${rec ? battleReward(rec) : 0} 💎</b></p>
+      <p><b class="coins">+${rec ? battleReward(rec) : 0} 💎</b>${rec?.elo != null ? ` <b class="${rec.elo >= 0 ? 'c-rev' : 'c-lrn'}">${rec.elo >= 0 ? '+' : ''}${rec.elo} Elo</b> → ${eloHTML(myElo())}` : rec?.bot ? ' <span class="small muted">(bot – bez Elo)</span>' : ''}</p>
       ${r.won === 1 && hasItem('case', caseKind) ? `<button class="primary block" data-go="#/case/${caseKind}?free=1" style="min-height:56px">🎁 Otwórz darmową skrzynkę!</button><div class="spacer"></div>` : ''}
       ${B.setup.mode === 'cards' ? `<details class="small"><summary>Odpowiedzi</summary>${B.setup.cards.map((c, i) => { const a = B.myAns.find(x => x.i === i);
         return `<div class="kv"><span class="grow">${esc(c.q)}</span><span class="${a?.ok ? 'c-rev' : 'c-lrn'}">${a?.ok ? '✓' : '✗'} ${esc(c.a)}</span></div>`; }).join('')}</details>` : ''}
@@ -460,43 +500,48 @@ ROUTES.battles = (parts, q) => {
   const ms = memSettings(), o = btOpts(), mode = ms.btMode || 'cards';
   const sel = (id, list, cur) => `<select data-btopt="${id}">${list.map(([v, l]) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   const memDisc = ms.btDisc || 'numbers';
+  const deck = deckById(ms.btDeck) || S.decks[0];
+  const summary = mode === 'cards'
+    ? `📚 ${esc(deck?.name || 'talia')} · ${o.n} fiszek · nauka ${o.learnSec ? o.learnSec / 60 + ' min' : '∞'} · odp. ${o.ansSec ? o.ansSec + ' s' : '∞'}${o.sab ? ' · sabotaże' : ''}`
+    : `🧠 ${DISC[memDisc].name} · ${o.memN || MEM_DEFAULT[memDisc][0]} el. · ${o.memSec ? o.memSec + ' s' : 'bez limitu'}${o.sab ? ' · sabotaże' : ''}`;
   return { tab: 'train', html: `
   <div class="row nowrap"><h1 class="grow">⚔️ Bitwy</h1>${coinsHTML()}</div>
-  <div class="card hero-card"><div class="hero">
-    <div class="stat"><b class="c-rev">${w}</b><small>wygrane</small></div><div class="stat"><b>${d}</b><small>remisy</small></div>
-    <div class="stat"><b class="c-lrn">${l}</b><small>przegrane</small></div><div class="stat"><b>${bs.length ? Math.round(w / bs.length * 100) : 0}%</b><small>skuteczność</small></div></div></div>
-  <button class="primary block big-btn" data-act="bt-quick">⚡ Szybki mecz – losowy przeciwnik</button>
-  <p class="small muted center">Pojedynek pamięci (liczby, słowa albo obrazy) z kimkolwiek, kto akurat szuka gry.</p>
-  <div class="card"><h2 style="margin-top:0">👥 Własna bitwa</h2>
-    <div class="seg" style="display:flex"><button class="grow ${mode === 'cards' ? 'on' : ''}" data-act="bt-mode" data-m="cards">📚 Fiszki</button><button class="grow ${mode === 'mem' ? 'on' : ''}" data-act="bt-mode" data-m="mem">🧠 Pamięć</button></div>
+  <div class="row nowrap elo-row">${eloHTML(myElo())}<span class="grow"></span></div>
+  <p class="small muted">🏆 ${w} · 🤝 ${d} · 💪 ${l}${bs.length ? ` · ${Math.round(w / bs.length * 100)}% wygranych` : ''}</p>
+  <button class="primary block big-btn" data-act="bt-quick">⚡ Szybki mecz</button>
+  <p class="small muted center" style="margin:4px 0 12px">losowy przeciwnik · pojedynek pamięci</p>
+  <div class="card">
+    <div class="row"><button class="primary grow" data-act="bt-host">👥 Wyzwij znajomego</button><button class="grow" data-act="bt-bot">🤖 Z botem</button></div>
+    <div class="row nowrap" style="margin-top:10px"><input id="bt-code" class="grow" placeholder="Kod od znajomego" maxlength="6" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"><button data-act="bt-join">Dołącz</button></div>
+  </div>
+  <details class="card rules"${ms.rulesOpen ? ' open' : ''}><summary><b>⚙️ Zasady bitwy</b><div class="small muted">${summary}</div></summary>
+    <div class="seg" style="display:flex;margin-top:10px"><button class="grow ${mode === 'cards' ? 'on' : ''}" data-act="bt-mode" data-m="cards">📚 Fiszki</button><button class="grow ${mode === 'mem' ? 'on' : ''}" data-act="bt-mode" data-m="mem">🧠 Pamięć</button></div>
     ${mode === 'cards' ? `
-      <label class="field"><span>Talia</span><select id="bt-deck">${S.decks.map(dk => `<option value="${dk.id}" ${ms.btDeck === dk.id ? 'selected' : ''}>${esc(dk.name)}</option>`).join('')}</select></label>
+      <label class="field"><span>Talia</span><select id="bt-deck">${S.decks.map(dk => `<option value="${dk.id}" ${deck?.id === dk.id ? 'selected' : ''}>${esc(dk.name)}</option>`).join('')}</select></label>
       <div class="grid2">
         <label class="field"><span>Liczba fiszek</span><input type="number" inputmode="numeric" min="3" max="50" data-btopt="n" value="${o.n}"></label>
         <label class="field"><span>Kierunek</span>${sel('dir', [['qa', 'pytanie → odp.'], ['aq', 'odp. → pytanie'], ['mix', 'mieszany']], o.dir)}</label>
         <label class="field"><span>Czas na naukę</span>${sel('learnSec', [[0, 'bez limitu'], [60, '1 min'], [120, '2 min'], [180, '3 min'], [300, '5 min'], [600, '10 min']], o.learnSec)}</label>
         <label class="field"><span>Czas na odpowiedź</span>${sel('ansSec', [[0, 'bez limitu'], [10, '10 s'], [15, '15 s'], [25, '25 s'], [45, '45 s'], [60, '60 s']], o.ansSec)}</label>
         <label class="field"><span>Sprawdzanie</span>${sel('tol', [['strict', 'dokładne'], ['normal', 'normalne'], ['lenient', 'łagodne']], o.tol)}</label>
-        <label class="field"><span>Wynik przeciwnika</span>${sel('live', [['1', 'widoczny na żywo'], ['0', 'ukryty do końca']], o.live ? '1' : '0')}</label>
+        <label class="field"><span>Wynik rywala</span>${sel('live', [['1', 'na żywo'], ['0', 'ukryty do końca']], o.live ? '1' : '0')}</label>
       </div>`
       : `<div class="grid2">
         <label class="field"><span>Dyscyplina</span><select data-btopt="disc">${Object.keys(MEM_DEFAULT).map(k => `<option value="${k}" ${memDisc === k ? 'selected' : ''}>${DISC[k].icon} ${DISC[k].name}</option>`).join('')}</select></label>
         <label class="field"><span>Ile elementów</span><input type="number" inputmode="numeric" min="3" max="${MAX_ITEMS[memDisc]}" data-btopt="memN" value="${o.memN || MEM_DEFAULT[memDisc][0]}"></label>
         <label class="field"><span>Czas zapamiętywania</span>${sel('memSec', [[0, 'bez limitu'], [30, '30 s'], [60, '1 min'], [120, '2 min'], [180, '3 min'], [300, '5 min']], o.memSec)}</label>
       </div>`}
-    <label class="check"><input type="checkbox" data-btopt="sab" ${o.sab ? 'checked' : ''}> Sabotaże za kryształy (❄️ zamrożenie, 🌫️ mgła, ⏪ cofnięcie, 🛡️ tarcza)</label>
-    <div class="row"><button class="primary grow" data-act="bt-host">Utwórz pokój</button><button class="grow" data-act="bt-bot">🤖 Z botem</button></div>
-    <label class="field"><span>Poziom bota</span><select id="bt-botlvl">${BOT_LEVELS.map(([n], i) => `<option value="${i}" ${(ms.botLevel ?? 1) === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
-    <h3>Masz kod od znajomego?</h3>
-    <div class="row nowrap"><input id="bt-code" class="grow" placeholder="np. K7M2QX" maxlength="6" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:3px"><button data-act="bt-join">Dołącz</button></div>
-    <p class="small muted">Zasady ustala osoba tworząca pokój – dołączający gra na tych samych.</p></div>
-  <details class="card"><summary><b>Jak działają sabotaże?</b></summary>${Object.values(SABOTAGE).map(s => `<div class="kv"><span>${s.icon} <b>${s.name}</b> – ${s.desc}</span><b>${s.cost}💎</b></div>`).join('')}
-    <p class="small muted">Max ${SAB_MAX} na bitwę, odstęp ${SAB_COOLDOWN / 1000} s. Działają tylko, gdy twórca pokoju je włączył.</p></details>
-  <div class="row"><button class="grow" data-go="#/shop">🛒 Sklep i skrzynki</button><button class="grow" data-go="#/theme">🎨 Motywy</button></div>
-  ${Object.keys(heads).length ? `<div class="card"><h3 style="margin-top:0">Bilans ze znajomymi</h3>${Object.entries(heads).map(([n, h]) => `<div class="kv"><span>${esc(h.av || '')} ${esc(n)}</span><b><span class="c-rev">${h.w}</span> : <span class="c-lrn">${h.l}</span>${h.d ? ` (${h.d} rem.)` : ''}</b></div>`).join('')}</div>` : ''}
-  ${bs.length ? `<div class="card"><h3 style="margin-top:0">Ostatnie bitwy</h3>${bs.slice(-10).reverse().map(b => `<div class="kv"><span>${b.won === 1 ? '🏆' : b.won === 0 ? '🤝' : '💪'} ${esc(b.oppAvatar || '')} ${esc(b.opp || 'Bot')} · ${b.mode === 'cards' ? esc(b.deck || 'fiszki') : DISC[b.disc]?.name}</span><b>${b.my}:${b.them}</b></div>`).join('')}</div>` : ''}
-  <p class="small muted">Uczciwa gra: w trakcie testu wklejanie jest wyłączone, wyjście z aplikacji kasuje bieżące pytanie i jest widoczne dla przeciwnika, a każdy telefon sam sprawdza odpowiedzi drugiej strony.</p>` };
+    <label class="field"><span>Poziom bota (bez wpływu na Elo)</span><select id="bt-botlvl">${BOT_LEVELS.map(([n, acc], i) => `<option value="${i}" ${(ms.botLevel ?? 0) === i ? 'selected' : ''}>${n}${acc ? ` (~${Math.round(acc * 100)}%)` : ` – jak Ty (~${Math.round(myBattleAccuracy() * 100)}%)`}</option>`).join('')}</select></label>
+    <label class="check"><input type="checkbox" data-btopt="sab" ${o.sab ? 'checked' : ''}> Sabotaże za kryształy</label>
+    ${o.sab ? `<div class="small muted">${Object.values(SABOTAGE).map(x => `${x.icon} ${x.name} (${x.cost}💎) – ${x.desc}`).join('<br>')}<br>Max ${SAB_MAX} na bitwę.</div>` : ''}
+    <p class="small muted">Zasady ustala twórca pokoju. W teście nie da się wklejać, a wyjście z aplikacji kasuje bieżące pytanie.</p>
+  </details>
+  ${bs.length ? `<details class="card"><summary><b>📊 Historia</b> <span class="small muted">(${bs.length})</span></summary>
+    ${Object.keys(heads).length ? `<h3>Bilans ze znajomymi</h3>${Object.entries(heads).map(([n, h]) => `<div class="kv"><span>${esc(h.av || '')} ${esc(n)}</span><b><span class="c-rev">${h.w}</span> : <span class="c-lrn">${h.l}</span>${h.d ? ` (${h.d} rem.)` : ''}</b></div>`).join('')}` : ''}
+    <h3>Ostatnie bitwy</h3>${bs.slice(-10).reverse().map(b => `<div class="kv"><span>${b.won === 1 ? '🏆' : b.won === 0 ? '🤝' : '💪'} ${esc(b.oppAvatar || '')} ${esc(b.opp || 'Bot')} · ${b.mode === 'cards' ? esc(b.deck || 'fiszki') : DISC[b.disc]?.name}</span><b>${b.my}:${b.them}</b></div>`).join('')}</details>` : ''}
+  <div class="row"><button class="grow sm" data-go="#/shop">🛒 Sklep</button><button class="grow sm" data-go="#/theme">🎨 Motywy</button></div>` };
 };
+document.addEventListener('toggle', e => { if (e.target.classList?.contains('rules')) { memSettings().rulesOpen = e.target.open; save(); } }, true);
 document.addEventListener('change', e => {
   const k = e.target.dataset?.btopt; if (!k) return;
   const ms = memSettings(); ms.bt = ms.bt || {};
@@ -527,7 +572,8 @@ function quickMatch() {
 }
 function stopSeek() { if (!B) return; clearTimeout(B.seekTimer); B.lobby?.close(); }
 function startBot(setup, level) {
-  newBattle({ role: 'bot', setup, botLevel: level, opp: { nick: `Bot ${BOT_LEVELS[level][0].toLowerCase()}`, avatar: '🤖', level: [3, 8, 15][level] } });
+  const bp = botParams(level);
+  newBattle({ role: 'bot', setup, botLevel: level, botP: bp, opp: { nick: `Bot ${bp.name.toLowerCase()}`, avatar: '🤖', level: Math.round(bp.acc * 20) } });
   startCountdown(); go('#/battle');
 }
 function friendSetup() {
@@ -536,7 +582,7 @@ function friendSetup() {
     const disc = ms.btDisc || 'numbers';
     return { mode: 'mem', disc, seed: Math.random() * 1e9 | 0, n: clamp(o.memN || MEM_DEFAULT[disc][0], 3, MAX_ITEMS[disc]), memo: o.memSec, opts: { sab: o.sab } };
   }
-  const deckId = $('#bt-deck')?.value;
+  const deckId = $('#bt-deck')?.value || (deckById(ms.btDeck) || S.decks[0])?.id;
   const cards = battleCards(deckId, clamp(o.n, 3, 50), o.dir);
   if (cards.length < 3) { toast('W tej talii jest za mało fiszek tekstowych (min. 3)'); return null; }
   return { mode: 'cards', deckName: deckById(deckId)?.name, cards, opts: { learnSec: o.learnSec, ansSec: o.ansSec, tol: o.tol, live: o.live, sab: o.sab } };
@@ -544,10 +590,10 @@ function friendSetup() {
 
 Object.assign(ACTIONS, {
   'bt-quick': () => quickMatch(),
-  'bt-bot-now': () => { const st = B.setup; stopSeek(); B.ch?.close(); startBot(st, memSettings().botLevel ?? 1); },
+  'bt-bot-now': () => { const st = B.setup; stopSeek(); B.ch?.close(); startBot(st, memSettings().botLevel ?? 0); },
   'bt-mode': el => { memSettings().btMode = el.dataset.m; save(); render(); },
   'bt-host': () => { const st = friendSetup(); if (st) hostRoom(st); },
-  'bt-bot': () => { const st = friendSetup(); if (!st) return; const lv = +$('#bt-botlvl').value; memSettings().botLevel = lv; save(); startBot(st, lv); },
+  'bt-bot': () => { const st = friendSetup(); if (!st) return; const lv = $('#bt-botlvl') ? +$('#bt-botlvl').value : (memSettings().botLevel ?? 0); memSettings().botLevel = lv; save(); startBot(st, lv); },
   'bt-join': () => { const c = $('#bt-code').value.trim().toUpperCase(); if (c.length !== 6) return toast('Kod ma 6 znaków'); joinRoom(c); },
   'bt-quit': () => { if (B && B.phase !== 'end' && B.phase !== 'wait' && !confirm('Opuścić bitwę? Przeciwnik wygra walkowerem.')) return; quitBattle(); },
   'bt-ready': () => {

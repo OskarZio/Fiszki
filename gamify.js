@@ -2,6 +2,22 @@
 /* Motywacja: XP i poziomy, osiągnięcia (z konfetti), serie poprawnych odpowiedzi
    oraz ranking ze znajomymi publikowany przez prywatny GitHub Gist. */
 
+// ============================================================ Awatar (emoji albo własne zdjęcie)
+const safeImg = u => typeof u === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u) && u.length < 60000 ? u : null;
+function avatarHTML(p, size = 28) {
+  const img = safeImg(p?.avatarImg);
+  return img ? `<img class="avimg" src="${img}" alt="" style="width:${size}px;height:${size}px">` : `<span class="avemoji" style="font-size:${Math.round(size * .9)}px">${esc(p?.avatar || '🦊')}</span>`;
+}
+async function squareAvatar(blob, px = 128) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const s = Math.min(img.naturalWidth, img.naturalHeight), c = document.createElement('canvas'); c.width = c.height = px;
+    c.getContext('2d').drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, px, px);
+    return c.toDataURL('image/jpeg', .75);
+  } finally { URL.revokeObjectURL(url); }
+}
+
 // ============================================================ XP i poziomy
 function xpTotal() {
   let xp = 0;
@@ -178,7 +194,7 @@ function homeExtrasHTML() {
   const mine = rankRows().find(r => r.me), pos = mine ? rankRows().sort((x, y) => y.today - x.today).indexOf(mine) + 1 : 0;
   return `<div class="card tight">
     <div class="row nowrap"><span class="lvl">${lvl}</span>
-      <div class="grow"><div class="row small nowrap"><b class="grow">${esc(S.profile.avatar)} ${esc(S.profile.nick || 'Ty')} · ${levelTitle(lvl)}</b><span class="muted">${xp - a}/${b - a} XP</span></div>
+      <div class="grow"><div class="row small nowrap"><b class="grow">${avatarHTML(S.profile, 20)} ${esc(S.profile.nick || 'Ty')} · ${levelTitle(lvl)}</b><span class="muted">${xp - a}/${b - a} XP</span></div>
       ${progress((xp - a) / (b - a), true)}</div></div>
     <div class="spacer"></div>
     <div class="row"><button class="sm grow primary" data-go="#/battles">⚔️ Bitwa</button><button class="sm grow" data-go="#/shop">💎 ${typeof coins === 'function' ? coins() : 0}</button></div>
@@ -214,7 +230,7 @@ function myProfile() {
   const week = Object.entries(perDay).filter(([k]) => k >= dayKey(addDays(dayStart(), -6))).reduce((a, [, n]) => a + n, 0);
   const xp = xpTotal();
   const best = {}; for (const g of S.games) if (g.correct > (best[g.d] || 0)) best[g.d] = g.correct;
-  return { app: 'fiszki-profil', v: 1, nick: S.profile.nick || 'Anonim', avatar: S.profile.avatar || '🦊', level: levelOf(xp), xp,
+  return { app: 'fiszki-profil', v: 1, nick: S.profile.nick || 'Anonim', avatar: S.profile.avatar || '🦊', avatarImg: safeImg(S.profile.avatarImg), level: levelOf(xp), xp, elo: typeof myElo === 'function' ? myElo() : 1000,
     streak: streak(), day: dayKey(Date.now()), today: reviewsToday(), week, perDay, total: S.log.length, cards: S.cards.length,
     mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now() };
 }
@@ -264,7 +280,7 @@ function rankRows() {
     const week = Object.entries(per).filter(([k]) => k >= weekFrom && k <= today).reduce((a, [, n]) => a + n, 0);
     const lastDay = Object.keys(per).sort().pop();
     const streakAlive = p.day === today || lastDay === dayKey(addDays(dayStart(), -1)) || lastDay === today;
-    return { nick: p.nick, avatar: p.avatar, today: p.day === today ? p.today : (per[today] || 0), week, streak: streakAlive ? p.streak : 0, level: p.level || 1, xp: p.xp || 0, total: p.total || 0, updated: p.updated, ach: p.ach || 0, showcase: p.showcase || [] };
+    return { nick: p.nick, avatar: p.avatar, avatarImg: p.avatarImg, elo: +p.elo || 1000, today: p.day === today ? p.today : (per[today] || 0), week, streak: streakAlive ? p.streak : 0, level: p.level || 1, xp: p.xp || 0, total: p.total || 0, updated: p.updated, ach: p.ach || 0, showcase: p.showcase || [] };
   };
   const me = { ...norm(myProfile()), me: true };
   const rows = S.friends.map(f => FRIEND_DATA[f.code]?.app ? { ...norm(FRIEND_DATA[f.code]), id: f.id, err: FRIEND_DATA[f.code].err } : { nick: f.name || 'Znajomy', avatar: '❔', id: f.id, today: 0, week: 0, streak: 0, level: 0, xp: 0, err: FRIEND_DATA[f.code]?.err || 'brak danych' });
@@ -277,9 +293,9 @@ ROUTES.rank = () => {
     rankLoaded = Date.now();
     Promise.all([publishProfile(true).catch(e => toast('Profil: ' + e.message, 3000)), refreshFriends()]).then(() => { if (parseRoute().parts[0] === 'rank') render(); });
   }
-  const tabs = [['today', 'Dziś'], ['week', 'Tydzień'], ['streak', 'Seria'], ['xp', 'Poziom']];
-  const val = r => RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}` : `⭐ ${r.level} <small>${r.xp} XP</small>`;
-  const key = r => RANK_TAB === 'xp' ? r.xp : r[RANK_TAB];
+  const tabs = [['today', 'Dziś'], ['week', 'Tydzień'], ['streak', 'Seria'], ['xp', 'Poziom'], ['elo', 'Elo']];
+  const val = r => RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}` : RANK_TAB === 'elo' ? eloHTML(r.elo || 1000) : `⭐ ${r.level} <small>${r.xp} XP</small>`;
+  const key = r => RANK_TAB === 'xp' ? r.xp : RANK_TAB === 'elo' ? (r.elo || 1000) : r[RANK_TAB];
   const rows = rankRows().sort((a, b) => key(b) - key(a));
   const medal = i => ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;
   const maxToday = Math.max(1, ...rows.map(r => r.today));
@@ -288,7 +304,7 @@ ROUTES.rank = () => {
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Ranking</h1>${hasToken ? '<button class="iconbtn" data-act="rank-refresh">🔄</button>' : ''}</div>
   <div class="seg" style="display:flex">${tabs.map(([k, l]) => `<button class="grow ${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
   <div class="card">${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}">
-      <span class="medal">${medal(i)}</span><span class="av">${esc(r.avatar)}</span>
+      <span class="medal">${medal(i)}</span><span class="av">${avatarHTML(r, 34)}</span>
       <div class="grow"><div class="row nowrap"><b class="grow">${esc(r.nick)}${r.me ? ' (Ty)' : ''} ${typeof showcaseHTML === 'function' ? showcaseHTML(r.showcase) : ''}</b><span>${val(r)}</span></div>
         ${RANK_TAB === 'today' ? progress(r.today / maxToday, true) : ''}
         <div class="small muted">${r.err ? '⚠️ ' + esc(r.err) : r.me ? `poziom ${r.level} · 🔥 ${r.streak} · ${r.total} powtórek łącznie` : `poziom ${r.level} · 🔥 ${r.streak} · aktualizacja ${ago(r.updated)}`}</div></div>
@@ -296,7 +312,10 @@ ROUTES.rank = () => {
     ${S.friends.length ? '' : '<p class="muted small center">Dodaj znajomych, żeby się porównywać 💪</p>'}</div>
   <div class="card">
     <h3 style="margin-top:0">Twój profil</h3>
-    <div class="row nowrap"><input id="pr-avatar" value="${esc(S.profile.avatar)}" style="width:64px;text-align:center;font-size:24px" maxlength="4">
+    <div class="row nowrap"><span class="av-big">${avatarHTML(S.profile, 56)}</span>
+      <button class="sm" data-act="avatar-photo">📷 Zdjęcie</button>${S.profile.avatarImg ? '<button class="sm ghost" data-act="avatar-clear">Użyj emoji</button>' : ''}</div>
+    <div class="spacer"></div>
+    <div class="row nowrap"><input id="pr-avatar" value="${esc(S.profile.avatar)}" style="width:64px;text-align:center;font-size:24px" maxlength="4" title="Emoji (gdy nie masz zdjęcia)">
       <input id="pr-nick" class="grow" value="${esc(S.profile.nick)}" placeholder="Twój nick" maxlength="24"></div>
     ${hasToken ? `
       <div class="spacer"></div>
@@ -334,6 +353,12 @@ ROUTES.rank = (...a) => { onMount(mountRank); return _rankRoute(...a); };
 
 Object.assign(ACTIONS, {
   'rank-tab': el => { RANK_TAB = el.dataset.k; render(); },
+  'avatar-photo': async () => {
+    const f = await pickFile('image/*'); if (!f) return;
+    try { S.profile.avatarImg = await squareAvatar(f); S.profile.mod = Date.now(); publishAt = 0; save(); render(); toast('Zdjęcie profilowe ustawione ✓'); }
+    catch { toast('Nie udało się wczytać zdjęcia'); }
+  },
+  'avatar-clear': () => { S.profile.avatarImg = null; S.profile.mod = Date.now(); publishAt = 0; save(); render(); },
   'rank-refresh': () => { rankLoaded = 0; toast('Odświeżam…'); render(); },
   'friend-add': () => addFriend(friendCode($('#friend-code').value)),
   'friend-del': el => {

@@ -68,10 +68,49 @@ function applyTheme() {
   document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', bg);
 }
+// Personalizacja wyglądu fiszek i interfejsu
+const FONTS = { system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', serif: 'Georgia, "Times New Roman", serif',
+  rounded: 'ui-rounded, "SF Pro Rounded", "Nunito", -apple-system, sans-serif', mono: 'ui-monospace, "SF Mono", Menlo, monospace' };
+const RADII = { square: ['6px', '6px'], soft: ['16px', '12px'], round: ['26px', '22px'] };
+function applyPersonal() {
+  const st = S.settings, r = document.documentElement.style, b = document.body.classList;
+  r.setProperty('--card-fs', st.cardSize || 1); r.setProperty('--card-font', FONTS[st.cardFont] || FONTS.system);
+  r.setProperty('--card-align', st.cardAlign === 'left' ? 'left' : 'center');
+  const [rc, rb] = RADII[st.radius] || RADII.soft; r.setProperty('--r', rc); r.setProperty('--rb', rb);
+  b.toggle('compact', !!st.compact); b.toggle('nolabels', st.tabLabels === false);
+}
 function setTheme(patch) { S.settings.theme = { ...currentTheme(), ...patch }; applyTheme(); save(); }
 on('start', applyTheme);
 applyTheme.early = () => { try { if (S) applyTheme(); } catch { /* jeszcze brak stanu */ } };
 
+function personalHTML() {
+  const st = S.settings;
+  const sel = (k, list) => `<select data-pers="${k}">${list.map(([v, l]) => `<option value="${v}" ${String(st[k]) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  const chk = (k, l, def = true) => `<label class="check"><input type="checkbox" data-pers="${k}" ${(st[k] ?? def) ? 'checked' : ''}> ${l}</label>`;
+  return `<div class="card"><h3 style="margin-top:0">Personalizacja</h3>
+    <div class="grid2">
+      <label class="field"><span>Tekst na fiszkach</span>${sel('cardSize', [[0.85, 'mały'], [1, 'normalny'], [1.2, 'duży'], [1.45, 'bardzo duży']])}</label>
+      <label class="field"><span>Czcionka fiszek</span>${sel('cardFont', [['system', 'systemowa'], ['serif', 'szeryfowa'], ['rounded', 'zaokrąglona'], ['mono', 'maszynowa']])}</label>
+      <label class="field"><span>Wyrównanie</span>${sel('cardAlign', [['center', 'do środka'], ['left', 'do lewej']])}</label>
+      <label class="field"><span>Narożniki</span>${sel('radius', [['square', 'ostre'], ['soft', 'łagodne'], ['round', 'okrągłe']])}</label>
+      <label class="field"><span>Przyciski ocen</span>${sel('grade2', [['false', '4 (jak Anki)'], ['true', '2 (pamiętam / nie)']])}</label>
+    </div>
+    ${chk('gradients', 'Kolory gradientowe (wyłącz dla jednolitych kolorów)')}
+    ${chk('showIvl', 'Pokazuj odstęp na przyciskach ocen')}
+    ${chk('tts', 'Czytaj fiszki na głos (🔊)', false)}
+    ${chk('compact', 'Kompaktowy układ (mniej odstępów)', false)}
+    ${chk('tabLabels', 'Podpisy pod ikonami w dolnym pasku')}
+    ${chk('anim', 'Animacje i konfetti')}
+    ${chk('stickerAnim', 'Animowane naklejki w bitwach')}
+    ${chk('sound', 'Dźwięki')}
+  </div>`;
+}
+document.addEventListener('change', e => {
+  const k = e.target.dataset?.pers; if (!k) return;
+  const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+  S.settings[k] = k === 'cardSize' ? +v : k === 'grade2' ? v === 'true' : v;
+  save(); render();
+});
 ROUTES.theme = () => {
   const th = currentTheme();
   onMount(() => {
@@ -88,6 +127,7 @@ ROUTES.theme = () => {
   const sw = (list, key) => list.map(c => `<button class="swatch${(key === 'bg' ? th.bg : th.accent) === c ? ' on' : ''}" style="background:${c}" data-act="theme-color" data-k="${key}" data-c="${c}" aria-label="${c}"></button>`).join('');
   return { tab: 'more', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/more">‹</button><h1 class="grow">Wygląd</h1></div>
+  ${personalHTML()}
   <div class="card"><h3 style="margin-top:0">Motywy</h3><div class="themes">${THEMES.map(t => {
     const owned = themeOwned(t), on = th.id === t.id;
     const bg = t.bg ? `background:${t.bg};background-image:${t.image || 'none'}` : 'background:linear-gradient(135deg,#f5f6fb 50%,#0f1117 50%)';

@@ -89,7 +89,8 @@ const DEFAULT_SETTINGS = {
   newPerDay: 20, goal: 50, reminder: '19:00', hideAll: true,
   autoSync: true, sync: { token: '', gistId: '' }, lastSync: 0, lastDeck: null,
   aiKey: '', aiModel: 'claude-opus-5-5',
-  minimal: false, steps: '1 10', relearn: '10', maxIvl: 36500, tolerance: 'normal', sound: true, anim: true, easyBonus: 1.3,
+  minimal: false, mode: 'full', gradients: true, stickerAnim: true,
+  cardSize: 1, cardFont: 'system', cardAlign: 'center', radius: 'soft', compact: false, showIvl: true, grade2: false, tts: false, tabLabels: true, steps: '1 10', relearn: '10', maxIvl: 36500, tolerance: 'normal', sound: true, anim: true, easyBonus: 1.3,
 };
 let S;            // wszystkie dane (bez obrazów)
 const IMG = {};   // id -> dataURL
@@ -99,7 +100,7 @@ function blankState() {
   return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS), ...extraState() };
 }
 // pola dodane w kolejnych wersjach (tematy, znajomi, gry, osiągnięcia, system liczbowy)
-function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [] }; }
+function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [] }; }
 
 // Proste zdarzenia, na które reagują moduły (osiągnięcia, ranking…)
 const HOOKS = {};
@@ -119,6 +120,8 @@ function referencedImages() {
   const s = new Set();
   S.notes.forEach(n => { n.imageId && s.add(n.imageId); n.backImageId && s.add(n.backImageId); });
   S.palaces.forEach(p => p.stations.forEach(st => st.imageId && s.add(st.imageId)));
+  (S.atlases || []).forEach(a => { a.imageId && s.add(a.imageId); (a.draws || []).forEach(d => s.add(d.imageId)); });
+  (S.topics || []).forEach(t => t.items.forEach(it => (it.images || []).forEach(g => s.add(g.id))));
   return s;
 }
 // Obrazy usuwamy dopiero po 31 dniach od dodania – kosz i kopie lokalne mogą ich jeszcze potrzebować.
@@ -367,9 +370,15 @@ function pickNext(sess) {
   if (nw.length) return choose(nw);
   return pool.filter(c => isLearning(c) && c.srs.due <= now + 20 * MIN).sort(byDue)[0] || null;
 }
+// Czytanie na głos (pl-PL)
+const stripHtml = h => new DOMParser().parseFromString(h, 'text/html').body.textContent.replace(/\s+/g, ' ').trim();
+function speak(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'pl-PL'; u.rate = 0.95; speechSynthesis.speak(u);
+}
 function nextCard() {
   const s = SESSION;
-  s.card = pickNext(s); s.shown = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
+  s.card = pickNext(s); s.shown = false; s.spoken = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
 }
 function answer(g) {
   const s = SESSION, c = s.card; if (!c) return;
@@ -426,9 +435,9 @@ function render() {
       case 'quiz': html = viewQuiz(parts[1], q); focus = true; break;
       case 'add': html = viewAdd(null, q); tab = 'add'; break;
       case 'edit': html = viewAdd(parts[1], q); tab = 'add'; break;
-      case 'palaces': html = viewPalaces(); tab = 'train'; break;
-      case 'palace': html = viewPalace(parts[1]); tab = 'train'; break;
-      case 'station': html = viewStation(parts[1], parts[2]); tab = 'train'; break;
+      case 'palaces': html = viewPalaces(); tab = palTab(); break;
+      case 'palace': html = viewPalace(parts[1]); tab = palTab(); break;
+      case 'station': html = viewStation(parts[1], parts[2]); tab = palTab(); break;
       case 'walk': html = viewWalk(parts[1]); focus = true; break;
       case 'more': html = viewMore(); onMount(mountMore); tab = 'more'; break;
       default:
@@ -439,7 +448,11 @@ function render() {
     console.error(e); html = `<div class="card"><h2>Ups, błąd</h2><p>${esc(e.message)}</p><a href="#/">Wróć na start</a></div>`;
   }
   document.body.classList.toggle('focus', focus);
-  document.body.classList.toggle('minimal', !!S.settings.minimal);
+  const mode = appMode();
+  document.body.classList.toggle('minimal', mode !== 'full');
+  document.body.classList.toggle('zen', mode === 'zen');
+  document.body.classList.toggle('flat', S.settings.gradients === false);
+  if (typeof applyPersonal === 'function') applyPersonal();
   document.body.classList.toggle('noanim', !S.settings.anim);
   $('#view').innerHTML = html;
   $$('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
@@ -458,7 +471,21 @@ function deckSelect(selected) {
 const progress = (frac, thin) => `<div class="progress${thin ? ' thin' : ''}"><div style="width:${clamp(frac, 0, 1) * 100}%"></div></div>`;
 
 // ------------------------------------------------------------ Start
+// Tryby: 'full' – wszystko, 'minimal' – skupienie (bez grywalizacji, z pałacami), 'zen' – pełne skupienie
+const appMode = () => S.settings.mode || (S.settings.minimal ? 'minimal' : 'full');
+const palTab = () => appMode() === 'full' ? 'train' : 'palaces';
+function viewHomeZen() {
+  const all = deckCounts('all');
+  const decks = S.decks.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl')).map(d => { const k = deckCounts(d.id);
+    return `<div class="deck"><div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div><span class="muted small">${k.total || ''}</span>
+      <button class="sm ${k.total ? 'primary' : ''}" data-go="#/study/${d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz</button></div>`; }).join('');
+  return `<div class="zen-hero"><div class="zen-n">${all.total}</div><div class="muted">${all.total ? 'kart na dziś' : 'Na dziś wszystko zrobione'}</div>
+    ${all.total ? `<button class="primary block" data-go="#/study/all/flip" style="min-height:58px">Zacznij</button>` : ''}</div>
+    ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
+    <div class="card">${decks || '<p class="muted">Brak talii.</p>'}</div>`;
+}
 function viewHome() {
+  if (appMode() === 'zen') return viewHomeZen();
   const all = deckCounts('all'), today = reviewsToday(), st = streak(), hard = difficultCards().length;
   const goal = S.settings.goal || 50;
   const dayFrac = today / Math.max(1, today + all.total);
@@ -491,6 +518,7 @@ function viewHome() {
       ? `<button class="primary block" data-go="#/study/all/flip">▶ Ucz się wszystkiego (${all.total})</button>`
       : `<div class="center muted">${S.cards.length ? '🎉 Na dziś wszystko powtórzone!' + nextDueText() : 'Dodaj pierwsze fiszki, aby zacząć.'}</div>`}
   </div>
+  ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
   ${typeof safetyBannerHTML === 'function' ? safetyBannerHTML() : ''}
   ${typeof homeExtrasHTML === 'function' ? homeExtrasHTML() : ''}
   ${hard ? `<div class="banner row nowrap"><span class="grow">🧠 <b>${hard}</b> ${plural(hard, 'trudna fiszka', 'trudne fiszki', 'trudnych fiszek')} – powtórz bez wpływu na harmonogram</span><button class="sm" data-act="cram-hard">Powtórz</button></div>` : ''}
@@ -595,7 +623,7 @@ function viewStudy(deckId, mode, q) {
     </div>
   </div>
   ${progress(s.done / Math.max(1, s.done + rem))}
-  <div class="row small muted" style="margin-top:6px"><span class="grow">Zrobione: ${s.done}</span>
+  <div class="row small muted study-meta" style="margin-top:6px"><span class="grow">Zrobione: ${s.done}</span>
     ${s.cram ? `<span>Zostało: ${rem}</span>` : countsHTML(deckCounts(deckId))}
     ${s.undo ? '<button class="ghost sm" data-act="undo">↶ Cofnij</button>' : ''}</div>`;
 
@@ -616,7 +644,9 @@ function viewStudy(deckId, mode, q) {
     const msg = { ok: '✅ Dobrze!', close: '🟡 Prawie dobrze', wrong: '❌ Źle' }[s.verdict];
     typed = `<div class="typed">${msg}<br>Twoja odpowiedź: <span class="${cls}">${esc(s.typed || '(pusto)')}</span></div>`;
   }
-  const body = `<div class="card flash">${s.shown ? v.a : v.q}${typed}${hints}</div>`;
+  const tts = S.settings.tts && 'speechSynthesis' in window;
+  if (tts && !s.spoken) { s.spoken = true; onMount(() => speak(s.shown ? stripHtml(v.a) : stripHtml(v.q))); }
+  const body = `<div class="card flash">${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${s.shown ? v.a : v.q}${typed}${hints}</div>`;
 
   let bar;
   if (!s.shown) {
@@ -627,11 +657,11 @@ function viewStudy(deckId, mode, q) {
     } else bar = `<button class="primary block" data-act="show" style="min-height:56px">Pokaż odpowiedź</button>`;
   } else {
     const suggest = { ok: 3, close: 2, wrong: 1 }[s.verdict] || 0;
-    const labels = ['Nie pamiętam', 'Trudne', 'Dobrze', 'Łatwe'];
-    const now = Date.now();
-    bar = `<div class="grades">${[1, 2, 3, 4].map(g => {
+    const labels = S.settings.grade2 ? ['Nie pamiętam', '', 'Pamiętam', ''] : ['Nie pamiętam', 'Trudne', 'Dobrze', 'Łatwe'];
+    const now = Date.now(), gs = S.settings.grade2 ? [1, 3] : [1, 2, 3, 4];
+    bar = `<div class="grades n${gs.length}">${gs.map(g => {
       const t = s.cram ? (g === 1 ? 'jeszcze raz' : 'dalej') : human(schedule(c.srs, g, now, false).due - now);
-      return `<button class="g${g}${suggest === g ? ' suggest' : ''}" data-act="grade" data-g="${g}">${labels[g - 1]}<small>${t}</small></button>`;
+      return `<button class="g${g}${suggest === g ? ' suggest' : ''}" data-act="grade" data-g="${g}">${labels[g - 1]}${S.settings.showIvl !== false ? `<small>${t}</small>` : ''}</button>`;
     }).join('')}</div>`;
   }
   return head + body + `<div class="answerbar">${bar}</div>`;
@@ -1133,8 +1163,9 @@ function viewMore() {
   const last30 = S.log.filter(l => l.t > Date.now() - 30 * DAY), acc = last30.length ? Math.round(last30.filter(l => l.g > 1).length / last30.length * 100) : 0;
   const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const modeCard = `<div class="card"><h2 style="margin-top:0">Tryb aplikacji</h2>
-    <div class="modes"><button class="mode${st.minimal ? '' : ' on'}" data-act="set-mode" data-m="full"><span>🎮</span><b>Pełny</b><small>bitwy, osiągnięcia, skrzynki, ranking, gry pamięciowe</small></button>
-      <button class="mode${st.minimal ? ' on' : ''}" data-act="set-mode" data-m="min"><span>🧘</span><b>Skupienie</b><small>tylko fiszki i materiały – czysty, spokojny wygląd bez grywalizacji</small></button></div></div>`;
+    <div class="modes three">${[['full', '🎮', 'Pełny', 'bitwy, osiągnięcia, skrzynki, ranking, gry'], ['minimal', '🧘', 'Skupienie', 'fiszki, materiały i pałace pamięci – bez grywalizacji'],
+      ['zen', '🎯', 'Pełne skupienie', 'tylko nauka: zero liczników, statystyk i dodatków']].map(([m, i, n, d]) =>
+      `<button class="mode${appMode() === m ? ' on' : ''}" data-act="set-mode" data-m="${m}"><span>${i}</span><b>${n}</b><small>${d}</small></button>`).join('')}</div></div>`;
   return `<h1>Więcej</h1>
   ${modeCard}
   <div class="card"><h2 style="margin-top:0">📊 Statystyki</h2>
@@ -1266,7 +1297,7 @@ function exportData() { const { settings, ...rest } = S; return { ...rest, expor
 function mergeState(R) {
   const tomb = { ...S.tomb };
   for (const k in R.tomb || {}) tomb[k] = Math.max(R.tomb[k], tomb[k] || 0);
-  for (const key of ['decks', 'notes', 'cards', 'palaces', 'topics', 'friends']) {
+  for (const key of ['decks', 'notes', 'cards', 'palaces', 'topics', 'friends', 'stickies', 'atlases']) {
     S[key] = S[key] || [];
     const map = new Map(S[key].map(x => [x.id, x]));
     for (const r of R[key] || []) { const l = map.get(r.id); if (!l || (r.mod || 0) > (l.mod || 0)) map.set(r.id, r); }
@@ -1345,7 +1376,8 @@ const ACTIONS = {
   'cram-deck': el => { SESSION = null; go(`#/study/${el.dataset.id}/flip?cram=all`); },
   'end-study': el => { SESSION = null; go(el.dataset.href); },
   'switch-mode': el => { if (SESSION) { const [d, , c] = SESSION.key.split('/'); SESSION.key = `${d}/${el.dataset.href.split('/')[3].split('?')[0]}/${c}`; SESSION.mode = SESSION.key.split('/')[1]; } location.replace(el.dataset.href); },
-  show: () => { SESSION.shown = true; render(); },
+  show: () => { SESSION.shown = true; SESSION.spoken = false; render(); },
+  speak: () => { const v = cardView(SESSION.card); speak(stripHtml(SESSION.shown ? v.a : v.q)); },
   hint: () => { SESSION.hint = true; render(); },
   check: () => {
     const v = $('#typein').value, c = cardView(SESSION.card);
@@ -1423,7 +1455,8 @@ const ACTIONS = {
   'walk-step': el => { WALK.i += +el.dataset.d; WALK.assoc = false; WALK.fact = false; render(); },
 
   sync: () => syncNow(true),
-  'set-mode': el => { S.settings.minimal = el.dataset.m === 'min'; save(); render(); toast(S.settings.minimal ? '🧘 Tryb skupienia – tylko fiszki' : '🎮 Tryb pełny'); },
+  'set-mode': el => { const m = el.dataset.m; S.settings.mode = m; S.settings.minimal = m !== 'full'; save(); render();
+    toast({ full: '🎮 Tryb pełny', minimal: '🧘 Tryb skupienia', zen: '🎯 Pełne skupienie – tylko nauka' }[m]); },
   ics: () => { download('fiszki-przypomnienie.ics', makeICS(), 'text/calendar'); toast('Otwórz pobrany plik i dodaj do kalendarza', 3500); },
   badge: async () => {
     if (!('setAppBadge' in navigator)) return toast('Ta przeglądarka nie obsługuje liczby na ikonie. Dodaj aplikację do ekranu początkowego.', 4000);

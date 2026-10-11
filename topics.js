@@ -38,7 +38,7 @@ function topicStats(t) {
   const due = [...ids].reduce((a, id) => a + deckCounts(id).total, 0);
   return { cards: cards.length, mature: cards.filter(c => c.srs.ivl >= 21).length, due };
 }
-const ITEM_ICON = { link: '🔗', yt: '▶️', note: '📝' };
+const ITEM_ICON = { link: '🔗', yt: '▶️', note: '📝', gallery: '🖼️' };
 
 function topicRow(t) {
   const st = topicStats(t), subs = S.topics.filter(x => x.parentId === t.id).length;
@@ -52,6 +52,8 @@ function topicRow(t) {
 ROUTES.topics = () => {
   const roots = S.topics.filter(t => !t.parentId).sort((a, b) => a.name.localeCompare(b.name, 'pl'));
   return { tab: 'topics', html: `<h1>Tematy</h1>
+    <div class="card row nowrap atlas-cta" data-go="#/atlas"><span style="font-size:34px">🫀</span><div class="grow"><b>Atlas – nauka z rycin</b>
+      <div class="small muted">Twoje zdjęcie + nazwy struktur: przegląd, nazywanie i wskazywanie (np. anatomia)</div></div><span>›</span></div>
     <div class="card"><p class="small muted" style="margin-top:0">Katalogi z materiałami: strony, filmy z YouTube i notatki z zakreślaczem. Podepnij do tematu talie fiszek – zobaczysz postęp całego działu.</p>
     ${roots.map(topicRow).join('') || '<p class="muted">Nie masz jeszcze tematów.</p>'}
     <div class="spacer"></div><button class="primary block" data-act="topic-new">➕ Nowy temat</button></div>` };
@@ -69,8 +71,9 @@ ROUTES.topic = parts => {
     const yt = it.type === 'yt' && ytId(it.url);
     const thumb = yt ? `<img src="https://i.ytimg.com/vi/${yt}/mqdefault.jpg" alt="" style="width:64px;height:44px">`
       : it.type === 'link' ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostOf(it.url))}&sz=64" alt="" style="width:32px;height:32px;object-fit:contain">`
-      : `<span style="font-size:26px">📝</span>`;
-    const sub = it.type === 'note' ? htmlText(it.html).slice(0, 80) : hostOf(it.url) + (htmlText(it.html).trim() ? ' · 📝' : '');
+      : it.type === 'gallery' && IMG[it.images?.[0]?.id] ? `<img src="${IMG[it.images[0].id]}" alt="">`
+      : `<span style="font-size:26px">${ITEM_ICON[it.type]}</span>`;
+    const sub = it.type === 'note' ? htmlText(it.html).slice(0, 80) : it.type === 'gallery' ? `${(it.images || []).length} zdjęć` : hostOf(it.url) + (htmlText(it.html).trim() ? ' · 📝' : '');
     return `<div class="note" data-go="#/item/${t.id}/${it.id}">${thumb}<div class="t"><div><b>${esc(it.title)}</b></div><div class="small muted">${esc(sub)}</div></div><span class="tag">${ITEM_ICON[it.type]}</span></div>`;
   }).join('');
   const deckRows = decks.map(d => { const k = deckCounts(d.id); return `<div class="deck"><div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div>${countsHTML(k)}
@@ -88,6 +91,7 @@ ROUTES.topic = parts => {
     <div class="spacer"></div>
     <div class="row"><button class="sm grow" data-act="item-add" data-type="link" data-id="${t.id}">🔗 Strona</button>
       <button class="sm grow" data-act="item-add" data-type="yt" data-id="${t.id}">▶️ YouTube</button>
+      <button class="sm grow" data-act="item-add" data-type="gallery" data-id="${t.id}">🖼️ Galeria</button>
       <button class="sm grow primary" data-act="item-add" data-type="note" data-id="${t.id}">📝 Notatka</button></div>
     ${items || '<p class="muted small">Dodaj stronę, film albo notatkę.</p>'}
   </div>
@@ -117,6 +121,7 @@ ROUTES.item = parts => {
     <button class="iconbtn" data-act="item-rename" data-tid="${t.id}" data-id="${it.id}">✏️</button></div>
   ${yt ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${yt}?playsinline=1&rel=0${ytStart(it.url) ? '&start=' + ytStart(it.url) : ''}" title="YouTube" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
      <div class="row"><a class="btn sm" href="${esc(it.url)}" target="_blank" rel="noopener">Otwórz w YouTube ↗</a></div>` : ''}
+  ${it.type === 'gallery' ? galleryHTML(t, it) : ''}
   ${it.type === 'link' ? `<div class="card tight row nowrap"><span class="grow small" style="word-break:break-all">${esc(it.url)}</span>
      <a class="btn primary sm" href="${esc(it.url)}" target="_blank" rel="noopener">Otwórz ↗</a></div>` : ''}
   <div class="toolbar" id="ed-tools">
@@ -225,6 +230,11 @@ Object.assign(ACTIONS, {
   'item-add': async el => {
     const t = topicById(el.dataset.id), type = el.dataset.type;
     let url = '', title = '';
+    if (type === 'gallery') {
+      title = prompt('Nazwa galerii:', 'Zdjęcia ' + (t.items.filter(i => i.type === 'gallery').length + 1)); if (title == null) return;
+      const item = { id: uid(), type: 'gallery', title: title.trim() || 'Galeria', url: '', html: '', images: [], created: Date.now(), mod: Date.now() };
+      t.items.push(item); touch(t); save(); emit('material'); return go(`#/item/${t.id}/${item.id}`);
+    }
     if (type !== 'note') {
       url = (prompt(type === 'yt' ? 'Wklej link do filmu YouTube:' : 'Wklej adres strony:') || '').trim(); if (!url) return;
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
@@ -259,3 +269,53 @@ Object.assign(ACTIONS, {
     } catch (e) { toast('Błąd AI: ' + e.message, 5000); }
   },
 });
+
+// ============================================================ Galeria zdjęć w temacie
+let LB = null;   // podgląd pełnoekranowy { tid, iid, i }
+function galleryHTML(t, it) {
+  const imgs = it.images || [];
+  const lb = LB && LB.iid === it.id && imgs[LB.i] ? imgs[LB.i] : null;
+  return `<div class="gallery">${imgs.map((g, i) => `<figure data-act="gal-open" data-i="${i}" data-iid="${it.id}" data-tid="${t.id}">
+      ${IMG[g.id] ? `<img src="${IMG[g.id]}" alt="" loading="lazy">` : '<div class="muted small">brak obrazu</div>'}${g.cap ? `<figcaption>${esc(g.cap)}</figcaption>` : ''}</figure>`).join('')}
+    <button class="gal-add" data-act="gal-add" data-tid="${t.id}" data-id="${it.id}">➕<small>Dodaj zdjęcia</small></button></div>
+    ${lb ? `<div class="lightbox">
+      <div class="row nowrap lb-top"><span class="grow small">${LB.i + 1} / ${imgs.length}</span><button class="iconbtn" data-act="gal-close" style="color:#fff">✕</button></div>
+      <img src="${IMG[lb.id] || ''}" alt="">
+      <input id="gal-cap" value="${esc(lb.cap || '')}" placeholder="Podpis zdjęcia…">
+      <div class="row nowrap"><button class="grow" data-act="gal-nav" data-d="-1" ${LB.i ? '' : 'disabled'}>‹</button>
+        <button class="grow" data-act="gal-occl">🖼️ Fiszka z lukami</button><button class="grow" data-act="gal-atlas">🫀 Atlas</button>
+        <button class="grow" data-act="gal-nav" data-d="1" ${LB.i < imgs.length - 1 ? '' : 'disabled'}>›</button></div>
+      <button class="danger sm" data-act="gal-del">Usuń zdjęcie</button></div>` : ''}`;
+}
+const lbCtx = () => { const t = topicById(LB.tid), it = t?.items.find(x => x.id === LB.iid); return { t, it, img: it?.images[LB.i] }; };
+document.addEventListener('change', e => {
+  if (e.target.id !== 'gal-cap' || !LB) return;
+  const { t, img } = lbCtx(); if (img) { img.cap = e.target.value.trim(); touch(t); save(); }
+});
+Object.assign(ACTIONS, {
+  'gal-add': el => {
+    const t = topicById(el.dataset.tid), it = t?.items.find(x => x.id === el.dataset.id); if (!it) return;
+    const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.multiple = true; i.style.display = 'none'; document.body.append(i);
+    i.onchange = async () => {
+      const files = [...i.files]; i.remove(); if (!files.length) return;
+      toast(`Dodaję ${files.length} zdjęć…`, 20000);
+      for (const f of files) { try { it.images.push({ id: await putImage(await compressImage(f)), cap: '' }); } catch { /* pomijamy uszkodzony plik */ } }
+      touch(t); save(); toast(`Dodano ${files.length} ✓`); render();
+    };
+    i.click();
+  },
+  'gal-open': el => { LB = { tid: el.dataset.tid, iid: el.dataset.iid, i: +el.dataset.i }; render(); },
+  'gal-close': () => { LB = null; render(); },
+  'gal-nav': el => { LB.i += +el.dataset.d; render(); },
+  'gal-del': () => {
+    const { t, it } = lbCtx(); if (!confirm('Usunąć to zdjęcie z galerii?')) return;
+    it.images.splice(LB.i, 1); touch(t); save(); LB = it.images.length ? { ...LB, i: Math.min(LB.i, it.images.length - 1) } : null; render();
+  },
+  'gal-occl': () => { const { img } = lbCtx(); LB = null; DRAFT = freshDraft('occl'); DRAFT.imageId = img.id; DRAFT.title = img.cap || ''; DRAFT.fromHash = '#/add'; go('#/add'); },
+  'gal-atlas': () => {
+    const { img } = lbCtx(); LB = null;
+    const a = touch({ id: uid(), name: img.cap || 'Rycina z galerii', imageId: img.id, marks: [], created: Date.now() });
+    S.atlases.push(a); save(); AT = null; go('#/atlas/' + a.id);
+  },
+});
+window.addEventListener('hashchange', () => { LB = null; });
