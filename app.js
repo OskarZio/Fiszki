@@ -98,7 +98,7 @@ function blankState() {
   return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS), ...extraState() };
 }
 // pola dodane w kolejnych wersjach (tematy, znajomi, gry, osiągnięcia, system liczbowy)
-function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 } }; }
+function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [] }; }
 
 // Proste zdarzenia, na które reagują moduły (osiągnięcia, ranking…)
 const HOOKS = {};
@@ -1127,6 +1127,10 @@ function viewMore() {
     <div class="kv"><span>Powtórek łącznie</span><b>${S.log.length}</b></div>
   </div>
 
+  ${typeof statsChartsHTML === 'function' ? statsChartsHTML() : ''}
+
+  <div class="card row nowrap"><span style="font-size:30px">🎨</span><div class="grow"><b>Wygląd</b><div class="small muted">Motyw, kolor tła i akcentu (paleta lub HEX)</div></div><button class="primary sm" data-go="#/theme">Zmień</button></div>
+
   <div class="card"><h2 style="margin-top:0">⏰ Przypomnienia</h2>
     <p class="small muted">Przeglądarka na iPhonie nie może sama wysyłać powiadomień o stałej porze bez serwera, dlatego aplikacja dodaje codzienne przypomnienie do Kalendarza – iPhone przypomni Ci o nauce, a stuknięcie w wydarzenie otworzy aplikację.</p>
     <label class="field"><span>Godzina nauki</span><input type="time" id="rem-time" value="${esc(st.reminder)}"></label>
@@ -1235,8 +1239,10 @@ function mergeState(R) {
   const ids = new Set(S.log.map(l => l.id));
   for (const l of R.log || []) if (!ids.has(l.id)) S.log.push(l);
   S.log.sort((a, b) => a.t - b.t);
-  const gids = new Set(S.games.map(g => g.id));
-  for (const g of R.games || []) if (!gids.has(g.id)) S.games.push(g);
+  for (const key of ['games', 'wallet', 'items', 'battles']) {
+    S[key] = S[key] || []; const ids = new Set(S[key].map(x => x.id));
+    for (const x of R[key] || []) if (!ids.has(x.id)) S[key].push(x);
+  }
   for (const k in R.ach || {}) S.ach[k] = Math.min(R.ach[k], S.ach[k] || Infinity);
   for (const k in R.stats || {}) S.stats[k] = Math.max(R.stats[k] || 0, S.stats[k] || 0);
   if (R.major && (R.major.mod || 0) > (S.major.mod || 0)) S.major = R.major;
@@ -1454,6 +1460,7 @@ async function init() {
   S.settings = { ...structuredClone(DEFAULT_SETTINGS), ...S.settings, sync: { ...DEFAULT_SETTINGS.sync, ...(S.settings?.sync || {}) } };
   navigator.storage?.persist?.();
   window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+  if (typeof applyTheme === 'function') applyTheme();
   render();
   updateBadge();
   emit('start');

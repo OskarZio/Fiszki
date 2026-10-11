@@ -63,7 +63,10 @@ function palaceLoci(pid) {
 ROUTES.train = () => {
   const filled = Object.values(S.major.words || {}).filter(w => w?.trim()).length;
   const pins = S.palaces.reduce((a, p) => a + p.stations.reduce((b, s) => b + s.pins.length, 0), 0);
+  const w = S.battles.filter(b => b.won === 1).length;
   return { tab: 'train', html: `<h1>Trening pamięci</h1>
+  <div class="card hero-card battle-cta" data-go="#/battles"><div class="row nowrap"><span style="font-size:44px">⚔️</span>
+    <div class="grow"><b style="font-size:19px">Bitwy 1 na 1</b><div class="small">Rywalizuj ze znajomymi lub losowym graczem · ${w} ${plural(w, 'wygrana', 'wygrane', 'wygranych')} · 💎 ${coins()}</div></div><span style="font-size:22px">›</span></div></div>
   <div class="card"><h2 style="margin-top:0">🎮 Gry pamięciowe</h2>
     <p class="small muted">Zapamiętaj jak najwięcej w krótkim czasie, potem odtwórz w tej samej kolejności – jak w Memory League.</p>
     <div class="discs">${Object.entries(DISC).map(([k, d]) => {
@@ -129,8 +132,8 @@ function gameMemo(G, D) {
     const L = G.loci[G.pos % G.loci.length];
     locus = `<div class="locus">${occlHTML({ imageId: L.s.imageId, style: 'pin', boxes: L.s.pins }, L.pin.id, false, 'mini')}<span>📍 ${G.pos + 1}. ${esc(L.label)}</span></div>`;
   }
-  return `<div class="studybar"><button class="iconbtn" data-act="game-quit">✕</button><div class="title">${D.icon} Zapamiętuj</div>
-    <b id="gtimer" class="timer">${G.t}s</b></div>
+  return `${G.battle ? '' : `<div class="studybar"><button class="iconbtn" data-act="game-quit">✕</button><div class="title">${D.icon} Zapamiętuj</div>
+    <b id="gtimer" class="timer">${G.t}s</b></div>`}
     ${progress((G.pos + 1) / gs.length, true)}
     <div class="spot ${G.d}">${spot.map(D.tile).map(x => `<span>${x}</span>`).join('')}</div>
     ${hint ? `<div class="hintbox center">${hint}</div>` : ''}${locus}
@@ -141,7 +144,7 @@ function gameMemo(G, D) {
     <div class="spacer"></div><button class="block" data-act="game-recall">✅ Gotowe – przejdź do odtwarzania</button>`;
 }
 function gameRecall(G, D) {
-  const head = `<div class="studybar"><button class="iconbtn" data-act="game-quit">✕</button><div class="title">${D.icon} Odtwórz</div><b id="gtimer" class="timer">0:00</b></div>`;
+  const head = G.battle ? '' : `<div class="studybar"><button class="iconbtn" data-act="game-quit">✕</button><div class="title">${D.icon} Odtwórz</div><b id="gtimer" class="timer">0:00</b></div>`;
   if (G.d === 'numbers') {
     return head + `<p class="small muted center">Wpisz cyfry po kolei. Stuknij pole, aby je poprawić.</p>
       <div class="digits">${G.answer.map((v, i) => `<span class="dg${i === G.cursor ? ' cur' : ''}${i % 10 === 9 ? ' brk' : ''}" data-act="rc-cursor" data-i="${i}">${v ?? ''}</span>`).join('')}</div>
@@ -184,6 +187,7 @@ function mountGameTimer() {
   tick(); gameTimer = setInterval(tick, 250);
 }
 function finishGame() {
+  if (GAME.battle) return battleMemFinish();
   const G = GAME; clearInterval(gameTimer);
   G.recallMs = Date.now() - G.recallStart;
   G.correct = G.items.reduce((a, x, i) => a + ((G.d === 'numbers' ? G.answer[i] : G.answer[i] != null ? G.pool[G.answer[i]] : null) === x ? 1 : 0), 0);
@@ -193,7 +197,7 @@ function finishGame() {
   render(); scrollTo(0, 0);
 }
 document.addEventListener('keydown', e => {
-  if (!GAME || parseRoute().parts[0] !== 'game' || e.target.matches('input, textarea, select')) return;
+  if (!GAME || !['game', 'battle'].includes(parseRoute().parts[0]) || e.target.matches('input, textarea, select')) return;
   if (GAME.phase === 'memo') {
     if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); ACTIONS['game-nav']({ dataset: { dlt: 1 } }); }
     if (e.key === 'ArrowLeft') ACTIONS['game-nav']({ dataset: { dlt: -1 } });
@@ -230,6 +234,7 @@ Object.assign(ACTIONS, {
     G.memoMs = Math.min(G.t * 1000, Date.now() - G.start); G.phase = 'recall'; G.recallStart = Date.now(); G.cursor = 0;
     G.answer = Array(G.n).fill(null);
     if (G.d !== 'numbers') G.pool = shuffle([...G.items]);
+    emit('gameRecallStart');
     render(); scrollTo(0, 0);
   },
   'rc-key': el => {

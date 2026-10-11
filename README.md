@@ -16,6 +16,14 @@ Aplikacja webowa (PWA) do nauki z powtórkami rozłożonymi w czasie. Działa of
   - bez AI: odczyt tekstu (OCR po polsku, tekst z PDF) do listy do poprawki,
   - zdjęcie lub strona PDF jako „obraz z lukami”.
 - **Anki ⇄ Fiszki**: import `.apkg`/`.colpkg` (stary i nowy format, obrazy, karty odwrotne, luki, wbudowane „Image Occlusion”, postęp nauki) oraz eksport do `.apkg` (Anki, AnkiMobile, AnkiDroid; obrazy z lukami eksportują się jako gotowe obrazki).
+- **📚 Tematy**: katalogi i podtematy z materiałami (strony, filmy YouTube, notatki z zakreślaczem); z zaznaczonego tekstu notatki robi się fiszkę jednym stuknięciem.
+- **🏆 Motywacja**: XP i poziomy, 50+ osiągnięć z konfetti, serie poprawnych odpowiedzi, cel dzienny.
+- **📈 Wykres skuteczności** (7/30/90 dni) i powtórek dziennie, z podglądem po dotknięciu.
+- **🎨 Wygląd**: gotowe motywy, wybór koloru tła i akcentu z palety albo w HEX.
+- **👥 Ranking ze znajomymi** (dziś / tydzień / seria / poziom) – przez prywatny GitHub Gist, znajomych dodaje się kodem albo linkiem.
+- **⚔️ Bitwy 1 na 1**: szybki mecz z losowym graczem (matchmaking), pojedynek ze znajomym na kod/link albo trening z botem. Tryb „Fiszki” (kto szybciej się nauczy i odtworzy – wpisując lub mówiąc) i „Pamięć” (liczby/słowa/obrazy). Pasek życia i „szala” przesuwają się z każdą dobrą odpowiedzią, naklejki w trakcie walki, zabezpieczenia przed oszukiwaniem, statystyki i bilans ze znajomymi. Komunikacja przez publiczny przekaźnik ntfy.sh.
+- **💎 Kryształy i sklep**: skrzynki z naklejkami losowane na ruletce (rzadkości: zwykła/rzadka/epicka/legendarna), darmowa skrzynka za każdą wygraną, album naklejek, efekty zwycięstwa i motywy premium.
+- **🧠 Trening pamięci**: gry jak w Memory League (liczby, słowa, obrazy, karty) z rekordami i trasą z pałacu pamięci, polski system liczbowy 00–99 (konwerter, szybki trening, fiszki).
 - **Synchronizacja telefon ⇄ komputer** przez prywatny GitHub Gist (token z zakresem `gist`) albo eksport/import pliku.
 
 ## Uruchomienie (GitHub Pages)

@@ -8,6 +8,7 @@ function xpTotal() {
   for (const l of S.log) xp += l.n ? 3 : l.g > 1 ? 2 : 1;
   for (const g of S.games) xp += Math.round((g.correct || 0) / 2);
   xp += Object.keys(S.ach).length * 25;
+  for (const b of S.battles || []) xp += b.won === 1 ? 30 : 10;
   return xp;
 }
 const levelOf = xp => Math.floor((1 + Math.sqrt(1 + xp / 10)) / 2);   // próg poziomu n: 40·n·(n−1) XP
@@ -79,6 +80,12 @@ const ACHIEVEMENTS = [
   A('major_100', '🔟', 'System liczbowy', 'Uzupełnij obrazy 00–99', c => c.major, 100),
   A('friend_1', '🤝', 'Razem raźniej', 'Dodaj znajomego do rankingu', c => c.friends, 1),
   A('rank_1', '🥇', 'Lider dnia', 'Bądź pierwszy w dziennym rankingu', c => c.rankFirst || 0, 1),
+  A('battle_1', '⚔️', 'Pierwsza krew', 'Wygraj pierwszą bitwę', c => c.battleWins || 0, 1),
+  A('battle_10', '🛡️', 'Wojownik', 'Wygraj 10 bitew', c => c.battleWins || 0, 10),
+  A('battle_50', '🗡️', 'Gladiator', 'Wygraj 50 bitew', c => c.battleWins || 0, 50),
+  A('winstreak_3', '🌪️', 'Passa', '3 wygrane bitwy z rzędu', c => c.winStreak || 0, 3),
+  A('cases_10', '📦', 'Hazardzista wiedzy', 'Otwórz 10 skrzynek', c => c.cases || 0, 10),
+  A('legendary', '🌟', 'Legenda w albumie', 'Wylosuj legendarną naklejkę', c => c.legendary || 0, 1),
 ];
 
 let achTimer, lastLevel = null;
@@ -132,13 +139,17 @@ function confetti(n = 120) {
   const cv = $('#confetti'); if (!cv) return;
   const ctx = cv.getContext('2d'), W = cv.width = innerWidth * devicePixelRatio, H = cv.height = innerHeight * devicePixelRatio;
   const colors = ['#4f46e5', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'];
+  const eff = typeof EFFECTS !== 'undefined' && EFFECTS.find(e => e.id === S.settings.effect && e.chars);
   const ps = Array.from({ length: n }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .35, vx: (Math.random() - .5) * 18 * devicePixelRatio,
     vy: (-Math.random() * 18 - 6) * devicePixelRatio, s: (4 + Math.random() * 6) * devicePixelRatio, r: Math.random() * 6, c: colors[Math.random() * colors.length | 0] }));
   cv.style.display = 'block'; const t0 = performance.now();
   (function frame(t) {
     ctx.clearRect(0, 0, W, H);
     for (const p of ps) { p.vy += .5 * devicePixelRatio; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += .1;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); }
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      if (eff) { ctx.font = `${p.s * 3}px serif`; ctx.fillText(p.ch || (p.ch = eff.chars[Math.random() * eff.chars.length | 0]), 0, 0); }
+      else { ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); }
+      ctx.restore(); }
     if (t - t0 < 2600) requestAnimationFrame(frame); else { ctx.clearRect(0, 0, W, H); cv.style.display = 'none'; }
   })(t0);
 }
@@ -152,6 +163,8 @@ function homeExtrasHTML() {
     <div class="row nowrap"><span class="lvl">${lvl}</span>
       <div class="grow"><div class="row small nowrap"><b class="grow">${esc(S.profile.avatar)} ${esc(S.profile.nick || 'Ty')} · ${levelTitle(lvl)}</b><span class="muted">${xp - a}/${b - a} XP</span></div>
       ${progress((xp - a) / (b - a), true)}</div></div>
+    <div class="spacer"></div>
+    <div class="row"><button class="sm grow primary" data-go="#/battles">⚔️ Bitwa</button><button class="sm grow" data-go="#/shop">💎 ${typeof coins === 'function' ? coins() : 0}</button></div>
     <div class="spacer"></div>
     <div class="row"><button class="sm grow" data-go="#/ach">🏆 Osiągnięcia ${got}/${ACHIEVEMENTS.length}</button>
       <button class="sm grow" data-go="#/rank">👥 Ranking${S.friends.length ? ` · ${pos ? pos + '. miejsce' : ''}` : ''}</button></div>
