@@ -11,10 +11,31 @@ const REACT_DEFAULT = 'assets/reakcja-kot.webp';
 const RX = {};   // slot -> { url, name } (własne pliki z IndexedDB)
 let GLOBAL_RX = {};   // slot -> { path } – GIF-y ustawione przez hosta dla wszystkich (assets/global.json w repozytorium)
 // kolejność: własny plik użytkownika → GIF od hosta → domyślny kot
-const rxSrc = k => RX[k]?.url || (GLOBAL_RX[k]?.path ? GLOBAL_RX[k].path + '?v=' + (GLOBAL_RX[k].t || 0) : REACT_DEFAULT);
+const GLOBAL_PREVIEW = {};   // podgląd od razu po wgraniu przez hosta (zanim GitHub Pages opublikuje plik)
+const rxRepo = () => (typeof hostRepo === 'function' ? hostRepo() : 'OskarZio/aa');
+const rawUrl = path => `https://raw.githubusercontent.com/${rxRepo()}/HEAD/${path}`;
+// adresy GIF-a hosta: najpierw ze strony (GitHub Pages), a gdy się nie wczyta – prosto z repozytorium
+const globalSrcs = k => GLOBAL_RX[k]?.path ? [GLOBAL_PREVIEW[k], GLOBAL_RX[k].path + '?v=' + (GLOBAL_RX[k].t || 0), rawUrl(GLOBAL_RX[k].path)].filter(Boolean) : [];
+const rxSrcs = k => RX[k]?.url ? [RX[k].url] : [...globalSrcs(k), REACT_DEFAULT];
+const rxSrc = k => rxSrcs(k)[0];
 const rxIsCat = k => !RX[k] && !GLOBAL_RX[k]?.path;
+// <img> z listą zapasowych adresów (gdy pierwszy się nie wczyta, próbuje kolejnego)
+function rxImg(k, cls = '') {
+  const srcs = rxSrcs(k);
+  return `<img class="${cls}${rxIsCat(k) ? ' rx-default' : ''}" src="${srcs[0]}" data-alt="${esc(JSON.stringify(srcs.slice(1)))}" onerror="rxFallback(this)" alt="">`;
+}
+window.rxFallback = img => {
+  const alt = JSON.parse(img.dataset.alt || '[]'); if (!alt.length) return;
+  img.dataset.alt = JSON.stringify(alt.slice(1));
+  if (alt[0] === REACT_DEFAULT) img.classList.add('rx-default');
+  img.src = alt[0];
+};
 async function loadGlobalReactions() {
-  try { const r = await fetch('assets/global.json?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) GLOBAL_RX = (await r.json()).reactions || {}; } catch { /* offline */ }
+  // pobieramy listę ze strony i z repozytorium naraz – wygrywa nowsza
+  const get = url => fetch(url, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const [a, b] = await Promise.all([get('assets/global.json?t=' + Date.now()), get(rawUrl('assets/global.json') + '?t=' + Date.now())]);
+  const best = [a, b].filter(Boolean).sort((x, y) => (y.updated || 0) - (x.updated || 0))[0];
+  if (best) GLOBAL_RX = best.reactions || {};
 }
 on('start', loadGlobalReactions);
 
@@ -32,7 +53,8 @@ function showReaction(k, test) {
   const cfg = reactCfg()[k] || {}, custom = RX[k];
   document.querySelector('.reaction')?.remove();
   const el = document.createElement('div'); el.className = 'reaction';
-  el.innerHTML = `<div class="rx-card"><img class="${rxIsCat(k) ? 'rx-default' : ''}" src="${rxSrc(k)}" alt=""><b>${esc(REACT_SLOTS[k].caption)}</b><small>stuknij, aby zamknąć</small></div>`;
+  void custom;
+  el.innerHTML = `<div class="rx-card">${rxImg(k)}<b>${esc(REACT_SLOTS[k].caption)}</b><small>stuknij, aby zamknąć</small></div>`;
   const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 300); };
   el.addEventListener('click', close);
   document.body.append(el);
@@ -45,13 +67,15 @@ on('goal', () => setTimeout(() => showReaction('goal'), 600));
 function reactionsSectionHTML() {
   const cfg = reactCfg();
   return `<div class="card"><h2 style="margin-top:0">🎬 Reakcje (GIF)</h2>
-    <p class="small muted">Po wybranym zdarzeniu na ekranie pokaże się GIF. Wgraj własny (GIF, WebP, PNG, JPG) albo zostaw domyślnego kota. Pliki zostają na tym urządzeniu.</p>
+    <p class="small muted">Po wybranym zdarzeniu na ekranie pokaże się GIF. Wgraj własny (GIF, WebP, PNG, JPG) albo zostaw ${Object.keys(GLOBAL_RX).length ? 'GIF od hosta' : 'domyślnego kota'}. Własne pliki zostają na tym urządzeniu.</p>
     ${Object.entries(REACT_SLOTS).map(([k, sl]) => { const c = cfg[k] || {}, own = RX[k];
-      return `<div class="sndrow"><div class="row nowrap"><img class="rx-thumb" src="${rxSrc(k)}" alt=""><b class="grow">${sl.name}${!own && GLOBAL_RX[k]?.path ? '<br><small class="muted">GIF od hosta</small>' : ''}</b>
+      const note = own ? (GLOBAL_RX[k]?.path ? '<br><small class="c-hard">Twój własny GIF – zasłania GIF od hosta</small>' : '<br><small class="muted">Twój własny GIF</small>')
+        : GLOBAL_RX[k]?.path ? '<br><small class="muted">GIF od hosta</small>' : '<br><small class="muted">domyślny kot</small>';
+      return `<div class="sndrow"><div class="row nowrap">${rxImg(k, 'rx-thumb')}<b class="grow">${sl.name}${note}</b>
           <label class="switch"><input type="checkbox" data-rx-on="${k}" ${reactOn(k) ? 'checked' : ''}><span></span></label></div>
         <div class="row nowrap"><button class="sm" data-act="rx-test" data-k="${k}">▶ Pokaż</button>
           <button class="sm" data-act="rx-pick" data-k="${k}">📁 ${own ? 'Zmień' : 'Wgraj własny'}</button>
-          ${own ? `<button class="sm ghost" data-act="rx-reset" data-k="${k}">Domyślny</button>` : ''}
+          ${own ? `<button class="sm ghost" data-act="rx-reset" data-k="${k}">${GLOBAL_RX[k]?.path ? 'Użyj GIF-a hosta' : 'Domyślny'}</button>` : ''}
           <select data-rx-dur="${k}" style="width:auto;margin-left:auto">${[2, 3.5, 5, 8].map(d => `<option value="${d}" ${(c.dur || 3.5) === d ? 'selected' : ''}>${d} s</option>`).join('')}</select></div></div>`; }).join('')}
   </div>`;
 }

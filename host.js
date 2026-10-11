@@ -87,10 +87,12 @@ ROUTES.host = () => {
       ${HOST_CHECK ? `<div class="checklist">${HOST_CHECK.res.map(x => `<div class="${x.ok ? 'c-rev' : 'c-lrn'}">${x.ok ? '✓' : '✗'} ${esc(x.text)}</div>`).join('')}</div>` : ''}</div>
     <div class="card"><h3 style="margin-top:0">🎬 GIF-y dla wszystkich</h3>
       <p class="small muted">Wgrany GIF zobaczą wszyscy, którzy nie ustawili własnego. Po wgraniu GitHub Pages potrzebuje ok. 1–2 minut na publikację.</p>
-      ${Object.entries(REACT_SLOTS).map(([k, sl]) => `<div class="sndrow"><div class="row nowrap"><img class="rx-thumb" src="${GLOBAL_RX[k]?.path ? GLOBAL_RX[k].path + '?v=' + GLOBAL_RX[k].t : REACT_DEFAULT}" alt="">
-          <b class="grow">${sl.name}<br><small class="muted">${GLOBAL_RX[k]?.path ? 'globalny: ' + esc(GLOBAL_RX[k].name || '') : 'domyślny kot'}</small></b></div>
+      ${Object.entries(REACT_SLOTS).map(([k, sl]) => { const g = globalSrcs(k); return `<div class="sndrow"><div class="row nowrap">
+          <img class="rx-thumb" src="${g[0] || REACT_DEFAULT}" data-alt="${esc(JSON.stringify([...g.slice(1), REACT_DEFAULT]))}" onerror="rxFallback(this)" alt="">
+          <b class="grow">${sl.name}<br><small class="muted">${GLOBAL_RX[k]?.path ? 'globalny: ' + esc(GLOBAL_RX[k].name || '') : 'domyślny kot'}</small>
+          ${RX[k] ? '<br><small class="c-hard">Na tym urządzeniu masz własny GIF – zasłania GIF hosta (Więcej → Reakcje → „Użyj GIF-a hosta”)</small>' : ''}</b></div>
         <div class="row"><button class="sm primary" data-act="host-upload" data-k="${k}">📤 Wgraj dla wszystkich</button>
-          ${GLOBAL_RX[k]?.path ? `<button class="sm ghost" data-act="host-clear" data-k="${k}">Przywróć kota</button>` : ''}</div></div>`).join('')}
+          ${GLOBAL_RX[k]?.path ? `<button class="sm" data-act="rx-test" data-k="${k}">▶ Podgląd</button><button class="sm ghost" data-act="host-clear" data-k="${k}">Przywróć kota</button>` : ''}</div></div>`; }).join('')}
     </div>
     <button class="ghost" data-act="host-lock">Zablokuj panel na tym urządzeniu</button>` };
 };
@@ -122,7 +124,7 @@ Object.assign(ACTIONS, {
       const { sha, data } = await readGlobalJson();
       data.reactions = data.reactions || {}; data.reactions[k] = { path, name: f.name, t };
       await writeGlobalJson(data, sha, `Ustaw globalny GIF: ${k}`);
-      GLOBAL_RX = data.reactions; render();
+      GLOBAL_RX = data.reactions; GLOBAL_PREVIEW[k] = URL.createObjectURL(f); render();
       toast('Gotowe ✓ Wszyscy zobaczą nowy GIF po ok. 1–2 min (po odświeżeniu aplikacji)', 5000);
     } catch (e) { toast('Błąd: ' + e.message, 5000); }
   },
