@@ -9,6 +9,14 @@ const REACT_SLOTS = {
 };
 const REACT_DEFAULT = 'assets/reakcja-kot.webp';
 const RX = {};   // slot -> { url, name } (własne pliki z IndexedDB)
+let GLOBAL_RX = {};   // slot -> { path } – GIF-y ustawione przez hosta dla wszystkich (assets/global.json w repozytorium)
+// kolejność: własny plik użytkownika → GIF od hosta → domyślny kot
+const rxSrc = k => RX[k]?.url || (GLOBAL_RX[k]?.path ? GLOBAL_RX[k].path + '?v=' + (GLOBAL_RX[k].t || 0) : REACT_DEFAULT);
+const rxIsCat = k => !RX[k] && !GLOBAL_RX[k]?.path;
+async function loadGlobalReactions() {
+  try { const r = await fetch('assets/global.json?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) GLOBAL_RX = (await r.json()).reactions || {}; } catch { /* offline */ }
+}
+on('start', loadGlobalReactions);
 
 on('start', async () => {
   for (const k of Object.keys(REACT_SLOTS)) {
@@ -24,7 +32,7 @@ function showReaction(k, test) {
   const cfg = reactCfg()[k] || {}, custom = RX[k];
   document.querySelector('.reaction')?.remove();
   const el = document.createElement('div'); el.className = 'reaction';
-  el.innerHTML = `<div class="rx-card"><img class="${custom ? '' : 'rx-default'}" src="${custom ? custom.url : REACT_DEFAULT}" alt=""><b>${esc(REACT_SLOTS[k].caption)}</b><small>stuknij, aby zamknąć</small></div>`;
+  el.innerHTML = `<div class="rx-card"><img class="${rxIsCat(k) ? 'rx-default' : ''}" src="${rxSrc(k)}" alt=""><b>${esc(REACT_SLOTS[k].caption)}</b><small>stuknij, aby zamknąć</small></div>`;
   const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 300); };
   el.addEventListener('click', close);
   document.body.append(el);
@@ -39,7 +47,7 @@ function reactionsSectionHTML() {
   return `<div class="card"><h2 style="margin-top:0">🎬 Reakcje (GIF)</h2>
     <p class="small muted">Po wybranym zdarzeniu na ekranie pokaże się GIF. Wgraj własny (GIF, WebP, PNG, JPG) albo zostaw domyślnego kota. Pliki zostają na tym urządzeniu.</p>
     ${Object.entries(REACT_SLOTS).map(([k, sl]) => { const c = cfg[k] || {}, own = RX[k];
-      return `<div class="sndrow"><div class="row nowrap"><img class="rx-thumb" src="${own ? own.url : REACT_DEFAULT}" alt=""><b class="grow">${sl.name}</b>
+      return `<div class="sndrow"><div class="row nowrap"><img class="rx-thumb" src="${rxSrc(k)}" alt=""><b class="grow">${sl.name}${!own && GLOBAL_RX[k]?.path ? '<br><small class="muted">GIF od hosta</small>' : ''}</b>
           <label class="switch"><input type="checkbox" data-rx-on="${k}" ${reactOn(k) ? 'checked' : ''}><span></span></label></div>
         <div class="row nowrap"><button class="sm" data-act="rx-test" data-k="${k}">▶ Pokaż</button>
           <button class="sm" data-act="rx-pick" data-k="${k}">📁 ${own ? 'Zmień' : 'Wgraj własny'}</button>

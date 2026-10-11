@@ -1240,7 +1240,8 @@ function viewMore() {
   ${ankiSectionHTML()}
 
   <div class="card"><h2 style="margin-top:0">Dane</h2>
-    <button class="danger" data-act="wipe">Usuń wszystkie dane z tego urządzenia</button></div>`;
+    <button class="danger" data-act="wipe">Usuń wszystkie dane z tego urządzenia</button></div>
+  <p class="center"><a class="small muted" href="#/host">🔑 Panel hosta</a></p>`;
 }
 function mountMore() {
   const st = S.settings;
