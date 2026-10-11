@@ -9,16 +9,23 @@ const REACT_SLOTS = {
 };
 const REACT_DEFAULT = 'assets/reakcja-kot.webp';
 const RX = {};   // slot -> { url, name } (własne pliki z IndexedDB)
-let GLOBAL_RX = {};   // slot -> { path } – GIF-y ustawione przez hosta dla wszystkich (assets/global.json w repozytorium)
+let GLOBAL_RX = {};
+let GIF_CASE = [];            // GIF-y do wylosowania w skrzynce (host wgrywa je w panelu) – [{ id, name, path, r, t }]
+const GIFCASE_PREVIEW = {};   // podgląd świeżo wgranych (zanim GitHub Pages je opublikuje)
+const gifById = id => GIF_CASE.find(g => g.id === id);
+const gifSrcs = g => [GIFCASE_PREVIEW[g.id], g.path + '?v=' + (g.t || 0), rawUrl(g.path)].filter(Boolean);
+const gifImg = (g, cls = '') => { const s = gifSrcs(g); return `<img class="${cls}" src="${s[0]}" data-alt="${esc(JSON.stringify(s.slice(1)))}" onerror="rxFallback(this)" alt="${esc(g.name || '')}" loading="lazy">`; };
+// GIF z kolekcji ustawiony jako reakcja (jeśli nadal go masz)
+const rxGif = k => { const id = S?.settings?.reactions?.[k]?.gid, g = id && gifById(id); return g && typeof hasItem === 'function' && hasItem('gif', id) ? g : null; };   // slot -> { path } – GIF-y ustawione przez hosta dla wszystkich (assets/global.json w repozytorium)
 // kolejność: własny plik użytkownika → GIF od hosta → domyślny kot
 const GLOBAL_PREVIEW = {};   // podgląd od razu po wgraniu przez hosta (zanim GitHub Pages opublikuje plik)
 const rxRepo = () => (typeof hostRepo === 'function' ? hostRepo() : 'OskarZio/aa');
 const rawUrl = path => `https://raw.githubusercontent.com/${rxRepo()}/HEAD/${path}`;
 // adresy GIF-a hosta: najpierw ze strony (GitHub Pages), a gdy się nie wczyta – prosto z repozytorium
 const globalSrcs = k => GLOBAL_RX[k]?.path ? [GLOBAL_PREVIEW[k], GLOBAL_RX[k].path + '?v=' + (GLOBAL_RX[k].t || 0), rawUrl(GLOBAL_RX[k].path)].filter(Boolean) : [];
-const rxSrcs = k => RX[k]?.url ? [RX[k].url] : [...globalSrcs(k), REACT_DEFAULT];
+const rxSrcs = k => RX[k]?.url ? [RX[k].url] : rxGif(k) ? [...gifSrcs(rxGif(k)), REACT_DEFAULT] : [...globalSrcs(k), REACT_DEFAULT];
 const rxSrc = k => rxSrcs(k)[0];
-const rxIsCat = k => !RX[k] && !GLOBAL_RX[k]?.path;
+const rxIsCat = k => !RX[k] && !rxGif(k) && !GLOBAL_RX[k]?.path;
 // <img> z listą zapasowych adresów (gdy pierwszy się nie wczyta, próbuje kolejnego)
 function rxImg(k, cls = '') {
   const srcs = rxSrcs(k);
@@ -35,7 +42,7 @@ async function loadGlobalReactions() {
   const get = url => fetch(url, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
   const [a, b] = await Promise.all([get('assets/global.json?t=' + Date.now()), get(rawUrl('assets/global.json') + '?t=' + Date.now())]);
   const best = [a, b].filter(Boolean).sort((x, y) => (y.updated || 0) - (x.updated || 0))[0];
-  if (best) GLOBAL_RX = best.reactions || {};
+  if (best) { GLOBAL_RX = best.reactions || {}; GIF_CASE = Array.isArray(best.gifCase) ? best.gifCase : []; if (typeof render === 'function' && ['shop', 'host', 'case'].includes(parseRoute().parts[0])) render(); }
 }
 on('start', loadGlobalReactions);
 

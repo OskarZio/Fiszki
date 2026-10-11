@@ -202,14 +202,14 @@ Object.assign(ACTIONS, {
 });
 
 // Start (tylko pełny tryb): najbliższe terminy
-const calHome0 = homeExtrasHTML;
-homeExtrasHTML = function () {
-  const base = calHome0(); if (appMode() !== 'full') return base;
+function calHomeCardHTML() {
   const up = upcoming(3);
   return `<div class="card tight evhome"><div class="row nowrap"><h2 class="grow" style="margin:0;font-size:18px">📅 Terminarz</h2><button class="sm" data-go="#/calendar">Kalendarz ›</button></div>
     ${up.length ? up.map(e => `<div data-act="cal-open" data-id="${e.id}" style="cursor:pointer">${evRowHTML(e, { date: true, compact: true })}</div>`).join('')
-      : '<p class="small muted" style="margin:8px 0 0">Dodaj kolokwium albo egzamin – przypomnę i podpowiem, co powtórzyć.</p>'}</div>` + base;
-};
+      : '<p class="small muted" style="margin:8px 0 0">Dodaj kolokwium albo egzamin – przypomnę i podpowiem, co powtórzyć.</p>'}</div>`;
+}
+const calHome0 = homeExtrasHTML;
+homeExtrasHTML = function () { const base = calHome0(); return appMode() === 'full' ? calHomeCardHTML() + base : base; };
 // raz dziennie: przypomnienie w aplikacji o jutrzejszych i dzisiejszych terminach
 on('start', () => setTimeout(() => {
   const soon = upcoming().filter(e => daysTo(e) <= 1); if (!soon.length) return;

@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '28';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '30';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -475,7 +475,7 @@ const progress = (frac, thin) => `<div class="progress${thin ? ' thin' : ''}"><d
 // ------------------------------------------------------------ Start
 // Tryby: 'full' – wszystko, 'minimal' – skupienie (bez grywalizacji, z pałacami), 'zen' – pełne skupienie
 const appMode = () => S.settings.mode || (S.settings.minimal ? 'minimal' : 'full');
-const palTab = () => appMode() === 'full' ? 'train' : 'palaces';
+const palTab = () => appMode() === 'full' ? 'arena' : 'palaces';
 function viewHomeZen() {
   const all = deckCounts('all');
   const decks = S.decks.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl')).map(d => { const k = deckCounts(d.id);
@@ -502,7 +502,7 @@ function viewHome() {
   }).join('');
   const sync = S.settings.sync.token ? `<button class="iconbtn" data-act="sync" title="Synchronizuj">🔄</button>` : '';
   return `
-  <div class="row nowrap"><h1 class="grow">Fiszki</h1>${sync}</div>
+  <div class="row nowrap"><h1 class="grow">Fiszki</h1>${sync}${typeof homeChipHTML === 'function' ? homeChipHTML() : ''}</div>
   <div class="card">
     <div class="hero">
       <div class="stat"><b>${st ? '🔥 ' + st : '0'}</b><small>${plural(st, 'dzień', 'dni', 'dni')} z rzędu</small></div>
@@ -1169,9 +1169,11 @@ function viewMore() {
     <div class="modes three">${[['full', '🎮', 'Pełny', 'bitwy, osiągnięcia, skrzynki, ranking, gry'], ['minimal', '🧘', 'Skupienie', 'fiszki, materiały i pałace pamięci – bez grywalizacji'],
       ['zen', '🎯', 'Pełne skupienie', 'tylko nauka: zero liczników, statystyk i dodatków']].map(([m, i, n, d]) =>
       `<button class="mode${appMode() === m ? ' on' : ''}" data-act="set-mode" data-m="${m}"><span>${i}</span><b>${n}</b><small>${d}</small></button>`).join('')}</div></div>`;
-  return `<h1>Więcej</h1>
-  ${typeof accountCardHTML === 'function' ? accountCardHTML() : ''}
-  ${typeof profileCardHTML === 'function' ? profileCardHTML() : ''}
+  // w pełnym trybie konto i profil są w zakładce „Profil”, tu zostają ustawienia
+  const full = appMode() === 'full';
+  return `${full ? '<div class="row nowrap"><button class="iconbtn" data-go="#/me">‹</button><h1 class="grow">Ustawienia</h1></div>' : '<h1>Ustawienia</h1>'}
+  ${!full && typeof accountCardHTML === 'function' ? accountCardHTML() : ''}
+  ${!full && typeof profileCardHTML === 'function' ? profileCardHTML() : ''}
   ${modeCard}
   <div class="card"><h2 style="margin-top:0">📊 Statystyki</h2>
     <div class="heat">${cells}</div><div class="spacer"></div>

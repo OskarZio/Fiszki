@@ -101,6 +101,18 @@ ROUTES.host = () => {
         <div class="row"><button class="sm primary" data-act="host-upload" data-k="${k}">📤 Wgraj dla wszystkich</button>
           ${GLOBAL_RX[k]?.path ? `<button class="sm" data-act="rx-test" data-k="${k}">▶ Podgląd</button><button class="sm ghost" data-act="host-clear" data-k="${k}">Przywróć kota</button>` : ''}</div></div>`; }).join('')}
     </div>
+    <div class="card"><h3 style="margin-top:0">🎞️ Skrzynka z GIF-ami</h3>
+      <p class="small muted">Dodaj GIF-y, które gracze mogą wylosować (skrzynka pojawi się w sklepie, gdy będzie choć jeden). Rzadkość decyduje o szansie:
+        ${Object.entries(CASES.gif.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name} ${p}%</span>`).join(' · ')}. Duplikat zamienia się w kryształy.</p>
+      <div class="gifgrid">${(typeof GIF_CASE !== 'undefined' ? GIF_CASE : []).map(g => `<div class="gifitem" style="--rc:${RARITY[g.r || 'common'].color}">${gifImg(g)}
+        <small><b>${esc(g.name || 'GIF')}</b></small>
+        <div class="row nowrap"><select class="grow" data-gcr="${g.id}">${Object.entries(RARITY).map(([r, x]) => `<option value="${r}" ${(g.r || 'common') === r ? 'selected' : ''}>${x.name}</option>`).join('')}</select>
+          <button class="sm ghost" data-act="host-gc-del" data-id="${g.id}" title="Usuń ze skrzynki">🗑</button></div></div>`).join('') || '<p class="small muted">Jeszcze pusto.</p>'}</div>
+      <div class="spacer"></div>
+      <div class="row nowrap"><input id="gc-name" class="grow" placeholder="Nazwa GIF-a, np. Tańczący kot" maxlength="40">
+        <select id="gc-r">${Object.entries(RARITY).map(([r, x]) => `<option value="${r}">${x.name}</option>`).join('')}</select></div>
+      <div class="spacer"></div>
+      <button class="primary block" data-act="host-gc-add">📤 Dodaj GIF do skrzynki</button></div>
     <div class="card"><h3 style="margin-top:0">🧪 Testowa skrzynka</h3>
       <p class="small muted">Pokaz otwierania – bez kosztu kryształów, nic nie trafia do albumu. Możesz wymusić rzadkość, np. legendarną.</p>
       <label class="field"><span>Wylosuj</span><select id="host-case-r"><option value="">losowo (normalne szanse)</option>${Object.entries(RARITY).map(([r, x]) => `<option value="${r}">Naklejka: ${x.name}</option>`).join('')}<option value="gems">💎 Kryształy</option><option value="respin">🔁 Losuj jeszcze raz</option></select></label>
@@ -109,6 +121,12 @@ ROUTES.host = () => {
 };
 document.addEventListener('change', e => {
   if (e.target.id === 'host-token' || e.target.id === 'host-repo') { syncHostFields(); HOST_CHECK = null; }
+  if (e.target.dataset?.gcr && hostUnlocked()) (async () => {   // zmiana rzadkości GIF-a
+    try {
+      const { sha, data } = await readGlobalJson(), g = (data.gifCase || []).find(x => x.id === e.target.dataset.gcr); if (!g) return;
+      g.r = e.target.value; await writeGlobalJson(data, sha, `Skrzynka GIF: rzadkość ${g.name}`); GIF_CASE = data.gifCase; toast('Zapisano rzadkość ✓');
+    } catch (err) { toast('Błąd: ' + err.message, 5000); }
+  })();
 });
 const readB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
 
@@ -151,6 +169,30 @@ Object.assign(ACTIONS, {
       await writeGlobalJson(data, sha, `Ustaw globalny GIF: ${k}`);
       GLOBAL_RX = data.reactions; GLOBAL_PREVIEW[k] = URL.createObjectURL(f); render();
       toast('Gotowe ✓ Wszyscy zobaczą nowy GIF po ok. 1–2 min (po odświeżeniu aplikacji)', 5000);
+    } catch (e) { toast('Błąd: ' + e.message, 5000); }
+  },
+  'host-gc-add': async () => {
+    syncHostFields(); if (!S.settings.hostToken) return toast('Najpierw wklej token GitHub (wyżej)');
+    const name = ($('#gc-name').value || '').trim().slice(0, 40), r = $('#gc-r').value || 'common';
+    const f = await pickFile('image/gif,image/webp,image/png,image/jpeg,image/*'); if (!f) return;
+    if (f.size > 8e6) return toast('Plik jest za duży (max 8 MB) – wszyscy będą go pobierać');
+    try {
+      toast('Wysyłam do GitHub…', 30000);
+      const ext = (f.name.split('.').pop() || 'gif').toLowerCase().replace(/[^a-z0-9]/g, '') || 'gif', t = Date.now(), id = 'g' + t.toString(36);
+      const path = `assets/gifcase/${id}.${ext}`;
+      await ghRepo(path, { method: 'PUT', body: JSON.stringify({ message: `Skrzynka GIF: ${name || f.name}`, content: await readB64(f) }) });
+      const { sha, data } = await readGlobalJson();
+      data.gifCase = [...(data.gifCase || []), { id, name: name || f.name.replace(/\.[^.]+$/, ''), path, r, t }];
+      await writeGlobalJson(data, sha, `Skrzynka GIF: dodaj ${name || f.name}`);
+      GIF_CASE = data.gifCase; GIFCASE_PREVIEW[id] = URL.createObjectURL(f); render();
+      toast('Dodano ✓ Gracze zobaczą GIF po ok. 1–2 min (po odświeżeniu)', 5000);
+    } catch (e) { toast('Błąd: ' + e.message, 5000); }
+  },
+  'host-gc-del': async el => {
+    const g = GIF_CASE.find(x => x.id === el.dataset.id); if (!g || !confirm(`Usunąć „${g.name}” ze skrzynki? (kto go już ma – zachowa w kolekcji tylko, jeśli GIF wróci)`)) return;
+    try {
+      const { sha, data } = await readGlobalJson(); data.gifCase = (data.gifCase || []).filter(x => x.id !== g.id);
+      await writeGlobalJson(data, sha, `Skrzynka GIF: usuń ${g.name}`); GIF_CASE = data.gifCase; render(); toast('Usunięto ✓');
     } catch (e) { toast('Błąd: ' + e.message, 5000); }
   },
   'host-clear': async el => {

@@ -26,7 +26,7 @@ async function initCloud() {
     const { data } = await SB.auth.getSession();
     setCloudUser(data?.session?.user || null);
     SB.auth.onAuthStateChange((_ev, session) => setCloudUser(session?.user || null));
-    rerenderIf(['more', 'rank', '']);
+    rerenderIf(['more', 'me', 'rank', '']);
   } catch (e) { console.warn('Supabase', e); SB = null; }
 }
 on('start', initCloud);
@@ -35,7 +35,7 @@ function setCloudUser(u) {
   const changed = (u?.id || null) !== (SB_USER?.id || null);
   SB_USER = u;
   if (changed && u) { cloudSync(false).then(loadCloudFriends); }
-  if (changed) rerenderIf(['more', 'rank', '']);
+  if (changed) rerenderIf(['more', 'me', 'rank', '']);
 }
 
 // ---------- synchronizacja na koncie
@@ -64,7 +64,7 @@ async function cloudSync(manual) {
     await publishCloudProfile();
     S.settings.lastSync = Date.now(); await DB.set('state', S); updateBadge();
     if (manual) toast('Zsynchronizowano z kontem ✓');
-    rerenderIf(['', 'more', 'deck', 'rank', 'topics', 'palaces']);
+    rerenderIf(['', 'more', 'me', 'deck', 'rank', 'topics', 'palaces']);
   } catch (e) { console.error(e); if (manual) toast('Błąd synchronizacji: ' + (e.message || e), 5000); }
   finally { cloudBusy = false; }
 }

@@ -70,8 +70,7 @@ homeExtrasHTML = function () {
   return base + `<button class="block quest-cta${st.claimable ? ' primary pulse' : ''}" data-go="#/quests">📋 Zadania dnia ${done}/3${st.claimable ? ' · odbierz 💎' : ''}</button>`;
 };
 // Sklep: karta zadań na górze
-const qShop0 = ROUTES.shop;
-ROUTES.shop = (...a) => { const r = qShop0(...a); return { ...r, html: r.html.replace('<div class="card">', questsCardHTML() + '<div class="card">') }; };
+// (zadania mają własną sekcję w zakładce Profil)
 
 // Testy ABCD / pisemne: 💎 za poprawne odpowiedzi (min. 5 pytań, limit dzienny)
 on('quiz', (pct, total) => {

@@ -69,9 +69,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 function updateMsgBadge() {
   const n = cloudOn() ? unreadMsgs().length : 0;
-  // czerwony licznik wyzwań na zakładce „Bitwy”
-  const ch = cloudOn() ? MSGS.filter(m => m.to_id === myId() && challengeOpen(m) && !m.read_at).length : 0, tab = document.querySelector('#tabs [data-tab=battles]');
-  if (tab) { let bd = tab.querySelector('.unread'); if (ch) { if (!bd) { bd = document.createElement('i'); bd.className = 'unread tabbadge'; tab.append(bd); } bd.textContent = ch; } else bd?.remove(); }
+  // liczniki na zakładkach ustawia hub.js
   try { if (navigator.setAppBadge) n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } catch { /* */ }
 }
 async function markRead(fid) {
