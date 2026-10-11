@@ -16,8 +16,50 @@ async function ghRepo(path, opt = {}) {
   const r = await fetch(`https://api.github.com/repos/${hostRepo()}/contents/${path}`, {
     ...opt, headers: { Authorization: 'Bearer ' + S.settings.hostToken, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' } });
   if (r.status === 404 && (!opt.method || opt.method === 'GET')) return null;
-  if (!r.ok) throw new Error(r.status === 401 ? 'zły token' : r.status === 403 || r.status === 404 ? 'token nie ma prawa zapisu do repozytorium' : 'GitHub ' + r.status);
+  if (!r.ok) {
+    const msg = (await r.json().catch(() => ({}))).message || '';
+    throw new Error(r.status === 401 ? 'zły token (GitHub go nie rozpoznaje)' : r.status === 403 || r.status === 404 ? `token nie ma prawa zapisu do ${hostRepo()}${msg ? ' – ' + msg : ''}` : `GitHub ${r.status}${msg ? ' – ' + msg : ''}`);
+  }
   return r.json();
+}
+// token i repozytorium bierzemy też prosto z pól (na iPhonie „change” przychodzi dopiero po opuszczeniu pola)
+function syncHostFields() {
+  const t = $('#host-token'), r = $('#host-repo');
+  if (t) S.settings.hostToken = t.value.trim().replace(/\s+/g, '');
+  if (r && r.value.trim()) S.settings.hostRepo = r.value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
+  save();
+}
+let HOST_CHECK = null;   // wyniki sprawdzania tokenu
+async function checkHostToken() {
+  syncHostFields();
+  const tok = S.settings.hostToken, repo = hostRepo(), res = [];
+  const step = (ok, text) => { res.push({ ok, text }); HOST_CHECK = { res: [...res], running: true }; render(); };
+  HOST_CHECK = { res: [], running: true }; render();
+  const H = { Authorization: 'Bearer ' + tok, Accept: 'application/vnd.github+json' };
+  try {
+    if (!tok) return step(false, 'Pole tokenu jest puste – wklej token.');
+    if (!/^(github_pat_|ghp_)/.test(tok)) step(false, 'Token zwykle zaczyna się od „github_pat_” albo „ghp_” – sprawdź, czy skopiowałeś cały.');
+    let r = await fetch('https://api.github.com/user', { headers: H });
+    if (r.status === 401) return step(false, '1. Token jest nieprawidłowy lub wygasł – wygeneruj nowy i wklej ponownie.');
+    const user = await r.json();
+    step(r.ok, r.ok ? `1. Token działa – konto: ${user.login}` : `1. Błąd GitHub ${r.status}`);
+    r = await fetch(`https://api.github.com/repos/${repo}`, { headers: H });
+    if (!r.ok) return step(false, `2. Token nie widzi repozytorium „${repo}”. W ustawieniach tokenu wybierz „Only select repositories” → ${repo.split('/')[1]}.`);
+    const rp = await r.json();
+    step(true, `2. Repozytorium widoczne: ${rp.full_name}${rp.private ? ' (prywatne)' : ''}, gałąź: ${rp.default_branch}`);
+    // jedyny pewny test zapisu: zapisanie małego pliku kontrolnego
+    const path = 'assets/global/.sprawdzenie.txt';
+    r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { headers: H });
+    const sha = r.ok ? (await r.json()).sha : undefined;
+    r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { method: 'PUT', headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Sprawdzenie tokenu hosta', content: btoa('ok ' + new Date().toISOString()), ...(sha ? { sha } : {}) }) });
+    if (!r.ok) {
+      const msg = (await r.json().catch(() => ({}))).message || '';
+      return step(false, `3. Brak prawa zapisu (${r.status}${msg ? ': ' + msg : ''}). W tokenie ustaw Repository permissions → Contents: „Read and write”.`);
+    }
+    step(true, '3. Zapis działa ✓ – możesz wgrywać GIF-y dla wszystkich.');
+  } catch (e) { step(false, 'Brak połączenia z GitHub: ' + e.message); }
+  finally { HOST_CHECK.running = false; render(); }
 }
 const b64utf8 = s => btoa(unescape(encodeURIComponent(s)));
 const utf8b64 = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
@@ -40,7 +82,9 @@ ROUTES.host = () => {
       <label class="field"><span>Repozytorium (właściciel/nazwa)</span><input id="host-repo" value="${esc(hostRepo())}" autocapitalize="off"></label>
       <label class="field"><span>Token GitHub z prawem zapisu do tego repozytorium</span><input id="host-token" type="password" value="${esc(st.hostToken || '')}" placeholder="github_pat_…" autocomplete="off"></label>
       <p class="small muted">Utwórz <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">token „fine-grained”</a>:
-        dostęp tylko do repozytorium <b>${esc(hostRepo())}</b>, uprawnienie <b>Contents: Read and write</b>. Token zostaje tylko na tym urządzeniu.</p></div>
+        dostęp tylko do repozytorium <b>${esc(hostRepo())}</b>, uprawnienie <b>Contents: Read and write</b>. Token zostaje tylko na tym urządzeniu.</p>
+      <button class="primary block" data-act="host-check" ${HOST_CHECK?.running ? 'disabled' : ''}>${HOST_CHECK?.running ? 'Sprawdzam…' : '✅ Sprawdź token'}</button>
+      ${HOST_CHECK ? `<div class="checklist">${HOST_CHECK.res.map(x => `<div class="${x.ok ? 'c-rev' : 'c-lrn'}">${x.ok ? '✓' : '✗'} ${esc(x.text)}</div>`).join('')}</div>` : ''}</div>
     <div class="card"><h3 style="margin-top:0">🎬 GIF-y dla wszystkich</h3>
       <p class="small muted">Wgrany GIF zobaczą wszyscy, którzy nie ustawili własnego. Po wgraniu GitHub Pages potrzebuje ok. 1–2 minut na publikację.</p>
       ${Object.entries(REACT_SLOTS).map(([k, sl]) => `<div class="sndrow"><div class="row nowrap"><img class="rx-thumb" src="${GLOBAL_RX[k]?.path ? GLOBAL_RX[k].path + '?v=' + GLOBAL_RX[k].t : REACT_DEFAULT}" alt="">
@@ -51,8 +95,7 @@ ROUTES.host = () => {
     <button class="ghost" data-act="host-lock">Zablokuj panel na tym urządzeniu</button>` };
 };
 document.addEventListener('change', e => {
-  if (e.target.id === 'host-token') { S.settings.hostToken = e.target.value.trim(); save(); }
-  if (e.target.id === 'host-repo') { S.settings.hostRepo = e.target.value.trim(); save(); }
+  if (e.target.id === 'host-token' || e.target.id === 'host-repo') { syncHostFields(); HOST_CHECK = null; }
 });
 const readB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
 
@@ -63,9 +106,11 @@ Object.assign(ACTIONS, {
     try { localStorage.setItem('hostOK', HOST_HASH); } catch { /* */ }
     toast('Panel hosta odblokowany ✓'); render();
   },
+  'host-check': () => checkHostToken(),
   'host-lock': () => { try { localStorage.removeItem('hostOK'); } catch { /* */ } render(); },
   'host-upload': async el => {
     const k = el.dataset.k;
+    syncHostFields();
     if (!S.settings.hostToken) return toast('Najpierw wklej token GitHub');
     const f = await pickFile('image/gif,image/webp,image/png,image/jpeg,image/*'); if (!f) return;
     if (f.size > 8e6) return toast('Plik jest za duży (max 8 MB) – wszyscy będą go pobierać');
@@ -89,3 +134,4 @@ Object.assign(ACTIONS, {
     } catch (e) { toast('Błąd: ' + e.message, 5000); }
   },
 });
+document.addEventListener('input', e => { if (e.target.id === 'host-token') S.settings.hostToken = e.target.value.trim().replace(/\s+/g, ''); });

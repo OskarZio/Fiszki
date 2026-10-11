@@ -558,3 +558,4 @@ details.more-opts { margin: 8px 0 12px; }
 @keyframes rxpop { from { transform: scale(.4); opacity: 0; } }
 @keyframes rxin { from { opacity: 0; } }
 .rx-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 10px; }
+.checklist { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; }
