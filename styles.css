@@ -699,3 +699,19 @@ button.case { border: 0; font: inherit; cursor: pointer; }
 .evrem .check { padding: 4px 0; margin: 0; font-size: 14px; }
 .evrow { flex-wrap: wrap; } .evrow > .ev-actions { flex-basis: 100%; padding-left: 32px; margin-top: 0; }
 .ev-actions .sm { font-size: 14px; padding: 7px 11px; min-height: 0; }
+/* Karteczki: własny kolor tekstu, przypinanie na komputerze */
+.sticky { color: var(--ink, #1f2937); }
+.sticky button, .sticky.big textarea { color: var(--ink, #1f2937); }
+.sticky.big textarea::placeholder { color: var(--ink, #1f2937); opacity: .55; }
+.swatch.custom-col { position: relative; width: 44px; display: inline-block; cursor: pointer; overflow: hidden; }
+.swatch.custom-col input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: 0; padding: 0; }
+.sticky-layer { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
+.sticky.free { position: fixed; width: 200px; pointer-events: auto; transform: none; padding-top: 4px; box-shadow: 0 10px 28px rgba(0,0,0,.28); }
+.sticky.free::before { display: none; }
+.sticky.free .grip { cursor: grab; text-align: center; font-size: 16px; line-height: 18px; opacity: .55; user-select: none; touch-action: none; margin: 0 -12px 4px; padding: 2px 0; background: rgba(0,0,0,.06); }
+.sticky.free.dragging { box-shadow: 0 18px 40px rgba(0,0,0,.35); z-index: 31; }
+.sticky.free.dragging .grip { cursor: grabbing; }
+.evcustom { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.evcustom input[type=color] { width: 48px; height: 44px; padding: 2px; flex: none; }
+.evmore { margin-top: 10px; }
+.evmore summary { cursor: pointer; padding: 6px 0; }

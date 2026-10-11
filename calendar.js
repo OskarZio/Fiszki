@@ -15,7 +15,11 @@ const EV_REMIND = [['1w', 'tydzień przed'], ['1d', 'dzień przed'], ['1h', 'god
 const MONTHS = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
 const isoDay = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 const parseDay = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
-const evType = e => EV_TYPES[e.type] || EV_TYPES.other;
+const EV_NONE = { name: 'Wydarzenie', icon: '📅', color: '#64748b' };
+const evType = e => e.type === 'custom' && e.ct ? { name: e.ct.name || 'Własne', icon: e.ct.icon || '🏷️', color: /^#[0-9a-f]{6}$/i.test(e.ct.color || '') ? e.ct.color : '#64748b' }
+  : e.type === 'none' ? EV_NONE : EV_TYPES[e.type] || EV_TYPES.other;
+// własne typy użyte wcześniej – do szybkiego wyboru
+const customTypes = () => { const m = new Map(); for (const e of S.events || []) if (e.type === 'custom' && e.ct?.name) m.set(e.ct.name.toLowerCase(), e.ct); return [...m.values()]; };
 const evStart = e => { const d = parseDay(e.date); if (e.time) { const [h, m] = e.time.split(':').map(Number); d.setHours(h, m); } return d; };
 const daysTo = e => Math.round((parseDay(e.date) - parseDay(isoDay(new Date()))) / DAY);
 const whenText = n => n === 0 ? 'dziś' : n === 1 ? 'jutro' : n === 2 ? 'pojutrze' : n > 0 ? `za ${n} dni` : n === -1 ? 'wczoraj' : `${-n} dni temu`;
@@ -92,23 +96,35 @@ function evRowHTML(e, opts = {}) {
         <button class="sm ghost" data-act="ev-del" data-id="${e.id}">🗑</button></div>` : ''}</div>`;
 }
 function evFormHTML(e) {
-  const t = e || { title: '', type: 'kolos', date: CAL.sel, time: '', dur: 90, remind: ['1d'], deckId: '', note: '', place: '' };
+  const t = e || { title: '', type: 'none', date: CAL.sel, time: '', dur: 90, remind: ['1d'], deckId: '', note: '', place: '' };
+  const ct = t.ct || { name: '', icon: '🏷️', color: '#0ea5e9' }, custom = t.type === 'custom';
+  const more = !!(t.deckId || t.place || t.note || (e && (t.remind || []).join() !== '1d'));
   return `<div class="card" id="ev-form"><h3 style="margin-top:0">${e ? 'Edytuj wydarzenie' : '➕ Nowe wydarzenie'}</h3>
-    <input id="ev-title" placeholder="Np. Kolokwium z anatomii" maxlength="80" value="${esc(t.title)}">
-    <div class="spacer"></div>
-    <div class="evtypes">${Object.entries(EV_TYPES).map(([k, x]) => `<button class="${t.type === k ? 'on' : ''}" style="--ec:${x.color}" data-act="ev-type" data-k="${k}">${x.icon} ${x.name}</button>`).join('')}</div>
+    <input id="ev-title" placeholder="Nazwa, np. Kolokwium z anatomii" maxlength="80" value="${esc(t.title)}">
+    <div class="small muted" style="margin:10px 0 6px">Rodzaj (opcjonalnie)</div>
+    <div class="evtypes">
+      <button class="${t.type === 'none' ? 'on' : ''}" style="--ec:${EV_NONE.color}" data-act="ev-type" data-k="none">Bez typu</button>
+      ${Object.entries(EV_TYPES).map(([k, x]) => `<button class="${t.type === k ? 'on' : ''}" style="--ec:${x.color}" data-act="ev-type" data-k="${k}">${x.icon} ${x.name}</button>`).join('')}
+      ${customTypes().map(c => `<button class="${custom && ct.name === c.name ? 'on' : ''}" style="--ec:${esc(c.color)}" data-act="ev-type" data-k="custom" data-ct="${esc(JSON.stringify(c))}">${esc(c.icon)} ${esc(c.name)}</button>`).join('')}
+      <button class="${custom && !customTypes().some(c => c.name === ct.name) ? 'on' : ''}" style="--ec:#0ea5e9" data-act="ev-type" data-k="custom" data-new="1">➕ Własny</button></div>
     <input type="hidden" id="ev-type" value="${t.type}">
+    <div id="ev-custom" class="evcustom${custom ? '' : ' hidden'}">
+      <input id="ev-ct-icon" maxlength="4" value="${esc(ct.icon)}" title="Emoji" style="width:56px;text-align:center;font-size:20px">
+      <input id="ev-ct-name" class="grow" maxlength="30" placeholder="Nazwa rodzaju, np. Wejściówka" value="${esc(ct.name)}">
+      <input id="ev-ct-color" type="color" value="${/^#[0-9a-f]{6}$/i.test(ct.color) ? ct.color : '#0ea5e9'}" title="Kolor"></div>
     <div class="grid2">
       <label class="field"><span>Dzień</span><input type="date" id="ev-date" value="${t.date}"></label>
-      <label class="field"><span>Godzina (opcjonalnie)</span><input type="time" id="ev-time" value="${t.time || ''}"></label>
-      <label class="field"><span>Czas trwania</span><select id="ev-dur">${[[45, '45 min'], [60, '1 h'], [90, '1,5 h'], [120, '2 h'], [180, '3 h'], [240, '4 h']].map(([v, l]) => `<option value="${v}" ${+t.dur === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-      <label class="field"><span>Talia do nauki</span><select id="ev-deck"><option value="">— brak —</option>${S.decks.map(d => `<option value="${d.id}" ${t.deckId === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>
+      <label class="field"><span>Godzina</span><input type="time" id="ev-time" value="${t.time || ''}" ${t.time ? '' : 'disabled'}></label>
     </div>
-    <input id="ev-place" placeholder="Miejsce / sala (opcjonalnie)" maxlength="80" value="${esc(t.place || '')}">
-    <div class="spacer"></div>
-    <textarea id="ev-note" rows="2" placeholder="Notatka: zakres materiału, co przynieść…" maxlength="500">${esc(t.note || '')}</textarea>
-    <div class="small muted" style="margin:10px 0 4px">Przypomnienia w kalendarzu Apple:</div>
-    <div class="evrem">${EV_REMIND.map(([k, l]) => `<label class="check"><input type="checkbox" class="ev-rem" value="${k}" ${(t.remind || []).includes(k) ? 'checked' : ''}> ${l}</label>`).join('')}</div>
+    <label class="check"><input type="checkbox" id="ev-allday" ${t.time ? '' : 'checked'}> Cały dzień / bez godziny</label>
+    <label class="field${t.time ? '' : ' hidden'}" id="ev-dur-f"><span>Czas trwania</span><select id="ev-dur">${[[45, '45 min'], [60, '1 h'], [90, '1,5 h'], [120, '2 h'], [180, '3 h'], [240, '4 h']].map(([v, l]) => `<option value="${v}" ${+t.dur === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <details class="evmore"${more ? ' open' : ''}><summary class="small"><b>Więcej</b> – talia do nauki, miejsce, notatka, przypomnienia</summary>
+      <label class="field"><span>Talia do nauki</span><select id="ev-deck"><option value="">— brak —</option>${S.decks.map(d => `<option value="${d.id}" ${t.deckId === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>
+      <input id="ev-place" placeholder="Miejsce / sala" maxlength="80" value="${esc(t.place || '')}">
+      <div class="spacer"></div>
+      <textarea id="ev-note" rows="2" placeholder="Notatka: zakres materiału, co przynieść…" maxlength="500">${esc(t.note || '')}</textarea>
+      <div class="small muted" style="margin:10px 0 4px">Przypomnienia w kalendarzu Apple:</div>
+      <div class="evrem">${EV_REMIND.map(([k, l]) => `<label class="check"><input type="checkbox" class="ev-rem" value="${k}" ${(t.remind || []).includes(k) ? 'checked' : ''}> ${l}</label>`).join('')}</div></details>
     <div class="spacer"></div>
     <div class="row"><button class="primary grow" data-act="ev-save" data-id="${e?.id || ''}">💾 Zapisz</button><button class="grow" data-act="ev-cancel">Anuluj</button></div></div>`;
 }
@@ -153,12 +169,23 @@ Object.assign(ACTIONS, {
   'ev-new': () => { CAL.edit = 'new'; render(); },
   'ev-edit': el => { const e = S.events.find(x => x.id === el.dataset.id); if (!e) return; CAL.edit = e.id; CAL.sel = e.date; render(); },
   'ev-cancel': () => { CAL.edit = null; render(); },
-  'ev-type': el => { $('#ev-type').value = el.dataset.k; el.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === el)); },
+  'ev-type': el => {
+    $('#ev-type').value = el.dataset.k; el.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === el));
+    $('#ev-custom').classList.toggle('hidden', el.dataset.k !== 'custom');
+    if (el.dataset.ct) { const c = JSON.parse(el.dataset.ct); $('#ev-ct-icon').value = c.icon || '🏷️'; $('#ev-ct-name').value = c.name || ''; $('#ev-ct-color').value = c.color || '#0ea5e9'; }
+    else if (el.dataset.new) { $('#ev-ct-name').value = ''; $('#ev-ct-name').focus(); }
+  },
   'ev-save': el => {
     const title = $('#ev-title').value.trim(), date = $('#ev-date').value;
     if (!title) return toast('Wpisz nazwę, np. „Kolokwium z anatomii”');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return toast('Wybierz dzień');
-    const data = { title, date, type: $('#ev-type').value, time: $('#ev-time').value || '', dur: +$('#ev-dur').value || 90, deckId: $('#ev-deck').value || '',
+    const type = $('#ev-type').value, allDay = $('#ev-allday').checked;
+    let ct = null;
+    if (type === 'custom') {
+      ct = { name: $('#ev-ct-name').value.trim().slice(0, 30), icon: [...($('#ev-ct-icon').value.trim() || '🏷️')].slice(0, 2).join(''), color: $('#ev-ct-color').value };
+      if (!ct.name) return toast('Nazwij swój rodzaj wydarzenia, np. „Wejściówka”');
+    }
+    const data = { title, date, type, ct, time: allDay ? '' : $('#ev-time').value || '', dur: +$('#ev-dur').value || 90, deckId: $('#ev-deck').value || '',
       place: $('#ev-place').value.trim(), note: $('#ev-note').value.trim(), remind: [...document.querySelectorAll('.ev-rem:checked')].map(x => x.value) };
     S.events = S.events || [];
     const ex = el.dataset.id && S.events.find(x => x.id === el.dataset.id);
@@ -191,3 +218,10 @@ on('start', () => setTimeout(() => {
   const e = soon[0];
   toast(`${evType(e).icon} ${whenText(daysTo(e)).replace(/^./, c => c.toUpperCase())}: ${e.title}${soon.length > 1 ? ` (+${soon.length - 1})` : ''}`, 5000);
 }, 2500));
+
+// „Cały dzień” wyłącza godzinę i czas trwania
+document.addEventListener('change', e => {
+  if (e.target.id !== 'ev-allday') return;
+  const off = e.target.checked; $('#ev-time').disabled = off; $('#ev-dur-f').classList.toggle('hidden', off);
+  if (!off) { if (!$('#ev-time').value) $('#ev-time').value = '10:00'; $('#ev-time').focus(); }
+});
