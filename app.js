@@ -88,6 +88,7 @@ const DB = {
 const DEFAULT_SETTINGS = {
   newPerDay: 20, goal: 50, reminder: '19:00', hideAll: true,
   autoSync: true, sync: { token: '', gistId: '' }, lastSync: 0, lastDeck: null,
+  aiKey: '', aiModel: 'claude-opus-5-5',
 };
 let S;            // wszystkie dane (bez obrazów)
 const IMG = {};   // id -> dataURL
@@ -106,7 +107,7 @@ async function putImage(dataUrl) {
 }
 function referencedImages() {
   const s = new Set();
-  S.notes.forEach(n => n.imageId && s.add(n.imageId));
+  S.notes.forEach(n => { n.imageId && s.add(n.imageId); n.backImageId && s.add(n.backImageId); });
   S.palaces.forEach(p => p.stations.forEach(st => st.imageId && s.add(st.imageId)));
   return s;
 }
@@ -291,7 +292,9 @@ function cardView(c) {
   const front = fwd ? n.front : n.back, back = fwd ? n.back : n.front;
   if (n.hint) hints.push(n.hint);
   const q = (fwd ? img : '') + `<div class="ctext">${fmt(front)}</div>`;
-  return { q, a: q + `<hr><div class="ctext">${fmt(back)}</div>${fwd ? '' : img}${extra}`, ans: back, hints, label: front || '(obraz)' };
+  const bimg = n.backImageId && IMG[n.backImageId] ? `<img class="cimg" src="${IMG[n.backImageId]}" alt="">` : '';
+  const q2 = fwd ? q : bimg + `<div class="ctext">${fmt(front)}</div>`;
+  return { q: q2, a: q2 + `<hr><div class="ctext">${fmt(back)}</div>${fwd ? bimg : img}${extra}`, ans: back, hints, label: front || '(obraz)' };
 }
 
 // ============================================================ Sprawdzanie wpisanej odpowiedzi
@@ -517,6 +520,7 @@ function viewDeck(id, q) {
     <input id="note-search" type="search" placeholder="Szukaj…">
     <div id="notes">${notesList(notes, '')}</div>
   </div>
+  <div class="row"><button data-act="anki-export" data-deck="${id}">⬇️ Eksport do Anki</button></div>
   <div class="row"><button class="danger" data-act="reset-deck" data-id="${id}">Resetuj postęp</button>
     <button class="danger" data-act="delete-deck" data-id="${id}">Usuń talię</button></div>`;
 }
@@ -586,7 +590,7 @@ function viewStudy(deckId, mode, q) {
 
   let bar;
   if (!s.shown) {
-    if (mode === 'type') {
+    if (mode === 'type' && v.ans.trim()) {
       onMount(() => { const i = $('#typein'); i.focus({ preventScroll: true }); i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); act('check'); } }); });
       bar = `<input id="typein" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false">
         <button class="primary block" data-act="check">Sprawdź</button>`;
@@ -690,8 +694,9 @@ function viewAdd(editId, q) {
       DRAFT = { ...freshDraft(n.type, n.deckId), ...structuredClone(n), editId };
       if (n.type === 'occl' && n.style === 'pin') DRAFT.type = 'occl';
     }
-  } else if (!DRAFT || DRAFT.editId || (q.get('type') && q.get('type') !== DRAFT.type) || (q.get('deck') && q.get('deck') !== DRAFT.deckId)) {
+  } else if (!DRAFT || DRAFT.editId || ((q.get('type') || q.get('deck')) && DRAFT.fromHash !== location.hash)) {
     DRAFT = freshDraft(q.get('type') || DRAFT?.type, q.get('deck'));
+    DRAFT.fromHash = location.hash;
   }
   if (!S.decks.length) newDeck('Moja talia');
   if (!deckById(DRAFT.deckId)) DRAFT.deckId = S.decks[0].id;
@@ -703,13 +708,14 @@ function viewAdd(editId, q) {
       ${pal ? `<button class="primary block" data-go="#/palace/${pal.id}">🏛️ Otwórz pałac</button>` : ''}</div>
       <button class="danger block" data-act="delete-note">Usuń te fiszki</button>`;
   }
-  const types = [['basic', 'Fiszka'], ['cloze', 'Luki'], ['occl', 'Obraz'], ['bulk', 'Lista']];
+  const types = [['basic', 'Fiszka'], ['cloze', 'Luki'], ['occl', 'Obraz'], ['bulk', 'Lista'], ['scan', '📷 Skan']];
   const tabs = editId ? '' : `<div class="seg" style="display:flex">${types.map(([t, l]) =>
     `<button class="grow ${D.type === t ? 'on' : ''}" data-act="draft-type" data-t="${t}">${l}</button>`).join('')}</div>`;
   let form = '';
   if (D.type === 'basic') form = formBasic(D);
   else if (D.type === 'cloze') form = formCloze(D);
   else if (D.type === 'occl') form = formOccl(D);
+  else if (D.type === 'scan') { form = formScan(D); onMount(mountScan); }
   else form = formBulk(D);
   onMount(() => {
     $$('[data-bind]').forEach(el => el.addEventListener('input', () => {
@@ -726,7 +732,7 @@ function viewAdd(editId, q) {
   <label class="field"><span>Talia</span>${deckSelect(D.deckId)}</label>
   ${form}
   <div class="spacer"></div>
-  <button class="primary block" data-act="save-draft">${editId ? 'Zapisz zmiany' : D.type === 'bulk' ? 'Importuj' : 'Dodaj'}</button>
+  ${D.type === 'scan' ? '' : `<button class="primary block" data-act="save-draft">${editId ? 'Zapisz zmiany' : D.type === 'bulk' ? 'Importuj' : 'Dodaj'}</button>`}
   ${editId ? `<div class="spacer"></div><button class="danger block" data-act="delete-note">Usuń fiszkę</button>` : ''}`;
 }
 const field = (label, bind, val, opts = {}) => `<label class="field"><span>${label}</span>${opts.area
@@ -835,7 +841,7 @@ function detectSep(lines) {
   return best;
 }
 function parseBulk(D) {
-  const lines = D.bulk.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const lines = D.bulk.split(/\r?\n/).map(l => l.trim()).filter(l => l && !/^#(separator|html|tags|columns|notetype|deck|guid)/i.test(l));
   const sep = D.bulkSep === 'auto' ? detectSep(lines.filter(l => !/\{\{c\d+::/.test(l))) : SEPS[D.bulkSep];
   return { sep, items: lines.map(l => {
     if (/\{\{c\d+::/.test(l)) return { cloze: l };
@@ -944,6 +950,7 @@ document.addEventListener('paste', async e => {
   const target = parts[0] === 'add' || parts[0] === 'edit' ? 'draft' : parts[0] === 'palace' ? 'palace' : null;
   if (!target) return;
   e.preventDefault();
+  if (target === 'draft' && DRAFT?.type === 'scan') { await scanAddBlob(file, 'wklejony obraz'); return render(); }
   const id = await putImage(await compressImage(file));
   if (target === 'draft') {
     if (DRAFT.type !== 'occl' && DRAFT.type !== 'basic') DRAFT.type = 'occl';
@@ -1141,6 +1148,10 @@ function viewMore() {
     <li>Wybierz <b>Do ekranu początkowego</b>.</li></ol>
     <p class="small muted">Aplikacja będzie działać jak zwykła apka – pełny ekran, offline, z własną ikoną.</p></div>`}
 
+  ${aiSectionHTML()}
+
+  ${ankiSectionHTML()}
+
   <div class="card"><h2 style="margin-top:0">Dane</h2>
     <button class="danger" data-act="wipe">Usuń wszystkie dane z tego urządzenia</button></div>`;
 }
@@ -1153,6 +1164,7 @@ function mountMore() {
   bind('#set-hide', t => st.hideAll = t.checked);
   bind('#sync-token', t => { st.sync.token = t.value.trim(); });
   bind('#sync-auto', t => st.autoSync = t.checked);
+  mountAiSettings();
 }
 
 function makeICS() {
@@ -1426,4 +1438,5 @@ async function init() {
   });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 }
-init();
+// start po wczytaniu wszystkich skryptów (anki.js, scan.js)
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
