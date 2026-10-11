@@ -194,7 +194,7 @@ function homeExtrasHTML() {
   const mine = rankRows().find(r => r.me), pos = mine ? rankRows().sort((x, y) => y.today - x.today).indexOf(mine) + 1 : 0;
   return `<div class="card tight">
     <div class="row nowrap" style="gap:14px"><span class="lvl">${lvl}</span>
-      <div class="grow"><div class="row small nowrap" style="margin-bottom:10px"><b class="grow" data-go="#/more" style="cursor:pointer">${avatarHTML(S.profile, 26)} ${esc(S.profile.nick || 'Ty')} · ${levelTitle(lvl)}</b><span class="muted">${xp - a}/${b - a} XP</span></div>
+      <div class="grow"><div class="row small nowrap" style="margin-bottom:10px"><b class="grow nickrow" data-go="#/more" style="cursor:pointer">${avatarHTML(S.profile, 26)}<span class="nm">${esc(S.profile.nick || 'Ty')}</span><span class="nm lt">· ${levelTitle(lvl)}</span></b><span class="muted">${xp - a}/${b - a} XP</span></div>
       ${progress((xp - a) / (b - a), true)}</div></div>
     <div class="spacer"></div>
     <div class="row"><button class="sm grow primary" data-go="#/battles">⚔️ Bitwa</button><button class="sm grow" data-go="#/shop">💎 ${typeof coins === 'function' ? coins() : 0}</button></div>
@@ -305,7 +305,7 @@ ROUTES.rank = () => {
   <div class="seg" style="display:flex">${tabs.map(([k, l]) => `<button class="grow ${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
   <div class="card">${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}">
       <span class="medal">${medal(i)}</span><span class="av">${avatarHTML(r, 34)}</span>
-      <div class="grow"><div class="row nowrap"><b class="grow">${esc(r.nick)}${r.me ? ' (Ty)' : ''} ${typeof showcaseHTML === 'function' ? showcaseHTML(r.showcase) : ''}</b><span>${val(r)}</span></div>
+      <div class="grow"><div class="row nowrap"><b class="grow nickrow"><span class="nm">${esc(r.nick)}</span>${r.me ? '<span>(Ty)</span>' : ''}${typeof showcaseHTML === 'function' ? `<span>${showcaseHTML(r.showcase)}</span>` : ''}</b><span>${val(r)}</span></div>
         ${RANK_TAB === 'today' ? progress(r.today / maxToday, true) : ''}
         <div class="small muted">${r.err ? '⚠️ ' + esc(r.err) : r.me ? `poziom ${r.level} · 🔥 ${r.streak} · ${r.total} powtórek łącznie` : `poziom ${r.level} · 🔥 ${r.streak} · aktualizacja ${ago(r.updated)}`}</div></div>
       ${r.me ? '' : `<button class="ghost sm" data-act="friend-del" data-id="${r.id}">✕</button>`}</div>`).join('')}

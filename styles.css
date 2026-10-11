@@ -591,3 +591,24 @@ body.flat .roulette { background: var(--card2); } body.flat .tile { background: 
 .code-sm { font-family: ui-monospace, monospace; letter-spacing: 2px; font-size: 18px; }
 button.pulse { animation: pulse3 1.2s ease-in-out infinite; }
 @keyframes pulse3 { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent); } }
+
+/* Długie nicki: skracane „…” zamiast rozpychać wiersz (iPhone) */
+.nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; max-width: 100%; }
+.nickrow { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.nickrow > * { flex: none; }
+.nickrow > .nm { flex: 0 1 auto; }
+.nickrow > .nm.lt { flex-shrink: 3; color: var(--muted); font-weight: 500; }
+.rankrow > .medal, .rankrow > .av, .rankrow .row > span:last-child { flex: none; }
+.case.daily { background: linear-gradient(160deg, #f59e0b, #ef4444); }
+button.case { border: 0; font: inherit; cursor: pointer; }
+/* wiersze „etykieta – wartość”: długie wartości (e-mail) nie wychodzą poza ekran */
+.kv { gap: 12px; align-items: baseline; }
+.kv > span { flex: none; }
+.kv > b { min-width: 0; text-align: right; overflow-wrap: anywhere; }
+/* w rankingu długi nick może zająć 2 linie, zamiast od razu „…” */
+.rankrow .nickrow > .nm { white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.2; }
+@media (max-width: 380px) {
+  .rankrow { gap: 6px; padding: 10px 2px; }
+  .rankrow .medal { width: 22px; font-size: 15px; }
+  .rankrow .av { font-size: 22px; }
+}

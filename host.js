@@ -101,6 +101,10 @@ ROUTES.host = () => {
         <div class="row"><button class="sm primary" data-act="host-upload" data-k="${k}">📤 Wgraj dla wszystkich</button>
           ${GLOBAL_RX[k]?.path ? `<button class="sm" data-act="rx-test" data-k="${k}">▶ Podgląd</button><button class="sm ghost" data-act="host-clear" data-k="${k}">Przywróć kota</button>` : ''}</div></div>`; }).join('')}
     </div>
+    <div class="card"><h3 style="margin-top:0">🧪 Testowa skrzynka</h3>
+      <p class="small muted">Pokaz otwierania – bez kosztu kryształów, nic nie trafia do albumu. Możesz wymusić rzadkość, np. legendarną.</p>
+      <label class="field"><span>Wylosuj</span><select id="host-case-r"><option value="">losowo (normalne szanse)</option>${Object.entries(RARITY).map(([r, x]) => `<option value="${r}">${x.name}</option>`).join('')}</select></label>
+      <div class="cases">${Object.entries(CASES).map(([k, c]) => `<button class="case ${k}" data-act="host-test-case" data-k="${k}"><div class="ci">${c.icon}</div><b>${c.name}</b><small>🧪 testowo</small></button>`).join('')}</div></div>
     <button class="ghost" data-act="host-lock">Zablokuj panel na tym urządzeniu</button>` };
 };
 document.addEventListener('change', e => {
@@ -109,6 +113,7 @@ document.addEventListener('change', e => {
 const readB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
 
 Object.assign(ACTIONS, {
+  'host-test-case': el => { if (!hostUnlocked()) return; const r = $('#host-case-r')?.value; SPIN = null; go(`#/case/${el.dataset.k}?test=1${r ? '&r=' + r : ''}`); },
   'host-unlock': async () => {
     const ok = (await sha256($('#host-code').value.trim())) === HOST_HASH;
     if (!ok) return toast('Nieprawidłowy kod hosta');

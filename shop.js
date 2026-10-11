@@ -111,7 +111,9 @@ ROUTES.shop = () => {
 let SPIN = null;
 ROUTES.case = (parts, q) => {
   const k = parts[1], c = CASES[k]; if (!c) return { html: '<a href="#/shop">Wróć</a>' };
-  const free = q.get('free') && hasItem('case', k);
+  // tryb testowy (panel hosta): bez kosztu, nic nie trafia do albumu
+  const test = q.get('test') && typeof hostUnlocked === 'function' && hostUnlocked() ? (RARITY[q.get('r')] ? q.get('r') : 'any') : '';
+  const free = !test && q.get('free') && hasItem('case', k);
   if (!SPIN || SPIN.k !== k) SPIN = { k, phase: 'ready' };
   const tiles = SPIN.strip ? SPIN.strip.map(s => `<div class="tile" style="--rc:${RARITY[s.r].color}"><span>${s.e}</span><small>${esc(s.name)}</small></div>`).join('')
     : Array.from({ length: 9 }, () => { const s = STICKERS[Math.random() * STICKERS.length | 0]; return `<div class="tile" style="--rc:${RARITY[s.r].color}"><span>${s.e}</span><small>${esc(s.name)}</small></div>`; }).join('');
@@ -121,11 +123,11 @@ ROUTES.case = (parts, q) => {
   <div class="roulette"><div class="marker"></div><div class="strip" id="strip">${tiles}</div></div>
   ${SPIN.phase === 'done' && won ? `<div class="card center reveal" style="--rc:${RARITY[won.r].color}">
       <div class="big-st">${won.e}</div><b style="font-size:22px">${esc(won.name)}</b><div style="color:${RARITY[won.r].color};font-weight:700">${RARITY[won.r].name}</div>
-      <p class="small muted">${SPIN.dup ? `Duplikat – masz już ${itemCount('sticker', won.id)} szt. ${itemCount('sticker', won.id) >= 3 ? 'Możesz ją ulepszyć do złotej wersji ✨ w albumie!' : `Przy 3 sztukach ulepszysz ją do złotej ✨ (albo sprzedasz za ${RARITY[won.r].sell} 💎).`}` : 'Nowa naklejka w albumie! Wyślij ją w następnej bitwie.'}</p>
-      <div class="row"><button class="primary grow" data-act="case-again" data-k="${k}">Otwórz kolejną</button><button class="grow" data-go="#/shop">Album</button></div></div>`
+      <p class="small muted">${SPIN.test ? '🧪 Tryb testowy – naklejka nie trafia do albumu.' : SPIN.dup ? `Duplikat – masz już ${itemCount('sticker', won.id)} szt. ${itemCount('sticker', won.id) >= 3 ? 'Możesz ją ulepszyć do złotej wersji ✨ w albumie!' : `Przy 3 sztukach ulepszysz ją do złotej ✨ (albo sprzedasz za ${RARITY[won.r].sell} 💎).`}` : 'Nowa naklejka w albumie! Wyślij ją w następnej bitwie.'}</p>
+      <div class="row"><button class="primary grow" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">Otwórz kolejną</button><button class="grow" data-go="${SPIN.test ? '#/host' : '#/shop'}">${SPIN.test ? 'Panel hosta' : 'Album'}</button></div></div>`
     : `<div class="odds center">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join(' ')}</div>
-       <button class="primary block" data-act="case-spin" data-k="${k}" data-free="${free ? 1 : ''}" ${SPIN.phase === 'spinning' ? 'disabled' : ''} style="min-height:58px;font-size:18px">
-       ${SPIN.phase === 'spinning' ? 'Losowanie…' : free ? '🎁 Otwórz za darmo' : c.freeOnly ? 'Brak skrzynki – ucz się codziennie 🌞' : `Otwórz za ${c.price} 💎`}</button>`}` };
+       <button class="primary block" data-act="case-spin" data-k="${k}" data-free="${free ? 1 : ''}" data-test="${test}" ${SPIN.phase === 'spinning' ? 'disabled' : ''} style="min-height:58px;font-size:18px">
+       ${SPIN.phase === 'spinning' ? 'Losowanie…' : test ? '🧪 Otwórz testowo' : free ? '🎁 Otwórz za darmo' : c.freeOnly ? 'Brak skrzynki – ucz się codziennie 🌞' : `Otwórz za ${c.price} 💎`}</button>`}` };
 };
 let audioCtx;
 function tick(freq = 1400, dur = .03, vol = .08) {
@@ -137,15 +139,16 @@ function tick(freq = 1400, dur = .03, vol = .08) {
     o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
   } catch { /* brak dźwięku */ }
 }
-function spinCase(k, free) {
+function spinCase(k, free, test) {
   const c = CASES[k];
-  if (c.freeOnly && !free) return toast('Tę skrzynkę dostajesz za codzienną naukę');
-  if (free) { if (!hasItem('case', k)) return; addItem('case', k, -1); }
+  if (test) { /* pokaz: bez opłaty */ }
+  else if (c.freeOnly && !free) return toast('Tę skrzynkę dostajesz za codzienną naukę');
+  else if (free) { if (!hasItem('case', k)) return; addItem('case', k, -1); }
   else if (!spend(c.price, 'case-' + k)) return;
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch { /* */ }
-  const won = rollSticker(c.odds), WIN = 52;
+  const won = rollSticker(test && test !== 'any' ? { [test]: 100 } : c.odds), WIN = 52;
   const strip = Array.from({ length: 60 }, (_, i) => i === WIN ? won : rollSticker(c.odds));
-  SPIN = { k, phase: 'spinning', strip, won, dup: hasItem('sticker', won.id) };
+  SPIN = { k, phase: 'spinning', strip, won, dup: hasItem('sticker', won.id), test };
   render();
   const el = $('#strip'), tile = el.firstElementChild.getBoundingClientRect().width + 8, box = el.parentElement.getBoundingClientRect().width;
   const target = WIN * tile + tile / 2 - box / 2 + (Math.random() - .5) * tile * .7;
@@ -162,8 +165,10 @@ function spinCase(k, free) {
   };
   requestAnimationFrame(watch);
   setTimeout(() => {
-    addItem('sticker', won.id); S.stats.cases = (S.stats.cases || 0) + 1;
-    if (won.r === 'legendary') S.stats.legendary = 1;
+    if (!test) {
+      addItem('sticker', won.id); S.stats.cases = (S.stats.cases || 0) + 1;
+      if (won.r === 'legendary') S.stats.legendary = 1;
+    }
     SPIN.phase = 'done'; save(); render();
     const tr = $('#strip'); if (tr) { tr.style.transition = 'none'; tr.style.transform = `translateX(${-target}px)`; }
     tick(880, .15, .12); setTimeout(() => tick(1320, .25, .12), 120);
@@ -172,9 +177,10 @@ function spinCase(k, free) {
 }
 
 Object.assign(ACTIONS, {
-  'case-spin': el => spinCase(el.dataset.k, !!el.dataset.free),
-  'case-again': el => { SPIN = null; const k = el.dataset.k; go(`#/case/${k}${hasItem('case', k) ? '?free=1' : ''}`); render(); },
-  'case-close': () => { if (SPIN?.phase === 'spinning') return; SPIN = null; go('#/shop'); },
+  'case-spin': el => spinCase(el.dataset.k, !!el.dataset.free, el.dataset.test || ''),
+  'case-again': el => { SPIN = null; const k = el.dataset.k, t = el.dataset.test;
+    go(`#/case/${k}${t ? `?test=1${t !== 'any' ? '&r=' + t : ''}` : hasItem('case', k) ? '?free=1' : ''}`); render(); },
+  'case-close': () => { if (SPIN?.phase === 'spinning') return; const t = SPIN?.test; SPIN = null; go(t ? '#/host' : '#/shop'); },
   upgrade: el => {
     const s = stickerById(el.dataset.id); if (itemCount('sticker', s.id) < 3) return;
     addItem('sticker', s.id, -3); addItem('shiny', s.id); S.stats.shiny = (S.stats.shiny || 0) + 1; save();

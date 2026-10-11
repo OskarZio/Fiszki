@@ -378,9 +378,9 @@ function hpBars() {
   const state = (ready, done) => done ? '✅ skończył' : ready ? '⚔️ odpowiada' : ['learn', 'recall', 'waitopp'].includes(B.phase) ? '📖 uczy się' : '';
   const sc2 = ids => typeof showcaseHTML === 'function' ? `<span class="showcase">${showcaseHTML(ids)}</span>` : '';
   return `<div class="arena">
-    <div class="fighter"><div class="row nowrap"><span class="av">${avatarHTML(m, 34)}</span>${sc2(m.showcase)}</div><b>${esc(m.nick)}${B.shieldOn ? ' 🛡️' : ''}</b><div class="hp" id="hp-me"><div style="width:${myHp}%"></div></div><small>${reveal ? Math.round(myHp) + ' HP · ' : ''}${state(B.phase !== 'learn', B.myDone)}</small></div>
+    <div class="fighter"><div class="row nowrap"><span class="av">${avatarHTML(m, 34)}</span>${sc2(m.showcase)}</div><b class="nm">${esc(m.nick)}${B.shieldOn ? ' 🛡️' : ''}</b><div class="hp" id="hp-me"><div style="width:${myHp}%"></div></div><small>${reveal ? Math.round(myHp) + ' HP · ' : ''}${state(B.phase !== 'learn', B.myDone)}</small></div>
     <div class="vs">VS</div>
-    <div class="fighter r"><div class="row nowrap">${sc2(op.showcase)}<span class="av">${avatarHTML(op, 34)}</span></div><b>${esc(op.nick)}</b><div class="hp opp" id="hp-opp"><div style="width:${oppHp}%"></div></div><small>${reveal ? Math.round(oppHp) + ' HP · ' : ''}${state(B.oppReady, B.oppDone)}</small></div>
+    <div class="fighter r"><div class="row nowrap">${sc2(op.showcase)}<span class="av">${avatarHTML(op, 34)}</span></div><b class="nm">${esc(op.nick)}</b><div class="hp opp" id="hp-opp"><div style="width:${oppHp}%"></div></div><small>${reveal ? Math.round(oppHp) + ' HP · ' : ''}${state(B.oppReady, B.oppDone)}</small></div>
   </div><div class="tug"><div class="tugfill" style="width:${tug}%"></div><span class="knot" style="left:${tug}%">⚔️</span></div>
   ${reveal ? '' : '<p class="small muted center" style="margin-top:-8px">Wynik przeciwnika zobaczysz na końcu 🤫</p>'}`;
 }

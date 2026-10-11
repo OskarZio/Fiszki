@@ -71,7 +71,7 @@ async function cloudSync(manual) {
 async function publishCloudProfile() {
   if (!cloudOn()) return;
   const uid = SB_USER.id;
-  const r = await SB.from('profiles').upsert({ id: uid, nick: S.profile.nick || (SB_USER.email || 'Gracz').split('@')[0], avatar: S.profile.avatar || '🦊',
+  const r = await SB.from('profiles').upsert({ id: uid, nick: (S.profile.nick || '').slice(0, 24) || 'Gracz',  // nigdy nie pokazujemy maila innym avatar: S.profile.avatar || '🦊',
     avatar_img: safeImg(S.profile.avatarImg), stats: myProfile(), updated_at: new Date().toISOString() });
   if (r.error) throw r.error;
   const p = await SB.from('profiles').select('*').eq('id', uid).maybeSingle();
@@ -146,7 +146,7 @@ function cloudRankRoute() {
   <div class="seg" style="display:flex">${tabs.map(([k, l]) => `<button class="grow ${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
   <div class="card">${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}">
       <span class="medal">${['🥇', '🥈', '🥉'][i] || i + 1 + '.'}</span><span class="av">${avatarHTML(r, 34)}</span>
-      <div class="grow"><div class="row nowrap"><b class="grow">${esc(r.nick)}${r.me ? ' (Ty)' : ''} ${typeof showcaseHTML === 'function' ? showcaseHTML(r.showcase) : ''}</b><span>${val(r)}</span></div>
+      <div class="grow"><div class="row nowrap"><b class="grow nickrow"><span class="nm">${esc(r.nick)}</span>${r.me ? '<span>(Ty)</span>' : ''}${typeof showcaseHTML === 'function' ? `<span>${showcaseHTML(r.showcase)}</span>` : ''}</b><span>${val(r)}</span></div>
         ${RANK_TAB === 'today' ? progress(r.today / maxToday, true) : ''}
         <div class="small muted">poziom ${r.level} · 🔥 ${r.streak}${r.me ? ` · ${r.total} powtórek łącznie` : r.updated ? ` · aktywność ${ago(r.updated)}` : ''}</div></div>
       ${r.me ? '' : `<button class="ghost sm" data-act="cloud-friend-del" data-id="${String(r.id).replace('sb:', '')}">✕</button>`}</div>`).join('')}
@@ -179,12 +179,20 @@ function sbChannel(topic, recv) {
 }
 
 // ---------- karta konta w zakładce „Więcej”
+// nick z pola formularza → profil (zwraca, czy jakiś nick jest ustawiony)
+function takeNick() {
+  const v = ($('#acc-nick')?.value || '').trim().slice(0, 24);
+  if (v && v !== S.profile.nick) { S.profile.nick = v; S.profile.mod = Date.now(); save(); }
+  return !!S.profile.nick;
+}
 function accountCardHTML() {
   if (!SB) return `<div class="card row nowrap"><span style="font-size:30px">☁️</span><div class="grow"><b>Konto w chmurze</b>
       <div class="small muted">${SB_CFG === null ? 'Jeszcze nie podłączone – host musi dodać Supabase (instrukcja).' : 'Łączę…'}</div></div>
       <button class="sm" data-go="#/cloud-help">Instrukcja</button></div>`;
   if (!SB_USER) return `<div class="card"><h2 style="margin-top:0">☁️ Konto</h2>
       <p class="small muted">Zaloguj się, żeby mieć fiszki na każdym urządzeniu i widzieć ranking znajomych.</p>
+      <input id="acc-nick" placeholder="Nick (widzą go znajomi)" maxlength="24" value="${esc(S.profile.nick || '')}">
+      <div class="spacer"></div>
       <input id="acc-email" type="email" placeholder="E-mail" autocomplete="email" autocapitalize="off">
       <div class="spacer"></div>
       <input id="acc-pass" type="password" placeholder="Hasło (min. 6 znaków)" autocomplete="current-password">
@@ -193,7 +201,10 @@ function accountCardHTML() {
       <p class="small muted">Twoje obecne fiszki zostaną dołączone do konta przy pierwszym logowaniu.</p>
       <button class="ghost sm" data-act="cloud-check">🩺 Sprawdź połączenie z bazą</button>${cloudCheckHTML()}</div>`;
   return `<div class="card"><h2 style="margin-top:0">☁️ Konto</h2>
-    <div class="kv"><span>Zalogowano jako</span><b>${esc(SB_USER.email || '')}</b></div>
+    <label class="small muted">Twój nick – tak widzą Cię znajomi w rankingu i bitwach</label>
+    <div class="row nowrap"><input id="acc-nick" class="grow" maxlength="24" placeholder="Wpisz nick" value="${esc(S.profile.nick || '')}"><button class="${S.profile.nick ? '' : 'primary pulse'}" data-act="acc-nick">Zapisz</button></div>
+    <div class="spacer"></div>
+    <div class="kv"><span>Zalogowano jako</span><b class="nm">${esc(SB_USER.email || '')}</b></div>
     <div class="kv"><span>Ostatnia synchronizacja</span><b>${ago(S.settings.lastSync)}</b></div>
     ${SB_PROFILE?.code ? `<div class="kv"><span>Kod znajomego</span><b>${SB_PROFILE.code}</b></div>` : ''}
     <div class="spacer"></div>
@@ -241,14 +252,21 @@ async function cloudCheck() {
 Object.assign(ACTIONS, {
   'cloud-check': () => cloudCheck(),
   'acc-login': async () => {
+    takeNick();
     const email = $('#acc-email').value.trim(), password = $('#acc-pass').value;
     if (!email || !password) return toast('Wpisz e-mail i hasło');
     const { error } = await SB.auth.signInWithPassword({ email, password });
     if (error) return toast(/confirm/i.test(error.message) ? 'Najpierw potwierdź e-mail (link w skrzynce)' : /invalid/i.test(error.message) ? 'Zły e-mail lub hasło' : 'Błąd: ' + error.message, 4500);
     toast('Zalogowano ✓ Synchronizuję fiszki…');
   },
+  'acc-nick': async () => {
+    if (!takeNick()) return toast('Wpisz nick');
+    try { await publishCloudProfile(); toast(`Nick zapisany: ${S.profile.nick} ✓`); } catch (e) { toast('Błąd: ' + (e.message || e), 4000); }
+    render();
+  },
   'acc-signup': async () => {
     const email = $('#acc-email').value.trim(), password = $('#acc-pass').value;
+    if (!takeNick()) return toast('Wpisz nick – zobaczą go znajomi');
     if (!/^\S+@\S+\.\S+$/.test(email)) return toast('Wpisz poprawny e-mail');
     if (password.length < 6) return toast('Hasło musi mieć min. 6 znaków');
     const { data, error } = await SB.auth.signUp({ email, password, options: { emailRedirectTo: APP_URL() } });
