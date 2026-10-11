@@ -70,7 +70,41 @@ function homeChipHTML() {
   const lvl = levelOf(xpTotal()), n = profileBadge();
   return `<button class="hdrchip" data-go="#/me">${avatarHTML(S.profile, 22)}<b>${lvl}</b><span>💎 ${typeof coins === 'function' ? coins() : 0}</span>${n ? '<i class="dot"></i>' : ''}</button>`;
 }
-homeExtrasHTML = () => appMode() === 'full' && typeof calHomeCardHTML === 'function' ? calHomeCardHTML() : '';
+// ⚡ Skróty na Starcie – zwijane, z wyborem, co ma się w nich pokazywać
+const SHORTCUTS = {
+  quick: { icon: '⚡', name: 'Szybki mecz', act: 'bt-quick' },
+  battles: { icon: '⚔️', name: 'Bitwy', go: '#/battles', sub: () => typeof myElo === 'function' ? `${myElo()} Elo` : '' },
+  train: { icon: '🧠', name: 'Trening pamięci', go: '#/train' },
+  numbers: { icon: '🔢', name: 'Liczby', go: '#/game/numbers' },
+  words: { icon: '📝', name: 'Słowa', go: '#/game/words' },
+  images: { icon: '🖼️', name: 'Obrazy', go: '#/game/images' },
+  cards: { icon: '🃏', name: 'Karty', go: '#/game/cards' },
+  palaces: { icon: '🏛️', name: 'Pałace pamięci', go: '#/palaces' },
+  rank: { icon: '🏆', name: 'Ranking', go: '#/rank' },
+  inbox: { icon: '💬', name: 'Znajomi', go: '#/inbox', badge: () => arenaBadge() },
+  quests: { icon: '📋', name: 'Zadania', go: '#/quests', badge: () => profileBadge() },
+  shop: { icon: '💎', name: 'Sklep', go: '#/shop', sub: () => typeof coins === 'function' ? `${coins()} 💎` : '' },
+  calendar: { icon: '📅', name: 'Terminarz', go: '#/calendar' },
+};
+let SC_EDIT = false;
+const myShortcuts = () => (S.settings.shortcuts || ['battles', 'train']).filter(k => SHORTCUTS[k]);
+function shortcutsHTML() {
+  const list = myShortcuts(), open = S.settings.shortcutsOpen !== false;
+  const btn = k => { const x = SHORTCUTS[k], n = x.badge?.() || 0, sub = x.sub?.() || '';
+    return `<button class="sc" ${x.act ? `data-act="${x.act}"` : `data-go="${x.go}"`}><span>${x.icon}</span><b>${x.name}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${n ? `<i class="unread">${n}</i>` : ''}</button>`; };
+  return `<details class="card tight shortcuts" id="shortcuts"${open ? ' open' : ''}><summary><b>⚡ Skróty</b><span class="small muted">${open ? '' : list.map(k => SHORTCUTS[k].icon).join(' ')}</span>
+      <button class="sm ghost" data-act="sc-edit">${SC_EDIT ? 'Gotowe' : '✏️'}</button></summary>
+    ${SC_EDIT ? `<p class="small muted" style="margin:6px 0">Stuknij, żeby dodać albo usunąć skrót:</p>
+      <div class="sc-pick">${Object.entries(SHORTCUTS).map(([k, x]) => `<button class="${list.includes(k) ? 'on' : ''}" data-act="sc-toggle" data-k="${k}">${x.icon} ${x.name}</button>`).join('')}</div>`
+      : list.length ? `<div class="scgrid">${list.map(btn).join('')}</div>` : '<p class="small muted">Brak skrótów – dodaj je przyciskiem ✏️.</p>'}</details>`;
+}
+Object.assign(ACTIONS, {
+  'sc-edit': (el, e) => { e?.stopPropagation?.(); SC_EDIT = !SC_EDIT; S.settings.shortcutsOpen = true; save(); render(); },
+  'sc-toggle': el => { const k = el.dataset.k, l = myShortcuts(); S.settings.shortcuts = l.includes(k) ? l.filter(x => x !== k) : [...l, k]; save(); render(); },
+});
+// zapamiętaj zwinięcie / rozwinięcie
+document.addEventListener('toggle', e => { if (e.target.id === 'shortcuts' && S.settings.shortcutsOpen !== e.target.open) { S.settings.shortcutsOpen = e.target.open; save(); const sp = e.target.querySelector('summary .small'); if (sp) sp.textContent = e.target.open ? '' : myShortcuts().map(k => SHORTCUTS[k].icon).join(' '); } }, true);
+homeExtrasHTML = () => appMode() === 'full' ? shortcutsHTML() + (typeof calHomeCardHTML === 'function' ? calHomeCardHTML() : '') : '';
 
 // po każdym odświeżeniu: liczniki na zakładkach, Arena wraca do ostatniej sekcji, Ustawienia podświetlają Profil
 function updateTabBadges() {

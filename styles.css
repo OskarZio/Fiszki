@@ -786,3 +786,17 @@ body.minimal #tabs .min-only { display: flex; }
 .mix-imgs > div { border-radius: 10px; overflow: hidden; background: var(--card2); cursor: pointer; text-align: center; }
 .mix-imgs img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
 .mix-imgs small { display: block; padding: 3px; font-size: 11px; }
+/* ⚡ Skróty na Starcie */
+.shortcuts summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
+.shortcuts summary::-webkit-details-marker { display: none; }
+.shortcuts summary b { font-size: 17px; }
+.shortcuts summary .small { flex: 1; }
+.shortcuts summary::after { content: '›'; font-size: 22px; color: var(--muted); transition: transform .2s; order: 9; }
+.shortcuts[open] summary::after { transform: rotate(90deg); }
+.scgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 10px; }
+.sc { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; border-radius: 16px; min-height: 0; position: relative; text-align: center; }
+.sc span { font-size: 26px; } .sc b { font-size: 13px; line-height: 1.2; } .sc small { font-size: 11px; color: var(--muted); }
+.sc .unread { position: absolute; top: 4px; right: 6px; font-style: normal; margin: 0; }
+.sc-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc-pick button { padding: 7px 10px; font-size: 13px; min-height: 0; border: 2px solid transparent; }
+.sc-pick button.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
