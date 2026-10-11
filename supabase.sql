@@ -52,5 +52,12 @@ create table if not exists public.friends (
   primary key (user_id, friend_id)
 );
 alter table public.friends enable row level security;
+-- Znajomość jest obustronna: jeśli A doda B, to oboje widzą się w rankingu,
+-- a każde z nich może ją usunąć.
 drop policy if exists "friends_own" on public.friends;
-create policy "friends_own" on public.friends for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "friends_read" on public.friends;
+drop policy if exists "friends_insert" on public.friends;
+drop policy if exists "friends_delete" on public.friends;
+create policy "friends_read" on public.friends for select to authenticated using (auth.uid() in (user_id, friend_id));
+create policy "friends_insert" on public.friends for insert to authenticated with check (auth.uid() = user_id);
+create policy "friends_delete" on public.friends for delete to authenticated using (auth.uid() in (user_id, friend_id));

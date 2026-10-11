@@ -94,9 +94,11 @@ document.addEventListener('visibilitychange', () => {
 // ---------- znajomi i ranking z bazy
 async function loadCloudFriends() {
   if (!cloudOn()) return;
-  const f = await SB.from('friends').select('friend_id').eq('user_id', SB_USER.id);
+  // obustronnie: ci, których dodałem, i ci, którzy dodali mnie
+  const me = SB_USER.id;
+  const f = await SB.from('friends').select('user_id,friend_id').or(`user_id.eq.${me},friend_id.eq.${me}`);
   if (f.error) return console.warn(f.error);
-  const ids = (f.data || []).map(x => x.friend_id);
+  const ids = [...new Set((f.data || []).map(x => x.user_id === me ? x.friend_id : x.user_id))].filter(id => id !== me);
   if (!ids.length) { CLOUD_FRIENDS = []; return rerenderIf(['rank', '']); }
   const p = await SB.from('profiles').select('*').in('id', ids);
   if (!p.error) CLOUD_FRIENDS = p.data || [];
@@ -263,7 +265,8 @@ Object.assign(ACTIONS, {
   'cloud-friend-del': async el => {
     const f = CLOUD_FRIENDS.find(x => x.id === el.dataset.id);
     if (!confirm(`Usunąć ${f?.nick || 'znajomego'} z rankingu?`)) return;
-    await SB.from('friends').delete().eq('user_id', SB_USER.id).eq('friend_id', el.dataset.id);
+    const me = SB_USER.id, id = el.dataset.id;
+    await SB.from('friends').delete().or(`and(user_id.eq.${me},friend_id.eq.${id}),and(user_id.eq.${id},friend_id.eq.${me})`);
     CLOUD_FRIENDS = CLOUD_FRIENDS.filter(x => x.id !== el.dataset.id); render();
   },
   'cloud-invite': async () => {
