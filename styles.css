@@ -866,3 +866,18 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
   .pt-mode { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 12px 14px; }
   .pt-mode span { grid-row: span 3; font-size: 28px; }
 }
+
+/* Telefon: odrobinę więcej oddechu w całej aplikacji (nie dotyczy „Kompaktowego układu”) */
+@media (max-width: 600px) {
+  body:not(.compact) main { padding-left: 20px; padding-right: 20px; padding-top: calc(16px + env(safe-area-inset-top)); }
+  body:not(.compact) .card { padding: 18px; margin: 14px 0; }
+  body:not(.compact) .card.tight { padding: 13px 16px; }
+  body:not(.compact) button:not(.sm):not(.iconbtn):not(.calday):not(.pt-tile), body:not(.compact) .btn:not(.sm) { padding: 12px 18px; min-height: 46px; }
+  body:not(.compact) .row { gap: 10px; }
+  body:not(.compact) .spacer { height: 14px; }
+  body:not(.compact) h1 { margin-bottom: 16px; }
+  body:not(.compact) h2 { margin-top: 24px; }
+  body:not(.compact) .kv { padding: 8px 0; }
+  body:not(.compact) .deck { padding-top: 10px; padding-bottom: 10px; }
+  body:not(.compact) .hubnav { margin-left: -6px; margin-right: -6px; }
+}
