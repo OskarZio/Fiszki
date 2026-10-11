@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '22';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '23';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -101,7 +101,7 @@ function blankState() {
   return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS), ...extraState() };
 }
 // pola dodane w kolejnych wersjach (tematy, znajomi, gry, osiągnięcia, system liczbowy)
-function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [] }; }
+function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [], events: [] }; }
 
 // Proste zdarzenia, na które reagują moduły (osiągnięcia, ranking…)
 const HOOKS = {};
@@ -1308,7 +1308,7 @@ function exportData() { const { settings, ...rest } = S; return { ...rest, expor
 function mergeState(R) {
   const tomb = { ...S.tomb };
   for (const k in R.tomb || {}) tomb[k] = Math.max(R.tomb[k], tomb[k] || 0);
-  for (const key of ['decks', 'notes', 'cards', 'palaces', 'topics', 'friends', 'stickies', 'atlases']) {
+  for (const key of ['decks', 'notes', 'cards', 'palaces', 'topics', 'friends', 'stickies', 'atlases', 'events']) {
     S[key] = S[key] || [];
     const map = new Map(S[key].map(x => [x.id, x]));
     for (const r of R[key] || []) { const l = map.get(r.id); if (!l || (r.mod || 0) > (l.mod || 0)) map.set(r.id, r); }

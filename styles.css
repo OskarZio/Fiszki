@@ -668,3 +668,34 @@ button.case { border: 0; font: inherit; cursor: pointer; }
 @media (max-width: 380px) { .abcd { grid-template-columns: 1fr; } .abcd button { min-height: 52px; } }
 .card.flash.short { min-height: 0; padding-top: 22px; padding-bottom: 22px; }
 .abcd button { justify-content: flex-start; }
+
+/* Terminarz */
+.cal .calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; text-align: center; }
+.calgrid > small { color: var(--muted); font-size: 12px; font-weight: 600; padding: 4px 0; }
+.calday { aspect-ratio: 1; padding: 0; min-height: 0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  background: transparent; box-shadow: none; font-weight: 500; font-size: 15px; }
+.calday.out { opacity: .35; }
+.calday.has { background: var(--card2); font-weight: 700; }
+.calday.today span { color: var(--accent); font-weight: 800; }
+.calday.sel { background: var(--accent); color: #fff; }
+.calday.sel span { color: #fff; }
+.calday i { display: flex; gap: 2px; height: 6px; }
+.calday em { width: 6px; height: 6px; border-radius: 50%; }
+.calday.sel em { box-shadow: 0 0 0 1.5px #fff; }
+.evrow { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0 10px 10px; border-left: 4px solid var(--ec); margin: 8px 0; border-radius: 4px; }
+.evrow .evi { font-size: 22px; flex: none; }
+.evwhen { flex: none; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: var(--card2); white-space: nowrap; }
+.evwhen.urgent { background: #ef4444; color: #fff; }
+.ev-actions { margin-top: 6px; gap: 6px; }
+.ev-actions .sm { padding: 6px 10px; }
+.evtypes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.evtypes button { padding: 7px 10px; font-size: 13px; border: 2px solid transparent; }
+.evtypes button.on { border-color: var(--ec); background: color-mix(in srgb, var(--ec) 15%, transparent); font-weight: 700; }
+.evhome .evrow { margin: 6px 0 0; }
+.ev-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.ev-actions > * { flex: 0 0 auto; width: auto; margin: 0; }
+.evrow b.nm { white-space: normal; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; line-height: 1.25; }
+.evrem { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.evrem .check { padding: 4px 0; margin: 0; font-size: 14px; }
+.evrow { flex-wrap: wrap; } .evrow > .ev-actions { flex-basis: 100%; padding-left: 32px; margin-top: 0; }
+.ev-actions .sm { font-size: 14px; padding: 7px 11px; min-height: 0; }
