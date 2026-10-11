@@ -85,6 +85,13 @@ ROUTES.host = () => {
         dostęp tylko do repozytorium <b>${esc(hostRepo())}</b>, uprawnienie <b>Contents: Read and write</b>. Token zostaje tylko na tym urządzeniu.</p>
       <button class="primary block" data-act="host-check" ${HOST_CHECK?.running ? 'disabled' : ''}>${HOST_CHECK?.running ? 'Sprawdzam…' : '✅ Sprawdź token'}</button>
       ${HOST_CHECK ? `<div class="checklist">${HOST_CHECK.res.map(x => `<div class="${x.ok ? 'c-rev' : 'c-lrn'}">${x.ok ? '✓' : '✗'} ${esc(x.text)}</div>`).join('')}</div>` : ''}</div>
+    <div class="card"><h3 style="margin-top:0">☁️ Supabase (konta, ranking, bitwy)</h3>
+      <p class="small muted">${typeof SB_CFG !== 'undefined' && SB_CFG ? `✓ Podłączone: <b>${esc(SB_CFG.url.replace(/^https?:\/\//, ''))}</b>${SB_CFG.local ? ' (tylko na tym urządzeniu)' : ''}` : 'Jeszcze nie podłączone.'}
+        <a href="#/cloud-help">Instrukcja krok po kroku</a></p>
+      <label class="field"><span>Project URL</span><input id="sb-url" placeholder="https://xxxx.supabase.co" autocapitalize="off" value="${esc(typeof SB_CFG !== 'undefined' && SB_CFG ? SB_CFG.url : '')}"></label>
+      <label class="field"><span>Klucz anon / publishable</span><input id="sb-key" placeholder="eyJhbGciOi… lub sb_publishable_…" autocapitalize="off" autocomplete="off"></label>
+      <div class="row"><button class="primary grow" data-act="host-sb-save">💾 Zapisz dla wszystkich</button><button class="grow" data-act="host-sb-local">Tylko to urządzenie</button></div>
+      <p class="small muted">Nie wklejaj klucza <b>service_role / secret</b> – on daje pełny dostęp do bazy.</p></div>
     <div class="card"><h3 style="margin-top:0">🎬 GIF-y dla wszystkich</h3>
       <p class="small muted">Wgrany GIF zobaczą wszyscy, którzy nie ustawili własnego. Po wgraniu GitHub Pages potrzebuje ok. 1–2 minut na publikację.</p>
       ${Object.entries(REACT_SLOTS).map(([k, sl]) => { const g = globalSrcs(k); return `<div class="sndrow"><div class="row nowrap">
@@ -109,6 +116,19 @@ Object.assign(ACTIONS, {
     toast('Panel hosta odblokowany ✓'); render();
   },
   'host-check': () => checkHostToken(),
+  'host-sb-save': async () => {
+    const cfg = readSbFields(); if (!cfg) return;
+    syncHostFields(); if (!S.settings.hostToken) return toast('Najpierw wklej token GitHub (wyżej) – potrzebny do zapisu dla wszystkich');
+    try {
+      toast('Zapisuję…', 20000);
+      const f = await ghRepo('assets/config.json');
+      const data = { ...(f ? JSON.parse(utf8b64(f.content)) : {}), supabaseUrl: cfg.url, supabaseAnonKey: cfg.key, updated: Date.now() };
+      await ghRepo('assets/config.json', { method: 'PUT', body: JSON.stringify({ message: 'Konfiguracja Supabase', content: b64utf8(JSON.stringify(data, null, 2)), ...(f ? { sha: f.sha } : {}) }) });
+      delete S.settings.sbUrl; delete S.settings.sbKey; save();
+      toast('Zapisano ✓ Łączę… (u innych po odświeżeniu aplikacji)', 5000); await initCloud(); render();
+    } catch (e) { toast('Błąd: ' + e.message, 5000); }
+  },
+  'host-sb-local': async () => { const cfg = readSbFields(); if (!cfg) return; S.settings.sbUrl = cfg.url; S.settings.sbKey = cfg.key; save(); await initCloud(); toast(SB ? 'Połączono ✓' : 'Nie udało się połączyć'); render(); },
   'host-lock': () => { try { localStorage.removeItem('hostOK'); } catch { /* */ } render(); },
   'host-upload': async el => {
     const k = el.dataset.k;
@@ -137,3 +157,12 @@ Object.assign(ACTIONS, {
   },
 });
 document.addEventListener('input', e => { if (e.target.id === 'host-token') S.settings.hostToken = e.target.value.trim().replace(/\s+/g, ''); });
+
+function readSbFields() {
+  const url = ($('#sb-url')?.value || '').trim().replace(/\/+$/, ''), key = ($('#sb-key')?.value || '').trim();
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/i.test(url)) { toast('URL ma wyglądać jak https://xxxx.supabase.co'); return null; }
+  if (key.length < 20) { toast('Wklej klucz anon / publishable'); return null; }
+  if (/service_role|sb_secret_/.test(key) || (() => { try { return JSON.parse(atob(key.split('.')[1])).role === 'service_role'; } catch { return false; } })()) {
+    toast('To klucz service_role/secret – NIE wklejaj go! Użyj klucza anon/publishable.', 6000); return null; }
+  return { url, key };
+}

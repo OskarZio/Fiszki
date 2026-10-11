@@ -34,6 +34,7 @@ Aplikacja webowa (PWA) do nauki z powtórkami rozłożonymi w czasie. Działa of
 - **3 tryby**: Pełny, Skupienie (bez grywalizacji, z pałacami pamięci) i Pełne skupienie (tylko nauka).
 - **Personalizacja**: rozmiar i czcionka fiszek, wyrównanie, narożniki, 2 lub 4 przyciski ocen, czytanie na głos, gradienty lub jednolite kolory, układ kompaktowy, animacje naklejek.
 - **Elo i rangi** w bitwach (Brąz → Mistrz), bot dopasowujący się do Twojego poziomu, własne zdjęcie jako awatar.
+- **☁️ Konta (Supabase)**: logowanie e-mailem, fiszki na koncie, ranking znajomych z bazy i bitwy przez Realtime – instrukcja w [SUPABASE.md](SUPABASE.md). Po bitwie: rewanż z tym samym graczem albo szukanie nowego.
 - **Synchronizacja telefon ⇄ komputer** przez prywatny GitHub Gist (token z zakresem `gist`) albo eksport/import pliku.
 
 ## Uruchomienie (GitHub Pages)

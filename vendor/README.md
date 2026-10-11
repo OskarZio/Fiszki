@@ -3,3 +3,4 @@ Biblioteki zewnętrzne (wczytywane dopiero przy użyciu):
 - pdfjs-dist 3.11.174 – PDF
 - tesseract.js 5.1.1 – OCR (rdzeń i słowniki pobierane z jsDelivr)
 - anthropic-sdk.mjs – @anthropic-ai/sdk 0.126.0 spakowany esbuildem do jednego pliku ESM
+- supabase.js – @supabase/supabase-js 2.117.2 (UMD), logowanie, baza i Realtime

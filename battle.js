@@ -65,6 +65,7 @@ function channel(topic, onMsg) {
     const c = chunks[m.cid] || (chunks[m.cid] = []); c[m.i] = m.d;
     if (c.filter(x => x != null).length === m.n) { delete chunks[m.cid]; try { handle(JSON.parse(c.join(''))); } catch { /* */ } }
   };
+  if (!window.BATTLE_LOCAL && typeof SB !== 'undefined' && SB) return sbChannel(topic, recv);   // Supabase Realtime, gdy podłączone
   if (window.BATTLE_LOCAL) {   // test lokalny: dwie karty przeglądarki
     const bc = new BroadcastChannel('fb-' + topic); bc.onmessage = e => recv(e.data);
     return { send: m => bc.postMessage({ ...m, from: MY_ID }), close: () => bc.close() };
@@ -169,6 +170,9 @@ function onRoomMsg(m) {
   if (m.t === 'blur') { B.oppBlur++; toast(`⚠️ ${B.opp?.nick || 'Przeciwnik'} opuścił aplikację`, 2500); }
   if (m.t === 'st') stickerFx(m.k, B.opp?.nick, m.shiny);
   if (m.t === 'bye') { B.oppLeft = true; toast(`${B.opp?.nick || 'Przeciwnik'} opuścił bitwę`, 3000); }
+  // rewanż: obie strony muszą się zgodzić; nowy zestaw przygotowuje gospodarz
+  if (m.t === 'rm' && B.phase === 'end') { B.rmTheirs = true; toast(`🔁 ${B.opp?.nick || 'Przeciwnik'} chce rewanżu!`, 3500); maybeRematch(); }
+  if (m.t === 'rs' && B.phase === 'end') return restartBattle(m.setup);
   maybeFinish(); renderBattle();
 }
 function startCountdown() {
@@ -243,6 +247,23 @@ function finishBattle() {
     setTimeout(() => celebrate('🏆 Zwycięstwo!', `+${battleReward(rec)} 💎 i darmowa skrzynka`), 300);
   } else if (won === 0) toast('🤝 Remis!'); else toast('💪 Tym razem przegrana – rewanż?', 3000);
   save(); B.ch?.send({ t: 'done', total: B.myTotalMs }); renderBattle();
+}
+function maybeRematch() {
+  if (!(B.rmMine && B.rmTheirs) || B.role !== 'host') return renderBattle();
+  const st = B.setup, o = st.opts || {};
+  let fresh;
+  if (st.mode === 'mem') fresh = { ...st, seed: Math.random() * 1e9 | 0 };
+  else { const c = st.deckId && deckById(st.deckId) ? battleCards(st.deckId, st.cards.length, o.dir || 'qa') : []; fresh = { ...st, cards: c.length >= 3 ? c : shuffle([...st.cards]) }; }
+  B.ch.send({ t: 'rs', setup: fresh });
+  restartBattle(fresh);
+}
+// nowa runda na tym samym kanale, z tym samym przeciwnikiem
+function restartBattle(setup) {
+  const keep = { ch: B.ch, role: B.role, code: B.code, opp: B.opp, lobby: null };
+  clearInterval(B.uiTimer); GAME = null;
+  B = { id: uid(), phase: 'wait', myAns: [], oppAns: [], myBlur: 0, oppBlur: 0, lastOpp: Date.now(), sabUsed: 0, sabLast: 0, li: 0, lflip: false, seen: new Set([0]), ...keep, setup };
+  toast('🔁 Rewanż! Powodzenia', 2000);
+  startCountdown(); go('#/battle');
 }
 function quitBattle() {
   if (B) { if (B.phase !== 'end') B.ch?.send({ t: 'bye' }); B.ch?.close(); (B.botTimers || []).forEach(clearTimeout); clearInterval(B.uiTimer); }
@@ -461,7 +482,12 @@ ROUTES.battle = () => {
       <p class="small muted">Twój czas: ${fmtTime(B.myTotalMs || 0)}${B.oppTotalMs ? ` · przeciwnik: ${fmtTime(B.oppTotalMs)}` : ''}${B.myBlur || B.oppBlur ? ` · wyjścia z aplikacji: Ty ${B.myBlur}, przeciwnik ${B.oppBlur}` : ''}</p>
       <p><b class="coins">+${rec ? battleReward(rec) : 0} 💎</b>${rec?.elo != null ? ` <b class="${rec.elo >= 0 ? 'c-rev' : 'c-lrn'}">${rec.elo >= 0 ? '+' : ''}${rec.elo} Elo</b> → ${eloHTML(myElo())}` : rec?.bot ? ' <span class="small muted">(bot – bez Elo)</span>' : ''}</p>
       ${r.won === 1 && hasItem('case', caseKind) ? `<button class="primary block" data-go="#/case/${caseKind}?free=1" style="min-height:56px">🎁 Otwórz darmową skrzynkę!</button><div class="spacer"></div>` : ''}
-      <div class="row"><button class="grow" data-act="bt-quit">Zakończ</button>${B.role === 'bot' ? `<button class="primary grow" data-act="bt-rematch">🔁 Rewanż</button>` : ''}</div></div>
+      ${B.role === 'bot' ? `<div class="row"><button class="primary grow" data-act="bt-rematch">🔁 Rewanż</button><button class="grow" data-act="bt-new-opp">🔎 Nowy przeciwnik</button></div>`
+        : B.oppLeft ? `<p class="small muted">${esc(B.opp?.nick || 'Przeciwnik')} opuścił bitwę.</p><button class="primary block" data-act="bt-new-opp">🔎 Znajdź nowego przeciwnika</button>`
+        : `<div class="row">${B.rmMine ? `<button class="grow" disabled>⏳ Czekam na zgodę ${esc(B.opp?.nick || '')}…</button>`
+            : `<button class="primary grow${B.rmTheirs ? ' pulse' : ''}" data-act="bt-rm">${B.rmTheirs ? `✅ Przyjmij rewanż od ${esc(B.opp?.nick || '')}` : `🔁 Rewanż z ${esc(B.opp?.nick || 'tym graczem')}`}</button>`}
+            <button class="grow" data-act="bt-new-opp">🔎 Nowy przeciwnik</button></div>`}
+      <div class="spacer"></div><button class="ghost block" data-act="bt-quit">Zakończ</button></div>
     ${battleReviewHTML()}` };
 };
 // Analiza po bitwie: skuteczność obu graczy i pytanie po pytaniu – co kto odpowiedział
@@ -632,7 +658,7 @@ function friendSetup() {
   const deckId = $('#bt-deck')?.value || (deckById(ms.btDeck) || S.decks[0])?.id;
   const cards = battleCards(deckId, clamp(o.n, 3, 50), o.dir);
   if (cards.length < 3) { toast('W tej talii jest za mało fiszek tekstowych (min. 3)'); return null; }
-  return { mode: 'cards', deckName: deckById(deckId)?.name, cards, opts: { learnSec: o.learnSec, ansSec: o.ansSec, tol: o.tol, live: o.live, sab: o.sab } };
+  return { mode: 'cards', deckId, deckName: deckById(deckId)?.name, cards, opts: { learnSec: o.learnSec, ansSec: o.ansSec, tol: o.tol, live: o.live, sab: o.sab } };
 }
 
 Object.assign(ACTIONS, {
@@ -661,6 +687,9 @@ Object.assign(ACTIONS, {
   'bt-rv-show': () => { B.review.shown = true; render(); },
   'bt-rv-next': () => { B.review.i++; B.review.shown = false; render(); },
   'bt-rv-close': () => { B.review = null; render(); },
+  'bt-rm': () => { if (!B || B.phase !== 'end') return; B.rmMine = true; B.ch?.send({ t: 'rm' }); maybeRematch(); renderBattle(); },
+  'bt-new-opp': () => { const wasBot = B?.role === 'bot'; if (B) { if (B.phase !== 'end') B.ch?.send({ t: 'bye' }); else B.ch?.send({ t: 'bye' }); B.ch?.close(); (B.botTimers || []).forEach(clearTimeout); clearInterval(B.uiTimer); }
+    B = null; GAME = null; void wasBot; quickMatch(); },
   'bt-walkover': () => { B.oppLeft = true; maybeFinish(); },
   'bt-rematch': () => { const st = B.setup; const lv = B.botLevel;
     const fresh = st.mode === 'mem' ? { ...st, seed: Math.random() * 1e9 | 0 } : { ...st, cards: shuffle([...st.cards]) }; startBot(fresh, lv); },

@@ -588,3 +588,6 @@ body.flat .roulette { background: var(--card2); } body.flat .tile { background: 
 .stk { gap: 6px; padding: 10px 6px; }
 .stk span { margin-bottom: 2px; }
 .stk button { margin-top: 4px; }
+.code-sm { font-family: ui-monospace, monospace; letter-spacing: 2px; font-size: 18px; }
+button.pulse { animation: pulse3 1.2s ease-in-out infinite; }
+@keyframes pulse3 { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent); } }
