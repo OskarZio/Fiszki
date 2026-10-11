@@ -329,13 +329,18 @@ mark, .sw { color: inherit; padding: 0 2px; border-radius: 3px; }
 .effects { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .eff { flex-direction: column; gap: 0; padding: 8px 4px; } .eff span { font-size: 26px; } .eff small { font-size: 11px; color: var(--muted); }
 .eff.on { outline: 2px solid var(--accent); }
-.roulette { position: relative; overflow: hidden; height: 150px; margin: 18px -16px; background: linear-gradient(180deg, #111827, #1f2937); }
-.roulette .marker { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: #fbbf24; z-index: 2; box-shadow: 0 0 14px #fbbf24; }
+.roulette { position: relative; overflow: hidden; height: 150px; margin: 18px -16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 14%, var(--card2)), color-mix(in srgb, var(--accent2) 10%, var(--card2)));
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.roulette::before, .roulette::after { content: ''; position: absolute; top: 0; bottom: 0; width: 18%; z-index: 1; pointer-events: none; }
+.roulette::before { left: 0; background: linear-gradient(90deg, var(--bg), transparent); } .roulette::after { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
+.roulette .marker { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: var(--accent); z-index: 2; box-shadow: 0 0 14px var(--accent); }
 .roulette .marker::before, .roulette .marker::after { content: ''; position: absolute; left: -8px; border: 10px solid transparent; }
-.roulette .marker::before { top: 0; border-top-color: #fbbf24; } .roulette .marker::after { bottom: 0; border-bottom-color: #fbbf24; }
+.roulette .marker::before { top: 0; border-top-color: var(--accent); } .roulette .marker::after { bottom: 0; border-bottom-color: var(--accent); }
 .strip { display: flex; gap: 8px; padding: 15px 8px; will-change: transform; }
-.tile { flex: 0 0 104px; height: 120px; border-radius: 12px; background: linear-gradient(180deg, #374151, #1f2937); border-bottom: 6px solid var(--rc);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; box-shadow: inset 0 -30px 40px -30px var(--rc); }
+.tile { flex: 0 0 104px; height: 120px; border-radius: var(--r, 12px); background: linear-gradient(180deg, var(--card), color-mix(in srgb, var(--rc) 14%, var(--card)));
+  border: 1px solid var(--line); border-bottom: 6px solid var(--rc);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text); box-shadow: var(--shadow), inset 0 -30px 40px -34px var(--rc); }
 .tile span { font-size: 48px; } .tile small { font-size: 11px; opacity: .85; }
 .reveal { border: 3px solid var(--rc); box-shadow: 0 0 40px color-mix(in srgb, var(--rc) 50%, transparent); animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
 .big-st { font-size: 96px; line-height: 1.1; animation: wiggle 1.2s ease-in-out infinite; }
@@ -560,3 +565,26 @@ details.more-opts { margin: 8px 0 12px; }
 .rx-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 10px; }
 .checklist { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; }
 .c-hard { color: var(--hard); }
+
+body.flat .roulette { background: var(--card2); } body.flat .tile { background: var(--card); }
+/* Analiza po bitwie */
+.cmphead, .cmprow { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.cmphead { font-weight: 700; font-size: 14px; margin-bottom: 6px; } .cmphead span:last-child, .cmprow b:last-child { text-align: right; }
+.cmprow { padding: 7px 0; border-bottom: 1px solid var(--line); } .cmprow span { font-size: 12px; color: var(--muted); text-align: center; }
+.cmprow b { font-size: 17px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 12px 0 6px; }
+.legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 3px; }
+.dot.win, .qrev.win { --q: var(--rev); } .dot.lose, .qrev.lose { --q: var(--lrn); } .dot.both, .qrev.both { --q: var(--hard); }
+.legend .dot { background: var(--q); }
+.qrev { border-left: 4px solid var(--q, var(--line)); background: var(--card2); border-radius: 10px; padding: 8px 10px; margin: 8px 0; }
+.qrev .q { font-weight: 600; } .qrev .a { font-size: 13px; color: var(--rev); margin: 2px 0 6px; }
+.qrev .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px; }
+.qrev .two small { display: block; font-size: 11px; color: var(--muted); }
+/* Gablota i album – więcej oddechu */
+.showcase-row { margin: 10px 0 18px; padding: 10px 12px; background: var(--card2); border-radius: var(--rb, 12px); align-items: center; }
+.showcase-row .showcase { gap: 8px; }
+.showcase-row .mini-st { width: 34px; height: 34px; font-size: 20px; }
+.album { margin-top: 6px; }
+.stk { gap: 6px; padding: 10px 6px; }
+.stk span { margin-bottom: 2px; }
+.stk button { margin-top: 4px; }

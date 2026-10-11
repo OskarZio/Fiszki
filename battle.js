@@ -444,6 +444,14 @@ ROUTES.battle = () => {
       ${Date.now() - B.lastOpp > 90000 && B.role !== 'bot' ? '<button class="block" data-act="bt-walkover">Przeciwnik nie odpowiada – zakończ (walkower)</button>' : ''}</div>${sabotageBar()}${stickerBar()}` };
   }
   // koniec
+  if (B.review) {
+    const R = B.review, c = R.list[R.i];
+    if (!c) return { focus: true, html: `<div class="studybar"><button class="iconbtn" data-act="bt-rv-close">✕</button><div class="title">🔁 Moje błędy</div></div>
+      <div class="card center"><div style="font-size:50px">✅</div><p>Przejrzane wszystkie błędy.</p><button class="primary block" data-act="bt-rv-close">Wróć do wyniku</button></div>` };
+    return { focus: true, html: `<div class="studybar"><button class="iconbtn" data-act="bt-rv-close">✕</button><div class="title">🔁 Moje błędy</div><span class="small muted">${R.i + 1}/${R.list.length}</span></div>
+      ${progress(R.i / R.list.length)}<div class="card flash"><div class="ctext">${fmt(c.q)}</div>${R.shown ? `<hr><div class="ctext"><b>${fmt(c.a)}</b></div>` : ''}</div>
+      <div class="answerbar">${R.shown ? '<button class="primary block" data-act="bt-rv-next" style="min-height:56px">Dalej ›</button>' : '<button class="primary block" data-act="bt-rv-show" style="min-height:56px">Pokaż odpowiedź</button>'}</div>` };
+  }
   const r = B.result, rec = S.battles.find(x => x.id === B.id);
   const caseKind = hasItem('case', 'epic') ? 'epic' : 'basic';
   return { focus: true, html: `<div class="studybar">${close}<div class="title">⚔️ Wynik</div></div>${hpBars()}
@@ -453,10 +461,49 @@ ROUTES.battle = () => {
       <p class="small muted">Twój czas: ${fmtTime(B.myTotalMs || 0)}${B.oppTotalMs ? ` · przeciwnik: ${fmtTime(B.oppTotalMs)}` : ''}${B.myBlur || B.oppBlur ? ` · wyjścia z aplikacji: Ty ${B.myBlur}, przeciwnik ${B.oppBlur}` : ''}</p>
       <p><b class="coins">+${rec ? battleReward(rec) : 0} 💎</b>${rec?.elo != null ? ` <b class="${rec.elo >= 0 ? 'c-rev' : 'c-lrn'}">${rec.elo >= 0 ? '+' : ''}${rec.elo} Elo</b> → ${eloHTML(myElo())}` : rec?.bot ? ' <span class="small muted">(bot – bez Elo)</span>' : ''}</p>
       ${r.won === 1 && hasItem('case', caseKind) ? `<button class="primary block" data-go="#/case/${caseKind}?free=1" style="min-height:56px">🎁 Otwórz darmową skrzynkę!</button><div class="spacer"></div>` : ''}
-      ${B.setup.mode === 'cards' ? `<details class="small"><summary>Odpowiedzi</summary>${B.setup.cards.map((c, i) => { const a = B.myAns.find(x => x.i === i);
-        return `<div class="kv"><span class="grow">${esc(c.q)}</span><span class="${a?.ok ? 'c-rev' : 'c-lrn'}">${a?.ok ? '✓' : '✗'} ${esc(c.a)}</span></div>`; }).join('')}</details>` : ''}
-      <div class="row"><button class="grow" data-act="bt-quit">Zakończ</button>${B.role === 'bot' ? `<button class="primary grow" data-act="bt-rematch">🔁 Rewanż</button>` : ''}</div></div>` };
+      <div class="row"><button class="grow" data-act="bt-quit">Zakończ</button>${B.role === 'bot' ? `<button class="primary grow" data-act="bt-rematch">🔁 Rewanż</button>` : ''}</div></div>
+    ${battleReviewHTML()}` };
 };
+// Analiza po bitwie: skuteczność obu graczy i pytanie po pytaniu – co kto odpowiedział
+function battleReviewHTML() {
+  const op = B.opp?.nick || 'Przeciwnik', m = me();
+  const pct = (a, n) => n ? Math.round(a / n * 100) : 0;
+  const avg = arr => arr.length ? arr.reduce((x, y) => x + (y.ms || 0), 0) / arr.length / 1000 : 0;
+  const statRow = (label, mine, theirs) => `<div class="cmprow"><b>${mine}</b><span>${label}</span><b>${theirs}</b></div>`;
+  if (B.setup.mode === 'mem') {
+    const items = GAME?.items || memItems(B.setup.disc, memNT(B.setup)[0], B.setup.seed), D = DISC[B.setup.disc];
+    const mine = B.myMem || [], theirs = B.oppMem || [], sc = scores();
+    const cell = (v, x) => v === x ? `<span class="res ok">${D.tile(x)}</span>` : `<span class="res bad">${D.tile(x)}<small>${v != null ? D.tile(v) : '–'}</small></span>`;
+    return `<div class="card"><h3 style="margin-top:0">📊 Analiza bitwy</h3>
+      <div class="cmphead"><span>${avatarHTML(m, 24)} Ty</span><span></span><span>${esc(op)} ${avatarHTML(B.opp || {}, 24)}</span></div>
+      ${statRow('skuteczność', pct(sc.my, sc.n) + '%', pct(sc.opp, sc.n) + '%')}
+      ${statRow('poprawne', `${sc.my}/${sc.n}`, `${sc.opp}/${sc.n}`)}
+      ${statRow('zapamiętywanie', fmtTime(B.myLearnMs || 0), B.oppLearnMs ? fmtTime(B.oppLearnMs) : '–')}
+      <h4>Twoje odpowiedzi</h4><p class="small muted">Zielone – dobrze; czerwone – pod spodem to, co wpisałeś.</p><div class="results ${B.setup.disc}">${items.map((x, i) => cell(mine[i], x)).join('')}</div>
+      <h4>Odpowiedzi: ${esc(op)}</h4><div class="results ${B.setup.disc}">${items.map((x, i) => cell(theirs[i], x)).join('')}</div></div>`;
+  }
+  const cards = B.setup.cards, n = cards.length;
+  const myOk = B.myAns.filter(a => a.ok), opOk = B.oppAns.filter(a => a.ok);
+  const both = cards.filter((_, i) => !B.myAns.find(a => a.i === i)?.ok && !B.oppAns.find(a => a.i === i)?.ok).length;
+  const ans = (a, c) => !a ? '<span class="muted">—</span>' : a.ok
+    ? `<span class="c-rev">✓ ${esc(a.given || c.a)}</span>` : `<span class="c-lrn">✗ ${esc(a.given || '(brak odpowiedzi)')}</span>`;
+  const rows = cards.map((c, i) => { const a = B.myAns.find(x => x.i === i), b = B.oppAns.find(x => x.i === i);
+    const cls = a?.ok ? (b?.ok ? '' : 'win') : (b?.ok ? 'lose' : 'both');
+    return `<div class="qrev ${cls}"><div class="q">${i + 1}. ${esc(c.q)}</div><div class="a">✔ ${esc(c.a)}</div>
+      <div class="two"><div><small>Ty${a?.ms ? ` · ${(a.ms / 1000).toFixed(1)} s` : ''}</small>${ans(a, c)}</div><div><small>${esc(op)}${b?.ms ? ` · ${(b.ms / 1000).toFixed(1)} s` : ''}</small>${ans(b, c)}</div></div></div>`; }).join('');
+  const mistakes = cards.filter((_, i) => !B.myAns.find(a => a.i === i)?.ok);
+  return `<div class="card"><h3 style="margin-top:0">📊 Analiza bitwy</h3>
+    <div class="cmphead"><span>${avatarHTML(m, 24)} Ty</span><span></span><span>${esc(op)} ${avatarHTML(B.opp || {}, 24)}</span></div>
+    ${statRow('skuteczność', pct(myOk.length, n) + '%', pct(opOk.length, n) + '%')}
+    ${statRow('poprawne', `${myOk.length}/${n}`, `${opOk.length}/${n}`)}
+    ${statRow('błędy', n - myOk.length, n - opOk.length)}
+    ${statRow('śr. czas odp.', avg(B.myAns).toFixed(1) + ' s', B.oppAns.length ? avg(B.oppAns).toFixed(1) + ' s' : '–')}
+    ${statRow('nauka', fmtTime(B.myLearnMs || 0), B.oppLearnMs ? fmtTime(B.oppLearnMs) : '–')}
+    <div class="legend small muted"><span class="dot win"></span>tylko Ty dobrze <span class="dot lose"></span>tylko ${esc(op)} <span class="dot both"></span>oboje źle</div>
+    ${rows}
+    ${both ? `<p class="small muted">${both} ${plural(both, 'pytanie', 'pytania', 'pytań')} sprawiło trudność obojgu.</p>` : ''}
+    ${mistakes.length ? `<button class="block" data-act="bt-cram-mistakes">🔁 Powtórz moje błędy (${mistakes.length})</button>` : '<p class="center c-rev"><b>Bezbłędnie! 🎯</b></p>'}</div>`;
+}
 function rulesHTML(st) {
   const o = st.opts || {};
   if (st.mode === 'mem') { const [n, t] = memNT(st); return `<p class="small muted">${n} elementów · ${t ? t + ' s na zapamiętanie' : 'bez limitu czasu'}${o.sab ? ' · sabotaże ✓' : ''}</p>`; }
@@ -606,6 +653,14 @@ Object.assign(ACTIONS, {
   'bt-submit': () => submitAnswer($('#bt-in').value.trim()),
   'bt-skip': () => submitAnswer(''),
   'bt-sab': el => { useSabotage(el.dataset.k); renderBattle(); },
+  'bt-cram-mistakes': () => {
+    // błędne fiszki z bitwy jako szybka nauka (bez harmonogramu): pytanie → odpowiedź
+    const wrong = B.setup.cards.filter((_, i) => !B.myAns.find(a => a.i === i)?.ok);
+    QUIZ = null; B.review = { list: shuffle([...wrong]), i: 0, shown: false }; render(); scrollTo(0, 0);
+  },
+  'bt-rv-show': () => { B.review.shown = true; render(); },
+  'bt-rv-next': () => { B.review.i++; B.review.shown = false; render(); },
+  'bt-rv-close': () => { B.review = null; render(); },
   'bt-walkover': () => { B.oppLeft = true; maybeFinish(); },
   'bt-rematch': () => { const st = B.setup; const lv = B.botLevel;
     const fresh = st.mode === 'mem' ? { ...st, seed: Math.random() * 1e9 | 0 } : { ...st, cards: shuffle([...st.cards]) }; startBot(fresh, lv); },
