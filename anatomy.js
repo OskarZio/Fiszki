@@ -16,7 +16,7 @@ ROUTES.atlas = parts => {
   if (!AT || AT.id !== a.id) AT = { id: a.id, mode: a.marks.length ? 'review' : 'edit', shown: new Set(), sel: null };
   const modes = [['review', '👁️ Przegląd'], ['name', '✍️ Nazwij'], ['point', '👆 Wskaż'], ['draw', '🎨 Rysuj'], ['edit', '✏️ Edycja']];
   const head = `<div class="row nowrap"><button class="iconbtn" data-act="atlas-back">‹</button><h1 class="grow" style="font-size:21px">🫀 ${esc(a.name)}</h1>
-      <button class="iconbtn" data-act="atlas-rename" data-id="${a.id}">✏️</button></div>
+      <button class="iconbtn" data-act="atlas-rename" data-id="${a.id}">✏️</button><button class="iconbtn" data-act="atlas-del" data-id="${a.id}" title="Usuń rycinę">🗑️</button></div>
     <div class="atmodes">${modes.map(([m, l]) => { const [ic, ...t] = l.split(' '); return `<button class="${AT.mode === m ? 'on' : ''}" data-act="atlas-mode" data-m="${m}" ${!['edit', 'draw'].includes(m) && !a.marks.length ? 'disabled' : ''}><span>${ic}</span><small>${t.join(' ')}</small></button>`; }).join('')}</div>`;
   let body = '';
   if (AT.mode === 'edit') { onMount(() => mountAtlasEditor(a)); body = atlasEdit(a); }
@@ -27,8 +27,9 @@ ROUTES.atlas = parts => {
 };
 
 function atlasList() {
-  const list = (S.atlases || []).map(a => `<div class="note" data-go="#/atlas/${a.id}">${IMG[a.imageId] ? `<img src="${IMG[a.imageId]}" alt="">` : '<span style="font-size:30px">🫀</span>'}
-    <div class="t"><div><b>${esc(a.name)}</b></div><div class="small muted">${a.marks.length} ${plural(a.marks.length, 'struktura', 'struktury', 'struktur')}${a.best != null ? ` · najlepszy wynik ${a.best}%` : ''}</div></div></div>`).join('');
+  const list = (S.atlases || []).map(a => `<div class="note"><span data-go="#/atlas/${a.id}">${IMG[a.imageId] ? `<img src="${IMG[a.imageId]}" alt="">` : '<span style="font-size:30px">🫀</span>'}</span>
+    <div class="t" data-go="#/atlas/${a.id}"><div><b>${esc(a.name)}</b></div><div class="small muted">${a.marks.length} ${plural(a.marks.length, 'struktura', 'struktury', 'struktur')}${a.best != null ? ` · najlepszy wynik ${a.best}%` : ''}</div></div>
+    <button class="iconbtn" data-act="atlas-del" data-id="${a.id}" title="Usuń rycinę" aria-label="Usuń rycinę">🗑️</button></div>`).join('');
   return { tab: 'topics', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/topics">‹</button><h1 class="grow">🫀 Atlas</h1></div>
     <div class="card small muted" style="margin-top:0">Dodaj własną rycinę (np. ze skryptu, atlasu albo zdjęcie preparatu), zaznacz struktury i ucz się je nazywać i wskazywać.</div>
     <div class="card">${list || '<p class="muted">Nie masz jeszcze żadnej ryciny.</p>'}
@@ -142,7 +143,11 @@ Object.assign(ACTIONS, {
   },
   'atlas-back': () => { AT = null; go('#/atlas'); },
   'atlas-rename': el => { const a = atlasById(el.dataset.id); const n = prompt('Nazwa:', a.name); if (n?.trim()) { a.name = n.trim(); touch(a); save(); render(); } },
-  'atlas-del': el => { const a = atlasById(el.dataset.id); if (!confirm(`Usunąć atlas „${a.name}”?`)) return; S.atlases = S.atlases.filter(x => x !== a); S.tomb[a.id] = Date.now(); save(); AT = null; go('#/atlas'); },
+  'atlas-del': el => {
+    const a = atlasById(el.dataset.id); if (!a || !confirm(`Usunąć rycinę „${a.name}”? Trafi do kosza (przywrócisz ją w Więcej → Bezpieczeństwo danych).`)) return;
+    emit('deleting', 'atlas', { atlas: a });
+    S.atlases = S.atlases.filter(x => x !== a); S.tomb[a.id] = Date.now(); save(); AT = null; toast('Rycina usunięta – jest w koszu'); go('#/atlas'); render();
+  },
   'atlas-mode': el => { const a = atlasById(AT.id); AT.q = null; AT.saved = false; AT.mode = el.dataset.m; if (AT.mode === 'name' || AT.mode === 'point') startAtlasQuiz(a, AT.mode); render(); },
   'atlas-mark-del': el => { const a = atlasById(AT.id); a.marks = a.marks.filter(m => m.id !== el.dataset.id); touch(a); save(); render(); },
   'atlas-reveal': el => { AT.shown.has(el.dataset.id) ? AT.shown.delete(el.dataset.id) : AT.shown.add(el.dataset.id); render(); },

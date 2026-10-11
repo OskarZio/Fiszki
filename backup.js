@@ -36,7 +36,8 @@ on('deleting', (kind, data) => {
   DB.set('trash', TRASH);
 });
 function restoreTrash(entry) {
-  if (entry.kind === 'deck') {
+  if (entry.kind === 'atlas') S.atlases.push(touch({ ...structuredClone(entry.data.atlas), id: uid() }));
+  else if (entry.kind === 'deck') {
     let d = S.decks.find(x => x.name === entry.data.deck.name);
     if (!d) d = newDeck(entry.data.deck.name);
     for (const n of entry.data.notes) restoreNote(n.note, n.cards, d.id);
@@ -51,7 +52,7 @@ function restoreNote(note, cards, deckId) {
   for (const c of cards) S.cards.push(touch({ ...structuredClone(c), id: uid(), noteId: nn.id, deckId: did }));
   syncCards(nn);
 }
-const trashLabel = e => e.kind === 'deck' ? `📦 Talia „${e.data.deck.name}” (${e.data.notes.length} fiszek)`
+const trashLabel = e => e.kind === 'atlas' ? `🫀 Rycina „${e.data.atlas.name}”` : e.kind === 'deck' ? `📦 Talia „${e.data.deck.name}” (${e.data.notes.length} fiszek)`
   : `🃏 ${e.data.note.type === 'cloze' ? clozePlain(e.data.note.text) : e.data.note.type === 'occl' ? (e.data.note.title || 'Obraz z lukami') : e.data.note.front}`;
 
 function safetyStatus() {
