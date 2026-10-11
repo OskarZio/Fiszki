@@ -1,5 +1,5 @@
 // Offline: aplikacja działa bez internetu. Zmień numer wersji przy każdej aktualizacji plików.
-const CACHE = 'fiszki-v12';
+const CACHE = 'fiszki-v13';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'assets/reakcja-kot.webp'];
 
@@ -18,7 +18,8 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request)
+    // „no-cache” = zawsze pytaj serwer o świeżą wersję (omija pamięć podręczną przeglądarki)
+    fetch(e.request, { cache: 'no-cache' })
       .then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, copy));

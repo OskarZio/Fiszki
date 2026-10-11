@@ -10,6 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
+const APP_VERSION = '13';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1183,6 +1184,8 @@ function viewMore() {
 
   <div class="card row nowrap"><span style="font-size:30px">🛡️</span><div class="grow"><b>Bezpieczeństwo danych</b><div class="small muted">Kopie, kosz, wersje w chmurze</div></div><button class="primary sm" data-go="#/safety">Otwórz</button></div>
 
+  <div class="card row nowrap"><span style="font-size:30px">🔑</span><div class="grow"><b>Panel hosta</b><div class="small muted">GIF-y dla wszystkich użytkowników (wymaga kodu hosta)</div></div><button class="sm" data-go="#/host">Otwórz</button></div>
+
   ${typeof reactionsSectionHTML === 'function' ? reactionsSectionHTML() : ''}
 
   ${typeof soundsSectionHTML === 'function' ? soundsSectionHTML() : ''}
@@ -1241,7 +1244,8 @@ function viewMore() {
 
   <div class="card"><h2 style="margin-top:0">Dane</h2>
     <button class="danger" data-act="wipe">Usuń wszystkie dane z tego urządzenia</button></div>
-  <p class="center"><a class="small muted" href="#/host">🔑 Panel hosta</a></p>`;
+  <div class="row" style="justify-content:center"><span class="small muted">Wersja aplikacji: ${APP_VERSION}</span>
+    <button class="sm ghost" data-act="check-update">🔄 Sprawdź aktualizację</button></div>`;
 }
 function mountMore() {
   const st = S.settings;
@@ -1459,6 +1463,17 @@ const ACTIONS = {
   'walk-step': el => { WALK.i += +el.dataset.d; WALK.assoc = false; WALK.fact = false; render(); },
 
   sync: () => syncNow(true),
+  'check-update': async () => {
+    toast('Sprawdzam…');
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration();
+      await reg?.update();
+      const r = await fetch('app.js?t=' + Date.now(), { cache: 'no-store' }), txt = await r.text();
+      const v = (txt.match(/APP_VERSION = '(\d+)'/) || [])[1];
+      if (v && v !== APP_VERSION) { toast(`Nowa wersja ${v} – wczytuję…`); setTimeout(() => location.reload(), 800); }
+      else toast('Masz najnowszą wersję ✓');
+    } catch { toast('Brak połączenia z internetem'); }
+  },
   'set-mode': el => { const m = el.dataset.m; S.settings.mode = m; S.settings.minimal = m !== 'full'; save(); render();
     toast({ full: '🎮 Tryb pełny', minimal: '🧘 Tryb skupienia', zen: '🎯 Pełne skupienie – tylko nauka' }[m]); },
   ics: () => { download('fiszki-przypomnienie.ics', makeICS(), 'text/calendar'); toast('Otwórz pobrany plik i dodaj do kalendarza', 3500); },
@@ -1551,7 +1566,15 @@ async function init() {
     if (document.visibilityState === 'hidden') { DB.set('state', S); if (S.settings.autoSync && S.settings.sync.token) { clearTimeout(syncTimer); syncNow(false); } }
     else { updateBadge(); const r = parseRoute().parts[0]; if (!r) render(); if (S.settings.autoSync && S.settings.sync.token && Date.now() - S.settings.lastSync > 5 * MIN) syncNow(false); }
   });
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    // nowa wersja aplikacji: gdy nowy service worker przejmie kontrolę, przeładuj raz stronę
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloaded) { reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    }).catch(() => {});
+  }
 }
 // start po wczytaniu wszystkich skryptów (anki.js, scan.js)
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
