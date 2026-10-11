@@ -257,7 +257,7 @@ Object.assign(ACTIONS, {
       if (c.type === 'cloze') addNote({ ...base, type: 'cloze', text: c.text.trim() });
       else addNote({ ...base, type: 'basic', front: c.front.trim(), back: c.back.trim(), reverse: false });
     });
-    S.settings.lastDeck = deckId; save(); emit('aiCards', sel.length);
+    S.settings.lastDeck = deckId; save(); emit('aiCards', sel.length); emit('cardsAdded', sel.length);
     SCAN = { files: [], cards: null, busy: '' };
     toast(`Dodano ${sel.length} ${plural(sel.length, 'fiszkę', 'fiszki', 'fiszek')} ✓`); go(`#/deck/${deckId}`);
   },

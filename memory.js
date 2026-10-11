@@ -48,7 +48,14 @@ const DISC = {
   cards: { name: 'Karty', icon: '🃏', unit: 'kart', levels: [[13, 120], [26, 120], [52, 180], [52, 120]], group: 2,
     gen: n => shuffle([...DECK]).slice(0, n), tile: cardHTML },
 };
-const LEVEL_NAMES = ['Łatwy', 'Średni', 'Liga', 'Mistrz'];
+const LEVEL_NAMES = ['Łatwy', 'Średni', 'Liga', 'Mistrz', 'Własny'];
+const MAX_ITEMS = { numbers: 1000, words: PL_WORDS.length, images: EMOJI_POOL.length, cards: 52 };
+// [liczba elementów, czas zapamiętywania w s (0 = bez limitu)] dla wybranego poziomu
+function levelNT(d) {
+  const ms = memSettings(), lv = ms[d] ?? 0, D = DISC[d];
+  if (lv === 4) { const c = ms.custom?.[d] || {}; return [clamp(+c.n || D.levels[0][0], 1, MAX_ITEMS[d]), clamp(c.t ?? D.levels[0][1], 0, 3600)]; }
+  return D.levels[lv];
+}
 let GAME = null, gameTimer = null;
 const memSettings = () => (S.settings.mem = S.settings.mem || {});
 const personalBest = (d, n) => S.games.filter(g => g.d === d && g.n === n && !g.practice)
@@ -70,7 +77,7 @@ ROUTES.train = () => {
   <div class="card"><h2 style="margin-top:0">🎮 Gry pamięciowe</h2>
     <p class="small muted">Zapamiętaj jak najwięcej w krótkim czasie, potem odtwórz w tej samej kolejności – jak w Memory League.</p>
     <div class="discs">${Object.entries(DISC).map(([k, d]) => {
-      const lv = memSettings()[k] ?? 0, [n] = d.levels[lv], pb = personalBest(k, n);
+      const [n] = levelNT(k), pb = personalBest(k, n);
       return `<button class="disc" data-go="#/game/${k}"><span class="di">${d.icon}</span><b>${d.name}</b>
         <small>${pb ? `rekord: ${pb.correct}/${n} · ${fmtTime(pb.memoMs)}` : 'brak rekordu'}</small></button>`;
     }).join('')}</div></div>
@@ -100,14 +107,16 @@ ROUTES.game = parts => {
   return { tab: 'train', html: gameResult(G, D) };
 };
 function gameSetup(d, D) {
-  const ms = memSettings(), lv = ms[d] ?? 0, [n, t] = D.levels[lv], pb = personalBest(d, n);
+  const ms = memSettings(), lv = ms[d] ?? 0, [n, t] = levelNT(d), pb = personalBest(d, n), cu = ms.custom?.[d] || {};
   const hist = S.games.filter(g => g.d === d).slice(-8).reverse();
   const palId = ms.palace || '';
   return `<div class="row nowrap"><button class="iconbtn" data-go="#/train">‹</button><h1 class="grow">${D.icon} ${D.name}</h1></div>
   <div class="card">
     <h3 style="margin-top:0">Poziom</h3>
-    <div class="seg" style="display:flex">${D.levels.map(([a, b], i) => `<button class="grow ${i === lv ? 'on' : ''}" data-act="game-level" data-d="${d}" data-i="${i}">${LEVEL_NAMES[i]}<br><small>${a} · ${b}s</small></button>`).join('')}</div>
-    <p class="small muted">Zapamiętaj <b>${n} ${D.unit}</b> w <b>${t} s</b>, potem odtwórz je w tej samej kolejności.</p>
+    <div class="lvlgrid">${[...D.levels, null].map((l, i) => `<button class="${i === lv ? 'on' : ''}" data-act="game-level" data-d="${d}" data-i="${i}"><b>${LEVEL_NAMES[i]}</b><small>${l ? `${l[0]} · ${l[1]} s` : 'ustaw sam'}</small></button>`).join('')}</div>
+    ${lv === 4 ? `<div class="row nowrap"><label class="field grow"><span>Ile ${D.unit} (1–${MAX_ITEMS[d]})</span><input type="number" inputmode="numeric" min="1" max="${MAX_ITEMS[d]}" data-memcustom="n" value="${cu.n ?? n}"></label>
+      <label class="field grow"><span>Czas (s, 0 = bez limitu)</span><input type="number" inputmode="numeric" min="0" max="3600" data-memcustom="t" value="${cu.t ?? t}"></label></div>` : ''}
+    <p class="small muted">Zapamiętaj <b>${n} ${D.unit}</b> ${t ? `w <b>${t} s</b>` : '<b>bez limitu czasu</b> (liczy się, jak szybko skończysz)'}, potem odtwórz je w tej samej kolejności.</p>
     <label class="field"><span>Grupuj po (ile elementów na jeden obraz/locus)</span>
       <select data-memopt="group">${[1, 2, 3, 4, 6].map(g => `<option value="${g}" ${(ms.group?.[d] ?? D.group) === g ? 'selected' : ''}>${g}</option>`).join('')}</select></label>
     <label class="field"><span>Trasa z pałacu pamięci (opcjonalnie)</span>
@@ -133,7 +142,7 @@ function gameMemo(G, D) {
     locus = `<div class="locus">${occlHTML({ imageId: L.s.imageId, style: 'pin', boxes: L.s.pins }, L.pin.id, false, 'mini')}<span>📍 ${G.pos + 1}. ${esc(L.label)}</span></div>`;
   }
   return `${G.battle ? '' : `<div class="studybar"><button class="iconbtn" data-act="game-quit">✕</button><div class="title">${D.icon} Zapamiętuj</div>
-    <b id="gtimer" class="timer">${G.t}s</b></div>`}
+    <b id="gtimer" class="timer">${G.t ? G.t + "s" : "0:00"}</b></div>`}
     ${progress((G.pos + 1) / gs.length, true)}
     <div class="spot ${G.d}">${spot.map(D.tile).map(x => `<span>${x}</span>`).join('')}</div>
     ${hint ? `<div class="hintbox center">${hint}</div>` : ''}${locus}
@@ -178,7 +187,8 @@ function mountGameTimer() {
   clearInterval(gameTimer);
   const tick = () => {
     const G = GAME, el = $('#gtimer'); if (!G || !el) return clearInterval(gameTimer);
-    if (G.phase === 'memo') {
+    if (G.phase === 'memo' && !G.t) el.textContent = fmtTime(Date.now() - G.start);
+    else if (G.phase === 'memo') {
       const left = Math.max(0, G.t * 1000 - (Date.now() - G.start));
       el.textContent = Math.ceil(left / 1000) + 's'; el.classList.toggle('warn', left < 10000);
       if (left <= 0) ACTIONS['game-recall']();
@@ -210,6 +220,10 @@ document.addEventListener('keydown', e => {
   }
 });
 document.addEventListener('change', e => {
+  if (e.target.dataset?.memcustom) {
+    const ms = memSettings(), d = parseRoute().parts[1]; ms.custom = ms.custom || {}; ms.custom[d] = ms.custom[d] || {};
+    ms.custom[d][e.target.dataset.memcustom] = +e.target.value; save(); render(); return;
+  }
   const k = e.target.dataset?.memopt; if (!k) return;
   const ms = memSettings(), d = parseRoute().parts[1];
   if (k === 'group') { ms.group = ms.group || {}; ms.group[d] = +e.target.value; }
@@ -221,7 +235,7 @@ document.addEventListener('change', e => {
 Object.assign(ACTIONS, {
   'game-level': el => { memSettings()[el.dataset.d] = +el.dataset.i; save(); render(); },
   'game-start': el => {
-    const d = el.dataset.d, D = DISC[d], ms = memSettings(), [n, t] = D.levels[ms[d] ?? 0];
+    const d = el.dataset.d, D = DISC[d], ms = memSettings(), [n, t] = levelNT(d);
     const items = D.gen(n);
     GAME = { d, n, t, items, phase: 'memo', group: ms.group?.[d] ?? D.group, pos: 0, start: Date.now(),
       loci: ms.palace ? palaceLoci(ms.palace) : [], hints: d === 'numbers' && !!ms.hints, practice: d === 'numbers' && !!ms.hints };
@@ -231,7 +245,7 @@ Object.assign(ACTIONS, {
   'game-jump': el => { GAME.pos = +el.dataset.g; render(); },
   'game-recall': () => {
     const G = GAME; if (!G || G.phase !== 'memo') return;
-    G.memoMs = Math.min(G.t * 1000, Date.now() - G.start); G.phase = 'recall'; G.recallStart = Date.now(); G.cursor = 0;
+    G.memoMs = G.t ? Math.min(G.t * 1000, Date.now() - G.start) : Date.now() - G.start; G.phase = 'recall'; G.recallStart = Date.now(); G.cursor = 0;
     G.answer = Array(G.n).fill(null);
     if (G.d !== 'numbers') G.pool = shuffle([...G.items]);
     emit('gameRecallStart');

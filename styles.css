@@ -25,8 +25,7 @@ body.focus { padding-bottom: 0; }
 body.focus #tabs { display: none; }
 main { max-width: 760px; margin: 0 auto; padding: calc(12px + env(safe-area-inset-top)) 16px 24px; }
 .loading { text-align: center; color: var(--muted); padding: 40px; }
-h1 { font-size: 26px; margin: 6px 0 14px; background: linear-gradient(90deg, var(--text) 30%, var(--accent) 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+h1 { font-size: 26px; margin: 6px 0 14px; letter-spacing: -.3px; }
 h2 { font-size: 19px; margin: 22px 0 10px; }
 h3 { font-size: 16px; margin: 14px 0 8px; }
 a { color: var(--accent); }
@@ -112,7 +111,7 @@ label.check { display: flex; gap: 10px; align-items: center; margin: 10px 0; }
 .studybar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .studybar .title { flex: 1; font-weight: 600; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .seg { display: inline-flex; background: var(--card2); border-radius: 12px; padding: 3px; gap: 2px; }
-.seg button { white-space: nowrap; min-height: 34px; padding: 6px 10px; font-size: 14px; background: transparent; border-radius: 9px; }
+.seg button { white-space: nowrap; line-height: 1.15; min-width: 0; overflow: hidden; text-overflow: ellipsis; min-height: 34px; padding: 6px 8px; font-size: 14px; background: transparent; border-radius: 9px; }
 .seg button.on { background: var(--card); box-shadow: var(--shadow); font-weight: 600; }
 .flash { min-height: 42vh; display: flex; flex-direction: column; justify-content: center; text-align: center; font-size: 21px; padding: 20px 16px; }
 .flash hr { border: 0; border-top: 1px solid var(--line); margin: 18px 0; width: 100%; }
@@ -371,3 +370,56 @@ mark, .sw { color: inherit; padding: 0 2px; border-radius: 3px; }
   25% { transform: translate(-50%, 0) scale(1); } 80% { opacity: 1; } 100% { transform: translate(-50%, -80px) scale(.9); opacity: 0; } }
 .result-1 { background: linear-gradient(160deg, color-mix(in srgb, #22c55e 18%, var(--card)), var(--card)); }
 .result--1 { background: linear-gradient(160deg, color-mix(in srgb, #ef4444 12%, var(--card)), var(--card)); }
+
+/* Poprawki na wąskie ekrany */
+label.field > span { line-height: 1.25; }
+.row > label.field { min-width: 0; }
+select { text-overflow: ellipsis; padding-right: 28px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.grid2 label.field { margin: 6px 0; }
+@media (max-width: 360px) { .grid2 { grid-template-columns: 1fr; } .hero .stat b { font-size: 22px; } }
+.lvlgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.lvlgrid button { flex-direction: column; gap: 0; padding: 8px 4px; min-height: 54px; background: var(--card2); line-height: 1.2; }
+.lvlgrid button small { font-size: 11px; color: var(--muted); }
+.lvlgrid button.on { background: var(--accent); color: #fff; } .lvlgrid button.on small { color: rgba(255,255,255,.85); }
+details.adv { margin-top: 8px; } details summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mode { flex-direction: column; gap: 2px; padding: 12px 8px; border: 2px solid var(--line); background: var(--card); text-align: center; }
+.mode span { font-size: 30px; } .mode small { font-size: 11px; color: var(--muted); font-weight: 400; }
+.mode.on { border-color: var(--accent); background: var(--accent-soft); }
+.banner.warn { background: color-mix(in srgb, var(--hard) 18%, var(--card)); }
+.sndrow { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.sndrow:last-child { border-bottom: 0; }
+.switch { position: relative; width: 46px; height: 28px; flex: 0 0 auto; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span { position: absolute; inset: 0; background: var(--card2); border-radius: 99px; transition: .2s; border: 1px solid var(--line); }
+.switch span::before { content: ''; position: absolute; width: 22px; height: 22px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.switch input:checked + span { background: var(--accent); } .switch input:checked + span::before { transform: translateX(18px); }
+input[type=range] { padding: 0; border: 0; background: transparent; accent-color: var(--accent); }
+
+/* Bitwy – nauka, sabotaże */
+.learncard { cursor: pointer; min-height: 34vh; }
+.sabbar { margin-top: 10px; padding: 8px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); }
+.sab { flex-direction: column; gap: 0; min-height: 52px; flex: 1; padding: 4px; background: var(--card2); }
+.sab span { font-size: 22px; } .sab small { font-size: 11px; }
+.fog { filter: blur(7px); transition: filter .4s; pointer-events: none; }
+.freeze { position: fixed; inset: 0; z-index: 58; background: rgba(147, 197, 253, .55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; }
+.freeze div { display: flex; flex-direction: column; align-items: center; font-size: 80px; color: #1e3a8a; animation: pop .3s; }
+.freeze b { font-size: 26px; } .freeze small { font-size: 18px; }
+.showcase { display: inline-flex; gap: 2px; vertical-align: middle; }
+.mini-st { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 14px; border-radius: 6px; border: 1.5px solid var(--rc); background: var(--card); }
+.shiny, .stk.shiny { position: relative; box-shadow: 0 0 10px #fbbf24, inset 0 0 6px #fde68a; border-color: #fbbf24 !important; animation: shine 2s ease-in-out infinite; }
+@keyframes shine { 50% { box-shadow: 0 0 18px #fbbf24, inset 0 0 10px #fef3c7; } }
+.stfly.legendary span, .stfly.shiny span { font-size: 150px; filter: drop-shadow(0 0 30px #fbbf24); }
+.perks { padding-left: 18px; margin: 6px 0; } .perks li { margin: 3px 0; }
+
+/* Tryb skupienia (minimalistyczny) */
+body.minimal { --accent2: var(--accent); }
+body.minimal #tabs [data-tab=train], body.minimal .coins, body.minimal .battle-cta, body.minimal .floatxp, body.minimal .celebrate { display: none !important; }
+body.minimal button.primary, body.minimal .btn.primary { background: var(--accent); box-shadow: none; }
+body.minimal .progress > div { background: var(--accent); }
+body.minimal .card { box-shadow: none; border: 1px solid var(--line); }
+body.minimal .hero-card { background: var(--card); }
+body.minimal #tabs a span { filter: grayscale(1); }
+body.noanim *, body.noanim *::before { animation: none !important; transition: none !important; }
+.celebrate { pointer-events: none; }

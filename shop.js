@@ -27,7 +27,12 @@ const stickerById = id => STICKERS.find(s => s.id === id);
 const CASES = {
   basic: { name: 'Skrzynka nauki', icon: '📦', price: 120, odds: { common: 70, rare: 22, epic: 6.5, legendary: 1.5 } },
   epic: { name: 'Skrzynka mistrza', icon: '🎁', price: 350, odds: { common: 38, rare: 36, epic: 20, legendary: 6 } },
+  daily: { name: 'Codzienna skrzynka', icon: '🌞', price: 0, odds: { common: 45, rare: 33, epic: 16, legendary: 6 }, freeOnly: true },
 };
+// Komplet naklejek danej rzadkości = jednorazowa premia
+const SET_BONUS = { common: 200, rare: 400, epic: 800, legendary: 2000 };
+const setComplete = r => STICKERS.filter(s => s.r === r).every(s => hasItem('sticker', s.id) || hasItem('shiny', s.id));
+const isShiny = id => hasItem('shiny', id);
 const EFFECTS = [
   { id: 'classic', name: 'Konfetti', icon: '🎊', price: 0 },
   { id: 'stars', name: 'Gwiazdy', icon: '⭐', price: 150, chars: ['⭐', '✨', '🌟'] },
@@ -44,6 +49,7 @@ function earnedCoins() {
   c += Object.values(perDay).filter(n => n >= (S.settings.goal || 50)).length * 20;
   for (const g of S.games) if (!g.practice) c += Math.floor((g.correct || 0) / 4);
   for (const b of S.battles) c += battleReward(b);
+  for (const r in SET_BONUS) if (setComplete(r)) c += SET_BONUS[r];
   return c;
 }
 function battleReward(b) { return b.bot ? ({ 1: 20, 0: 10, '-1': 5 }[b.won] || 0) : ({ 1: 50, 0: 25, '-1': 10 }[b.won] || 0); }
@@ -55,7 +61,9 @@ function spend(n, why) {
 const itemCount = (kind, key) => S.items.filter(i => i.kind === kind && i.key === key).reduce((a, i) => a + (i.q ?? 1), 0);
 const hasItem = (kind, key) => itemCount(kind, key) > 0;
 const addItem = (kind, key, q = 1, id = uid()) => { if (S.items.some(i => i.id === id)) return; S.items.push({ id, kind, key, q, t: Date.now() }); save(); };
-const ownedStickers = () => [...new Set([...FREE_STICKERS, ...STICKERS.filter(s => hasItem('sticker', s.id)).map(s => s.id)])];
+const ownedStickers = () => [...new Set([...FREE_STICKERS, ...STICKERS.filter(s => hasItem('sticker', s.id) || hasItem('shiny', s.id)).map(s => s.id)])];
+const stickerTile = (id, extra = '') => { const s = stickerById(id); if (!s) return ''; return `<span class="mini-st${isShiny(id) ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}"${extra}>${s.e}</span>`; };
+const showcaseHTML = ids => (ids || []).filter(id => stickerById(id)).slice(0, 3).map(id => stickerTile(id)).join('');
 const coinsHTML = () => `<span class="coins">💎 ${coins()}</span>`;
 
 function rollRarity(odds) {
@@ -67,21 +75,30 @@ const rollSticker = odds => { const r = rollRarity(odds), pool = STICKERS.filter
 
 // ---------- sklep
 ROUTES.shop = () => {
-  const free = itemCount('case', 'basic') + 0, freeEpic = itemCount('case', 'epic');
-  const owned = STICKERS.filter(s => hasItem('sticker', s.id)).length;
+  const freeKinds = Object.keys(CASES).filter(k => hasItem('case', k));
+  const freeN = freeKinds.reduce((a, k) => a + itemCount('case', k), 0);
+  const owned = STICKERS.filter(s => hasItem('sticker', s.id) || hasItem('shiny', s.id)).length;
+  const showcase = S.profile.showcase || [];
   return { tab: 'train', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/battles">‹</button><h1 class="grow">Sklep</h1>${coinsHTML()}</div>
   <p class="small muted" style="margin-top:-6px">Kryształy zdobywasz za bitwy, osiągnięcia (30 💎), dni z osiągniętym celem (20 💎) i gry pamięciowe.</p>
-  ${free + freeEpic ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${free + freeEpic}</b> darmowe ${plural(free + freeEpic, 'skrzynkę', 'skrzynki', 'skrzynek')} za wygrane!</span>
-    <button class="primary sm" data-go="#/case/${free ? 'basic' : 'epic'}?free=1">Otwórz</button></div>` : ''}
-  <div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2><div class="cases">${Object.entries(CASES).map(([k, c]) => `
+  ${freeN ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${freeN}</b> darmowe ${plural(freeN, 'skrzynkę', 'skrzynki', 'skrzynek')}: ${freeKinds.map(k => `${CASES[k].icon} ${CASES[k].name} ×${itemCount('case', k)}`).join(', ')}</span>
+    <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}
+  <p class="small muted">🌞 <b>Codzienna skrzynka</b> (lepsze szanse!) – za ukończenie jednego zestawu fiszek albo celu dziennego każdego dnia.</p>
+  <div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2><div class="cases">${Object.entries(CASES).filter(([, c]) => !c.freeOnly).map(([k, c]) => `
     <div class="case ${k}"><div class="ci">${c.icon}</div><b>${c.name}</b>
       <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}</div>
       <button class="primary block" data-go="#/case/${k}">Otwórz · ${c.price} 💎</button></div>`).join('')}</div></div>
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">Album naklejek</h2><span class="small muted">${owned}/${STICKERS.length}</span></div>
-    <p class="small muted">Naklejki wysyłasz przeciwnikowi w trakcie bitwy. Duplikaty możesz sprzedać.</p>
-    <div class="album">${STICKERS.map(s => { const n = itemCount('sticker', s.id);
-      return `<div class="stk ${s.r}${n ? '' : ' locked'}" style="--rc:${RARITY[s.r].color}"><span>${n ? s.e : '❔'}</span><small>${n ? esc(s.name) : RARITY[s.r].name}</small>
+    <ul class="small muted perks"><li>Wysyłasz je przeciwnikowi w bitwie (legendarne i złote mają specjalną animację).</li>
+      <li><b>3 duplikaty → złota wersja ✨</b> – błyszczy w albumie, profilu i bitwach.</li>
+      <li>Wystaw do 3 naklejek w <b>gablocie</b> – widzą je znajomi w rankingu i przeciwnicy w bitwie.</li>
+      <li>Komplet danej rzadkości daje premię: ${Object.entries(SET_BONUS).map(([r, v]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name.toLowerCase()} +${v}💎${setComplete(r) ? ' ✓' : ''}</span>`).join(', ')}.</li></ul>
+    <div class="row small"><b class="grow">Gablota:</b><span class="showcase">${showcaseHTML(showcase) || '<span class="muted">pusta – stuknij ☆ przy naklejce</span>'}</span></div>
+    <div class="album">${STICKERS.map(s => { const n = itemCount('sticker', s.id), sh = isShiny(s.id), have = n || sh, inSc = showcase.includes(s.id);
+      return `<div class="stk ${s.r}${have ? '' : ' locked'}${sh ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span>${have ? s.e : '❔'}</span><small>${have ? esc(s.name) + (sh ? ' ✨' : '') : RARITY[s.r].name}</small>
+        ${have ? `<button class="sm ghost" data-act="showcase" data-id="${s.id}">${inSc ? '★ w gablocie' : '☆ do gabloty'}</button>` : ''}
+        ${n >= 3 && !sh ? `<button class="sm primary" data-act="upgrade" data-id="${s.id}">✨ Ulepsz (3 szt.)</button>` : ''}
         ${n > 1 ? `<button class="sm ghost" data-act="sell-dup" data-id="${s.id}">×${n} · sprzedaj +${RARITY[s.r].sell}💎</button>` : ''}</div>`; }).join('')}</div></div>
   <div class="card"><h2 style="margin-top:0">Efekty zwycięstwa</h2><div class="effects">${EFFECTS.map(e => {
     const own = !e.price || hasItem('effect', e.id), on = (S.settings.effect || 'classic') === e.id;
@@ -104,14 +121,15 @@ ROUTES.case = (parts, q) => {
   <div class="roulette"><div class="marker"></div><div class="strip" id="strip">${tiles}</div></div>
   ${SPIN.phase === 'done' && won ? `<div class="card center reveal" style="--rc:${RARITY[won.r].color}">
       <div class="big-st">${won.e}</div><b style="font-size:22px">${esc(won.name)}</b><div style="color:${RARITY[won.r].color};font-weight:700">${RARITY[won.r].name}</div>
-      <p class="small muted">${SPIN.dup ? `Duplikat – masz już ${itemCount('sticker', won.id)} szt. Możesz sprzedać w albumie za ${RARITY[won.r].sell} 💎.` : 'Nowa naklejka w albumie! Wyślij ją w następnej bitwie.'}</p>
+      <p class="small muted">${SPIN.dup ? `Duplikat – masz już ${itemCount('sticker', won.id)} szt. ${itemCount('sticker', won.id) >= 3 ? 'Możesz ją ulepszyć do złotej wersji ✨ w albumie!' : `Przy 3 sztukach ulepszysz ją do złotej ✨ (albo sprzedasz za ${RARITY[won.r].sell} 💎).`}` : 'Nowa naklejka w albumie! Wyślij ją w następnej bitwie.'}</p>
       <div class="row"><button class="primary grow" data-act="case-again" data-k="${k}">Otwórz kolejną</button><button class="grow" data-go="#/shop">Album</button></div></div>`
     : `<div class="odds center">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join(' ')}</div>
        <button class="primary block" data-act="case-spin" data-k="${k}" data-free="${free ? 1 : ''}" ${SPIN.phase === 'spinning' ? 'disabled' : ''} style="min-height:58px;font-size:18px">
-       ${SPIN.phase === 'spinning' ? 'Losowanie…' : free ? '🎁 Otwórz za darmo' : `Otwórz za ${c.price} 💎`}</button>`}` };
+       ${SPIN.phase === 'spinning' ? 'Losowanie…' : free ? '🎁 Otwórz za darmo' : c.freeOnly ? 'Brak skrzynki – ucz się codziennie 🌞' : `Otwórz za ${c.price} 💎`}</button>`}` };
 };
 let audioCtx;
 function tick(freq = 1400, dur = .03, vol = .08) {
+  if (S.settings.sound === false) return;
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = freq; o.type = 'square';
@@ -121,6 +139,7 @@ function tick(freq = 1400, dur = .03, vol = .08) {
 }
 function spinCase(k, free) {
   const c = CASES[k];
+  if (c.freeOnly && !free) return toast('Tę skrzynkę dostajesz za codzienną naukę');
   if (free) { if (!hasItem('case', k)) return; addItem('case', k, -1); }
   else if (!spend(c.price, 'case-' + k)) return;
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch { /* */ }
@@ -156,6 +175,16 @@ Object.assign(ACTIONS, {
   'case-spin': el => spinCase(el.dataset.k, !!el.dataset.free),
   'case-again': el => { SPIN = null; const k = el.dataset.k; go(`#/case/${k}${hasItem('case', k) ? '?free=1' : ''}`); render(); },
   'case-close': () => { if (SPIN?.phase === 'spinning') return; SPIN = null; go('#/shop'); },
+  upgrade: el => {
+    const s = stickerById(el.dataset.id); if (itemCount('sticker', s.id) < 3) return;
+    addItem('sticker', s.id, -3); addItem('shiny', s.id); S.stats.shiny = (S.stats.shiny || 0) + 1; save();
+    celebrate(`✨ Złota naklejka: ${s.e} ${s.name}`, 'Błyszczy w albumie, profilu i bitwach'); render();
+  },
+  showcase: el => {
+    const id = el.dataset.id, sc = S.profile.showcase || [];
+    S.profile.showcase = sc.includes(id) ? sc.filter(x => x !== id) : [...sc, id].slice(-3);
+    S.profile.mod = Date.now(); save(); render();
+  },
   'sell-dup': el => {
     const s = stickerById(el.dataset.id); if (itemCount('sticker', s.id) < 2) return;
     addItem('sticker', s.id, -1); S.wallet.push({ id: uid(), n: RARITY[s.r].sell, why: 'sell-' + s.id, t: Date.now() }); save();

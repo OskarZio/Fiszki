@@ -24,6 +24,10 @@ Aplikacja webowa (PWA) do nauki z powtórkami rozłożonymi w czasie. Działa of
 - **⚔️ Bitwy 1 na 1**: szybki mecz z losowym graczem (matchmaking), pojedynek ze znajomym na kod/link albo trening z botem. Tryb „Fiszki” (kto szybciej się nauczy i odtworzy – wpisując lub mówiąc) i „Pamięć” (liczby/słowa/obrazy). Pasek życia i „szala” przesuwają się z każdą dobrą odpowiedzią, naklejki w trakcie walki, zabezpieczenia przed oszukiwaniem, statystyki i bilans ze znajomymi. Komunikacja przez publiczny przekaźnik ntfy.sh.
 - **💎 Kryształy i sklep**: skrzynki z naklejkami losowane na ruletce (rzadkości: zwykła/rzadka/epicka/legendarna), darmowa skrzynka za każdą wygraną, album naklejek, efekty zwycięstwa i motywy premium.
 - **🧠 Trening pamięci**: gry jak w Memory League (liczby, słowa, obrazy, karty) z rekordami i trasą z pałacu pamięci, polski system liczbowy 00–99 (konwerter, szybki trening, fiszki).
+- **🧘 Tryb skupienia**: jednym przełącznikiem chowa całą grywalizację – zostają fiszki i materiały w spokojnym wyglądzie.
+- **⚙️ Własne ustawienia**: kroki nauki, maks. odstęp, premia „Łatwe”, dokładność sprawdzania odpowiedzi, animacje, dźwięki; w grach pamięciowych dowolna liczba elementów i czas (także bez limitu); w bitwach: liczba fiszek, kierunek, czas na naukę i odpowiedź (lub bez limitu), dokładność, ukryty/na żywo wynik, sabotaże.
+- **🔊 Własne dźwięki**: wgraj piosenkę na wygraną albo efekt na poprawną fiszkę, dodanie fiszki czy osiągnięcie – każdy osobno.
+- **🛡️ Bezpieczeństwo danych**: codzienne kopie lokalne, kosz (30 dni), historia wersji w chmurze, kopia do pliku/iCloud i przypomnienie, gdy dane nie są zabezpieczone.
 - **Synchronizacja telefon ⇄ komputer** przez prywatny GitHub Gist (token z zakresem `gist`) albo eksport/import pliku.
 
 ## Uruchomienie (GitHub Pages)

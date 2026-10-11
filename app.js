@@ -89,6 +89,7 @@ const DEFAULT_SETTINGS = {
   newPerDay: 20, goal: 50, reminder: '19:00', hideAll: true,
   autoSync: true, sync: { token: '', gistId: '' }, lastSync: 0, lastDeck: null,
   aiKey: '', aiModel: 'claude-opus-5-5',
+  minimal: false, steps: '1 10', relearn: '10', maxIvl: 36500, tolerance: 'normal', sound: true, anim: true, easyBonus: 1.3,
 };
 let S;            // wszystkie dane (bez obrazów)
 const IMG = {};   // id -> dataURL
@@ -120,9 +121,11 @@ function referencedImages() {
   S.palaces.forEach(p => p.stations.forEach(st => st.imageId && s.add(st.imageId)));
   return s;
 }
+// Obrazy usuwamy dopiero po 31 dniach od dodania – kosz i kopie lokalne mogą ich jeszcze potrzebować.
+const imgTime = id => parseInt(String(id).slice(1, 9), 36) || 0;
 async function gcImages() {
-  const used = referencedImages();
-  for (const id of Object.keys(IMG)) if (!used.has(id)) { delete IMG[id]; await DB.del('img:' + id); }
+  const used = referencedImages(), old = Date.now() - 31 * DAY;
+  for (const id of Object.keys(IMG)) if (!used.has(id) && imgTime(id) < old) { delete IMG[id]; await DB.del('img:' + id); }
 }
 
 // ============================================================ Talie, notatki, karty
@@ -163,24 +166,31 @@ function addNote(fields) {
   const n = touch({ id: uid(), created: Date.now(), ...fields });
   S.notes.push(n); syncCards(n); return n;
 }
-function deleteNote(n) {
+function deleteNote(n, silent) {
+  if (!silent) emit('deleting', 'note', { note: n, cards: S.cards.filter(c => c.noteId === n.id) });
   S.cards.filter(c => c.noteId === n.id).forEach(removeCard);
   S.notes = S.notes.filter(x => x !== n); S.tomb[n.id] = Date.now();
 }
 function deleteDeck(d) {
-  S.notes.filter(n => n.deckId === d.id).forEach(deleteNote);
+  const notes = S.notes.filter(n => n.deckId === d.id);
+  emit('deleting', 'deck', { deck: d, notes: notes.map(n => ({ note: n, cards: S.cards.filter(c => c.noteId === n.id) })) });
+  notes.forEach(n => deleteNote(n, true));
   S.decks = S.decks.filter(x => x !== d); S.tomb[d.id] = Date.now();
   save(); gcImages();
 }
 
 // ============================================================ Algorytm powtórek (SM-2 jak w Anki)
-const LEARN = [1, 10], RELEARN = [10];  // kroki nauki w minutach
+// kroki nauki w minutach – można je zmienić w ustawieniach (np. „1 10 60”)
+const parseSteps = (str, def) => { const a = String(str || '').split(/[\s,;]+/).map(Number).filter(x => x > 0 && x < 1440 * 7); return a.length ? a : def; };
+const LEARN_STEPS = () => parseSteps(S?.settings?.steps, [1, 10]);
+const RELEARN_STEPS = () => parseSteps(S?.settings?.relearn, [10]);
 
 function schedule(srs, g, now = Date.now(), fuzzy = true) {
   const s = { ...srs }; s.reps++;
   const sod = dayStart(now);
   const fuzz = ivl => !fuzzy || ivl < 3 ? ivl : Math.round(ivl * (0.95 + Math.random() * 0.1));
-  const toReview = ivl => { s.state = 'review'; s.ivl = ivl; s.step = 0; s.due = addDays(sod, ivl); };
+  const LEARN = LEARN_STEPS(), RELEARN = RELEARN_STEPS(), maxIvl = S?.settings?.maxIvl || 36500, easy = S?.settings?.easyBonus || 1.3;
+  const toReview = ivl => { ivl = Math.min(ivl, maxIvl); s.state = 'review'; s.ivl = ivl; s.step = 0; s.due = addDays(sod, ivl); };
   if (s.state === 'new' || s.state === 'learning') {
     s.state = 'learning';
     if (g === 1) { s.step = 0; s.due = now + LEARN[0] * MIN; }
@@ -198,7 +208,7 @@ function schedule(srs, g, now = Date.now(), fuzzy = true) {
       s.state = 'relearn'; s.step = 0; s.due = now + RELEARN[0] * MIN;
     } else if (g === 2) { s.ease = Math.max(1.3, s.ease - 0.15); toReview(Math.max(s.ivl + 1, fuzz(Math.round(s.ivl * 1.2)))); }
     else if (g === 3) toReview(Math.max(s.ivl + 1, fuzz(Math.round((s.ivl + late / 2) * s.ease))));
-    else { s.ease += 0.15; toReview(Math.max(s.ivl + 2, fuzz(Math.round((s.ivl + late) * s.ease * 1.3)))); }
+    else { s.ease += 0.15; toReview(Math.max(s.ivl + 2, fuzz(Math.round((s.ivl + late) * s.ease * easy)))); }
   }
   return s;
 }
@@ -321,11 +331,14 @@ function lev(a, b) {
   }
   return prev[n];
 }
-function checkAnswer(input, correct) {
+// tol: 'strict' – tylko dokładnie (bez wielkości liter i interpunkcji), 'normal' – drobne literówki, 'lenient' – więcej literówek
+function checkAnswer(input, correct, tol = S?.settings?.tolerance || 'normal') {
   const x = norm(input); if (!x) return 'wrong';
   const alts = [correct, ...String(correct).split(/[\/;|,]| lub | albo /)].map(norm).filter(Boolean);
   if (alts.includes(x)) return 'ok';
-  const close = alts.some(a => lev(x, a) <= Math.max(1, Math.floor(a.length * 0.2)));
+  if (tol === 'strict') return 'wrong';
+  const f = tol === 'lenient' ? 0.34 : 0.2;
+  const close = alts.some(a => lev(x, a) <= Math.max(1, Math.floor(a.length * f)));
   return close ? 'close' : 'wrong';
 }
 
@@ -426,6 +439,8 @@ function render() {
     console.error(e); html = `<div class="card"><h2>Ups, błąd</h2><p>${esc(e.message)}</p><a href="#/">Wróć na start</a></div>`;
   }
   document.body.classList.toggle('focus', focus);
+  document.body.classList.toggle('minimal', !!S.settings.minimal);
+  document.body.classList.toggle('noanim', !S.settings.anim);
   $('#view').innerHTML = html;
   $$('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
   MOUNT.forEach(fn => fn());
@@ -476,6 +491,7 @@ function viewHome() {
       ? `<button class="primary block" data-go="#/study/all/flip">▶ Ucz się wszystkiego (${all.total})</button>`
       : `<div class="center muted">${S.cards.length ? '🎉 Na dziś wszystko powtórzone!' + nextDueText() : 'Dodaj pierwsze fiszki, aby zacząć.'}</div>`}
   </div>
+  ${typeof safetyBannerHTML === 'function' ? safetyBannerHTML() : ''}
   ${typeof homeExtrasHTML === 'function' ? homeExtrasHTML() : ''}
   ${hard ? `<div class="banner row nowrap"><span class="grow">🧠 <b>${hard}</b> ${plural(hard, 'trudna fiszka', 'trudne fiszki', 'trudnych fiszek')} – powtórz bez wpływu na harmonogram</span><button class="sm" data-act="cram-hard">Powtórz</button></div>` : ''}
   <div class="card">
@@ -902,7 +918,7 @@ async function saveDraft() {
       else if (!x.bad) { addNote({ ...base, type: 'basic', front: x.front, back: x.back, hint: x.hint, extra: '', reverse: D.bulkReverse }); n++; }
     });
     if (!n) return toast('Nie rozpoznano żadnej fiszki');
-    save(); DRAFT.bulk = ''; toast(`Dodano ${n} ${plural(n, 'fiszkę', 'fiszki', 'fiszek')} ✓`); return go(`#/deck/${deckId}`);
+    save(); emit('cardsAdded', n); DRAFT.bulk = ''; toast(`Dodano ${n} ${plural(n, 'fiszkę', 'fiszki', 'fiszek')} ✓`); return go(`#/deck/${deckId}`);
   }
   let fields;
   if (D.type === 'basic') {
@@ -924,7 +940,7 @@ async function saveDraft() {
     Object.assign(n, fields, { deckId }); touch(n); syncCards(n); save(); gcImages();
     DRAFT = null; toast('Zapisano ✓'); history.length > 1 ? history.back() : go(`#/deck/${deckId}`);
   } else {
-    addNote({ ...fields, deckId }); save();
+    addNote({ ...fields, deckId }); save(); emit('cardsAdded', 1);
     const keep = { type: D.type, deckId, reverse: D.reverse, hideAll: D.hideAll };
     DRAFT = { ...freshDraft(D.type, deckId), ...keep };
     toast('Dodano ✓'); render();
@@ -1116,7 +1132,11 @@ function viewMore() {
   const total = S.cards.length, nw = S.cards.filter(c => c.srs.state === 'new').length, mature = S.cards.filter(c => c.srs.ivl >= 21).length;
   const last30 = S.log.filter(l => l.t > Date.now() - 30 * DAY), acc = last30.length ? Math.round(last30.filter(l => l.g > 1).length / last30.length * 100) : 0;
   const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const modeCard = `<div class="card"><h2 style="margin-top:0">Tryb aplikacji</h2>
+    <div class="modes"><button class="mode${st.minimal ? '' : ' on'}" data-act="set-mode" data-m="full"><span>🎮</span><b>Pełny</b><small>bitwy, osiągnięcia, skrzynki, ranking, gry pamięciowe</small></button>
+      <button class="mode${st.minimal ? ' on' : ''}" data-act="set-mode" data-m="min"><span>🧘</span><b>Skupienie</b><small>tylko fiszki i materiały – czysty, spokojny wygląd bez grywalizacji</small></button></div></div>`;
   return `<h1>Więcej</h1>
+  ${modeCard}
   <div class="card"><h2 style="margin-top:0">📊 Statystyki</h2>
     <div class="heat">${cells}</div><div class="spacer"></div>
     <div class="kv"><span>Seria dni nauki</span><b>🔥 ${streak()}</b></div>
@@ -1128,6 +1148,10 @@ function viewMore() {
   </div>
 
   ${typeof statsChartsHTML === 'function' ? statsChartsHTML() : ''}
+
+  <div class="card row nowrap"><span style="font-size:30px">🛡️</span><div class="grow"><b>Bezpieczeństwo danych</b><div class="small muted">Kopie, kosz, wersje w chmurze</div></div><button class="primary sm" data-go="#/safety">Otwórz</button></div>
+
+  ${typeof soundsSectionHTML === 'function' ? soundsSectionHTML() : ''}
 
   <div class="card row nowrap"><span style="font-size:30px">🎨</span><div class="grow"><b>Wygląd</b><div class="small muted">Motyw, kolor tła i akcentu (paleta lub HEX)</div></div><button class="primary sm" data-go="#/theme">Zmień</button></div>
 
@@ -1144,6 +1168,16 @@ function viewMore() {
     <label class="field"><span>Nowych kart dziennie (na talię)</span><input type="number" min="0" max="999" id="set-new" value="${st.newPerDay}"></label>
     <label class="field"><span>Cel dzienny (liczba powtórek)</span><input type="number" min="1" max="2000" id="set-goal" value="${st.goal}"></label>
     <label class="check"><input type="checkbox" id="set-hide" ${st.hideAll ? 'checked' : ''}> Obraz z lukami: domyślnie ukrywaj wszystkie luki</label>
+    <details class="adv"><summary>Ustawienia zaawansowane</summary>
+      <label class="field"><span>Kroki nauki nowych kart (minuty, oddzielone spacją)</span><input id="set-steps" value="${esc(st.steps)}" placeholder="1 10" inputmode="numeric"></label>
+      <label class="field"><span>Kroki po zapomnieniu (minuty)</span><input id="set-relearn" value="${esc(st.relearn)}" placeholder="10" inputmode="numeric"></label>
+      <label class="field"><span>Maksymalny odstęp między powtórkami (dni)</span><input type="number" id="set-maxivl" min="1" max="36500" value="${st.maxIvl}"></label>
+      <label class="field"><span>Premia za „Łatwe” (mnożnik odstępu)</span><input type="number" id="set-easy" min="1" max="3" step="0.05" value="${st.easyBonus}"></label>
+      <label class="field"><span>Sprawdzanie wpisanych odpowiedzi</span><select id="set-tol">
+        ${[['strict', 'Dokładne – bez literówek'], ['normal', 'Normalne – drobne literówki OK'], ['lenient', 'Łagodne – więcej literówek OK']].map(([v, l]) => `<option value="${v}" ${st.tolerance === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="check"><input type="checkbox" id="set-anim" ${st.anim ? 'checked' : ''}> Animacje i konfetti</label>
+      <label class="check"><input type="checkbox" id="set-sound" ${st.sound ? 'checked' : ''}> Dźwięki</label>
+    </details>
   </div>
 
   <div class="card"><h2 style="margin-top:0">🔄 Telefon ⇄ komputer</h2>
@@ -1181,6 +1215,13 @@ function mountMore() {
   bind('#set-new', t => st.newPerDay = clamp(+t.value || 0, 0, 999));
   bind('#set-goal', t => st.goal = clamp(+t.value || 1, 1, 2000));
   bind('#set-hide', t => st.hideAll = t.checked);
+  bind('#set-steps', t => { st.steps = LEARN_STEPS().join(' ') && parseSteps(t.value, [1, 10]).join(' '); t.value = st.steps; });
+  bind('#set-relearn', t => { st.relearn = parseSteps(t.value, [10]).join(' '); t.value = st.relearn; });
+  bind('#set-maxivl', t => st.maxIvl = clamp(+t.value || 36500, 1, 36500));
+  bind('#set-easy', t => st.easyBonus = clamp(+t.value || 1.3, 1, 3));
+  bind('#set-tol', t => st.tolerance = t.value);
+  bind('#set-anim', t => { st.anim = t.checked; document.body.classList.toggle('noanim', !st.anim); });
+  bind('#set-sound', t => st.sound = t.checked);
   bind('#sync-token', t => { st.sync.token = t.value.trim(); });
   bind('#sync-auto', t => st.autoSync = t.checked);
   mountAiSettings();
@@ -1382,6 +1423,7 @@ const ACTIONS = {
   'walk-step': el => { WALK.i += +el.dataset.d; WALK.assoc = false; WALK.fact = false; render(); },
 
   sync: () => syncNow(true),
+  'set-mode': el => { S.settings.minimal = el.dataset.m === 'min'; save(); render(); toast(S.settings.minimal ? '🧘 Tryb skupienia – tylko fiszki' : '🎮 Tryb pełny'); },
   ics: () => { download('fiszki-przypomnienie.ics', makeICS(), 'text/calendar'); toast('Otwórz pobrany plik i dodaj do kalendarza', 3500); },
   badge: async () => {
     if (!('setAppBadge' in navigator)) return toast('Ta przeglądarka nie obsługuje liczby na ikonie. Dodaj aplikację do ekranu początkowego.', 4000);
@@ -1389,12 +1431,15 @@ const ACTIONS = {
     updateBadge(); toast('Gotowe – liczba powtórek pokaże się na ikonie');
   },
   export: () => {
+    S.settings.lastExport = Date.now(); save();
     const used = referencedImages(), images = {};
     used.forEach(id => { if (IMG[id]) images[id] = IMG[id]; });
-    download(`fiszki-kopia-${dayKey(Date.now())}.json`, JSON.stringify({ app: 'fiszki', data: exportData(), images }), 'application/json');
+    const blob = new Blob([JSON.stringify({ app: 'fiszki', data: exportData(), images })], { type: 'application/json' });
+    shareOrDownload(blob, `fiszki-kopia-${dayKey(Date.now())}.json`);   // na iPhonie: „Zapisz w Plikach” / iCloud Drive
   },
   import: async () => {
     const f = await pickFile('.json,application/json'); if (!f) return;
+    if (typeof snapshot === 'function') await snapshot('przed importem');
     try {
       const j = JSON.parse(await f.text()); if (j.app !== 'fiszki') throw new Error('to nie jest kopia Fiszek');
       for (const [id, d] of Object.entries(j.images || {})) { IMG[id] = d; await DB.set('img:' + id, d); }

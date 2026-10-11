@@ -135,7 +135,7 @@ function statsChartsHTML() {
   const avg = tot ? Math.round(ok / tot * 100) : 0;
   const half = Math.floor(s.length / 2), part = arr => { const n = arr.reduce((a, d) => a + d.n, 0); return n ? arr.reduce((a, d) => a + d.n * (d.acc || 0) / 100, 0) / n * 100 : null; };
   const p1 = part(s.slice(0, half)), p2 = part(s.slice(half)), delta = p1 != null && p2 != null ? Math.round(p2 - p1) : null;
-  return `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">📈 Skuteczność</h2>
+  return `<div class="card"><div class="row"><h2 class="grow" style="margin:0;white-space:nowrap">📈 Skuteczność</h2>
     <div class="seg">${[7, 30, 90].map(d => `<button class="${CHART_RANGE === d ? 'on' : ''}" data-act="chart-range" data-d="${d}">${d} dni</button>`).join('')}</div></div>
     <div class="kpis"><div><b>${avg}%</b><small>średnio</small></div><div><b class="${delta > 0 ? 'c-rev' : delta < 0 ? 'c-lrn' : ''}">${delta == null ? '–' : (delta > 0 ? '▲ +' : delta < 0 ? '▼ ' : '') + delta + ' pp'}</b><small>zmiana (2. połowa vs 1.)</small></div><div><b>${tot}</b><small>powtórek</small></div></div>
     <div class="chart" id="chart-acc" aria-label="Skuteczność dzienna w procentach"></div>

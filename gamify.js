@@ -86,6 +86,9 @@ const ACHIEVEMENTS = [
   A('winstreak_3', '🌪️', 'Passa', '3 wygrane bitwy z rzędu', c => c.winStreak || 0, 3),
   A('cases_10', '📦', 'Hazardzista wiedzy', 'Otwórz 10 skrzynek', c => c.cases || 0, 10),
   A('legendary', '🌟', 'Legenda w albumie', 'Wylosuj legendarną naklejkę', c => c.legendary || 0, 1),
+  A('daily_7', '📅', 'Codzienny rytuał', 'Zdobądź 7 codziennych skrzynek', c => c.dailyCases || 0, 7),
+  A('shiny_1', '✨', 'Błyszczy!', 'Ulepsz naklejkę do wersji złotej', c => c.shiny || 0, 1),
+  A('saboteur', '🧊', 'Sabotażysta', 'Użyj 10 sabotaży w bitwach', c => c.sabUsed || 0, 10),
 ];
 
 let achTimer, lastLevel = null;
@@ -114,19 +117,32 @@ on('review', (c, g, wasNew) => {
   const xp = wasNew ? 3 : g > 1 ? 2 : 1;
   floatText(`+${xp} XP${combo >= 5 ? `  🔥×${combo}` : ''}`, combo >= 10 && combo % 10 === 0);
   const today = reviewsToday(), goal = S.settings.goal || 50;
-  if (today === goal) setTimeout(() => celebrate('🎯 Cel dzienny osiągnięty!', `${goal} powtórek – świetna robota!`), 300);
+  if (today === goal) { setTimeout(() => celebrate('🎯 Cel dzienny osiągnięty!', `${goal} powtórek – świetna robota!`), 300); grantDailyCase(); }
 });
-on('sessionEnd', s => { combo = 0; if (s.done >= 10) setTimeout(() => confetti(80), 200); });
+on('sessionEnd', s => { combo = 0; if (!s.cram && s.done >= 5) grantDailyCase(); if (s.done >= 10) setTimeout(() => confetti(80), 200); });
+// Codzienna skrzynka: raz dziennie za ukończony zestaw (sesję) albo cel dzienny
+function grantDailyCase() {
+  if (typeof addItem !== 'function') return;
+  const id = 'daily-' + dayKey(Date.now());
+  if (S.items.some(i => i.id === id)) return;
+  addItem('case', 'daily', 1, id);
+  S.stats.dailyCases = (S.stats.dailyCases || 0) + 1;
+  setTimeout(() => celebrate('🎁 Codzienna skrzynka!', 'Za dzisiejszą naukę – otwórz ją w sklepie'), 1500);
+}
 on('quiz', (pct, total) => { if (pct === 100 && total >= 10) { S.stats.quizPerfect = 1; save(); } if (pct >= 90) confetti(60); });
 on('ankiImport', () => { S.stats.ankiImport = 1; save(); });
 on('aiCards', n => { S.stats.aiCards = (S.stats.aiCards || 0) + n; save(); });
 
 // ============================================================ Efekty
+const quiet = () => S.settings.minimal || !S.settings.anim;
 function floatText(text, big) {
+  if (quiet()) return;
   const el = document.createElement('div'); el.className = 'floatxp' + (big ? ' big' : ''); el.textContent = text;
   document.body.append(el); setTimeout(() => el.remove(), 1300);
 }
 function celebrate(title, sub) {
+  emit('celebrate');
+  if (S.settings.minimal) return;
   confetti(140);
   const el = document.createElement('div'); el.className = 'celebrate';
   el.innerHTML = `<b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}`;
@@ -135,7 +151,7 @@ function celebrate(title, sub) {
   setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 4200);
 }
 function confetti(n = 120) {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || quiet()) return;
   const cv = $('#confetti'); if (!cv) return;
   const ctx = cv.getContext('2d'), W = cv.width = innerWidth * devicePixelRatio, H = cv.height = innerHeight * devicePixelRatio;
   const colors = ['#4f46e5', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'];
@@ -156,6 +172,7 @@ function confetti(n = 120) {
 
 // ============================================================ Start: poziom, osiągnięcia, ranking
 function homeExtrasHTML() {
+  if (S.settings.minimal) return '';
   const xp = xpTotal(), lvl = levelOf(xp), a = levelStart(lvl), b = levelStart(lvl + 1);
   const got = Object.keys(S.ach).length;
   const mine = rankRows().find(r => r.me), pos = mine ? rankRows().sort((x, y) => y.today - x.today).indexOf(mine) + 1 : 0;
@@ -199,7 +216,7 @@ function myProfile() {
   const best = {}; for (const g of S.games) if (g.correct > (best[g.d] || 0)) best[g.d] = g.correct;
   return { app: 'fiszki-profil', v: 1, nick: S.profile.nick || 'Anonim', avatar: S.profile.avatar || '🦊', level: levelOf(xp), xp,
     streak: streak(), day: dayKey(Date.now()), today: reviewsToday(), week, perDay, total: S.log.length, cards: S.cards.length,
-    mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, updated: Date.now() };
+    mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now() };
 }
 async function publishProfile(force) {
   const cfg = S.settings.sync;
@@ -247,7 +264,7 @@ function rankRows() {
     const week = Object.entries(per).filter(([k]) => k >= weekFrom && k <= today).reduce((a, [, n]) => a + n, 0);
     const lastDay = Object.keys(per).sort().pop();
     const streakAlive = p.day === today || lastDay === dayKey(addDays(dayStart(), -1)) || lastDay === today;
-    return { nick: p.nick, avatar: p.avatar, today: p.day === today ? p.today : (per[today] || 0), week, streak: streakAlive ? p.streak : 0, level: p.level || 1, xp: p.xp || 0, total: p.total || 0, updated: p.updated, ach: p.ach || 0 };
+    return { nick: p.nick, avatar: p.avatar, today: p.day === today ? p.today : (per[today] || 0), week, streak: streakAlive ? p.streak : 0, level: p.level || 1, xp: p.xp || 0, total: p.total || 0, updated: p.updated, ach: p.ach || 0, showcase: p.showcase || [] };
   };
   const me = { ...norm(myProfile()), me: true };
   const rows = S.friends.map(f => FRIEND_DATA[f.code]?.app ? { ...norm(FRIEND_DATA[f.code]), id: f.id, err: FRIEND_DATA[f.code].err } : { nick: f.name || 'Znajomy', avatar: '❔', id: f.id, today: 0, week: 0, streak: 0, level: 0, xp: 0, err: FRIEND_DATA[f.code]?.err || 'brak danych' });
@@ -272,7 +289,7 @@ ROUTES.rank = () => {
   <div class="seg" style="display:flex">${tabs.map(([k, l]) => `<button class="grow ${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
   <div class="card">${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}">
       <span class="medal">${medal(i)}</span><span class="av">${esc(r.avatar)}</span>
-      <div class="grow"><div class="row nowrap"><b class="grow">${esc(r.nick)}${r.me ? ' (Ty)' : ''}</b><span>${val(r)}</span></div>
+      <div class="grow"><div class="row nowrap"><b class="grow">${esc(r.nick)}${r.me ? ' (Ty)' : ''} ${typeof showcaseHTML === 'function' ? showcaseHTML(r.showcase) : ''}</b><span>${val(r)}</span></div>
         ${RANK_TAB === 'today' ? progress(r.today / maxToday, true) : ''}
         <div class="small muted">${r.err ? '⚠️ ' + esc(r.err) : r.me ? `poziom ${r.level} · 🔥 ${r.streak} · ${r.total} powtórek łącznie` : `poziom ${r.level} · 🔥 ${r.streak} · aktualizacja ${ago(r.updated)}`}</div></div>
       ${r.me ? '' : `<button class="ghost sm" data-act="friend-del" data-id="${r.id}">✕</button>`}</div>`).join('')}
