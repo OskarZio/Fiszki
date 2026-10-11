@@ -194,7 +194,7 @@ function homeExtrasHTML() {
   const mine = rankRows().find(r => r.me), pos = mine ? rankRows().sort((x, y) => y.today - x.today).indexOf(mine) + 1 : 0;
   return `<div class="card tight">
     <div class="row nowrap"><span class="lvl">${lvl}</span>
-      <div class="grow"><div class="row small nowrap"><b class="grow">${avatarHTML(S.profile, 20)} ${esc(S.profile.nick || 'Ty')} · ${levelTitle(lvl)}</b><span class="muted">${xp - a}/${b - a} XP</span></div>
+      <div class="grow"><div class="row small nowrap"><b class="grow" data-go="#/more" style="cursor:pointer">${avatarHTML(S.profile, 20)} ${esc(S.profile.nick || 'Ty')} · ${levelTitle(lvl)}</b><span class="muted">${xp - a}/${b - a} XP</span></div>
       ${progress((xp - a) / (b - a), true)}</div></div>
     <div class="spacer"></div>
     <div class="row"><button class="sm grow primary" data-go="#/battles">⚔️ Bitwa</button><button class="sm grow" data-go="#/shop">💎 ${typeof coins === 'function' ? coins() : 0}</button></div>
@@ -343,6 +343,18 @@ async function addFriend(code) {
     S.friends.push(touch({ id: uid(), code, name: p.nick })); FRIEND_DATA[code] = { ...p, ok: true }; save();
     toast(`Dodano ${p.nick} ✓`); go('#/rank');
   } catch (e) { toast('Nie udało się dodać: ' + e.message, 4000); go('#/rank'); }
+}
+// Karta profilu (awatar ze zdjęcia lub emoji + nick) – na górze zakładki „Więcej”
+function profileCardHTML() {
+  onMount(mountRank);
+  return `<div class="card"><h2 style="margin-top:0">👤 Profil</h2>
+    <div class="row nowrap"><span class="av-big" data-act="avatar-photo" style="cursor:pointer">${avatarHTML(S.profile, 64)}</span>
+      <div class="grow"><input id="pr-nick" value="${esc(S.profile.nick)}" placeholder="Twój nick" maxlength="24"></div></div>
+    <div class="spacer"></div>
+    <div class="row"><button class="primary sm" data-act="avatar-photo">📷 ${S.profile.avatarImg ? 'Zmień zdjęcie' : 'Dodaj zdjęcie'}</button>
+      ${S.profile.avatarImg ? '<button class="sm ghost" data-act="avatar-clear">Usuń zdjęcie</button>' : ''}
+      <span class="grow"></span><label class="small muted">emoji <input id="pr-avatar" value="${esc(S.profile.avatar)}" style="width:56px;text-align:center;font-size:20px;padding:6px" maxlength="4"></label></div>
+    <p class="small muted">Awatar widać na stronie głównej, w rankingu i w bitwach. Zdjęcie jest przycinane do kwadratu.</p></div>`;
 }
 function mountRank() {
   const upd = () => { S.profile.nick = $('#pr-nick').value.trim(); S.profile.avatar = $('#pr-avatar').value.trim() || '🦊'; S.profile.mod = Date.now(); save(); publishAt = 0; };

@@ -1167,6 +1167,7 @@ function viewMore() {
       ['zen', '🎯', 'Pełne skupienie', 'tylko nauka: zero liczników, statystyk i dodatków']].map(([m, i, n, d]) =>
       `<button class="mode${appMode() === m ? ' on' : ''}" data-act="set-mode" data-m="${m}"><span>${i}</span><b>${n}</b><small>${d}</small></button>`).join('')}</div></div>`;
   return `<h1>Więcej</h1>
+  ${typeof profileCardHTML === 'function' ? profileCardHTML() : ''}
   ${modeCard}
   <div class="card"><h2 style="margin-top:0">📊 Statystyki</h2>
     <div class="heat">${cells}</div><div class="spacer"></div>
