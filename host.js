@@ -101,6 +101,7 @@ ROUTES.host = () => {
         <div class="row"><button class="sm primary" data-act="host-upload" data-k="${k}">📤 Wgraj dla wszystkich</button>
           ${GLOBAL_RX[k]?.path ? `<button class="sm" data-act="rx-test" data-k="${k}">▶ Podgląd</button><button class="sm ghost" data-act="host-clear" data-k="${k}">Przywróć kota</button>` : ''}</div></div>`; }).join('')}
     </div>
+    ${betaCardHTML()}
     <div class="card"><h3 style="margin-top:0">🎞️ Skrzynka z GIF-ami</h3>
       <p class="small muted">Dodaj GIF-y, które gracze mogą wylosować (skrzynka pojawi się w sklepie, gdy będzie choć jeden). Rzadkość decyduje o szansie:
         ${Object.entries(CASES.gif.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name} ${p}%</span>`).join(' · ')}. Duplikat zamienia się w kryształy.</p>
@@ -213,3 +214,50 @@ function readSbFields() {
     toast('To klucz service_role/secret – NIE wklejaj go! Użyj klucza anon/publishable.', 6000); return null; }
   return { url, key };
 }
+
+// ---------- 🧪 Beta – testy dźwięków i efektów (nic nie zmienia w danych)
+const BETA_FX = {
+  'case-open': ['📦 Otwarcie skrzynki', () => CASE_SFX.open()],
+  'case-ticks': ['🎰 Stukanie ruletki', () => { for (let i = 0; i < 14; i++) setTimeout(() => CASE_SFX.tick(i), i * (60 + i * 9)); }],
+  'rev-common': ['🔵 Wygrana: zwykła', () => CASE_SFX.reveal('common')],
+  'rev-rare': ['🟣 Wygrana: rzadka', () => CASE_SFX.reveal('rare')],
+  'rev-epic': ['🩷 Wygrana: epicka', () => CASE_SFX.reveal('epic')],
+  'rev-legendary': ['🟡 Wygrana: legendarna', () => CASE_SFX.reveal('legendary')],
+  'msg': ['💬 Nowa wiadomość', () => { tick(988, .12, .1); setTimeout(() => tick(1319, .18, .1), 110); }],
+  'right': ['✅ Dobra odpowiedź', () => tick(1320, .08, .08)],
+  'wrong': ['❌ Zła odpowiedź', () => tick(220, .15, .1)],
+};
+const BETA_VIS = {
+  confetti: ['🎊 Konfetti', () => confetti(150)],
+  celebrate: ['🏆 Osiągnięcie', () => celebrate('💀 🗂️ Komplet albumu', 'Zdobądź wszystkie naklejki · +150 💎')],
+  level: ['⭐ Nowy poziom', () => celebrate('⭐ Poziom 7!', levelTitle(7))],
+  xp: ['+XP nad kartą', () => floatText('+3 XP  🔥×10', true)],
+  rxwin: ['🏆 GIF: wygrana', () => showReaction('win', true)],
+  rxsession: ['✅ GIF: zestaw', () => showReaction('session', true)],
+  rxgoal: ['🎯 GIF: cel dnia', () => showReaction('goal', true)],
+  popup: ['🔔 Powiadomienie', () => typeof msgPopup === 'function' ? msgPopup({ id: 0, kind: 'nudge', from_id: 'x', body: {} }, '🔔 Kolega przypomina o nauce', 'Czas na fiszki! 📚') : toast('Brak modułu wiadomości')],
+  toast: ['💬 Dymek (toast)', () => toast('To jest przykładowy komunikat ✓', 3000)],
+};
+function betaCardHTML() {
+  const btn = (k, [l]) => `<button class="sm" data-act="beta" data-k="${k}">${l}</button>`;
+  return `<details class="card beta"><summary><h3 style="margin:0;display:inline">🧪 Beta – testy dźwięków i efektów</h3></summary>
+    <p class="small muted">Podgląd bez grania – nic nie zapisuje się na koncie. Dźwięki grają także przy wyciszonych dźwiękach naklejek.</p>
+    <h4>🔊 Skrzynki i aplikacja</h4><div class="beta-row">${Object.entries(BETA_FX).map(([k, v]) => btn(k, v)).join('')}</div>
+    <h4>🐐 Dźwięki naklejek <small class="muted">(z animacją)</small></h4>
+    <div class="beta-row st">${STICKERS.map(x => `<button class="sm beta-st" data-act="beta-st" data-id="${x.id}" title="${esc(x.name)}" style="--rc:${RARITY[x.r].color}">${x.e}</button>`).join('')}</div>
+    <h4>✨ Efekty na ekranie</h4><div class="beta-row">${Object.entries(BETA_VIS).map(([k, v]) => btn(k, v)).join('')}</div></details>`;
+}
+Object.assign(ACTIONS, {
+  beta: el => {
+    const f = BETA_FX[el.dataset.k] || BETA_VIS[el.dataset.k]; if (!f) return;
+    // dźwięki testowe grają nawet przy wyłączonych dźwiękach naklejek, ale nie przy całkowicie wyłączonym dźwięku
+    if (S.settings.sound === false && BETA_FX[el.dataset.k]) return toast('Dźwięki są wyłączone w Ustawieniach → Personalizacja');
+    if (typeof fxUnlock === 'function') fxUnlock();
+    try { f[1](); } catch (e) { toast('Błąd: ' + e.message, 4000); }
+  },
+  'beta-st': el => {
+    if (typeof fxUnlock === 'function') fxUnlock();
+    const keep = S.settings.stickerSound; S.settings.stickerSound = true;
+    try { stickerFx(el.dataset.id, 'Test', false); } finally { S.settings.stickerSound = keep; }
+  },
+});
