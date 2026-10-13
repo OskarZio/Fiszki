@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '37';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '38';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -101,7 +101,7 @@ function blankState() {
   return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS), ...extraState() };
 }
 // pola dodane w kolejnych wersjach (tematy, znajomi, gry, osiągnięcia, system liczbowy)
-function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [], events: [] }; }
+function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [], events: [], logins: [] }; }
 
 // Proste zdarzenia, na które reagują moduły (osiągnięcia, ranking…)
 const HOOKS = {};
@@ -1368,7 +1368,7 @@ function mergeState(R) {
   const ids = new Set(S.log.map(l => l.id));
   for (const l of R.log || []) if (!ids.has(l.id)) S.log.push(l);
   S.log.sort((a, b) => a.t - b.t);
-  for (const key of ['games', 'wallet', 'items', 'battles']) {
+  for (const key of ['games', 'wallet', 'items', 'battles', 'logins']) {
     S[key] = S[key] || []; const ids = new Set(S[key].map(x => x.id));
     for (const x of R[key] || []) if (!ids.has(x.id)) S[key].push(x);
   }

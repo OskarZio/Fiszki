@@ -13,7 +13,7 @@ const LAST_HUB = { arena: 'battles', profile: 'me' };
 
 // liczniki: Arena = nowe wiadomości + wyzwania, Profil = zadania do odebrania
 const arenaBadge = () => typeof cloudOn === 'function' && cloudOn() && typeof unreadMsgs === 'function' ? unreadMsgs().length : 0;
-const profileBadge = () => typeof questState === 'function' ? questState().claimable : 0;
+const profileBadge = () => (typeof questState === 'function' ? questState().claimable : 0) + (typeof dailyOn === 'function' && dailyOn() && !loginState().claimed ? 1 : 0);
 const segBadge = r => { const n = r === 'inbox' ? arenaBadge() : r === 'quests' ? profileBadge() : 0; return n ? `<i class="unread">${n}</i>` : ''; };
 
 function hubNav(hub, cur) {
@@ -42,6 +42,7 @@ ROUTES.me = () => {
     ${tile('#/ach', '🏅', `${got}/${ACHIEVEMENTS.length}`, 'osiągnięcia')}
   </div>
   <div class="card list-links">
+    ${typeof dailyOn === 'function' && dailyOn() ? `<a class="lnk" href="#/me" data-act="dr-open"><span>🎁</span><b class="grow">Nagroda dnia</b>${loginState().claimed ? `<small class="muted">dzień ${loginState().n}/7 ✓</small>` : '<i class="unread">1</i>'}<i>›</i></a>` : ''}
     <a class="lnk" href="#/calendar"><span>📅</span><b class="grow">Terminarz</b><small class="muted">${typeof upcoming === 'function' ? upcoming().length || '' : ''}</small><i>›</i></a>
     <a class="lnk" href="#/quests"><span>📋</span><b class="grow">Zadania dnia</b>${segBadge('quests')}<i>›</i></a>
     <a class="lnk" href="#/shop"><span>🎁</span><b class="grow">Skrzynki i album naklejek</b><i>›</i></a>

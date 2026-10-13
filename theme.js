@@ -104,6 +104,7 @@ function personalHTML() {
     ${chk('stickerAnim', 'Animowane naklejki')}
     ${chk('stickerSound', 'Dźwięki naklejek (np. koza 🐐)')}
     ${chk('sound', 'Dźwięki')}
+    ${chk('loginRewards', '🎁 Nagroda dnia przy wejściu (okienko na start)')}
   </div>`;
 }
 document.addEventListener('change', e => {
