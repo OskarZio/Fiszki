@@ -1227,3 +1227,12 @@ label.field { min-width: 0; max-width: 100%; }
 .invite-card .row.nowrap + .row { margin-top: 12px; }
 .invite-card > .row:last-of-type { gap: 8px; }
 .invite-banner { gap: 10px; }
+/* oceny: kolumny zawsze równe i mieszczą się na ekranie (1fr nie zmniejsza się poniżej najdłuższego słowa) */
+.grades { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grades.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grades.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grades button { min-width: 0; line-height: 1.15; padding: 8px 3px !important; font-size: clamp(13px, 3.9vw, 16px); text-align: center; }
+.grades button small { font-size: clamp(11px, 3vw, 12px); }
+@media (max-width: 420px) { .grades { gap: 5px; } }
+/* zabezpieczenie: nic nie może poszerzyć strony w poziomie */
+html, body { max-width: 100%; overflow-x: clip; }
