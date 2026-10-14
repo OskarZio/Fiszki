@@ -1208,3 +1208,9 @@ body:has(.sh-stage) #tabs { background: rgba(15,10,46,.85); border-color: rgba(2
 .sh-cfg-row label { gap: 8px; cursor: pointer; } .sh-cfg-row input { width: 20px; height: 20px; flex: none; }
 .sh-cfg-row select { width: auto; min-width: 92px; }
 .sh-cfg .grid2 { margin-top: 10px; }
+/* iOS Safari: pola daty/godziny ignorują width:100% i wychodzą poza kartę */
+input[type=time], input[type=date], input[type=datetime-local], input[type=month] {
+  -webkit-appearance: none; appearance: none; display: block; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; min-height: 46px; text-align: left; }
+input::-webkit-date-and-time-value { text-align: left; margin: 0; }
+input[type=time]::-webkit-calendar-picker-indicator, input[type=date]::-webkit-calendar-picker-indicator { margin-left: auto; }
+label.field { min-width: 0; max-width: 100%; }
