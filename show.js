@@ -77,7 +77,7 @@ function showQuestions(deckId, need) {
   const out = []; while (out.length < need) out.push(...shuffle(pool.map(c => ({ ...c, opts: shuffle([...c.opts]) }))));
   return out.slice(0, need);
 }
-const selfPlayer = id => ({ id, name: (S.profile.nick || 'Ty').slice(0, 20), av: S.profile.avatar || '🦊', color: SHOW_COLORS[0], score: 0, me: true });
+const selfPlayer = id => ({ id, name: (S.profile.nick || 'Ty').slice(0, 20), av: S.profile.avatar || '🦊', color: SHOW_COLORS[0], score: 0, me: true, gif: typeof myWinGif === 'function' ? myWinGif() : null });
 function makeBots(n, level, used) {
   const lv = SHOW_LEVELS[level] || SHOW_LEVELS.mid;
   return shuffle([...SHOW_BOTS]).slice(0, n).map(([name, av], i) => ({ id: 'bot' + i, name, av, bot: true, color: SHOW_COLORS[(used + i) % SHOW_COLORS.length], score: 0,
@@ -117,7 +117,7 @@ function showHostMsg(m) {
     if (!p) {
       if (SHOW.phase !== 'lobby') return SHOW.ch.send({ t: 'full', to: m.from, why: 'Gra już trwa' });
       if (SHOW.players.filter(x => !x.bot).length >= SHOW_MAX) return SHOW.ch.send({ t: 'full', to: m.from, why: 'Lobby pełne' });
-      p = { id: pid, name: String(m.name || 'Gracz').slice(0, 20), av: String(m.av || '🙂').slice(0, 4), color: SHOW_COLORS[SHOW.players.length % SHOW_COLORS.length], score: 0, remote: true };
+      p = { id: pid, name: String(m.name || 'Gracz').slice(0, 20), av: String(m.av || '🙂').slice(0, 4), color: SHOW_COLORS[SHOW.players.length % SHOW_COLORS.length], score: 0, remote: true, gif: typeof m.gif === 'string' ? m.gif.slice(0, 40) : null };
       SHOW.players.push(p); showSfx('join'); toast(`${p.av} ${p.name} dołącza!`, 1800);
     }
     p.left = false; showRender(); return;
@@ -133,7 +133,7 @@ function showHostMsg(m) {
 function showSnapshot() {
   const ph = SHOW.phase, q = SHOW.qs?.[SHOW.qi], R = SHOW_ROUNDS[SHOW.r] || {}, rev = ph === 'reveal' || ph === 'aim';
   return { t: 'state', phase: ph, pin: SHOW.pin, r: SHOW.r, rq: SHOW.rq, qi: SHOW.qi,
-    players: SHOW.players.map(p => ({ id: p.id, name: p.name, av: p.av, color: p.color, score: p.score, bet: p.bet, bot: !!p.bot, left: !!p.left, hp: p.hp, out: p.out })),
+    players: SHOW.players.map(p => ({ id: p.id, name: p.name, av: p.av, color: p.color, score: p.score, bet: p.bet, bot: !!p.bot, left: !!p.left, hp: p.hp, out: p.out, gif: p.gif })),
     shooter: SHOW.shooter, hit: SHOW.hit, src: SHOW.src, cat: SHOW.cat, picker: SHOW.picker, catOpts: SHOW.catOpts, pickLeft: ph === 'pick' ? Math.max(0, SHOW.pickEnd - Date.now()) : 0, aimEnd: ph === 'aim' ? Math.max(0, SHOW.aimEnd - Date.now()) : 0,
     q: q && (ph === 'question' || rev || ph === 'aim') ? { q: q.q, opts: q.opts, ...(rev || ph === 'aim' ? { a: q.a } : {}) } : null,
     left: ph === 'question' ? Math.max(0, R.sec * 1000 - (Date.now() - SHOW.t0)) : ph === 'bet' ? Math.max(0, SHOW.betEnd - Date.now()) : 0,
@@ -149,7 +149,7 @@ function showJoin(pin) {
   if (SHOW?.ch) SHOW.ch.close();
   SHOW = { role: 'guest', pin, myId: 'p' + MY_ID, phase: 'joining', players: [], timers: [], log: [], qs: {} };
   SHOW.ch = channel('fiszki-show-' + pin, showGuestMsg);
-  const hello = () => { if (SHOW?.role === 'guest' && SHOW.phase === 'joining') { SHOW.ch.send({ t: 'join', name: S.profile.nick || 'Gracz', av: S.profile.avatar || '🙂' }); SHOW.tries = (SHOW.tries || 0) + 1; if (SHOW.tries < 8) later(hello, 2500); else { SHOW.phase = 'nohost'; render(); } } };
+  const hello = () => { if (SHOW?.role === 'guest' && SHOW.phase === 'joining') { SHOW.ch.send({ t: 'join', name: S.profile.nick || 'Gracz', av: S.profile.avatar || '🙂', gif: typeof myWinGif === 'function' ? myWinGif() : null }); SHOW.tries = (SHOW.tries || 0) + 1; if (SHOW.tries < 8) later(hello, 2500); else { SHOW.phase = 'nohost'; render(); } } };
   hello(); go('#/show'); render();
 }
 function showGuestMsg(m) {
@@ -166,7 +166,7 @@ function showGuestMsg(m) {
     showSfx(ok && (m.gain[SHOW.myId] || 0) > 0 ? 'ok' : 'bad'); if (!ok) SHOW.log.push({ q: m.q.q, a: m.q.a });
   }
   if (m.hit && m.hit.k !== SHOW._hitK) { SHOW._hitK = m.hit.k; showSfx(m.hit.to === SHOW.myId ? 'hurt' : 'shot'); }
-  if ((m.phase === 'round' || m.phase === 'end') && prev !== m.phase) { showSfx('round'); if (m.phase === 'end') { if (showRanking()[0]?.id === SHOW.myId) confetti(200); SHOW.rewarded = false; showReward(); } }
+  if ((m.phase === 'round' || m.phase === 'end') && prev !== m.phase) { showSfx('round'); if (m.phase === 'end') { if (showRanking()[0]?.id === SHOW.myId) confetti(200); SHOW.rewarded = false; showReward(); showWinGifAll(); } }
   if (m.phase === 'question' && m.ans && Object.keys(m.ans).length > Object.keys(SHOW._ansN || {}).length) showSfx('buzz');
   SHOW._ansN = m.ans;
   render(); if (m.phase === 'question') showTimerLoop();
@@ -277,7 +277,15 @@ function showShoot(id) {
 }
 function showFinishGame() {
   SHOW.phase = 'end'; showSfx('round'); showReward();
-  confetti(showRanking()[0]?.me ? 220 : 60); showRender();
+  confetti(showRanking()[0]?.me ? 220 : 60); showRender(); showWinGifAll();
+}
+// GIF zwycięzcy na ekranie każdego gracza (zwycięzca widzi swoją reakcję „wygrana”)
+function showWinGifAll() {
+  const w = showRanking()[0]; if (!w) return;
+  setTimeout(() => {
+    if (w.id === SHOW?.myId) { if (typeof showReaction === 'function') showReaction('win'); }
+    else if (!w.bot && typeof showWinnerGif === 'function') showWinnerGif(w.gif, w.name);
+  }, 900);
 }
 // kolejność: kto przetrwał finał (najwięcej ❤️), potem kto odpadł później, na końcu punkty
 const showRanking = () => SHOW.players.slice().sort((a, b) =>

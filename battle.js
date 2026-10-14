@@ -113,7 +113,7 @@ function channel(topic, onMsg) {
     close: () => { closed = true; es?.close(); },
   };
 }
-const me = () => ({ elo: myElo(), nick: S.profile.nick || 'Gracz', avatar: S.profile.avatar || '🦊', avatarImg: safeImg(S.profile.avatarImg), level: levelOf(xpTotal()), showcase: S.profile.showcase || [] });
+const me = () => ({ elo: myElo(), nick: S.profile.nick || 'Gracz', avatar: S.profile.avatar || '🦊', avatarImg: safeImg(S.profile.avatarImg), level: levelOf(xpTotal()), showcase: S.profile.showcase || [], winGif: typeof myWinGif === 'function' ? myWinGif() : null });
 const roomCode = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random() * 32 | 0]).join('');
 const rngFrom = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 function seededShuffle(a, rnd) { for (let i = a.length - 1; i > 0; i--) { const j = rnd() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -185,7 +185,7 @@ function onRoomMsg(m) {
     if (B.opp && B.opp.id !== m.from) return B.ch.send({ t: 'full', to: m.from });
     if (B.opp) { if (B.phase === 'countdown') B.ch.send({ t: 'setup', to: m.from, setup: B.setup, host: me() }); return; }
     if (B.phase === 'seeking') stopSeek();
-    B.opp = { id: m.from, nick: m.nick, avatar: m.avatar, avatarImg: m.avatarImg, level: m.level, showcase: m.showcase, elo: m.elo };
+    B.opp = { id: m.from, nick: m.nick, avatar: m.avatar, avatarImg: m.avatarImg, level: m.level, showcase: m.showcase, elo: m.elo, winGif: m.winGif };
     B.ch.send({ t: 'setup', to: m.from, setup: B.setup, host: me() });
     startCountdown(); return;
   }
@@ -285,7 +285,12 @@ function finishBattle() {
     S.stats.winStreak = Math.max(S.stats.winStreak || 0, streakNow);
     emit('battleWin', rec);
     setTimeout(() => celebrate('🏆 Zwycięstwo!', `+${battleReward(rec)} 💎 i darmowa skrzynka`), 300);
-  } else if (won === 0) toast('🤝 Remis!'); else toast('💪 Tym razem przegrana – rewanż?', 3000);
+  } else if (won === 0) toast('🤝 Remis!');
+  else {
+    toast('💪 Tym razem przegrana – rewanż?', 3000);
+    // GIF wygranej przeciwnika (z jego ekwipunku) – zwycięzcę widać u wszystkich
+    if (B.role !== 'bot' && typeof showWinnerGif === 'function') setTimeout(() => showWinnerGif(B.opp?.winGif, B.opp?.nick), 500);
+  }
   save(); B.ch?.send({ t: 'done', total: B.myTotalMs }); renderBattle();
 }
 function maybeRematch() {

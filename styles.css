@@ -1169,3 +1169,35 @@ body:has(.sh-stage) #tabs { background: rgba(15,10,46,.85); border-color: rgba(2
 .sh-vamp { text-align: center; font-weight: 800; font-size: 14px; margin: 6px auto; padding: 6px 12px; border-radius: 99px; width: fit-content; max-width: 100%;
   background: linear-gradient(90deg, rgba(220,38,38,.55), rgba(126,34,206,.55)); box-shadow: 0 0 18px rgba(220,38,38,.4); animation: shPop .4s cubic-bezier(.2,1.5,.4,1); }
 @keyframes shOkPulse { 50% { transform: scale(1.02); } }
+/* 🎒 Ekwipunek */
+.inv-cta { cursor: pointer; }
+.inv-empty { text-align: center; padding: 14px 6px; } .inv-empty > span { font-size: 46px; display: block; } .inv-empty p { margin: 6px 0 10px; }
+.inv-st { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.inv-st span { position: relative; font-size: 30px; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 14px; cursor: pointer;
+  background: color-mix(in srgb, var(--rc) 14%, var(--card)); border: 2px solid color-mix(in srgb, var(--rc) 55%, transparent); }
+.inv-st span.shiny { box-shadow: 0 0 12px gold; }
+.inv-st span i { position: absolute; right: -4px; bottom: -4px; font-style: normal; font-size: 10px; font-weight: 800; background: var(--accent); color: #fff; border-radius: 99px; padding: 1px 5px; }
+.inv-case { padding: 6px 0; border-top: 1px solid var(--line, rgba(127,127,127,.15)); } .inv-case:first-of-type { border-top: 0; }
+/* czat: naklejki, GIF-y, emotki */
+.chat-media { display: flex; flex-direction: column; gap: 6px; }
+.emo-row, .st-row, .gif-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.emo-row button { font-size: 24px; padding: 4px 6px; min-width: 42px; background: transparent; border: 0; }
+.st-row button { font-size: 28px; min-width: 52px; height: 52px; border-radius: 14px; flex: none; background: color-mix(in srgb, var(--rc) 14%, var(--card)); border: 2px solid color-mix(in srgb, var(--rc) 55%, transparent); }
+.st-row button.shiny { box-shadow: 0 0 10px gold; }
+.gif-row button { flex: none; width: 92px; height: 92px; padding: 0; overflow: hidden; border-radius: 12px; border: 2px solid var(--rc); }
+.gif-row button img { width: 100%; height: 100%; object-fit: cover; }
+.msg.k-sticker, .msg.k-gif, .msg.k-emoji { background: transparent !important; box-shadow: none !important; padding: 2px 0 !important; }
+.chat-st { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 14px; border-radius: 22px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--rc) 35%, transparent), transparent 70%); }
+.chat-st span { font-size: 64px; line-height: 1.1; cursor: pointer; filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--rc) 60%, transparent)); animation: shPop .45s cubic-bezier(.2,1.5,.4,1); }
+.chat-st small { font-size: 11px; font-weight: 700; color: var(--rc); }
+.chat-st.shiny span { filter: drop-shadow(0 0 10px gold); }
+.chat-gif { border-radius: 16px; overflow: hidden; border: 3px solid var(--rc, #888); max-width: 220px; }
+.chat-gif img { display: block; width: 100%; max-height: 260px; object-fit: cover; }
+.chat-gif.none { padding: 20px; text-align: center; }
+.emoji-big { font-size: 46px; line-height: 1.15; letter-spacing: 2px; animation: shPop .4s cubic-bezier(.2,1.5,.4,1); }
+.msg .emo { font-size: 1.35em; vertical-align: -.1em; }
+.chat-tools { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.chat-tools button { padding: 9px 2px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg .emo { display: inline; font-style: normal; }
+.gif-row button img { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; object-fit: cover; }

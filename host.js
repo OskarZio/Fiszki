@@ -97,7 +97,7 @@ ROUTES.host = () => {
       ${Object.entries(REACT_SLOTS).map(([k, sl]) => { const g = globalSrcs(k); return `<div class="sndrow"><div class="row nowrap">
           <img class="rx-thumb" src="${g[0] || REACT_DEFAULT}" data-alt="${esc(JSON.stringify([...g.slice(1), REACT_DEFAULT]))}" onerror="rxFallback(this)" alt="">
           <b class="grow">${sl.name}<br><small class="muted">${GLOBAL_RX[k]?.path ? 'globalny: ' + esc(GLOBAL_RX[k].name || '') : 'domyślny kot'}</small>
-          ${RX[k] ? '<br><small class="c-hard">Na tym urządzeniu masz własny GIF – zasłania GIF hosta (Więcej → Reakcje → „Użyj GIF-a hosta”)</small>' : ''}</b></div>
+</b></div>
         <div class="row"><button class="sm primary" data-act="host-upload" data-k="${k}">📤 Wgraj dla wszystkich</button>
           ${GLOBAL_RX[k]?.path ? `<button class="sm" data-act="rx-test" data-k="${k}">▶ Podgląd</button><button class="sm ghost" data-act="host-clear" data-k="${k}">Przywróć kota</button>` : ''}</div></div>`; }).join('')}
     </div>

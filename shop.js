@@ -136,7 +136,8 @@ ROUTES.shop = () => {
         ${have ? `<button class="sm ghost" data-act="showcase" data-id="${s.id}">${inSc ? '★ w gablocie' : '☆ do gabloty'}</button>` : ''}
         ${n >= 3 && !sh ? `<button class="sm primary" data-act="upgrade" data-id="${s.id}">✨ Ulepsz (3 szt.)</button>` : ''}
         ${n > 1 ? `<button class="sm ghost" data-act="sell-dup" data-id="${s.id}">×${n} · sprzedaj +${RARITY[s.r].sell}💎</button>` : ''}</div>`; }).join('')}</div></div>
-  ${gifCaseReady() ? gifCollectionHTML() : ''}
+  <div class="card row nowrap inv-cta" data-go="#/inv"><span style="font-size:34px">🎒</span><div class="grow"><b>Ekwipunek</b>
+    <div class="small muted">GIF-y (${typeof GIF_CASE !== 'undefined' ? GIF_CASE.filter(g => hasItem('gif', g.id)).length : 0}), naklejki (${owned}/${STICKERS.length}), skrzynki do otwarcia</div></div><span style="font-size:22px">›</span></div>
   <div class="card"><h2 style="margin-top:0">Efekty zwycięstwa</h2><div class="effects">${EFFECTS.map(e => {
     const own = !e.price || hasItem('effect', e.id), on = (S.settings.effect || 'classic') === e.id;
     return `<button class="eff${on ? ' on' : ''}" data-act="effect" data-id="${e.id}"><span>${e.icon}</span><b>${e.name}</b><small>${on ? '✓ aktywny' : own ? 'wybierz' : e.price + ' 💎'}</small></button>`; }).join('')}</div></div>
@@ -160,7 +161,7 @@ ROUTES.case = (parts, q) => {
   ${SPIN.phase === 'done' && won ? `<div class="card center reveal" style="--rc:${RARITY[won.r].color}">
       <div class="big-st${won.kind === 'gif' ? ' gifprize' : ''}">${won.kind === 'gif' ? gifImg(won.g) : won.e}</div><b style="font-size:22px">${won.kind === 'gems' ? `+${won.n} kryształów` : won.kind === 'respin' ? 'Losuj jeszcze raz!' : esc(won.name)}</b>
       <div style="color:${RARITY[won.r].color};font-weight:700">${won.kind === 'gems' ? (won.r === 'legendary' ? '💰 JACKPOT' : 'Kryształy') : won.kind === 'respin' ? 'Darmowe losowanie' : RARITY[won.r].name}</div>
-      <p class="small muted">${SPIN.test ? '🧪 Tryb testowy – nic nie trafia na konto.' : won.kind === 'gems' ? 'Kryształy dodane do salda 💎' : won.kind === 'gif' ? (SPIN.dup ? `Masz już ten GIF – dostajesz +${GIF_DUP[won.r]} 💎.` : 'Nowy GIF w kolekcji! Ustaw go jako reakcję (Sklep → Moje GIF-y).') : won.kind === 'respin' ? 'Otwierasz tę skrzynkę jeszcze raz – za darmo!' : SPIN.dup ? `Duplikat – masz już ${itemCount('sticker', won.id)} szt. ${itemCount('sticker', won.id) >= 3 ? 'Możesz ją ulepszyć do złotej wersji ✨ w albumie!' : `Przy 3 sztukach ulepszysz ją do złotej ✨ (albo sprzedasz za ${RARITY[won.r].sell} 💎).`}` : 'Nowa naklejka w albumie! Wyślij ją w następnej bitwie.'}</p>
+      <p class="small muted">${SPIN.test ? '🧪 Tryb testowy – nic nie trafia na konto.' : won.kind === 'gems' ? 'Kryształy dodane do salda 💎' : won.kind === 'gif' ? (SPIN.dup ? `Masz już ten GIF – dostajesz +${GIF_DUP[won.r]} 💎.` : 'Nowy GIF w ekwipunku 🎒! Ustaw go jako GIF wygranej albo wyślij na czacie.') : won.kind === 'respin' ? 'Otwierasz tę skrzynkę jeszcze raz – za darmo!' : SPIN.dup ? `Duplikat – masz już ${itemCount('sticker', won.id)} szt. ${itemCount('sticker', won.id) >= 3 ? 'Możesz ją ulepszyć do złotej wersji ✨ w albumie!' : `Przy 3 sztukach ulepszysz ją do złotej ✨ (albo sprzedasz za ${RARITY[won.r].sell} 💎).`}` : 'Nowa naklejka w albumie! Wyślij ją w następnej bitwie.'}</p>
       <div class="row"><button class="primary grow${won.kind === 'respin' ? ' pulse' : ''}" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">${won.kind === 'respin' ? '🔁 Losuj jeszcze raz' : 'Otwórz kolejną'}</button><button class="grow" data-go="${SPIN.test ? '#/host' : '#/shop'}">${SPIN.test ? 'Panel hosta' : 'Album'}</button></div></div>`
     : `<div class="odds center"><span>💎 Kryształy ${CASE_EXTRA.gems}% (do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} 💎)</span> <span>🔁 Jeszcze raz ${CASE_EXTRA.respin}%</span><br>
        <small class="muted">Naklejki (${100 - CASE_EXTRA.gems - CASE_EXTRA.respin}%):</small> ${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join(' ')}</div>
@@ -255,23 +256,38 @@ Object.assign(ACTIONS, {
   },
 });
 
-// ---------- Moje GIF-y (ze skrzynki z GIF-ami)
+// ---------- 🎒 Ekwipunek: GIF-y (tylko ze skrzynki), naklejki, nieotwarte skrzynki
 function gifCollectionHTML() {
-  const own = GIF_CASE.filter(g => hasItem('gif', g.id)), cfg = S.settings.reactions || {};
-  return `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🎞️ Moje GIF-y</h2><span class="small muted">${own.length}/${GIF_CASE.length}</span></div>
-    <p class="small muted">Wylosuj je w skrzynce z GIF-ami i ustaw jako reakcję: 🏆 po wygranej bitwie, ✅ po zestawie fiszek, 🎯 po celu dziennym.</p>
-    <div class="gifgrid">${GIF_CASE.map(g => { const have = hasItem('gif', g.id), r = g.r || 'common';
-      return `<div class="gifitem${have ? '' : ' locked'}" style="--rc:${RARITY[r].color}">${have ? gifImg(g) : '<div class="giflock">🔒</div>'}
-        <small><b>${have ? esc(g.name || 'GIF') : '???'}</b> · <span style="color:${RARITY[r].color}">${RARITY[r].name}</span></small>
-        ${have ? `<div class="row nowrap gifuse">${Object.keys(REACT_SLOTS).map(k => `<button class="sm${cfg[k]?.gid === g.id ? ' primary' : ''}" data-act="gif-use" data-id="${g.id}" data-k="${k}" title="${esc(REACT_SLOTS[k].name)}">${REACT_SLOTS[k].name.split(' ')[0]}</button>`).join('')}</div>` : ''}</div>`; }).join('')}</div></div>`;
+  const all = typeof GIF_CASE !== 'undefined' ? GIF_CASE : [], own = all.filter(g => hasItem('gif', g.id)), cfg = S.settings.reactions || {};
+  const ready = gifCaseReady();
+  return `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🎞️ GIF-y</h2><span class="small muted">${own.length}/${all.length}</span></div>
+    <p class="small muted">GIF-y zdobywasz <b>tylko</b> w 🎞️ skrzynce z GIF-ami. Ustaw GIF jako: 🏆 wygrana (widzą go wszyscy gracze, gdy wygrasz bitwę lub teleturniej), ✅ zestaw fiszek, 🎯 cel dzienny. Możesz go też wysłać znajomemu na czacie.</p>
+    ${own.length ? `<div class="gifgrid">${own.map(g => { const r = g.r || 'common';
+      return `<div class="gifitem" style="--rc:${RARITY[r].color}">${gifImg(g)}
+        <small><b>${esc(g.name || 'GIF')}</b> · <span style="color:${RARITY[r].color}">${RARITY[r].name}</span></small>
+        <div class="row nowrap gifuse">${Object.keys(REACT_SLOTS).map(k => `<button class="sm${cfg[k]?.gid === g.id ? ' primary' : ''}" data-act="gif-use" data-id="${g.id}" data-k="${k}" title="${esc(REACT_SLOTS[k].name)}">${REACT_SLOTS[k].name.split(' ')[0]}</button>`).join('')}</div></div>`; }).join('')}</div>`
+      : `<div class="inv-empty"><span>🎞️</span><p>Nie masz jeszcze żadnego GIF-a.</p>${ready ? '<button class="primary" data-go="#/case/gif">Otwórz skrzynkę z GIF-ami · ' + CASES.gif.price + ' 💎</button>' : '<p class="small muted">Skrzynka z GIF-ami pojawi się w sklepie wkrótce 👀</p>'}</div>`}
+    ${own.length && ready && own.length < all.length ? `<p class="small muted center" style="margin-bottom:0">Brakuje Ci ${all.length - own.length} – <a href="#/case/gif">losuj dalej</a></p>` : ''}</div>`;
 }
+ROUTES.inv = () => {
+  const cases = Object.keys(CASES).filter(k => hasItem('case', k));
+  const st = ownedStickers().map(stickerById).filter(Boolean);
+  return { tab: 'profile', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/me">‹</button><h1 class="grow">🎒 Ekwipunek</h1>${coinsHTML()}</div>
+    ${gifCollectionHTML()}
+    <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🃏 Naklejki</h2><span class="small muted">${st.length}</span></div>
+      <p class="small muted">Wysyłasz je w bitwie i na czacie (nie znikają). „Podaruj” na czacie oddaje naklejkę znajomemu.</p>
+      <div class="inv-st">${st.map(s => `<span class="${isShiny(s.id) ? 'shiny' : ''}" style="--rc:${RARITY[s.r].color}" data-act="st-preview" data-id="${s.id}" title="${esc(s.name)}">${s.e}${itemCount('sticker', s.id) > 1 ? `<i>×${itemCount('sticker', s.id)}</i>` : ''}</span>`).join('')}</div>
+      <button class="block" data-go="#/shop">📖 Album i skrzynki w sklepie</button></div>
+    <div class="card"><h2 style="margin-top:0">🎁 Skrzynki do otwarcia</h2>
+      ${cases.length ? cases.map(k => `<div class="row nowrap inv-case"><span style="font-size:30px">${CASES[k].icon}</span><b class="grow">${CASES[k].name} ×${itemCount('case', k)}</b><button class="primary sm" data-go="#/case/${k}?free=1">Otwórz</button></div>`).join('')
+        : '<p class="small muted" style="margin:0">Brak – darmowe skrzynki dostajesz za wygrane bitwy, zestawy fiszek i nagrody dnia.</p>'}</div>` };
+};
 Object.assign(ACTIONS, {
-  'gif-use': async el => {
+  'gif-use': el => {
     const k = el.dataset.k, id = el.dataset.id, c = (S.settings.reactions = S.settings.reactions || {});
     c[k] = { ...(c[k] || {}) };
     if (c[k].gid === id) { delete c[k].gid; save(); render(); return toast('Przywrócono poprzednią reakcję'); }
     c[k].gid = id; c[k].on = true;
-    if (RX[k]) { await DB.del('gif:' + k); URL.revokeObjectURL(RX[k].url); delete RX[k]; }   // własny plik zasłaniałby GIF z kolekcji
     save(); render(); showReaction(k, true);
   },
 });

@@ -86,6 +86,8 @@ const msgSummary = m => {
   if (m.kind === 'gift') { const s = stickerById(m.body.st); return [`🎁 ${who} podarował(a) Ci naklejkę!`, `${s?.e || ''} ${s?.name || ''} – jest już w Twoim albumie`]; }
   if (m.kind === 'nudge') return [`🔔 ${who} przypomina o nauce`, m.body?.text || 'Czas na fiszki! 📚'];
   if (m.kind === 'challenge') return [`⚔️ ${who} wyzywa Cię na bitwę!`, m.body?.deck ? `Talia: ${m.body.deck}` : 'Stuknij, żeby przyjąć'];
+  if (m.body?.gif) return [`🎞️ ${who} wysłał(a) GIF-a`, 'Stuknij, żeby zobaczyć'];
+  if (m.body?.st) { const s = stickerById(m.body.st); return [`${s?.e || '🃏'} ${who} wysłał(a) naklejkę`, s?.name || '']; }
   return [`💬 ${who}`, m.body?.text || ''];
 };
 function notifyMsg(m) {
@@ -143,8 +145,22 @@ function msgBodyHTML(m, mine) {
       ${!open ? '<small class="muted">wygasło</small>' : mine ? (typeof B !== 'undefined' && B?.code === b.code ? '<button class="sm" data-go="#/battle">Wróć do poczekalni</button>' : '<small class="muted">czeka na przeciwnika</small>')
         : `<button class="sm primary" data-act="chat-accept" data-id="${m.id}">⚔️ Przyjmij wyzwanie</button>`}`;
   }
-  return esc(b.text || '');
+  if (b.st) {   // naklejka (bez oddawania – tylko pokazanie)
+    const s = stickerById(b.st); if (!s) return '🃏';
+    return `<div class="chat-st${b.shiny ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${s.e}</span><small>${esc(s.name)}</small></div>`;
+  }
+  if (b.gif) {
+    const g = typeof gifById === 'function' && gifById(String(b.gif));
+    return g ? `<div class="chat-gif" style="--rc:${RARITY[g.r || 'common'].color}">${gifImg(g)}</div>` : '<div class="chat-gif none">🎞️ GIF</div>';
+  }
+  const t = b.text || '';
+  return emojiOnly(t) ? `<div class="emoji-big">${esc(t)}</div>` : `<div class="msg-t">${esc(t).replace(EMO_RE, '<i class="emo">$&</i>')}</div>`;
 }
+// emotki: wiadomość z samych emotek (do 6) jest duża i bez dymka; w tekście są lekko powiększone
+const EMO_RE = /\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic}|\p{Emoji_Modifier})*/gu;
+const emojiOnly = t => { const s = String(t).replace(/\s/g, ''); if (!s || s.replace(EMO_RE, '').replace(/[\uFE0F\u200D]/g, '')) return false; return (s.match(EMO_RE) || []).length <= 6; };
+const msgKind = m => m.kind !== 'text' ? m.kind : m.body?.st ? 'sticker' : m.body?.gif ? 'gif' : emojiOnly(m.body?.text || '') ? 'emoji' : 'text';
+const QUICK_EMO = ['❤️', '😂', '🔥', '👍', '🎉', '😮', '😢', '🙏', '💯', '🤯', '😎', '🐐'];
 const hhmm = t => { const d = new Date(t); return (dayKey(+d) === dayKey(Date.now()) ? '' : d.toLocaleDateString('pl', { day: 'numeric', month: 'short' }) + ' ') + d.toLocaleTimeString('pl', { hour: '2-digit', minute: '2-digit' }); };
 
 ROUTES.chat = parts => {
@@ -153,6 +169,7 @@ ROUTES.chat = parts => {
   const f = friendById(fid);
   if (!f) { if (!CLOUD_FRIENDS.length) loadCloudFriends(); return { tab: 'home', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><h1 class="grow">Czat</h1></div><div class="card"><p class="muted">Ładuję znajomego…</p></div>` }; }
   if (CHAT.fid !== fid) CHAT = { fid, pick: false, draft: '' };
+  const mySt = ownedStickers().map(stickerById).filter(Boolean), myGifs = typeof GIF_CASE !== 'undefined' ? GIF_CASE.filter(g => hasItem('gif', g.id)) : [];
   const me = myId(), list = MSGS.filter(m => (m.from_id === me && m.to_id === fid) || (m.from_id === fid && m.to_id === me)).slice(-120);
   onMount(() => {
     markRead(fid); clearTimeout(inboxTimer); inboxTimer = setTimeout(inboxTick, 4000);
@@ -166,13 +183,19 @@ ROUTES.chat = parts => {
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img }, 36)}</span><h1 class="grow nm" style="font-size:24px">${esc(f.nick || 'Znajomy')}</h1></div>
   <div class="chat-tools">
-    <button class="${CHAT.pick ? 'primary' : ''}" data-act="chat-pick">🎁 Podaruj</button>
+    <button class="${CHAT.pick === 'media' ? 'primary' : ''}" data-act="chat-media-pick">😀 GIF</button>
+    <button class="${CHAT.pick === 'gift' ? 'primary' : ''}" data-act="chat-pick">🎁 Podaruj</button>
     <button data-act="chat-nudge">🔔 Przypomnij</button>
     <button data-act="chat-challenge">⚔️ Wyzwij</button></div>
-  ${CHAT.pick ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
+  ${CHAT.pick === 'media' ? `<div class="card tight chat-media">
+    <div class="emo-row">${QUICK_EMO.map(e => `<button data-act="chat-emo" data-e="${e}">${e}</button>`).join('')}</div>
+    <b class="small">🃏 Naklejki</b><div class="st-row">${mySt.map(s => `<button class="${isShiny(s.id) ? 'shiny' : ''}" data-act="chat-st" data-id="${s.id}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}">${s.e}</button>`).join('')}</div>
+    <b class="small">🎞️ GIF-y</b>${myGifs.length ? `<div class="gif-row">${myGifs.map(g => `<button data-act="chat-gif" data-id="${g.id}" style="--rc:${RARITY[g.r || 'common'].color}">${gifImg(g)}</button>`).join('')}</div>`
+      : '<p class="small muted" style="margin:4px 0 0">Nie masz jeszcze GIF-ów – zdobywa się je tylko w skrzynce z GIF-ami (<a href="#/inv">🎒 Ekwipunek</a>).</p>'}</div>` : ''}
+  ${CHAT.pick === 'gift' ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
     ${gifts.length ? `<div class="gift-pick">${gifts.map(s => `<button data-act="chat-gift" data-id="${s.id}" style="--rc:${RARITY[s.r].color}"><span>${s.e}</span><small>${esc(s.name)}</small><em>×${itemCount('sticker', s.id)}</em></button>`).join('')}</div>`
       : '<p class="small">Nie masz jeszcze naklejek do podarowania – zdobądź je w <a href="#/shop">skrzynkach</a>. (Startowe 👋👍😅 nie są do oddania.)</p>'}</div>` : ''}
-  <div class="chat-list" id="chat-list">${list.length ? list.map(m => { const mine = m.from_id === me; return `<div class="msg ${mine ? 'me' : 'them'} k-${m.kind}">${msgBodyHTML(m, mine)}<small>${hhmm(m.created_at)}${mine && m.read_at ? ' · ✓✓' : ''}</small></div>`; }).join('')
+  <div class="chat-list" id="chat-list">${list.length ? list.map(m => { const mine = m.from_id === me; return `<div class="msg ${mine ? 'me' : 'them'} k-${msgKind(m)}">${msgBodyHTML(m, mine)}<small>${hhmm(m.created_at)}${mine && m.read_at ? ' · ✓✓' : ''}</small></div>`; }).join('')
     : `<p class="muted small center">Napisz pierwszą wiadomość, podaruj naklejkę albo wyzwij ${esc(f.nick || 'znajomego')} na bitwę 👋</p>`}</div>
   <div class="chat-input row nowrap"><input id="chat-in" class="grow" maxlength="${MSG_TEXT_MAX}" placeholder="Wiadomość…" autocomplete="off" enterkeyhint="send"><button class="primary" data-act="chat-send">➤</button></div>
   ${notifBtnHTML()}` };
@@ -185,7 +208,7 @@ ROUTES.inbox = () => {
     const conv = MSGS.filter(m => m.from_id === f.id || m.to_id === f.id), last = conv[conv.length - 1];
     return { f, last, unread: unreadMsgs(f.id).length, t: last ? Date.parse(last.created_at) : 0 };
   }).sort((a, b) => b.t - a.t);
-  const preview = m => { if (!m) return 'Brak wiadomości'; const [t, b] = msgSummary(m); return (m.from_id === me ? 'Ty: ' : '') + (m.kind === 'text' ? m.body?.text || '' : m.from_id === me ? t.replace(/^\S+\s/, '') : t); };
+  const preview = m => { if (!m) return 'Brak wiadomości'; const [t, b] = msgSummary(m); return (m.from_id === me ? 'Ty: ' : '') + (m.kind === 'text' && !m.body?.st && !m.body?.gif ? m.body?.text || '' : m.from_id === me ? t.replace(/^\S+\s/, '') : t); };
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Wiadomości</h1><button class="iconbtn" data-act="inbox-refresh">🔄</button></div>
   <div class="card">${rows.length ? rows.map(r => `<div class="rankrow" data-go="#/chat/${r.f.id}" style="cursor:pointer">
@@ -201,7 +224,18 @@ Object.assign(ACTIONS, {
   'msgpop-x': el => el.closest('.msgpop')?.remove(),
   'notif-on': askNotifications,
   'inbox-refresh': async () => { await loadCloudFriends(); await loadMsgs(); render(); },
-  'chat-pick': () => { CHAT.pick = !CHAT.pick; render(); },
+  'chat-pick': () => { CHAT.pick = CHAT.pick === 'gift' ? false : 'gift'; render(); },
+  'chat-media-pick': () => { CHAT.pick = CHAT.pick === 'media' ? false : 'media'; render(); },
+  'chat-emo': el => { const inp = $('#chat-in'); if (!inp) return; inp.value += el.dataset.e; CHAT.draft = inp.value; inp.focus(); },
+  'chat-st': async el => {
+    const s = stickerById(el.dataset.id); if (!s || !ownedStickers().includes(s.id)) return;
+    CHAT.pick = false; if (typeof playStickerSound === 'function') playStickerSound(s.id);
+    await sendMsg(CHAT.fid, 'text', { st: s.id, ...(isShiny(s.id) ? { shiny: 1 } : {}) }); render();
+  },
+  'chat-gif': async el => {
+    const id = el.dataset.id; if (!hasItem('gif', id)) return toast('Tego GIF-a nie masz w ekwipunku');
+    CHAT.pick = false; await sendMsg(CHAT.fid, 'text', { gif: id }); render();
+  },
   'chat-send': async () => {
     const inp = $('#chat-in'), text = (inp?.value || '').trim().slice(0, MSG_TEXT_MAX); if (!text) return;
     inp.value = ''; CHAT.draft = '';

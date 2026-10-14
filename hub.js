@@ -5,7 +5,7 @@
 
 const HUBS = {
   arena: [['battles', '⚔️', 'Bitwy'], ['rank', '🏆', 'Ranking'], ['inbox', '💬', 'Znajomi'], ['train', '🧠', 'Trening']],
-  profile: [['me', '👤', 'Ja'], ['quests', '📋', 'Zadania'], ['shop', '💎', 'Sklep'], ['ach', '🏅', 'Osiągnięcia']],
+  profile: [['me', '👤', 'Ja'], ['quests', '📋', 'Zadania'], ['shop', '💎', 'Sklep'], ['inv', '🎒', 'Ekwipunek'], ['ach', '🏅', 'Osiągnięcia']],
 };
 const HUB_OF = { chat: 'arena', battle: 'arena', calendar: 'home' };
 for (const [h, list] of Object.entries(HUBS)) for (const [r] of list) HUB_OF[r] = h;
