@@ -17,5 +17,70 @@
       "t": 1791722408657
     }
   },
-  "updated": 1791722452067
+  "updated": 1792015972666,
+  "gifCase": [
+    {
+      "id": "gmv8nudfl",
+      "name": "IMG_1193",
+      "path": "assets/gifcase/gmv8nudfl.gif",
+      "r": "legendary",
+      "t": 1792015640193
+    },
+    {
+      "id": "gmv8nv0nf",
+      "name": "IMG_1196",
+      "path": "assets/gifcase/gmv8nv0nf.gif",
+      "r": "epic",
+      "t": 1792015670283
+    },
+    {
+      "id": "gmv8nvx8e",
+      "name": "IMG_1197",
+      "path": "assets/gifcase/gmv8nvx8e.gif",
+      "r": "rare",
+      "t": 1792015712510
+    },
+    {
+      "id": "gmv8nw4eg",
+      "name": "IMG_1198",
+      "path": "assets/gifcase/gmv8nw4eg.gif",
+      "r": "common",
+      "t": 1792015721800
+    },
+    {
+      "id": "gmv8nwq40",
+      "name": "IMG_1199",
+      "path": "assets/gifcase/gmv8nwq40.gif",
+      "r": "rare",
+      "t": 1792015749936
+    },
+    {
+      "id": "gmv8nyims",
+      "name": "IMG_1202",
+      "path": "assets/gifcase/gmv8nyims.gif",
+      "r": "epic",
+      "t": 1792015833556
+    },
+    {
+      "id": "gmv8nzqp4",
+      "name": "IMG_1203",
+      "path": "assets/gifcase/gmv8nzqp4.gif",
+      "r": "common",
+      "t": 1792015890664
+    },
+    {
+      "id": "gmv8o0hul",
+      "name": "IMG_1204",
+      "path": "assets/gifcase/gmv8o0hul.gif",
+      "r": "rare",
+      "t": 1792015925853
+    },
+    {
+      "id": "gmv8o1d9t",
+      "name": "IMG_1205",
+      "path": "assets/gifcase/gmv8o1d9t.gif",
+      "r": "common",
+      "t": 1792015966577
+    }
+  ]
 }
