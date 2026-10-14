@@ -1,4 +1,5 @@
 :root {
+  --sat: env(safe-area-inset-top, 0px);
   --bg: #f5f6fb; --card: #ffffff; --card2: #eef0f8; --text: #1b1d29; --muted: #6b7083;
   --line: #e1e4ef; --accent: #4f46e5; --accent-soft: #e0e7ff;
   --new: #2563eb; --lrn: #dc2626; --rev: #16a34a; --hard: #d97706;
@@ -23,7 +24,7 @@ body {
 }
 body.focus { padding-bottom: 0; }
 body.focus #tabs { display: none; }
-main { max-width: 760px; margin: 0 auto; padding: calc(12px + env(safe-area-inset-top)) 16px 24px; }
+main { max-width: 760px; margin: 0 auto; padding: calc(12px + var(--sat)) 16px 24px; }
 .loading { text-align: center; color: var(--muted); padding: 40px; }
 h1 { font-size: 26px; margin: 6px 0 14px; letter-spacing: -.3px; }
 h2 { font-size: 19px; margin: 22px 0 10px; }
@@ -189,12 +190,12 @@ table.preview td { border-bottom: 1px solid var(--line); padding: 6px 4px; verti
 ol.steps { padding-left: 20px; margin: 6px 0; }
 ol.steps li { margin: 4px 0; }
 code { background: var(--card2); padding: 1px 5px; border-radius: 5px; font-size: 14px; }
-body.focus #toast { bottom: auto; top: calc(16px + env(safe-area-inset-top)); }
+body.focus #toast { bottom: auto; top: calc(16px + var(--sat)); }
 
 /* Tematy i notatki */
 .video { position: relative; padding-top: 56.25%; border-radius: 12px; overflow: hidden; background: #000; margin: 8px 0; }
 .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.toolbar { position: sticky; top: env(safe-area-inset-top); z-index: 5; display: flex; gap: 4px; overflow-x: auto; padding: 6px; margin: 10px 0 6px;
+.toolbar { position: sticky; top: var(--sat); z-index: 5; display: flex; gap: 4px; overflow-x: auto; padding: 6px; margin: 10px 0 6px;
   background: var(--card); border-radius: 12px; box-shadow: var(--shadow); -webkit-overflow-scrolling: touch; }
 .toolbar button { min-height: 38px; min-width: 38px; padding: 4px 8px; flex: 0 0 auto; font-size: 15px; }
 .toolbar .sw { display: inline-block; width: 18px; height: 18px; border-radius: 5px; }
@@ -208,11 +209,11 @@ mark, .sw { color: inherit; padding: 0 2px; border-radius: 3px; }
 
 /* Motywacja */
 #confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; display: none; }
-.floatxp { position: fixed; left: 50%; top: calc(70px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 55; pointer-events: none;
+.floatxp { position: fixed; left: 50%; top: calc(70px + var(--sat)); transform: translateX(-50%); z-index: 55; pointer-events: none;
   font-weight: 800; color: var(--accent); font-size: 18px; animation: floatup 1.3s ease-out forwards; text-shadow: 0 1px 4px rgba(0,0,0,.15); }
 .floatxp.big { font-size: 28px; color: var(--hard); }
 @keyframes floatup { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.8); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1); } }
-.celebrate { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translate(-50%, -150%); z-index: 70; transition: transform .4s cubic-bezier(.2,1.4,.4,1);
+.celebrate { position: fixed; left: 50%; top: calc(16px + var(--sat)); transform: translate(-50%, -150%); z-index: 70; transition: transform .4s cubic-bezier(.2,1.4,.4,1);
   background: linear-gradient(135deg, #4f46e5, #9333ea); color: #fff; padding: 14px 20px; border-radius: 18px; box-shadow: 0 10px 30px rgba(79,70,229,.45);
   display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 92vw; min-width: 240px; cursor: pointer; }
 .celebrate.show { transform: translate(-50%, 0); }
@@ -432,7 +433,7 @@ body.noanim *, body.noanim *::before { animation: none !important; transition: n
 .celebrate { pointer-events: none; }
 
 /* Personalizacja */
-body.compact main { padding-top: calc(6px + env(safe-area-inset-top)); }
+body.compact main { padding-top: calc(6px + var(--sat)); }
 body.compact .card { padding: 10px 12px; margin: 8px 0; }
 body.compact h1 { font-size: 22px; margin: 4px 0 8px; }
 body.compact .deck { padding: 8px 0; }
@@ -540,7 +541,7 @@ details.more-opts { margin: 8px 0 12px; }
 .gal-add { aspect-ratio: 1; flex-direction: column; font-size: 26px; border: 2px dashed var(--line); background: transparent; }
 .gal-add small { font-size: 11px; color: var(--muted); }
 .lightbox { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.94); display: flex; flex-direction: column; gap: 10px;
-  padding: calc(10px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom)); }
+  padding: calc(10px + var(--sat)) 14px calc(14px + env(safe-area-inset-bottom)); }
 .lightbox img { flex: 1; min-height: 0; width: 100%; object-fit: contain; }
 .lightbox .lb-top { color: #fff; }
 .lightbox input { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.2); }
@@ -653,7 +654,7 @@ button.case { border: 0; font: inherit; cursor: pointer; }
 .gift-pick span { font-size: 32px; }
 .gift-pick small { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .gift-pick em { position: absolute; top: 2px; right: 6px; font-style: normal; font-size: 11px; color: var(--muted); }
-.msgpop { position: fixed; left: 12px; right: 12px; top: calc(10px + env(safe-area-inset-top)); z-index: 80; display: flex; align-items: center; gap: 8px;
+.msgpop { position: fixed; left: 12px; right: 12px; top: calc(10px + var(--sat)); z-index: 80; display: flex; align-items: center; gap: 8px;
   background: var(--card); border-radius: 18px; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25); animation: popdown .35s cubic-bezier(.3,1.4,.5,1); max-width: 520px; margin: 0 auto; }
 .msgpop > button { flex: none; }
 @keyframes popdown { from { transform: translateY(-120%); } to { transform: none; } }
@@ -736,8 +737,8 @@ button.case { border: 0; font: inherit; cursor: pointer; }
 /* ===== Układ: Arena / Profil ===== */
 #tabs .min-only { display: none; }
 body.minimal #tabs .min-only { display: flex; }
-.hubnav { position: sticky; top: 0; z-index: 15; display: flex; gap: 4px; padding: 6px; margin: calc(-1 * env(safe-area-inset-top, 0px)) 0 14px;
-  padding-top: calc(6px + env(safe-area-inset-top, 0px)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+.hubnav { position: sticky; top: 0; z-index: 15; display: flex; gap: 4px; padding: 6px; margin: calc(-1 * var(--sat)) 0 14px;
+  padding-top: calc(6px + var(--sat)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-radius: 0 0 18px 18px; }
 .hubnav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px; border-radius: 12px; text-decoration: none;
   color: var(--muted); font-size: 12px; font-weight: 600; position: relative; background: var(--card2); }
@@ -869,7 +870,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 
 /* Telefon: odrobinę więcej oddechu w całej aplikacji (nie dotyczy „Kompaktowego układu”) */
 @media (max-width: 600px) {
-  body:not(.compact) main { padding-left: 20px; padding-right: 20px; padding-top: calc(16px + env(safe-area-inset-top)); }
+  body:not(.compact) main { padding-left: 20px; padding-right: 20px; padding-top: calc(16px + var(--sat)); }
   body:not(.compact) .card { padding: 18px; margin: 14px 0; }
   body:not(.compact) .card.tight { padding: 13px 16px; }
   body:not(.compact) button:not(.sm):not(.iconbtn):not(.calday):not(.pt-tile), body:not(.compact) .btn:not(.sm) { padding: 12px 18px; min-height: 46px; }
@@ -940,3 +941,12 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .card.flash.qfit img { max-height: 34vh; object-fit: contain; }
 .abcd button { gap: 14px; }
 .card.flash.short img { max-height: 30vh; object-fit: contain; }
+
+/* górny pasek ekranów nauki/testu/bitwy nie wchodzi pod pasek statusu iPhone'a */
+body.focus main { padding-top: calc(10px + var(--sat)); }
+.studybar { min-height: 44px; }
+/* test ABCD/pisemny: wybór liczby pytań – liczby w rzędzie, „Wszystkie” pełną szerokością */
+.qcount { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.qcount + .spacer + button { width: 100%; }
+.qcount button { white-space: nowrap; padding-left: 8px !important; padding-right: 8px !important; }
+.card > h2:first-child, .card > h3:first-child { margin-top: 0; }

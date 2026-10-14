@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '40';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '41';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -57,6 +57,13 @@ function download(name, text, type) {
 // iPhone/iPad nie zna typów takich jak .apkg – z filtrem takie pliki są wyszarzone w „Plikach”.
 // Dlatego na iOS przy nietypowych plikach pokazujemy wszystkie, a typ sprawdzamy po wybraniu.
 const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function fixSafeTop() {
+  if (!IS_IOS || !(navigator.standalone || matchMedia('(display-mode: standalone)').matches)) return;
+  const t = document.createElement('div'); t.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);visibility:hidden'; document.body.append(t);
+  const h = t.getBoundingClientRect().height; t.remove();
+  if (h < 1) document.documentElement.style.setProperty('--sat', (Math.max(screen.height, screen.width) >= 812 ? 50 : 20) + 'px');   // notch / Dynamic Island albo starszy iPhone
+}
+document.addEventListener('DOMContentLoaded', fixSafeTop); window.addEventListener('orientationchange', () => setTimeout(fixSafeTop, 300));
 function pickFile(accept) {
   if (IS_IOS && accept && !/(image|audio|video)\/\*/.test(accept)) accept = '';
   return new Promise(res => {
@@ -721,8 +728,8 @@ function viewQuiz(deckId, q) {
     const n = S.cards.filter(c => deckId === 'all' || c.deckId === deckId).length;
     return `<div class="studybar"><button class="iconbtn" data-go="${back}">✕</button><div class="title">${type === 'abcd' ? 'Test ABCD' : 'Test pisemny'}</div></div>
       <div class="card"><h2>Ile pytań?</h2><p class="muted">Test sprawdza wiedzę i nie zmienia harmonogramu powtórek. Błędne odpowiedzi możesz potem dodać do powtórki.</p>
-      <div class="row">${[10, 20, 50].filter(x => x < n).map(x => `<button class="grow" data-act="quiz-start" data-n="${x}" data-deck="${deckId}" data-type="${type}">${x}</button>`).join('')}
-      <button class="primary grow" data-act="quiz-start" data-n="0" data-deck="${deckId}" data-type="${type}">Wszystkie (${n})</button></div></div>`;
+      ${[10, 20, 50].some(x => x < n) ? `<div class="qcount">${[10, 20, 50].filter(x => x < n).map(x => `<button data-act="quiz-start" data-n="${x}" data-deck="${deckId}" data-type="${type}">${x} pytań</button>`).join('')}</div><div class="spacer"></div>` : ''}
+      <button class="primary block" data-act="quiz-start" data-n="0" data-deck="${deckId}" data-type="${type}">Wszystkie (${n})</button></div>`;
   }
   const Z = QUIZ, total = Z.items.length;
   const head = `<div class="studybar"><button class="iconbtn" data-act="quiz-end" data-href="${back}">✕</button>
