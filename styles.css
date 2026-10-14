@@ -1048,10 +1048,14 @@ html.noscroll, html.noscroll body { overflow: hidden; overscroll-behavior: none;
 /* ===== 🎤 Teleturniej ===== */
 .beta-tag { font-size: 10px; font-weight: 800; letter-spacing: .5px; padding: 2px 6px; border-radius: 6px; background: #f59e0b; color: #fff; vertical-align: middle; }
 .sh-cta { cursor: pointer; background: linear-gradient(135deg, color-mix(in srgb, #7c3aed 14%, var(--card)), var(--card)); }
-.sh-stage { margin: calc(-10px - var(--sat)) -20px -24px; padding: calc(10px + var(--sat)) 16px 30px; min-height: 100vh; color: #f8fafc;
+.sh-stage { color: #f8fafc; min-height: 60vh; }
+/* tło teleturnieju na całą stronę (także pod paskiem statusu) – bez ujemnych marginesów, więc nic się nie rozjeżdża */
+html:has(.sh-stage) { background: #0f0a2e; } body:has(.sh-stage) { background: transparent; }
+body:has(.sh-stage)::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(ellipse at 20% -10%, rgba(236,72,153,.45), transparent 50%), radial-gradient(ellipse at 85% 0%, rgba(59,130,246,.45), transparent 45%),
     radial-gradient(ellipse at 50% 120%, rgba(234,179,8,.25), transparent 55%), linear-gradient(180deg, #1e1b4b, #0f0a2e 70%); }
-@media (min-width: 601px) { .sh-stage { margin: calc(-12px - var(--sat)) -16px -24px; } }
+body:has(.sh-stage) #sbar { background: #1e1b4b; }
+body:has(.sh-stage) #tabs { background: rgba(15,10,46,.85); border-color: rgba(255,255,255,.08); }
 .sh-stage .studybar .iconbtn, .sh-stage .studybar .title, .sh-stage .studybar .small { color: #f8fafc; }
 .sh-stage .card { background: rgba(255,255,255,.08); color: #f8fafc; box-shadow: 0 8px 30px rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.08); }
 .sh-stage .muted, .sh-stage label.field > span { color: rgba(248,250,252,.7); }
@@ -1106,3 +1110,25 @@ html.noscroll, html.noscroll body { overflow: hidden; overscroll-behavior: none;
 .big-btn { min-height: 54px; font-size: 17px; }
 .sh-stage button:not(.primary):not(.sh-opt):not(.iconbtn):not(.sh-bets button) { background: rgba(255,255,255,.12); color: #f8fafc; }
 .sh-stage details summary { cursor: pointer; }
+
+/* Teleturniej – lobby jak w Kahoot */
+.sh-pinbox { text-align: center; padding: 18px 12px; }
+.sh-pinbox small { display: block; letter-spacing: 2px; text-transform: uppercase; opacity: .7; font-weight: 700; }
+.sh-pinbox span { display: block; font-size: 13px; opacity: .75; margin-bottom: 10px; }
+.sh-pinbox b { display: block; font-size: clamp(38px, 12vw, 60px); font-weight: 900; letter-spacing: .12em; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 6px 0 10px;
+  background: linear-gradient(90deg, #f472b6, #facc15, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sh-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.sh-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-weight: 700; font-size: 14px; max-width: 100%;
+  background: color-mix(in srgb, var(--pc, #7c3aed) 30%, transparent); border: 1.5px solid var(--pc, #7c3aed); animation: shPop .35s cubic-bezier(.2,1.5,.4,1); }
+.sh-chip > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.sh-chip.left { opacity: .4; text-decoration: line-through; }
+@keyframes shPop { from { transform: scale(.4); opacity: 0; } }
+.sh-wait { text-align: center; padding: 26px 10px; }
+.sh-wait .sh-dots::after { content: '…'; animation: shDots 1.2s steps(4) infinite; display: inline-block; width: 1.2em; text-align: left; overflow: hidden; vertical-align: bottom; }
+@keyframes shDots { 0% { width: 0; } 100% { width: 1.2em; } }
+.sh-pin-in { font-size: 24px !important; font-weight: 900; text-align: center; letter-spacing: .2em; font-variant-numeric: tabular-nums; min-width: 0;
+  background: rgba(255,255,255,.95) !important; color: #1e1b4b !important; border-radius: 14px; padding: 12px !important; }
+.sh-board.many { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 420px) { .sh-board.many { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sh-bets button.on { outline: 3px solid #facc15; outline-offset: 2px; transform: scale(1.05); }
+.sh-pl.left { opacity: .35; filter: grayscale(1); }

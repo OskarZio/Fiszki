@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '51';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '52';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -64,7 +64,8 @@ function fixSafeTop() {
   const t = document.createElement('div'); t.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);visibility:hidden'; document.body.append(t);
   const h = t.getBoundingClientRect().height; t.remove();
   // zapas tylko, gdy iPhone naprawdę zgłasza 0 – inaczej używamy jego wartości (bez sumowania)
-  if (h < 1) root.style.setProperty('--sat-fb', (Math.max(screen.height, screen.width) >= 812 ? 50 : 20) + 'px'); else root.style.removeProperty('--sat-fb');
+  const full = Math.abs(Math.max(innerHeight, document.documentElement.clientHeight) - (innerWidth < innerHeight ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width))) < 8;
+  if (h < 1 && full) root.style.setProperty('--sat-fb', (Math.max(screen.height, screen.width) >= 812 ? 50 : 20) + 'px'); else root.style.removeProperty('--sat-fb');
 }
 document.addEventListener('DOMContentLoaded', () => { fixSafeTop(); setTimeout(fixSafeTop, 700); setTimeout(fixSafeTop, 2000); });
 window.addEventListener('orientationchange', () => setTimeout(fixSafeTop, 300));
