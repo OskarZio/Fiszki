@@ -44,7 +44,7 @@ function questsCardHTML() {
     <details class="small muted"><summary>Jak liczą się punkty nauki i 💎?</summary>
       <ul class="perks"><li><b>Wpisz</b> albo <b>test ABCD / pisemny</b>: 1 pkt za odpowiedź, 💎 za każdą poprawną.</li>
       <li><b>Przewijanie fiszek</b>: 10 fiszek = tyle co 1 wpisana. Przewinięte w mniej niż 1,5 s nie liczą się wcale.</li>
-      <li>Z testów max ${QUIZ_GEM_CAP} 💎 dziennie. Cel dzienny i jego premia liczą się w punktach nauki.</li></ul></details>
+      <li>Testy: progi za wynik (np. 70% → 20 💎, 80% → 30 💎 na 10 pytań), max ${QUIZ_GEM_CAP} 💎 dziennie. Cel dzienny i jego premia liczą się w punktach nauki.</li></ul></details>
     ${st.list.map(q => `<div class="quest${q.claimed ? ' got' : ''}"><span class="qi">${q.icon}</span>
       <div class="grow"><div class="row nowrap"><b class="grow">${esc(q.name)}</b><small class="muted">${q.cur}/${q.goal}</small></div>${progress(q.cur / q.goal, true)}</div>
       ${q.claimed ? '<span class="c-rev">✓</span>' : `<button class="sm${q.done ? ' primary pulse' : ''}" data-act="quest-claim" data-id="${q.id}" ${q.done ? '' : 'disabled'}>+${q.reward} 💎</button>`}</div>`).join('')}
@@ -73,12 +73,21 @@ homeExtrasHTML = function () {
 // (zadania mają własną sekcję w zakładce Profil)
 
 // Testy ABCD / pisemne: 💎 za poprawne odpowiedzi (min. 5 pytań, limit dzienny)
+// Progi nagród za test (na 10 pytań ABCD). Więcej pytań = więcej (do 30), pisemny ×1,5, dzienny limit QUIZ_GEM_CAP.
+const QUIZ_TIERS = [[100, 50], [90, 40], [80, 30], [70, 20], [60, 12], [50, 6]];
+function quizReward(pct, total, type) {
+  if (total < 5) return { n: 0, why: 'min. 5 pytań' };
+  const tier = (QUIZ_TIERS.find(([p]) => pct >= p) || [0, 0])[1];
+  const base = Math.round(tier * Math.min(total, 30) / 10 * (type === 'type' ? 1.5 : 1));
+  const t0 = dayStart(), already = S.wallet.filter(w => w.why === 'quiz' && w.t >= t0).reduce((a, w) => a + w.n, 0);
+  const n = Math.max(0, Math.min(base, QUIZ_GEM_CAP - already));
+  if (n > 0) { S.wallet.push({ id: uid(), n, why: 'quiz', t: Date.now() }); save(); }
+  return { n, base, capped: n < base, tier };
+}
+const quizTiersHTML = type => `<div class="qtiers">${QUIZ_TIERS.slice().reverse().map(([p, g]) => `<span>${p}% → <b>${Math.round(g * (type === 'type' ? 1.5 : 1))}💎</b></span>`).join('')}</div>
+  <p class="small muted" style="margin:6px 0 0">Na 10 pytań${type === 'type' ? ' (pisemny ×1,5)' : ''} · więcej pytań = więcej 💎 (do 30) · max ${QUIZ_GEM_CAP} 💎 dziennie z testów</p>`;
 on('quiz', (pct, total) => {
   if (total < 5) return;
-  const good = Math.round(pct * total / 100), day = dayKey(Date.now()), t0 = dayStart();
-  S.stats['quizok_' + day] = (S.stats['quizok_' + day] || 0) + good;
-  const already = S.wallet.filter(w => w.why === 'quiz' && w.t >= t0).reduce((a, w) => a + w.n, 0);
-  const n = Math.min(Math.floor(good * .5), QUIZ_GEM_CAP - already);
-  if (n > 0) { S.wallet.push({ id: uid(), n, why: 'quiz', t: Date.now() }); toast(`+${n} 💎 za test`); }
-  save();
+  const good = Math.round(pct * total / 100), day = dayKey(Date.now());
+  S.stats['quizok_' + day] = (S.stats['quizok_' + day] || 0) + good; save();
 });

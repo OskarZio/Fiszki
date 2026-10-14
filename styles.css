@@ -1001,3 +1001,18 @@ body.focus .undobar { bottom: calc(16px + env(safe-area-inset-bottom)); }
 .pp-emojis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 @media (min-width: 420px) { .pp-emojis { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
 .pp-stats div { min-width: 0; } .pp-stats b { font-size: 13px; }
+/* wyniki testu */
+.qwrong { padding: 10px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.qwrong:last-of-type { border-bottom: 0; }
+.qwrong b { display: block; margin-top: 3px; }
+.qreward { display: inline-block; margin: 6px 0 10px; padding: 8px 18px; border-radius: 99px; font-size: 22px; font-weight: 800;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6); color: #fff; box-shadow: 0 6px 18px rgba(14,165,233,.35); animation: revealpop .5s cubic-bezier(.3,1.6,.5,1) both; }
+.qreward.none { background: var(--card2); color: var(--muted); font-size: 14px; box-shadow: none; font-weight: 600; }
+.qreward small { font-size: 12px; font-weight: 600; opacity: .85; }
+.qtiers { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.qtiers span { font-size: 12px; padding: 4px 8px; border-radius: 99px; background: var(--card2); }
+/* wiersze „etykieta – wartość”: długi tekst nie ściska drugiej kolumny do jednej litery */
+.kv > span { flex: 0 1 auto; min-width: 0; max-width: 60%; overflow-wrap: anywhere; }
+.kv > b { flex: 1 1 40%; }
+/* pasek pod paskiem statusu iPhone'a – przewijana treść nie wchodzi pod godzinę */
+body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--sat); background: var(--bg); z-index: 90; pointer-events: none; }

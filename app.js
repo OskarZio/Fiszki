@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '47';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '48';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -769,10 +769,14 @@ function viewQuiz(deckId, q) {
   if (Z.i >= total) {
     const good = Z.items.filter(x => x.ok).length, pct = Math.round(good / Math.max(1, total) * 100);
     const wrong = Z.items.filter(x => !x.ok);
-    if (!Z.reported) { Z.reported = true; setTimeout(() => emit('quiz', pct, total)); }
+    if (!Z.reported) { Z.reported = true; Z.reward = typeof quizReward === 'function' ? quizReward(pct, total, type) : null; setTimeout(() => emit('quiz', pct, total)); }
+    // pytanie nad odpowiedzią (długie odpowiedzi nie rozjeżdżają się w wąską kolumnę)
     const list = wrong.map(x => { const c = S.cards.find(y => y.id === x.cardId); if (!c) return ''; const v = cardView(c);
-      return `<div class="kv"><span class="grow">${esc(v.label).slice(0, 120)}</span><b class="c-rev" style="margin-left:8px">${esc(v.ans)}</b></div>`; }).join('');
-    return head + `<div class="card center"><div class="score">${pct}%</div><p>${good} / ${total} poprawnych ${pct >= 90 ? '🏆' : pct >= 60 ? '👍' : '💪'}</p></div>
+      return `<div class="qwrong"><div class="small">${esc(v.label).slice(0, 160)}</div><b class="c-rev">${esc(v.ans)}</b></div>`; }).join('');
+    const R = Z.reward;
+    return head + `<div class="card center"><div class="score">${pct}%</div><p>${good} / ${total} poprawnych ${pct >= 90 ? '🏆' : pct >= 60 ? '👍' : '💪'}</p>
+      ${R ? `<div class="qreward${R.n ? '' : ' none'}">${R.n ? `+${R.n} 💎` : R.why ? `Bez nagrody (${R.why})` : R.capped ? 'Dzienny limit 💎 z testów osiągnięty' : 'Za mało na nagrodę – od 50% są kryształy'}${R.n && R.capped ? '<small> (dzienny limit)</small>' : ''}</div>` : ''}
+      ${typeof quizTiersHTML === 'function' ? quizTiersHTML(type) : ''}</div>
       ${wrong.length ? `<div class="card"><h3>Do poprawy (${wrong.length})</h3>${list}<div class="spacer"></div>
         <div class="row"><button class="primary grow" data-act="quiz-cram">🔁 Powtórz błędne teraz</button>
         <button class="grow" data-act="quiz-due">📅 Dodaj do dzisiejszych powtórek</button></div></div>` : ''}
