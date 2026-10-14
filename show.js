@@ -11,10 +11,10 @@ const SHOW_ANS = ['#2563eb', '#f97316', '#16a34a', '#eab308'];   // kolory przyc
 const SHOW_BOTS = [['Robo-Rysiek', '🤖'], ['Profesor Sowa', '🦉'], ['Lisica Lena', '🦊'], ['Mózg Marek', '🧠'], ['Kot Bonifacy', '🐱']];
 const SHOW_LEVELS = { easy: { name: 'Łatwi', acc: .5, fast: 1.25 }, mid: { name: 'Średni', acc: .68, fast: 1 }, hard: { name: 'Trudni', acc: .85, fast: .75 } };
 const SHOW_ROUNDS = [
-  { k: 'speed', icon: '⚡', name: 'Szybkie palce', n: 5, sec: 10, desc: 'Poprawna odpowiedź: do 1000 pkt – im szybciej, tym więcej.' },
-  { k: 'bet', icon: '💰', name: 'Wszystko albo nic', n: 4, sec: 12, desc: 'Przed pytaniem obstawiasz 100, 250 albo 500. Dobrze: zyskujesz, źle: tracisz.' },
-  { k: 'steal', icon: '🦊', name: 'Złodziej punktów', n: 4, sec: 10, desc: 'Najszybszy z poprawną odpowiedzią kradnie 300 pkt liderowi. Błąd: −100.' },
-  { k: 'final', icon: '🎯', name: 'Finał: pojedynek', n: 30, sec: 10, desc: 'Punkty z rund 1–3 zamieniają się w życie ❤️ (100 + 1 za każde 100 pkt). Kto pierwszy odpowie dobrze, strzela w wybranego rywala. Z każdym pytaniem obrażenia rosną, błąd kosztuje 10 ❤️. Wygrywa ostatni, kto przeżyje!' },
+  { k: 'speed', icon: '⚡', name: 'Szybkie palce', n: 5, sec: 15, desc: 'Poprawna odpowiedź: do 1000 pkt – im szybciej, tym więcej.' },
+  { k: 'bet', icon: '💰', name: 'Wszystko albo nic', n: 4, sec: 17, desc: 'Przed pytaniem obstawiasz 100, 250 albo 500. Dobrze: zyskujesz, źle: tracisz.' },
+  { k: 'steal', icon: '🦊', name: 'Złodziej punktów', n: 4, sec: 15, desc: 'Najszybszy z poprawną odpowiedzią kradnie 300 pkt liderowi. Błąd: −100.' },
+  { k: 'final', icon: '🎯', name: 'Finał: pojedynek', n: 30, sec: 15, desc: 'Punkty z rund 1–3 zamieniają się w życie ❤️ (100 + 1 za każde 100 pkt). Kto pierwszy odpowie dobrze, strzela w wybranego rywala. Przez pierwsze 4 pytania obrażenia są stałe, potem rosną z każdym pytaniem. Co 4. pytanie to mini-runda 🧛 Wampir: trafienie zabiera rywalowi ❤️ i leczy Ciebie. Błąd kosztuje 10 ❤️. Wygrywa ostatni, kto przeżyje!' },
 ];
 const QB_CATS = [
   ['ogolna', '🧠', 'Wiedza ogólna'], ['geo', '🌍', 'Geografia'], ['hist', '🏛️', 'Historia'], ['polska', '🇵🇱', 'Polska'],
@@ -41,7 +41,11 @@ function qbTake(cat, n, used) {
 const SHOW_MAX = 8, PICK_SEC = 12, BET_SEC = 10, AIM_SEC = 8, WRONG_HP = 10;
 // finał: życie z punktów, obrażenia rosną z każdym pytaniem (+ premia do 50% za szybkość)
 const finalHp = score => 100 + Math.round(score / 100);
-const finalDmg = (rq, ms) => Math.round((20 + 10 * rq) * (1 + .5 * Math.max(0, 1 - (ms || 0) / 10000)) / 5) * 5;
+const DMG_CALM = 4;   // tyle pierwszych pytań finału ze stałymi obrażeniami
+const finalBase = rq => 25 + 10 * Math.max(0, rq - DMG_CALM + 1);
+const finalDmg = (rq, ms) => Math.round(finalBase(rq) * (1 + .5 * Math.max(0, 1 - (ms || 0) / 15000)) / 5) * 5;
+// mini-runda 🧛 Wampir: co 4. pytanie finału trafienie leczy strzelającego o zadane obrażenia
+const isVamp = rq => (rq + 1) % 4 === 0;
 const isFinal = () => SHOW_ROUNDS[SHOW.r]?.k === 'final';
 const alive = p => !p.left && !(p.hp != null && p.hp <= 0);
 const HOST_LINES = {
@@ -232,7 +236,7 @@ function showReveal() {
   const shooter = R.k === 'final' && SHOW.players.find(p => p.id === SHOW.winner);
   if (shooter && alive(shooter) && activePlayers().length > 1) {
     SHOW.phase = 'aim'; SHOW.shooter = shooter.id; SHOW.aimEnd = Date.now() + AIM_SEC * 1000;
-    SHOW.host = shooter.me ? `🎯 Twój strzał! Obrażenia: ${SHOW.dmg} – w kogo celujesz?` : `🎯 ${shooter.name} celuje… (${SHOW.dmg} obrażeń)`;
+    SHOW.host = shooter.me ? `🎯 Twój strzał! Obrażenia: ${SHOW.dmg}${isVamp(SHOW.rq) ? ' (+ tyle samo ❤️ dla Ciebie)' : ''} – w kogo celujesz?` : `🎯 ${shooter.name} celuje… (${SHOW.dmg} obrażeń)`;
     if (shooter.bot) later(() => showShoot(botTarget(shooter)), 1300 + Math.random() * 900);
     later(() => showShoot(), AIM_SEC * 1000 + (SHOW.role === 'host' ? 600 : 0));
     return showRender();
@@ -257,10 +261,14 @@ function showShoot(id) {
   const from = SHOW.players.find(p => p.id === SHOW.shooter), foes = activePlayers().filter(p => p !== from);
   const to = foes.find(p => p.id === id) || foes.sort((a, b) => b.hp - a.hp)[0];
   if (to) {
+    const taken = Math.min(SHOW.dmg, to.hp), vamp = isVamp(SHOW.rq) && from && alive(from);
     hurt(to, SHOW.dmg);
-    SHOW.hit = { k: SHOW.qi, from: from?.id, to: to.id, dmg: SHOW.dmg, ko: to.hp <= 0 };
-    SHOW.gain = { ...SHOW.gain, [to.id]: (SHOW.gain[to.id] || 0) - SHOW.dmg };
-    SHOW.host = `💥 ${from?.name || '?'} trafia ${to.name}: −${SHOW.dmg} ❤️${to.hp <= 0 ? ` – ${to.name} odpada! 💀` : ''}`;
+    let heal = 0;
+    if (vamp) { heal = Math.max(0, Math.min(taken, finalHp(from.score) - from.hp)); from.hp += heal; }
+    SHOW.hit = { k: SHOW.qi, from: from?.id, to: to.id, dmg: SHOW.dmg, ko: to.hp <= 0, heal };
+    SHOW.gain = { ...SHOW.gain, [to.id]: (SHOW.gain[to.id] || 0) - SHOW.dmg, ...(heal ? { [from.id]: (SHOW.gain[from.id] || 0) + heal } : {}) };
+    SHOW.host = vamp ? `🧛 ${from.name} wysysa ${to.name}: −${SHOW.dmg} ❤️${heal ? `, sam odzyskuje +${heal} ❤️` : ' (ma już pełne życie)'}${to.hp <= 0 ? ` – ${to.name} odpada! 💀` : ''}`
+      : `💥 ${from?.name || '?'} trafia ${to.name}: −${SHOW.dmg} ❤️${to.hp <= 0 ? ` – ${to.name} odpada! 💀` : ''}`;
     showSfx(to.id === SHOW.myId ? 'hurt' : 'shot');
   }
   SHOW.phase = 'reveal'; SHOW.shooter = null;
@@ -344,7 +352,7 @@ function showBoard(compact) {
     const hit = SHOW.hit && SHOW.phase === 'reveal' && SHOW.hit.to === p.id, dead = hpMode && p.hp <= 0;
     return `<div class="sh-pl${p.me ? ' me' : ''}${(hpMode ? p.hp : p.score) === lead && lead > 0 ? ' lead' : ''}${p.left || dead ? ' left' : ''}${hit ? ' hit' : ''}${SHOW.shooter === p.id ? ' aim' : ''}" style="--pc:${p.color}">
       <span class="sh-av">${p.me && S.profile.avatarImg ? `<img src="${safeImg(S.profile.avatarImg)}" alt="">` : esc(p.av)}${SHOW.phase === 'question' && a ? '<i class="sh-buzz">🔔</i>' : ''}${SHOW.locked?.[p.id] ? '<i class="sh-buzz">🔒</i>' : ''}${SHOW.phase === 'bet' && p.bet && !p.me ? '<i class="sh-buzz">💰</i>' : ''}</span>
-      <b class="nm">${esc(p.name)}</b>${hpMode ? `<span class="sh-sc">${dead ? '💀' : '❤️ ' + p.hp}</span><span class="sh-hp"><i style="width:${Math.max(0, p.hp) / maxHp * 100}%"></i></span>` : `<span class="sh-sc">${p.score}</span>`}${g ? `<em class="${g > 0 ? 'up' : 'down'}">${g > 0 ? '+' : ''}${g}</em>` : ''}</div>`; }).join('')}</div>`;
+      <b class="nm">${esc(p.name)}</b>${hpMode ? `<span class="sh-sc">${dead ? '💀' : '❤️ ' + p.hp}</span><span class="sh-hp"><i style="width:${Math.min(100, Math.max(0, p.hp) / maxHp * 100)}%"></i></span>` : `<span class="sh-sc">${p.score}</span>`}${g ? `<em class="${g > 0 ? 'up' : 'down'}">${g > 0 ? '+' : ''}${g}</em>` : ''}</div>`; }).join('')}</div>`;
 }
 const chipList = () => `<div class="sh-chips">${SHOW.players.map(p => `<span class="sh-chip${p.left ? ' left' : ''}" style="--pc:${p.color}">${esc(p.av)} ${esc(p.name)}${p.me ? ' (Ty)' : ''}${p.bot ? ' 🤖' : ''}</span>`).join('')}</div>`;
 ROUTES.show = (parts, q) => {
@@ -416,6 +424,7 @@ ROUTES.show = (parts, q) => {
     const sh = SHOW.players.find(p => p.id === SHOW.shooter), mineShot = SHOW.shooter === SHOW.myId, qq = SHOW.qs[SHOW.qi];
     const foes = SHOW.players.filter(p => alive(p) && p.id !== SHOW.shooter);
     return { focus: true, html: `<div class="sh-stage">${head(`${R.icon} ${R.name}`, `<span class="small">💥 ${SHOW.dmg}</span>`)}${showBoard(true)}
+      ${isVamp(SHOW.rq) ? '<div class="sh-vamp">🧛 Mini-runda Wampir: ile zabierzesz, tyle odzyskasz</div>' : ''}
       ${qq ? `<p class="center small muted" style="margin:6px 0">${fmt(qq.q)} → <b class="c-rev">${fmt(qq.a)}</b></p>` : ''}
       <div class="sh-host">🎤 ${mineShot ? `🎯 <b>Twój strzał!</b> W kogo celujesz? (−${SHOW.dmg} ❤️)` : `🎯 <b>${esc(sh?.name || '?')}</b> celuje… (−${SHOW.dmg} ❤️)`}</div>
       ${mineShot ? `<div class="sh-targets">${foes.map(p => `<button data-act="show-shoot" data-id="${esc(p.id)}" style="--pc:${p.color}"><span>${esc(p.av)}</span><b>${esc(p.name)}</b><small>❤️ ${p.hp}${p.hp <= SHOW.dmg ? ' · 💀 KO!' : ''}</small></button>`).join('')}</div>
@@ -438,7 +447,8 @@ ROUTES.show = (parts, q) => {
   const rev = SHOW.phase === 'reveal', mine = SHOW.ans?.[SHOW.myId], myK = mine?.k ?? SHOW.myK, dead = R.k === 'final' && showMe().hp != null && showMe().hp <= 0, answered = !!mine || SHOW.myK != null || SHOW.locked?.[SHOW.myId] || dead;
   return { focus: true, html: `<div class="sh-stage">${head(`${R.icon} ${R.name}`, `<span class="small">${R.k === 'final' ? `#${SHOW.rq + 1}` : `${SHOW.rq + 1}/${R.n}`}</span>`)}
     ${showBoard(true)}
-    ${R.k === 'final' && !rev ? `<div class="sh-pool">💥 Obrażenia: <b>${20 + 10 * SHOW.rq}–${finalDmg(SHOW.rq, 0)}</b> <small>(im szybciej, tym mocniej)</small></div>` : ''}
+    ${R.k === 'final' && !rev ? `${isVamp(SHOW.rq) ? '<div class="sh-vamp">🧛 Mini-runda Wampir! Trafienie zabiera rywalowi ❤️ i leczy Ciebie</div>' : ''}
+      <div class="sh-pool">💥 Obrażenia: <b>${finalBase(SHOW.rq)}–${finalDmg(SHOW.rq, 0)}</b> <small>${SHOW.rq < DMG_CALM - 1 ? `(rosną od pytania #${DMG_CALM + 1})` : '(rosną z każdym pytaniem · im szybciej, tym mocniej)'}</small></div>` : ''}
     ${R.k === 'bet' && !rev ? `<div class="sh-pool">Twój zakład: <b>${showMe().bet || 100}</b></div>` : ''}
     ${SHOW.src === 'cat' && SHOW.cat ? `<div class="sh-catchip">${qbCat(SHOW.cat).icon} ${qbCat(SHOW.cat).name}</div>` : ''}
     <div class="sh-q">${fmt(qq.q)}</div>
