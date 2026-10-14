@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '39';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '40';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -747,7 +747,7 @@ function viewQuiz(deckId, q) {
   if (type === 'abcd') {
     ui = `<div class="options">${it.options.map((o, k) => {
       let cls = ''; if (answered) { if (o === v.ans) cls = 'right'; else if (k === it.given) cls = 'wrong'; }
-      return `<button class="${cls}" data-act="quiz-pick" data-k="${k}" ${answered ? 'disabled style="opacity:1"' : ''}><b>${'ABCD'[k]}.</b>&nbsp; ${esc(o)}</button>`;
+      return `<button class="${cls}" data-act="quiz-pick" data-k="${k}" ${answered ? 'disabled style="opacity:1"' : ''}><b class="ol">${'ABCD'[k]}</b><span>${esc(o)}</span></button>`;
     }).join('')}</div>`;
   } else if (!answered) {
     onMount(() => { const i = $('#quizin'); i.focus({ preventScroll: true }); i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); act('quiz-check'); } }); });
@@ -757,7 +757,8 @@ function viewQuiz(deckId, q) {
     ui = `<div class="card center">${it.ok ? '✅ Dobrze' : '❌ Źle'} – twoja odpowiedź: <b>${esc(it.given || '(pusto)')}</b><br>Poprawna: <b class="c-rev">${esc(v.ans)}</b>
       ${it.ok ? '' : `<br><button class="ghost sm" data-act="quiz-override">To była dobra odpowiedź</button>`}</div>`;
   }
-  return head + `<div class="card flash">${answered ? v.a : v.q}</div>${ui}
+  // ABCD: karta pytania tylko tak wysoka, jak treść – żeby zmieściły się wszystkie odpowiedzi
+  return head + `<div class="card flash${type === 'abcd' ? ' qfit' : ''}">${answered ? v.a : v.q}</div>${ui}
     ${answered ? '<div class="spacer"></div><button class="primary block" data-act="quiz-next">Dalej ›</button>' : ''}`;
 }
 
