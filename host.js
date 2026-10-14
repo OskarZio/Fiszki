@@ -101,8 +101,6 @@ ROUTES.host = () => {
         <div class="row"><button class="sm primary" data-act="host-upload" data-k="${k}">📤 Wgraj dla wszystkich</button>
           ${GLOBAL_RX[k]?.path ? `<button class="sm" data-act="rx-test" data-k="${k}">▶ Podgląd</button><button class="sm ghost" data-act="host-clear" data-k="${k}">Przywróć kota</button>` : ''}</div></div>`; }).join('')}
     </div>
-    <div class="card row nowrap sh-cta" data-act="show-open"><span style="font-size:38px">🎤</span><div class="grow"><b>Teleturniej <small class="beta-tag">BETA</small></b>
-      <div class="small muted">Fiszkowy Show w stylu Buzz! – 4 rundy, Ty kontra boty, pytania z Twojej talii</div></div><span style="font-size:22px">›</span></div>
     ${betaCardHTML()}
     <div class="card"><h3 style="margin-top:0">🎞️ Skrzynka z GIF-ami</h3>
       <p class="small muted">Dodaj GIF-y, które gracze mogą wylosować (skrzynka pojawi się w sklepie, gdy będzie choć jeden). Rzadkość decyduje o szansie:

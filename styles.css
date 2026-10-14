@@ -1108,7 +1108,7 @@ body:has(.sh-stage) #tabs { background: rgba(15,10,46,.85); border-color: rgba(2
 .sh-block { width: 100%; border-radius: 12px 12px 4px 4px; background: linear-gradient(180deg, var(--pc), color-mix(in srgb, var(--pc) 50%, #000)); display: grid; place-items: center; font-size: 30px; margin-top: 6px; }
 .sh-step.p1 .sh-block { height: 120px; } .sh-step.p2 .sh-block { height: 86px; } .sh-step.p3 .sh-block { height: 60px; }
 .big-btn { min-height: 54px; font-size: 17px; }
-.sh-stage button:not(.primary):not(.sh-opt):not(.iconbtn):not(.sh-bets button):not(.sh-targets button) { background: rgba(255,255,255,.12); color: #f8fafc; }
+.sh-stage button:not(.primary):not(.sh-opt):not(.iconbtn):not(.sh-bets button):not(.sh-targets button):not(.sh-cats button):not(.sh-src button) { background: rgba(255,255,255,.12); color: #f8fafc; }
 .sh-stage details summary { cursor: pointer; }
 
 /* Teleturniej – lobby jak w Kahoot */
@@ -1146,3 +1146,23 @@ body:has(.sh-stage) #tabs { background: rgba(15,10,46,.85); border-color: rgba(2
 .sh-crosshair { font-size: 64px; animation: shAim 1.4s ease-in-out infinite; }
 @keyframes shAim { 0%, 100% { transform: translate(-14px, 0) scale(1); } 50% { transform: translate(14px, -6px) scale(1.1); } }
 .sh-pool small { opacity: .7; font-size: 12px; }
+/* Teleturniej – kategorie */
+.sh-src { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.sh-stage .sh-src button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 8px; border-radius: 14px; background: rgba(255,255,255,.06); border: 2px solid transparent; color: #f8fafc; text-align: center; }
+.sh-stage .sh-src button.on { border-color: #facc15; background: rgba(250,204,21,.12); }
+.sh-src span { font-size: 26px; } .sh-src small { opacity: .7; font-size: 11px; line-height: 1.25; }
+.sh-catlist { display: flex; flex-wrap: wrap; gap: 5px; }
+.sh-catlist span { font-size: 12px; padding: 3px 8px; border-radius: 99px; background: rgba(255,255,255,.08); }
+.sh-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.sh-stage .sh-cats button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 96px; padding: 12px 8px; border-radius: 18px; color: #fff;
+  background: linear-gradient(135deg, rgba(124,58,237,.55), rgba(59,130,246,.45)); border: 1.5px solid rgba(255,255,255,.18); animation: shPop .4s cubic-bezier(.2,1.5,.4,1) both; }
+.sh-cats button:nth-child(2) { animation-delay: .06s; } .sh-cats button:nth-child(3) { animation-delay: .12s; } .sh-cats button:nth-child(4) { animation-delay: .18s; }
+.sh-stage .sh-cats button.mix { grid-column: 1 / -1; min-height: 56px; flex-direction: row; background: rgba(255,255,255,.08); }
+.sh-cats button span { font-size: 34px; } .sh-cats button.mix span { font-size: 22px; }
+.sh-cats button b { font-size: 15px; }
+.sh-cats.wait button { opacity: .75; }
+.sh-cats button:not(:disabled):active { transform: scale(.95); }
+.sh-pickbar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); animation: shShrink linear forwards; transform-origin: left; }
+@keyframes shShrink { to { transform: scaleX(0); } }
+.sh-catchip { text-align: center; font-size: 12px; font-weight: 700; opacity: .8; margin: 2px 0 -4px; }
+.sh-rew { font-weight: 800; font-size: 18px; color: #fde047; }

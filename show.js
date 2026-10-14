@@ -1,13 +1,13 @@
 'use strict';
-/* 🎤 Teleturniej (BETA) – w stylu Buzz! / Brain Show, z lobby jak w Kahoot.
+/* 🎤 Teleturniej – 4 rundy, pytania z bazy (kategorie wybierane co rundę) albo z własnej talii.
    Tryby: 🤖 solo z botami · 👥 lobby z PIN-em (host prowadzi grę, gracze dołączają ze swoich telefonów).
    4 rundy: ⚡ Szybkie palce · 💰 Wszystko albo nic · 🦊 Złodziej punktów · 🎯 Finał: pojedynek (jak w Brain Show –
    punkty stają się życiem, najszybszy strzela w rywala, obrażenia rosną, wygrywa ostatni żywy).
    W lobby host liczy punkty i rozsyła stan gry (bez poprawnej odpowiedzi do czasu odkrycia), gracze wysyłają tylko swoje odpowiedzi.
-   Host / solo: tylko z panelu hosta (beta). Dołączyć PIN-em może każdy. */
+   Baza pytań (qbank.json) ładuje się dopiero przy wejściu w teleturniej. */
 
 const SHOW_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#ec4899', '#06b6d4', '#f97316'];
-const SHOW_ANS = ['#2563eb', '#f97316', '#16a34a', '#eab308'];   // kolory przycisków odpowiedzi jak w Buzz!
+const SHOW_ANS = ['#2563eb', '#f97316', '#16a34a', '#eab308'];   // kolory przycisków odpowiedzi
 const SHOW_BOTS = [['Robo-Rysiek', '🤖'], ['Profesor Sowa', '🦉'], ['Lisica Lena', '🦊'], ['Mózg Marek', '🧠'], ['Kot Bonifacy', '🐱']];
 const SHOW_LEVELS = { easy: { name: 'Łatwi', acc: .5, fast: 1.25 }, mid: { name: 'Średni', acc: .68, fast: 1 }, hard: { name: 'Trudni', acc: .85, fast: .75 } };
 const SHOW_ROUNDS = [
@@ -16,7 +16,29 @@ const SHOW_ROUNDS = [
   { k: 'steal', icon: '🦊', name: 'Złodziej punktów', n: 4, sec: 10, desc: 'Najszybszy z poprawną odpowiedzią kradnie 300 pkt liderowi. Błąd: −100.' },
   { k: 'final', icon: '🎯', name: 'Finał: pojedynek', n: 30, sec: 10, desc: 'Punkty z rund 1–3 zamieniają się w życie ❤️ (100 + 1 za każde 100 pkt). Kto pierwszy odpowie dobrze, strzela w wybranego rywala. Z każdym pytaniem obrażenia rosną, błąd kosztuje 10 ❤️. Wygrywa ostatni, kto przeżyje!' },
 ];
-const SHOW_MAX = 8, BET_SEC = 10, AIM_SEC = 8, WRONG_HP = 10;
+const QB_CATS = [
+  ['ogolna', '🧠', 'Wiedza ogólna'], ['geo', '🌍', 'Geografia'], ['hist', '🏛️', 'Historia'], ['polska', '🇵🇱', 'Polska'],
+  ['nauka', '🔬', 'Nauka i kosmos'], ['tech', '💻', 'Technologia'], ['zwierzeta', '🐾', 'Zwierzęta i przyroda'], ['kuchnia', '🍕', 'Jedzenie i kuchnia'],
+  ['rap', '🎤', 'Rap i hip-hop'], ['muzyka', '🎵', 'Muzyka'], ['film', '🎬', 'Film i seriale'], ['gry', '🎮', 'Gry i internet'],
+  ['sport', '⚽', 'Sport'], ['lit', '📖', 'Literatura i język'], ['bajki', '🧸', 'Bajki i dzieciństwo'],
+].map(([id, icon, name]) => ({ id, icon, name }));
+const qbCat = id => QB_CATS.find(c => c.id === id) || { id, icon: '🎲', name: 'Mix' };
+let QB = null;
+async function loadQBank() {
+  if (!QB) { try { QB = await (await fetch('qbank.json')).json(); } catch { QB = null; } }
+  return QB;
+}
+// pytania z kategorii: najpierw te, których dawno nie było (pamięć ostatnich ~800 na urządzeniu)
+function qbTake(cat, n, used) {
+  let seen; try { seen = new Set(JSON.parse(localStorage.getItem('showSeen') || '[]')); } catch { seen = new Set(); }
+  const ids = cat === 'mix' ? Object.keys(QB) : [cat], all = [];
+  ids.forEach(c => (QB[c] || []).forEach((x, i) => all.push({ id: c + i, x })));
+  const fresh = shuffle(all.filter(o => !used.has(o.id) && !seen.has(o.id))), old = shuffle(all.filter(o => !used.has(o.id) && seen.has(o.id)));
+  const out = [...fresh, ...old].slice(0, n).map(({ id, x }) => { used.add(id); seen.add(id); return { id, q: x[0], a: x[1], opts: shuffle(x.slice(1, 5)), d: x[5] }; });
+  try { localStorage.setItem('showSeen', JSON.stringify([...seen].slice(-800))); } catch { /* */ }
+  return out;
+}
+const SHOW_MAX = 8, PICK_SEC = 12, BET_SEC = 10, AIM_SEC = 8, WRONG_HP = 10;
 // finał: życie z punktów, obrażenia rosną z każdym pytaniem (+ premia do 50% za szybkość)
 const finalHp = score => 100 + Math.round(score / 100);
 const finalDmg = (rq, ms) => Math.round((20 + 10 * rq) * (1 + .5 * Math.max(0, 1 - (ms || 0) / 10000)) / 5) * 5;
@@ -58,10 +80,12 @@ function makeBots(n, level, used) {
     acc: Math.min(.95, lv.acc + (Math.random() - .5) * .14), fast: lv.fast * (.85 + Math.random() * .3) }));
 }
 function newGame(o, players) {
-  const total = SHOW_ROUNDS.reduce((a, r) => a + r.n, 0), qs = showQuestions(o.deckId, total);
-  if (qs.length < 3) { toast('W tej talii za mało fiszek tekstowych z różnymi odpowiedziami (min. 4).', 4500); return false; }
+  const cat = o.src !== 'deck';
+  if (cat && !QB) { toast('Nie udało się wczytać bazy pytań – sprawdź internet.', 4000); return false; }
+  const total = SHOW_ROUNDS.reduce((a, r) => a + r.n, 0), qs = cat ? [] : showQuestions(o.deckId, total);
+  if (!cat && qs.length < 3) { toast('W tej talii za mało fiszek tekstowych z różnymi odpowiedziami (min. 4).', 4500); return false; }
   players.forEach(p => { p.score = 0; delete p.bet; delete p.hp; delete p.out; });
-  Object.assign(SHOW, { deckId: o.deckId, players, qs, qi: 0, r: 0, rq: 0, phase: 'intro', log: [], ans: {}, locked: {}, gain: {}, host: '', hit: null, shooter: null, outN: 0 });
+  Object.assign(SHOW, { deckId: o.deckId, src: cat ? 'cat' : 'deck', used: new Set(), cat: null, catsDone: [], rewarded: false, players, qs, qi: 0, r: 0, rq: 0, phase: 'intro', log: [], ans: {}, locked: {}, gain: {}, host: '', hit: null, shooter: null, outN: 0 });
   return true;
 }
 function showStartSolo(o) {
@@ -98,6 +122,7 @@ function showHostMsg(m) {
   if (m.t === 'ans' && SHOW.phase === 'question' && m.qi === SHOW.qi) showTakeAnswer(p, +m.k, Math.max(0, Math.min(+m.ms || 0, showRound().sec * 1000)));
   if (m.t === 'bet' && SHOW.phase === 'bet' && [100, 250, 500].includes(+m.v)) { p.bet = +m.v; showBetCheck(); }
   if (m.t === 'shoot' && SHOW.phase === 'aim' && SHOW.shooter === pid) showShoot(m.id);
+  if (m.t === 'pick' && SHOW.phase === 'pick' && SHOW.picker === pid) showPickCat(m.c);
   if (m.t === 'bye') { p.left = true; if (SHOW.phase === 'aim' && SHOW.shooter === pid) showShoot(); else showRender(); }
 }
 // stan gry dla graczy – bez poprawnej odpowiedzi, dopóki nie nastąpi odkrycie
@@ -105,7 +130,7 @@ function showSnapshot() {
   const ph = SHOW.phase, q = SHOW.qs?.[SHOW.qi], R = SHOW_ROUNDS[SHOW.r] || {}, rev = ph === 'reveal' || ph === 'aim';
   return { t: 'state', phase: ph, pin: SHOW.pin, r: SHOW.r, rq: SHOW.rq, qi: SHOW.qi,
     players: SHOW.players.map(p => ({ id: p.id, name: p.name, av: p.av, color: p.color, score: p.score, bet: p.bet, bot: !!p.bot, left: !!p.left, hp: p.hp, out: p.out })),
-    shooter: SHOW.shooter, hit: SHOW.hit, aimEnd: ph === 'aim' ? Math.max(0, SHOW.aimEnd - Date.now()) : 0,
+    shooter: SHOW.shooter, hit: SHOW.hit, src: SHOW.src, cat: SHOW.cat, picker: SHOW.picker, catOpts: SHOW.catOpts, pickLeft: ph === 'pick' ? Math.max(0, SHOW.pickEnd - Date.now()) : 0, aimEnd: ph === 'aim' ? Math.max(0, SHOW.aimEnd - Date.now()) : 0,
     q: q && (ph === 'question' || rev || ph === 'aim') ? { q: q.q, opts: q.opts, ...(rev || ph === 'aim' ? { a: q.a } : {}) } : null,
     left: ph === 'question' ? Math.max(0, R.sec * 1000 - (Date.now() - SHOW.t0)) : ph === 'bet' ? Math.max(0, SHOW.betEnd - Date.now()) : 0,
     ans: Object.fromEntries(Object.entries(SHOW.ans || {}).map(([id, a]) => [id, rev ? { k: a.k } : { done: 1 }])),
@@ -130,14 +155,14 @@ function showGuestMsg(m) {
   const prev = SHOW.phase, prevQi = SHOW.qi;
   if (m.phase === 'question' && (prev !== 'question' || prevQi !== m.qi)) { SHOW.myK = null; SHOW.lastTick = 0; }
   const R = SHOW_ROUNDS[m.r] || SHOW_ROUNDS[0];
-  Object.assign(SHOW, m, { qs: { [m.qi]: m.q }, t0: m.phase === 'question' ? Date.now() - (R.sec * 1000 - m.left) : SHOW.t0, aimEnd: Date.now() + (m.aimEnd || 0), betEnd: m.phase === 'bet' ? Date.now() + m.left : SHOW.betEnd });
+  Object.assign(SHOW, m, { qs: { [m.qi]: m.q }, t0: m.phase === 'question' ? Date.now() - (R.sec * 1000 - m.left) : SHOW.t0, aimEnd: Date.now() + (m.aimEnd || 0), pickEnd: Date.now() + (m.pickLeft || 0), betEnd: m.phase === 'bet' ? Date.now() + m.left : SHOW.betEnd });
   SHOW.players.forEach(p => { p.me = p.id === SHOW.myId; });
   if (m.phase === 'reveal' && prev !== 'reveal' && m.q) {
     const myK = m.ans[SHOW.myId]?.k ?? SHOW.myK, ok = myK != null && m.q.opts[myK] === m.q.a;
     showSfx(ok && (m.gain[SHOW.myId] || 0) > 0 ? 'ok' : 'bad'); if (!ok) SHOW.log.push({ q: m.q.q, a: m.q.a });
   }
   if (m.hit && m.hit.k !== SHOW._hitK) { SHOW._hitK = m.hit.k; showSfx(m.hit.to === SHOW.myId ? 'hurt' : 'shot'); }
-  if ((m.phase === 'round' || m.phase === 'end') && prev !== m.phase) { showSfx('round'); if (m.phase === 'end' && showRanking()[0]?.id === SHOW.myId) confetti(200); }
+  if ((m.phase === 'round' || m.phase === 'end') && prev !== m.phase) { showSfx('round'); if (m.phase === 'end') { if (showRanking()[0]?.id === SHOW.myId) confetti(200); SHOW.rewarded = false; showReward(); } }
   if (m.phase === 'question' && m.ans && Object.keys(m.ans).length > Object.keys(SHOW._ansN || {}).length) showSfx('buzz');
   SHOW._ansN = m.ans;
   render(); if (m.phase === 'question') showTimerLoop();
@@ -243,7 +268,7 @@ function showShoot(id) {
   later(showNext, SHOW.role === 'host' ? 3200 : 2600);
 }
 function showFinishGame() {
-  SHOW.phase = 'end'; showSfx('round');
+  SHOW.phase = 'end'; showSfx('round'); showReward();
   confetti(showRanking()[0]?.me ? 220 : 60); showRender();
 }
 // kolejność: kto przetrwał finał (najwięcej ❤️), potem kto odpadł później, na końcu punkty
@@ -255,12 +280,52 @@ function showNext() {
   if (isFinal() && (activePlayers().length <= 1 || SHOW.qi >= SHOW.qs.length)) return showFinishGame();
   if (SHOW.rq >= showRound().n) {
     SHOW.r++; SHOW.rq = 0;
-    if (SHOW.r >= SHOW_ROUNDS.length || SHOW.qi >= SHOW.qs.length) return showFinishGame();
+    if (SHOW.r >= SHOW_ROUNDS.length || (SHOW.src === 'deck' && SHOW.qi >= SHOW.qs.length)) return showFinishGame();
     if (isFinal()) SHOW.players.forEach(p => { p.hp = p.left ? 0 : finalHp(p.score); });
     SHOW.phase = 'round'; showSfx('round'); return showRender();
   }
   if (showRound().k === 'bet') return showBetPhase();
   showAsk();
+}
+// start rundy: w trybie kategorii najpierw wybór kategorii (wybiera gracz z najmniejszą liczbą punktów)
+function showBeginRound() {
+  if (SHOW.src === 'cat') return showPickPhase();
+  if (showRound().k === 'bet') return showBetPhase();
+  showAsk();
+}
+function showPickPhase() {
+  const act = activePlayers(), low = Math.min(...act.map(p => p.score));
+  const cands = act.filter(p => p.score === low), humans = cands.filter(p => !p.bot);
+  const picker = SHOW.r === 0 ? (act.find(p => p.id === SHOW.myId) || act[0]) : pick(humans.length ? humans : cands);
+  const left = QB_CATS.filter(c => QB[c.id]?.length && !SHOW.catsDone.includes(c.id));
+  SHOW.catOpts = shuffle(left.length >= 4 ? left : QB_CATS.filter(c => QB[c.id]?.length)).slice(0, 4).map(c => c.id);
+  Object.assign(SHOW, { phase: 'pick', picker: picker.id, pickEnd: Date.now() + PICK_SEC * 1000, host: '' });
+  if (picker.bot) later(() => showPickCat(pick(SHOW.catOpts)), 1500 + Math.random() * 1200);
+  later(() => showPickCat(pick(SHOW.catOpts)), PICK_SEC * 1000 + (SHOW.role === 'host' ? 600 : 0));
+  showRender();
+}
+function showPickCat(id) {
+  if (SHOW.phase !== 'pick') return;
+  if (id !== 'mix' && !SHOW.catOpts.includes(id)) return;
+  showClear();
+  const R = showRound(), add = qbTake(id, R.n, SHOW.used);
+  SHOW.qs.length = SHOW.qi; SHOW.qs.push(...add);
+  SHOW.cat = id; if (id !== 'mix') SHOW.catsDone.push(id);
+  const c = qbCat(id), who = SHOW.players.find(p => p.id === SHOW.picker);
+  toast(`${c.icon} ${c.name}${who ? ' – wybiera ' + who.name : ''}`, 1800); showSfx('join');
+  if (R.k === 'bet') return showBetPhase();
+  showAsk();
+}
+// nagroda w kryształach za miejsce (gra z min. 1 rywalem), max 60 💎 dziennie
+function showReward() {
+  if (!SHOW || SHOW.rewarded || SHOW.phase !== 'end') return 0;
+  SHOW.rewarded = true;
+  const rank = showRanking(), place = rank.findIndex(p => p.id === SHOW.myId) + 1;
+  if (rank.length < 2 || !place) return 0;
+  const base = [0, 20, 12, 6][place] || 2, t0 = dayStart();
+  const today = S.wallet.filter(w => w.why === 'show' && w.t >= t0).reduce((a, w) => a + w.n, 0), n = Math.max(0, Math.min(base, 60 - today));
+  if (n) { S.wallet.push({ id: uid(), n, why: 'show', t: Date.now() }); save(); }
+  SHOW.myReward = n; return n;
 }
 function showBetPhase() {
   SHOW.phase = 'bet'; SHOW.betEnd = Date.now() + BET_SEC * 1000;
@@ -283,22 +348,25 @@ function showBoard(compact) {
 }
 const chipList = () => `<div class="sh-chips">${SHOW.players.map(p => `<span class="sh-chip${p.left ? ' left' : ''}" style="--pc:${p.color}">${esc(p.av)} ${esc(p.name)}${p.me ? ' (Ty)' : ''}${p.bot ? ' 🤖' : ''}</span>`).join('')}</div>`;
 ROUTES.show = (parts, q) => {
-  const admin = typeof hostUnlocked === 'function' && hostUnlocked();
   const head = (t, r = '') => `<div class="studybar"><button class="iconbtn" data-act="show-exit">✕</button><div class="title">${t}</div>${r}</div>`;
   if (!SHOW && q?.get('pin')) { setTimeout(() => showJoin(q.get('pin')), 0); }
-  // --- start: dołącz PIN-em / (admin) graj z botami albo stwórz lobby
+  // --- start: dołącz PIN-em / graj z botami albo stwórz lobby
   if (!SHOW) {
-    const o = S.settings.show = S.settings.show || { bots: 3, level: 'mid' };
-    return { focus: true, html: `<div class="sh-stage setup">${head('🎤 Teleturniej <small class="beta-tag">BETA</small>')}
-      <div class="sh-logo">🎤<b>Fiszkowy Show</b><small>4 rundy · pytania ABCD · jak Buzz! i Kahoot</small></div>
+    const o = S.settings.show = S.settings.show || { bots: 3, level: 'mid', src: 'cat' }, deck = o.src === 'deck';
+    return { focus: true, html: `<div class="sh-stage setup">${head('🎤 Teleturniej')}
+      <div class="sh-logo">🎤<b>Fiszkowy Show</b><small>4 rundy · ${QB_CATS.length} kategorii · ze znajomymi albo z botami</small></div>
       <div class="card"><h3 style="margin-top:0">🔑 Dołącz do gry</h3><p class="small muted" style="margin-top:0">Wpisz PIN, który widzi prowadzący.</p>
         <div class="row nowrap"><input id="sh-pin" class="grow sh-pin-in" inputmode="numeric" maxlength="6" placeholder="PIN" value="${esc(q?.get('pin') || '')}"><button class="primary" data-act="show-join">Dołącz</button></div></div>
-      ${admin ? `<div class="card"><label class="field"><span>Talia z pytaniami</span><select id="sh-deck">${S.decks.map(d => `<option value="${d.id}" ${o.deckId === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>
+      <div class="card"><h3 style="margin-top:0">🎬 Nowa gra</h3>
+        <div class="sh-src"><button class="${deck ? '' : 'on'}" data-act="show-src" data-v="cat"><span>🧠</span><b>Kategorie</b><small>Wiedza ogólna, rap, muzyka, sport…</small></button>
+          <button class="${deck ? 'on' : ''}" data-act="show-src" data-v="deck"><span>📚</span><b>Moje fiszki</b><small>Pytania z wybranej talii</small></button></div>
+        ${deck ? `<label class="field"><span>Talia z pytaniami</span><select id="sh-deck">${S.decks.map(d => `<option value="${d.id}" ${o.deckId === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>`
+          : `<div class="sh-catlist">${QB_CATS.map(c => `<span>${c.icon} ${c.name}</span>`).join('')}</div><p class="small muted" style="margin:4px 0 10px">Przed każdą rundą gracz z najmniejszą liczbą punktów wybiera kategorię.</p>`}
         <div class="grid2"><label class="field"><span>Boty</span><select id="sh-bots">${[0, 1, 2, 3].map(n => `<option value="${n}" ${o.bots === n ? 'selected' : ''}>${n ? `${n} ${plural(n, 'bot', 'boty', 'botów')}` : 'bez botów'}</option>`).join('')}</select></label>
           <label class="field"><span>Poziom botów</span><select id="sh-level">${Object.entries(SHOW_LEVELS).map(([k, l]) => `<option value="${k}" ${o.level === k ? 'selected' : ''}>${l.name}</option>`).join('')}</select></label></div>
         <div class="row"><button class="primary grow big-btn" data-act="show-lobby">👥 Stwórz lobby</button><button class="grow big-btn" data-act="show-go">🤖 Graj z botami</button></div>
         <details class="small" style="margin-top:10px"><summary>Zasady rund</summary><div class="sh-rounds">${SHOW_ROUNDS.map((r, i) => `<div><span>${r.icon}</span><b>Runda ${i + 1}: ${r.name}</b><small>${r.desc}</small></div>`).join('')}</div></details>
-        <p class="small muted center" style="margin-bottom:0">Wersja testowa – bez nagród w kryształach.</p></div>` : ''}</div>` };
+        <p class="small muted center" style="margin-bottom:0">💎 Za podium: 20 / 12 / 6 kryształów (max 60 dziennie)</p></div></div>` };
   }
   const R = showRound() || SHOW_ROUNDS[0], guest = SHOW.role === 'guest';
   // --- dołączanie / brak hosta
@@ -333,6 +401,16 @@ ROUTES.show = (parts, q) => {
       <div class="sh-host">🎤 ${me.bet ? `Postawione: <b>${me.bet}</b>. Czekamy na resztę…` : `Ile stawiasz? Masz <b>${me.score || 0}</b> pkt.`}</div>
       <div class="sh-bets">${[100, 250, 500].map(v => `<button class="${me.bet === v ? 'on' : ''}" data-act="show-bet" data-v="${v}" ${me.bet ? 'disabled' : ''}><b>${v}</b><small>pkt</small></button>`).join('')}</div></div>` };
   }
+  // --- wybór kategorii
+  if (SHOW.phase === 'pick') {
+    const who = SHOW.players.find(p => p.id === SHOW.picker), mine = SHOW.picker === SHOW.myId, left = Math.max(0, SHOW.pickEnd - Date.now());
+    return { focus: true, html: `<div class="sh-stage">${head(`${R.icon} Runda ${SHOW.r + 1}: ${R.name}`)}${showBoard(true)}
+      <div class="sh-host">🎤 ${mine ? '<b>Wybierz kategorię</b> na tę rundę!' : `<b style="color:${who?.color}">${esc(who?.name || '…')}</b> wybiera kategorię…`}</div>
+      <div class="sh-timer"><div class="sh-pickbar" style="animation-duration:${left}ms"></div></div>
+      <div class="sh-cats${mine ? '' : ' wait'}">${(SHOW.catOpts || []).map(id => { const c = qbCat(id); return `<button data-act="show-pick" data-c="${id}" ${mine ? '' : 'disabled'}><span>${c.icon}</span><b>${c.name}</b></button>`; }).join('')}
+        <button class="mix" data-act="show-pick" data-c="mix" ${mine ? '' : 'disabled'}><span>🎲</span><b>Mix wszystkiego</b></button></div>
+      ${mine ? `<p class="center small muted">Brak wyboru w ${PICK_SEC} s = losowa kategoria</p>` : ''}</div>` };
+  }
   // --- finał: celowanie
   if (SHOW.phase === 'aim') {
     const sh = SHOW.players.find(p => p.id === SHOW.shooter), mineShot = SHOW.shooter === SHOW.myId, qq = SHOW.qs[SHOW.qi];
@@ -350,6 +428,7 @@ ROUTES.show = (parts, q) => {
     return { focus: true, html: `<div class="sh-stage">${head('🏆 Wyniki')}
       <div class="sh-host">🎤 ${myPlace === 1 ? (rank[0].hp > 0 ? 'Ostatni na placu boju – wygrywasz! 🎉' : 'Mamy zwycięzcę – to Ty! 🎉') : myPlace === 2 ? 'Srebro! Było blisko!' : myPlace === 3 ? 'Brąz – podium jest Twoje!' : 'Dzięki za grę – rewanż?'}</div>
       <div class="sh-podium">${pod.map(p => { const place = rank.indexOf(p) + 1; return `<div class="sh-step p${place}" style="--pc:${p.color}"><span class="sh-av">${esc(p.av)}</span><b class="nm">${esc(p.name)}</b><small>${p.hp > 0 ? '❤️ ' + p.hp : (p.hp != null ? '💀 ' : '') + p.score + ' pkt'}</small><div class="sh-block">${['🥇', '🥈', '🥉'][place - 1]}</div></div>`; }).join('')}</div>
+      ${SHOW.myReward ? `<p class="center sh-rew">+${SHOW.myReward} 💎 za ${myPlace}. miejsce</p>` : ''}
       ${rank.slice(3).map((p, i) => `<p class="center small">${i + 4}. ${esc(p.name)} – ${p.hp > 0 ? '❤️ ' + p.hp : '💀'} · ${p.score} pkt</p>`).join('')}
       ${SHOW.log.length ? `<details class="card"><summary><b>Do powtórki (${SHOW.log.length})</b></summary>${SHOW.log.slice(0, 15).map(l => `<div class="qwrong"><div class="small">${fmt(l.q)}</div><b class="c-rev">${fmt(l.a)}</b></div>`).join('')}</details>` : ''}
       <div class="row">${guest ? '<p class="small muted grow">Prowadzący może zacząć kolejną grę w tym samym lobby.</p>' : `<button class="primary grow" data-act="show-again">🔁 Jeszcze raz</button>`}<button class="grow" data-act="show-exit">Zakończ</button></div></div>` };
@@ -361,6 +440,7 @@ ROUTES.show = (parts, q) => {
     ${showBoard(true)}
     ${R.k === 'final' && !rev ? `<div class="sh-pool">💥 Obrażenia: <b>${20 + 10 * SHOW.rq}–${finalDmg(SHOW.rq, 0)}</b> <small>(im szybciej, tym mocniej)</small></div>` : ''}
     ${R.k === 'bet' && !rev ? `<div class="sh-pool">Twój zakład: <b>${showMe().bet || 100}</b></div>` : ''}
+    ${SHOW.src === 'cat' && SHOW.cat ? `<div class="sh-catchip">${qbCat(SHOW.cat).icon} ${qbCat(SHOW.cat).name}</div>` : ''}
     <div class="sh-q">${fmt(qq.q)}</div>
     <div class="sh-timer"><div id="show-timer" style="width:${rev ? 0 : Math.max(0, (R.sec * 1000 - (Date.now() - SHOW.t0)) / (R.sec * 10))}%"></div></div>
     <div class="sh-opts">${qq.opts.map((o, k) => {
@@ -372,17 +452,21 @@ ROUTES.show = (parts, q) => {
       : answered && !rev ? `<div class="sh-host">🎤 ${dead ? '💀 Odpadłeś – oglądasz finał do końca.' : SHOW.locked?.[SHOW.myId] ? `Pudło! −${WRONG_HP} ❤️ – czekamy na resztę…` : 'Odpowiedź przyjęta – czekamy na resztę…'}</div>` : SHOW.host ? `<div class="sh-host">🎤 ${esc(SHOW.host)}</div>` : ''}</div>` };
 };
 
+const showOpts = solo => ({ src: S.settings.show?.src === 'deck' ? 'deck' : 'cat', deckId: $('#sh-deck')?.value || S.settings.show?.deckId,
+  bots: solo ? Math.max(1, +$('#sh-bots').value) : +$('#sh-bots').value, level: $('#sh-level').value });
 Object.assign(ACTIONS, {
   'show-open': () => { if (SHOW?.ch) SHOW.ch.close(); SHOW = null; go('#/show'); },
   'show-join': () => { if (typeof fxUnlock === 'function') fxUnlock(); showJoin($('#sh-pin').value); },
-  'show-go': () => {
-    const o = S.settings.show = { deckId: $('#sh-deck').value, bots: Math.max(1, +$('#sh-bots').value), level: $('#sh-level').value }; save();
+  'show-go': async () => {
+    const o = S.settings.show = showOpts(true); save();
     if (typeof fxUnlock === 'function') fxUnlock();
+    if (o.src !== 'deck') await loadQBank();
     showStartSolo(o);
   },
-  'show-lobby': () => {
-    const o = S.settings.show = { deckId: $('#sh-deck').value, bots: +$('#sh-bots').value, level: $('#sh-level').value }; save();
+  'show-lobby': async () => {
+    const o = S.settings.show = showOpts(false); save();
     if (typeof fxUnlock === 'function') fxUnlock();
+    if (o.src !== 'deck') await loadQBank();
     showOpenLobby(o);
   },
   'show-share': async () => {
@@ -396,7 +480,13 @@ Object.assign(ACTIONS, {
     if (!newGame(SHOW.opts, [...SHOW.players.filter(p => !p.bot && !p.left), ...bots])) return;
     showSfx('round'); showRender();
   },
-  'show-round-go': () => { if (!isHostRole()) return; if (showRound().k === 'bet') showBetPhase(); else showAsk(); },
+  'show-round-go': () => { if (!isHostRole()) return; showBeginRound(); },
+  'show-pick': el => {
+    if (SHOW?.phase !== 'pick' || SHOW.picker !== SHOW.myId) return;
+    if (SHOW.role === 'guest') { SHOW.ch.send({ t: 'pick', c: el.dataset.c }); SHOW.picker = null; return render(); }
+    showPickCat(el.dataset.c);
+  },
+  'show-src': el => { S.settings.show = { ...S.settings.show, src: el.dataset.v }; save(); render(); },
   'show-bet': el => {
     const v = +el.dataset.v;
     if (SHOW.role === 'guest') { const me = showMe(); me.bet = v; SHOW.ch.send({ t: 'bet', v }); return render(); }
@@ -418,7 +508,7 @@ Object.assign(ACTIONS, {
   },
   'show-exit': () => {
     if (SHOW) { showClear(); if (SHOW.ch) { if (SHOW.role === 'guest') SHOW.ch.send({ t: 'bye' }); else SHOW.ch.send({ t: 'state', phase: 'nohost', players: [], pin: SHOW.pin }); SHOW.ch.close(); } }
-    SHOW = null; go(typeof hostUnlocked === 'function' && hostUnlocked() ? '#/host' : '#/battles');
+    SHOW = null; go('#/battles');
   },
 });
 // lobby: zmiana liczby botów / poziomu
@@ -434,8 +524,8 @@ window.addEventListener('hashchange', () => {
 const shBattles0 = ROUTES.battles;
 ROUTES.battles = (...a) => {
   const r = shBattles0(...a); if (!r?.html) return r;
-  const card = `<div class="card row nowrap sh-cta" data-go="#/show"><span style="font-size:34px">🎤</span><div class="grow"><b>Teleturniej <small class="beta-tag">BETA</small></b>
-    <div class="small muted">Dołącz PIN-em do gry znajomego – jak w Kahoot</div></div><span style="font-size:22px">›</span></div>`;
+  const card = `<div class="card row nowrap sh-cta" data-go="#/show"><span style="font-size:34px">🎤</span><div class="grow"><b>Teleturniej</b>
+    <div class="small muted">Wiedza ogólna, rap, muzyka, sport… Graj z botami albo ze znajomymi (PIN)</div></div><span style="font-size:22px">›</span></div>`;
   const i = r.html.indexOf('<details class="card rules"');
   return { ...r, html: i < 0 ? r.html + card : r.html.slice(0, i) + card + r.html.slice(i) };
 };
