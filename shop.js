@@ -53,7 +53,7 @@ const EFFECTS = [
 const FLIP_MIN_MS = 1500;
 const studyPoints = l => !l.m ? 1 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .1 : 0) : 1;                 // do celu dziennego
 const studyGems = l => !l.m ? 0 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .05 : 0) : ({ ok: .5, close: .3 }[l.v] ?? .1);   // 💎 za samą naukę
-const QUIZ_GEM_CAP = 120;   // max 💎 dziennie z testów ABCD / pisemnych
+const QUIZ_GEM_CAP = 150;   // max 💎 dziennie z testów ABCD / pisemnych
 function earnedCoins() {
   let c = Object.keys(S.ach).reduce((a, id) => a + (typeof achReward === 'function' ? achReward(id) : 30), 0);   // trudne osiągnięcia: 150
   const perDay = {}; let study = 0;

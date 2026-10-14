@@ -1016,3 +1016,5 @@ body.focus .undobar { bottom: calc(16px + env(safe-area-inset-bottom)); }
 .kv > b { flex: 1 1 40%; }
 /* pasek pod paskiem statusu iPhone'a – przewijana treść nie wchodzi pod godzinę */
 body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--sat); background: var(--bg); z-index: 90; pointer-events: none; }
+.qcustom input { width: 80px; flex: none; text-align: center; }
+.qcustom button { flex: none; }

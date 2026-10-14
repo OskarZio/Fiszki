@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '48';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '49';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -760,7 +760,11 @@ function viewQuiz(deckId, q) {
     return `<div class="studybar"><button class="iconbtn" data-go="${back}">✕</button><div class="title">${type === 'abcd' ? 'Test ABCD' : 'Test pisemny'}</div></div>
       <div class="card"><h2>Ile pytań?</h2><p class="muted">Test sprawdza wiedzę i nie zmienia harmonogramu powtórek. Błędne odpowiedzi możesz potem dodać do powtórki.</p>
       ${[10, 20, 50].some(x => x < n) ? `<div class="qcount">${[10, 20, 50].filter(x => x < n).map(x => `<button data-act="quiz-start" data-n="${x}" data-deck="${deckId}" data-type="${type}">${x} pytań</button>`).join('')}</div><div class="spacer"></div>` : ''}
-      <button class="primary block" data-act="quiz-start" data-n="0" data-deck="${deckId}" data-type="${type}">Wszystkie (${n})</button></div>`;
+      <button class="primary block" data-act="quiz-start" data-n="0" data-deck="${deckId}" data-type="${type}">Wszystkie (${n})</button>
+      <div class="spacer"></div>
+      <div class="row nowrap qcustom"><span class="small muted grow">Własna liczba:</span><input id="quiz-n" type="number" inputmode="numeric" min="1" max="${n}" value="${Math.min(15, n)}">
+        <button data-act="quiz-start-custom" data-deck="${deckId}" data-type="${type}">Start</button></div>
+      <p class="small muted" style="margin-bottom:0">💎 Kryształy od 10 pytań – im dłuższy test, tym więcej.</p></div>`;
   }
   const Z = QUIZ, total = Z.items.length;
   const head = `<div class="studybar"><button class="iconbtn" data-act="quiz-end" data-href="${back}">✕</button>
@@ -1491,6 +1495,7 @@ const ACTIONS = {
   grade: el => answer(+el.dataset.g),
   undo: () => undo(),
 
+  'quiz-start-custom': el => { const v = Math.round(+$('#quiz-n').value); if (!(v >= 1)) return toast('Wpisz liczbę pytań'); el.dataset.n = v; ACTIONS['quiz-start'](el); },
   'quiz-start': el => { QUIZ = buildQuiz(el.dataset.deck, el.dataset.type, +el.dataset.n); if (!QUIZ.items.length) { QUIZ = null; toast('Brak kart z odpowiedziami'); } render(); },
   'quiz-pick': el => { const it = QUIZ.items[QUIZ.i], v = cardView(S.cards.find(c => c.id === it.cardId)); it.given = +el.dataset.k; it.ok = it.options[it.given] === v.ans; render(); },
   'quiz-check': () => { const it = QUIZ.items[QUIZ.i], v = cardView(S.cards.find(c => c.id === it.cardId)); it.given = $('#quizin').value; it.ok = checkAnswer(it.given, v.ans) !== 'wrong'; render(); },

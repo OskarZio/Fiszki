@@ -75,17 +75,19 @@ homeExtrasHTML = function () {
 // Testy ABCD / pisemne: 💎 za poprawne odpowiedzi (min. 5 pytań, limit dzienny)
 // Progi nagród za test (na 10 pytań ABCD). Więcej pytań = więcej (do 30), pisemny ×1,5, dzienny limit QUIZ_GEM_CAP.
 const QUIZ_TIERS = [[100, 50], [90, 40], [80, 30], [70, 20], [60, 12], [50, 6]];
+// wzór: (stawka z progu na 10 pytań) × (liczba pytań / 10)^1,15 – dłuższy test daje odrobinę więcej niż proporcjonalnie
+const quizLenMul = total => Math.pow(Math.min(total, 60) / 10, 1.15);
 function quizReward(pct, total, type) {
-  if (total < 5) return { n: 0, why: 'min. 5 pytań' };
+  if (total < 10) return { n: 0, why: 'kryształy od 10 pytań' };
   const tier = (QUIZ_TIERS.find(([p]) => pct >= p) || [0, 0])[1];
-  const base = Math.round(tier * Math.min(total, 30) / 10 * (type === 'type' ? 1.5 : 1));
+  const base = Math.round(tier * quizLenMul(total) * (type === 'type' ? 1.5 : 1));
   const t0 = dayStart(), already = S.wallet.filter(w => w.why === 'quiz' && w.t >= t0).reduce((a, w) => a + w.n, 0);
   const n = Math.max(0, Math.min(base, QUIZ_GEM_CAP - already));
   if (n > 0) { S.wallet.push({ id: uid(), n, why: 'quiz', t: Date.now() }); save(); }
   return { n, base, capped: n < base, tier };
 }
 const quizTiersHTML = type => `<div class="qtiers">${QUIZ_TIERS.slice().reverse().map(([p, g]) => `<span>${p}% → <b>${Math.round(g * (type === 'type' ? 1.5 : 1))}💎</b></span>`).join('')}</div>
-  <p class="small muted" style="margin:6px 0 0">Na 10 pytań${type === 'type' ? ' (pisemny ×1,5)' : ''} · więcej pytań = więcej 💎 (do 30) · max ${QUIZ_GEM_CAP} 💎 dziennie z testów</p>`;
+  <p class="small muted" style="margin:6px 0 0">Stawki na 10 pytań${type === 'type' ? ' (pisemny ×1,5)' : ''}. Od 10 pytań w górę – np. 70% przy 20 pytaniach = ${Math.round(20 * quizLenMul(20) * (type === 'type' ? 1.5 : 1))} 💎, przy 30 = ${Math.round(20 * quizLenMul(30) * (type === 'type' ? 1.5 : 1))} 💎 · max ${QUIZ_GEM_CAP} 💎 dziennie z testów</p>`;
 on('quiz', (pct, total) => {
   if (total < 5) return;
   const good = Math.round(pct * total / 100), day = dayKey(Date.now());
