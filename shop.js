@@ -86,7 +86,11 @@ function rollRarity(odds) {
 const rollSticker = odds => { const r = rollRarity(odds), pool = STICKERS.filter(s => s.r === r); return pool[Math.random() * pool.length | 0]; };
 // Poza naklejkami w skrzynce mogą wypaść kryształy (różne kwoty, rzadko „jackpot”) albo darmowe ponowne losowanie
 const CASE_EXTRA = { gems: 20, respin: 7 };   // % szans
-const GEM_PRIZES = { basic: [[20, 50], [50, 30], [100, 15], [300, 5]], epic: [[60, 50], [150, 30], [300, 15], [800, 5]], gif: [[40, 50], [100, 30], [200, 15], [500, 5]] };
+// progi kryształów (pospolite → legendarne); legendarny drop = 1000 💎
+const GEM_PRIZES = { basic: [[20, 50], [50, 30], [150, 17], [1000, 3]], epic: [[60, 48], [150, 30], [400, 17], [1000, 5]], gif: [[40, 50], [100, 30], [250, 16], [1000, 4]] };
+// w zwykłych skrzynkach (nie GIF-owej) może wypaść GIF – tylko legendarny; % szans
+const CASE_GIF = { basic: 1, epic: 2, daily: 1.5 };
+const legendGifReady = () => typeof GIF_CASE !== 'undefined' && GIF_CASE.some(g => g.r === 'legendary');
 const GIF_DUP = { common: 25, rare: 60, epic: 150, legendary: 400 };   // duplikat GIF-a zamienia się w kryształy
 const gifCaseReady = () => typeof GIF_CASE !== 'undefined' && GIF_CASE.length > 0;
 function rollGif(odds, force) {
@@ -99,12 +103,14 @@ function rollGif(odds, force) {
 }
 function rollPrize(k, odds, force) {
   const x = Math.random() * 100;
-  if (force === 'gems' || (!force && x < CASE_EXTRA.gems)) {
-    const t = GEM_PRIZES[k] || GEM_PRIZES.basic; let y = Math.random() * 100;
+  if (force === 'lgif') return legendGifReady() ? rollGif({ legendary: 100 }, 'legendary') : rollSticker({ legendary: 100 });
+  if (force === 'gems' || force === 'jackpot' || (!force && x < CASE_EXTRA.gems)) {
+    const t = GEM_PRIZES[k] || GEM_PRIZES.basic; let y = force === 'jackpot' ? 100 : Math.random() * 100;
     for (let i = 0; i < t.length; i++) { const [n, p] = t[i]; if (y < p || i === t.length - 1) return { kind: 'gems', id: 'gems' + n, n, e: '💎', name: `+${n} 💎`, r: ['common', 'rare', 'epic', 'legendary'][i] }; y -= p; }
   }
   if (force === 'respin' || (!force && x < CASE_EXTRA.gems + CASE_EXTRA.respin)) return { kind: 'respin', id: 'respin', e: '🔁', name: 'Jeszcze raz!', r: 'epic' };
   if (CASES[k]?.gif && gifCaseReady()) return rollGif(odds, force);
+  if (!force && CASE_GIF[k] && legendGifReady() && Math.random() * 100 < CASE_GIF[k]) return rollGif({ legendary: 100 }, 'legendary');
   return rollSticker(force && RARITY[force] ? { [force]: 100 } : odds);
 }
 const prizeTile = s => `<div class="tile${s.kind ? ' prize-' + s.kind : ''}" style="--rc:${RARITY[s.r].color}"><span>${s.kind === 'gif' ? gifImg(s.g) : s.e}</span><small>${esc(s.name)}</small></div>`;
@@ -123,7 +129,7 @@ ROUTES.shop = () => {
     <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}
   <div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2><div class="cases">${Object.entries(CASES).filter(([, c]) => !c.freeOnly && (!c.gif || gifCaseReady())).map(([k, c]) => `
     <div class="case ${k}"><div class="ci">${c.icon}</div><b>${c.name}</b>
-      <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}<span style="color:#0369a1">💎 do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} · 🔁 jeszcze raz</span></div>
+      <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}${CASE_GIF[k] && legendGifReady() ? `<span style="color:${RARITY.legendary.color}">🎞️ GIF legendarny ${CASE_GIF[k]}%</span>` : ''}<span style="color:#0369a1">💎 do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} · 🔁 jeszcze raz</span></div>
       <button class="primary block" data-go="#/case/${k}">Otwórz · ${c.price} 💎</button></div>`).join('')}</div></div>
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">Album naklejek</h2><span class="small muted">${owned}/${STICKERS.length}</span></div>
     <ul class="small muted perks"><li>Wysyłasz je przeciwnikowi w bitwie albo <b>podarujesz znajomemu</b> (💬 w rankingu). Stuknij naklejkę, żeby zobaczyć animację i usłyszeć jej dźwięk.</li>
@@ -150,7 +156,7 @@ let SPIN = null;
 ROUTES.case = (parts, q) => {
   const k = parts[1], c = CASES[k]; if (!c) return { html: '<a href="#/shop">Wróć</a>' };
   // tryb testowy (panel hosta): bez kosztu, nic nie trafia do albumu
-  const test = q.get('test') && typeof hostUnlocked === 'function' && hostUnlocked() ? (RARITY[q.get('r')] || ['gems', 'respin'].includes(q.get('r')) ? q.get('r') : 'any') : '';
+  const test = q.get('test') && typeof hostUnlocked === 'function' && hostUnlocked() ? (RARITY[q.get('r')] || ['gems', 'respin', 'jackpot', 'lgif'].includes(q.get('r')) ? q.get('r') : 'any') : '';
   const free = !test && q.get('free') && hasItem('case', k);
   if (!SPIN || SPIN.k !== k) SPIN = { k, phase: 'ready' };
   const tiles = (SPIN.strip || (SPIN.idle = SPIN.idle || Array.from({ length: 9 }, () => rollPrize(k, c.odds)))).map(prizeTile).join('');
