@@ -950,3 +950,8 @@ body.focus main { padding-top: calc(10px + var(--sat)); }
 .qcount + .spacer + button { width: 100%; }
 .qcount button { white-space: nowrap; padding-left: 8px !important; padding-right: 8px !important; }
 .card > h2:first-child, .card > h3:first-child { margin-top: 0; }
+.all-new { border: 2px dashed var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; white-space: normal; }
+.all-new-link { margin-top: 6px; font-size: 14px; }
+@media (max-width: 600px) {
+  body:not(.compact) .row > button.grow:not(.sm) { padding-left: 10px; padding-right: 10px; font-size: 15px; line-height: 1.25; }
+}

@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '42';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '43';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -239,7 +239,7 @@ function reviewsToday() {
   for (let i = S.log.length - 1; i >= 0 && S.log[i].t >= sod; i--) n++;
   return n;
 }
-function deckCounts(deckId) {
+function deckCounts(deckId, noLimit) {
   const eod = addDays(dayStart(), 1), intro = introducedToday();
   const per = {};
   for (const c of S.cards) {
@@ -250,7 +250,7 @@ function deckCounts(deckId) {
   }
   let nw = 0, lrn = 0, rev = 0;
   for (const id in per) {
-    nw += Math.min(per[id].n, Math.max(0, S.settings.newPerDay - (intro[id] || 0)));
+    nw += noLimit ? per[id].n : Math.min(per[id].n, Math.max(0, S.settings.newPerDay - (intro[id] || 0)));
     lrn += per[id].l; rev += per[id].r;
   }
   return { nw, lrn, rev, total: nw + lrn + rev };
@@ -360,8 +360,8 @@ function checkAnswer(input, correct, tol = S?.settings?.tolerance || 'normal') {
 // ============================================================ Sesja nauki
 let SESSION = null;
 
-function startSession(deckId, mode, cramIds = null) {
-  SESSION = {
+function startSession(deckId, mode, cramIds = null, all = false) {
+  SESSION = { all,
     key: `${deckId}/${mode}/${cramIds ? 'cram' : ''}`, deckId, mode, cram: cramIds ? shuffle([...cramIds]) : null,
     done: 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: 0,
   };
@@ -384,7 +384,7 @@ function pickNext(sess) {
   if (lrn.length) return lrn[0];
   const rev = pool.filter(c => c.srs.state === 'review' && c.srs.due <= now).sort(byDue);
   const intro = introducedToday();
-  const nwAll = pool.filter(c => c.srs.state === 'new' && (intro[c.deckId] || 0) < S.settings.newPerDay), key = newOrderKey(nwAll);
+  const nwAll = pool.filter(c => c.srs.state === 'new' && (sess.all || (intro[c.deckId] || 0) < S.settings.newPerDay)), key = newOrderKey(nwAll);   // sess.all: bez dziennego limitu
   const nw = nwAll.sort((a, b) => key(a) - key(b));
   if (rev.length && (!nw.length || sess.done % 3 !== 2)) return choose(rev);
   if (nw.length) return choose(nw);
@@ -426,9 +426,11 @@ function undo() {
   s.card = c; s.shown = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
   save(); render();
 }
+// nowe karty, które dziś nie zmieściły się w dziennym limicie
+const hiddenNew = deckId => deckCounts(deckId, true).nw - deckCounts(deckId).nw;
 function sessionRemaining(s) {
   if (s.cram) return s.cram.length;
-  const k = deckCounts(s.deckId); return k.total;
+  const k = deckCounts(s.deckId, s.all); return k.total;
 }
 
 // ============================================================ Router i renderowanie
@@ -545,6 +547,7 @@ function viewHome() {
     ${all.total
       ? `<button class="primary block" data-go="#/study/all/flip">▶ Ucz się wszystkiego (${all.total})</button>`
       : `<div class="center muted">${S.cards.length ? '🎉 Na dziś wszystko powtórzone!' + nextDueText() : 'Dodaj pierwsze fiszki, aby zacząć.'}</div>`}
+    ${(() => { const h = hiddenNew('all'); return h ? `<button class="ghost block all-new-link" data-go="#/study/all/flip?all=1">📚 Ucz się też wszystkich nowych naraz (+${h})</button>` : ''; })()}
   </div>
   ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
   ${typeof safetyBannerHTML === 'function' ? safetyBannerHTML() : ''}
@@ -588,6 +591,7 @@ function viewDeck(id, q) {
       <button class="primary grow" data-go="#/study/${id}/flip" ${k.total ? '' : 'disabled'}>▶ Fiszki</button>
       <button class="grow" data-go="#/study/${id}/type" ${k.total ? '' : 'disabled'}>⌨️ Wpisywanie</button>
     </div>
+    ${(() => { const h = hiddenNew(id); return h ? `<div class="spacer"></div><button class="block all-new" data-go="#/study/${id}/flip?all=1">📚 Wszystkie nowe naraz (+${h})</button>` : ''; })()}
     <div class="spacer"></div>
     <div class="row">
       <button class="grow" data-go="#/quiz/${id}?type=abcd" ${cards.length ? '' : 'disabled'}>📝 Test ABCD</button>
@@ -630,13 +634,13 @@ function notesList(notes, query) {
 
 // ------------------------------------------------------------ Nauka
 function viewStudy(deckId, mode, q) {
-  const key = `${deckId}/${mode}/${q.get('cram') ? 'cram' : ''}`;
+  const all = q.get('all') === '1', key = `${deckId}/${mode}/${q.get('cram') ? 'cram' : ''}${all ? '/all' : ''}`;
   if (!SESSION || SESSION.key !== key) {
     let cram = null;
     if (q.get('cram') === 'hard') cram = difficultCards().filter(c => deckId === 'all' || c.deckId === deckId).map(c => c.id);
     else if (q.get('cram') === 'all') cram = S.cards.filter(c => c.deckId === deckId).map(c => c.id);
     else if (q.get('cram') === 'list') cram = (q.get('ids') || '').split(',').filter(Boolean);
-    startSession(deckId, mode, cram);
+    startSession(deckId, mode, cram, all);
   }
   const s = SESSION, c = s.card;
   const name = deckId === 'all' ? 'Wszystkie talie' : (deckById(deckId)?.name || '');
@@ -646,7 +650,7 @@ function viewStudy(deckId, mode, q) {
   const head = `
   <div class="studybar">
     <button class="iconbtn" data-act="end-study" data-href="${backHash}">✕</button>
-    <div class="title">${esc(name)}${s.cram ? ' · bez harmonogramu' : ''}</div>
+    <div class="title">${esc(name)}${s.cram ? ' · bez harmonogramu' : s.all ? ' · wszystkie nowe' : ''}</div>
     <div class="seg">
       <button class="${mode === 'flip' ? 'on' : ''}" data-act="switch-mode" data-href="#/study/${deckId}/flip${qs}">Fiszki</button>
       <button class="${mode === 'type' ? 'on' : ''}" data-act="switch-mode" data-href="#/study/${deckId}/type${qs}">Wpisz</button>
@@ -661,7 +665,8 @@ function viewStudy(deckId, mode, q) {
     return head + `<div class="card flash"><div style="font-size:54px">🎉</div><h2>Gratulacje!</h2>
       <p class="muted">${s.done ? `Powtórzono ${s.done} ${plural(s.done, 'kartę', 'karty', 'kart')}.` : 'Na teraz nie ma nic do powtórki.'}</p>
       <p class="muted small">${nextDueText()}</p></div>
-      <button class="primary block" data-act="end-study" data-href="${backHash}">Gotowe</button>`;
+      ${!s.all && !s.cram && hiddenNew(deckId) ? `<button class="primary block" data-go="#/study/${deckId}/${mode}?all=1">📚 Ucz się dalej – wszystkie nowe (${hiddenNew(deckId)})</button><div class="spacer"></div>` : ''}
+      <button class="${!s.all && !s.cram && hiddenNew(deckId) ? '' : 'primary '}block" data-act="end-study" data-href="${backHash}">Gotowe</button>`;
   }
 
   const v = cardView(c);
