@@ -39,7 +39,8 @@ function htmlToText(html) {
   const imgs = [...doc.querySelectorAll('img')].map(i => i.getAttribute('src')).filter(Boolean);
   doc.querySelectorAll('br').forEach(b => b.replaceWith('\n'));
   doc.querySelectorAll('div, p, li, tr, h1, h2, h3').forEach(d => d.prepend('\n'));
-  const text = doc.body.textContent.replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  const text = doc.body.textContent.replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/[ \t]{2,}/g, ' ')
+    .replace(/\{\{c(\d+)::\s*([^}]*?)\s*(::[^}]*)?\}\}/g, (m, n, a, h) => `{{c${n}::${a}${h ? '::' + h.slice(2).trim() : ''}}}`).replace(/\n{3,}/g, '\n\n').trim();
   return { text, imgs };
 }
 const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp' };
@@ -363,3 +364,21 @@ function ankiSectionHTML() {
       <button data-act="anki-export">⬇️ Eksportuj</button></div>
     <p class="small muted">W Anki: <i>Plik → Eksportuj → Talia (.apkg)</i>, a na iPhonie plik możesz otworzyć bezpośrednio stąd („Udostępnij” → AnkiMobile).</p></div>`;
 }
+
+// Jednorazowo: usuń zbędne spacje z fiszek zaimportowanych wcześniej (np. „ dwugłowy” → „dwugłowy”)
+function tidyText(t) {
+  return String(t || '').replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/[ \t]{2,}/g, ' ')
+    .replace(/\{\{c(\d+)::\s*([^}]*?)\s*(::[^}]*)?\}\}/g, (m, n, a, h) => `{{c${n}::${a}${h ? '::' + h.slice(2).trim() : ''}}}`).trim();
+}
+on('start', () => {
+  if (S.settings.tidyV1) return;
+  let n = 0;
+  for (const note of S.notes) {
+    let ch = false;
+    for (const k of ['front', 'back', 'text', 'hint', 'extra', 'title']) if (typeof note[k] === 'string') { const v = tidyText(note[k]); if (v !== note[k]) { note[k] = v; ch = true; } }
+    for (const b of note.boxes || []) for (const k of ['label', 'hint']) if (typeof b[k] === 'string') { const v = b[k].trim(); if (v !== b[k]) { b[k] = v; ch = true; } }
+    if (ch) { touch(note); n++; }
+  }
+  S.settings.tidyV1 = 1; save();
+  if (n) console.log('Uporządkowano spacje w fiszkach:', n);
+});

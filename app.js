@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '41';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '42';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -307,7 +307,7 @@ function cardView(c) {
     return {
       q: `<div class="ctext">${clozeHTML(n.text, c.ord, false)}</div>`,
       a: `<div class="ctext">${clozeHTML(n.text, c.ord, true)}</div>${extra}`,
-      ans: ms.map(m => m[2]).join(', '), hints, label: clozePlain(n.text),
+      ans: ms.map(m => m[2].trim()).join(', '), hints, label: clozePlain(n.text),
     };
   }
   if (n.type === 'occl') {
@@ -318,7 +318,7 @@ function cardView(c) {
     return {
       q: title + occlHTML(n, c.ord, false),
       a: title + occlHTML(n, c.ord, true) + `<div class="ansline">${fmt(b.label || '')}</div>${extra}`,
-      ans: b.label || '', hints, label: `${n.title || 'Obraz'} – luka ${i + 1}`, noteId: n.id,
+      ans: (b.label || '').trim(), hints, label: `${n.title || 'Obraz'} – luka ${i + 1}`, noteId: n.id,
     };
   }
   const fwd = c.ord !== 'r';
@@ -328,7 +328,7 @@ function cardView(c) {
   const q = (fwd ? img : '') + `<div class="ctext">${fmt(front)}</div>`;
   const bimg = n.backImageId && IMG[n.backImageId] ? `<img class="cimg" src="${IMG[n.backImageId]}" alt="">` : '';
   const q2 = fwd ? q : bimg + `<div class="ctext">${fmt(front)}</div>`;
-  return { q: q2, a: q2 + `<hr><div class="ctext">${fmt(back)}</div>${fwd ? bimg : img}${extra}`, ans: back, hints, label: front || '(obraz)' };
+  return { q: q2, a: q2 + `<hr><div class="ctext">${fmt(back)}</div>${fwd ? bimg : img}${extra}`, ans: (back || '').trim(), hints, label: (front || '').trim() || '(obraz)' };
 }
 
 // ============================================================ Sprawdzanie wpisanej odpowiedzi
