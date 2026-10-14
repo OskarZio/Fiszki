@@ -969,3 +969,6 @@ button.danger-fill { background: var(--lrn); color: #fff; }
   display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px; border-radius: 16px; background: #1f2937; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.3); animation: slideup .25s ease; }
 .undobar button { background: rgba(255,255,255,.15); color: #fff; }
 body.focus .undobar { bottom: calc(16px + env(safe-area-inset-bottom)); }
+/* przyciski obok siebie w jednym rzędzie – zawsze tej samej wysokości */
+.row:has(> button.grow) { align-items: stretch; }
+.row > button.grow { height: auto; }
