@@ -1,5 +1,5 @@
 :root {
-  --sat: env(safe-area-inset-top, 0px);
+  --sat: max(env(safe-area-inset-top, 0px), var(--sat-fb, 0px));   /* zapas tylko gdy iPhone poda 0 */
   --bg: #f5f6fb; --card: #ffffff; --card2: #eef0f8; --text: #1b1d29; --muted: #6b7083;
   --line: #e1e4ef; --accent: #4f46e5; --accent-soft: #e0e7ff;
   --new: #2563eb; --lrn: #dc2626; --rev: #16a34a; --hard: #d97706;
@@ -1015,7 +1015,9 @@ body.focus .undobar { bottom: calc(16px + env(safe-area-inset-bottom)); }
 .kv > span { flex: 0 1 auto; min-width: 0; max-width: 60%; overflow-wrap: anywhere; }
 .kv > b { flex: 1 1 40%; }
 /* pasek pod paskiem statusu iPhone'a – przewijana treść nie wchodzi pod godzinę */
-body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--sat); background: var(--bg); z-index: 90; pointer-events: none; }
+/* pasek pod paskiem statusu – tylko podczas przewijania, nad całą treścią */
+#sbar { position: fixed; top: 0; left: 0; right: 0; height: var(--sat); background: var(--bg); z-index: 1000; pointer-events: none; opacity: 0; transition: opacity .15s; }
+html.scrolled #sbar { opacity: 1; }
 .qcustom input { width: 80px; flex: none; text-align: center; }
 .qcustom button { flex: none; }
 /* okienko profilu: bez przewijania, dopasowane do ekranu */

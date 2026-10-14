@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '50';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '51';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -58,12 +58,17 @@ function download(name, text, type) {
 // Dlatego na iOS przy nietypowych plikach pokazujemy wszystkie, a typ sprawdzamy po wybraniu.
 const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function fixSafeTop() {
-  if (!IS_IOS || !(navigator.standalone || matchMedia('(display-mode: standalone)').matches)) return;
+  const root = document.documentElement;
+  if (!document.getElementById('sbar')) { const b = document.createElement('div'); b.id = 'sbar'; document.body.append(b); }
+  if (!IS_IOS || !(navigator.standalone || matchMedia('(display-mode: standalone)').matches)) return root.style.removeProperty('--sat-fb');
   const t = document.createElement('div'); t.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);visibility:hidden'; document.body.append(t);
   const h = t.getBoundingClientRect().height; t.remove();
-  if (h < 1) document.documentElement.style.setProperty('--sat', (Math.max(screen.height, screen.width) >= 812 ? 50 : 20) + 'px');   // notch / Dynamic Island albo starszy iPhone
+  // zapas tylko, gdy iPhone naprawdę zgłasza 0 – inaczej używamy jego wartości (bez sumowania)
+  if (h < 1) root.style.setProperty('--sat-fb', (Math.max(screen.height, screen.width) >= 812 ? 50 : 20) + 'px'); else root.style.removeProperty('--sat-fb');
 }
-document.addEventListener('DOMContentLoaded', fixSafeTop); window.addEventListener('orientationchange', () => setTimeout(fixSafeTop, 300));
+document.addEventListener('DOMContentLoaded', () => { fixSafeTop(); setTimeout(fixSafeTop, 700); setTimeout(fixSafeTop, 2000); });
+window.addEventListener('orientationchange', () => setTimeout(fixSafeTop, 300));
+window.addEventListener('scroll', () => document.documentElement.classList.toggle('scrolled', scrollY > 4), { passive: true });
 function pickFile(accept) {
   if (IS_IOS && accept && !/(image|audio|video)\/\*/.test(accept)) accept = '';
   return new Promise(res => {
