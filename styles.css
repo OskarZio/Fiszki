@@ -1108,7 +1108,7 @@ body:has(.sh-stage) #tabs { background: rgba(15,10,46,.85); border-color: rgba(2
 .sh-block { width: 100%; border-radius: 12px 12px 4px 4px; background: linear-gradient(180deg, var(--pc), color-mix(in srgb, var(--pc) 50%, #000)); display: grid; place-items: center; font-size: 30px; margin-top: 6px; }
 .sh-step.p1 .sh-block { height: 120px; } .sh-step.p2 .sh-block { height: 86px; } .sh-step.p3 .sh-block { height: 60px; }
 .big-btn { min-height: 54px; font-size: 17px; }
-.sh-stage button:not(.primary):not(.sh-opt):not(.iconbtn):not(.sh-bets button) { background: rgba(255,255,255,.12); color: #f8fafc; }
+.sh-stage button:not(.primary):not(.sh-opt):not(.iconbtn):not(.sh-bets button):not(.sh-targets button) { background: rgba(255,255,255,.12); color: #f8fafc; }
 .sh-stage details summary { cursor: pointer; }
 
 /* Teleturniej – lobby jak w Kahoot */
@@ -1132,3 +1132,17 @@ body:has(.sh-stage) #tabs { background: rgba(15,10,46,.85); border-color: rgba(2
 @media (max-width: 420px) { .sh-board.many { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .sh-bets button.on { outline: 3px solid #facc15; outline-offset: 2px; transform: scale(1.05); }
 .sh-pl.left { opacity: .35; filter: grayscale(1); }
+/* Teleturniej – finał: pojedynek */
+.sh-hp { display: block; width: 80%; height: 5px; border-radius: 99px; background: rgba(255,255,255,.15); overflow: hidden; margin-top: 2px; }
+.sh-hp i { display: block; height: 100%; background: linear-gradient(90deg, #ef4444, #f97316 40%, #22c55e); transition: width .6s ease; }
+.sh-pl.hit { animation: shHit .6s ease; box-shadow: 0 0 0 2px #ef4444, 0 0 24px rgba(239,68,68,.6); }
+@keyframes shHit { 0%, 100% { transform: none; } 15% { transform: translateX(-6px) rotate(-3deg); } 35% { transform: translateX(6px) rotate(3deg); } 55% { transform: translateX(-4px); } 75% { transform: translateX(3px); } }
+.sh-pl.aim { box-shadow: 0 0 0 2px #facc15, 0 0 20px rgba(250,204,21,.5); }
+.sh-targets { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 10px 0; }
+.sh-stage .sh-targets button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 8px; border-radius: 16px; min-width: 0;
+  background: color-mix(in srgb, var(--pc) 35%, rgba(255,255,255,.06)); border: 2px solid var(--pc); color: #fff; }
+.sh-targets button span { font-size: 30px; } .sh-targets button b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-targets button:active { transform: scale(.95); }
+.sh-crosshair { font-size: 64px; animation: shAim 1.4s ease-in-out infinite; }
+@keyframes shAim { 0%, 100% { transform: translate(-14px, 0) scale(1); } 50% { transform: translate(14px, -6px) scale(1.1); } }
+.sh-pool small { opacity: .7; font-size: 12px; }

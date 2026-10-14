@@ -1,7 +1,8 @@
 'use strict';
 /* 🎤 Teleturniej (BETA) – w stylu Buzz! / Brain Show, z lobby jak w Kahoot.
    Tryby: 🤖 solo z botami · 👥 lobby z PIN-em (host prowadzi grę, gracze dołączają ze swoich telefonów).
-   4 rundy: ⚡ Szybkie palce · 💰 Wszystko albo nic · 🦊 Złodziej punktów · 🏔️ Finał (pula maleje).
+   4 rundy: ⚡ Szybkie palce · 💰 Wszystko albo nic · 🦊 Złodziej punktów · 🎯 Finał: pojedynek (jak w Brain Show –
+   punkty stają się życiem, najszybszy strzela w rywala, obrażenia rosną, wygrywa ostatni żywy).
    W lobby host liczy punkty i rozsyła stan gry (bez poprawnej odpowiedzi do czasu odkrycia), gracze wysyłają tylko swoje odpowiedzi.
    Host / solo: tylko z panelu hosta (beta). Dołączyć PIN-em może każdy. */
 
@@ -13,9 +14,14 @@ const SHOW_ROUNDS = [
   { k: 'speed', icon: '⚡', name: 'Szybkie palce', n: 5, sec: 10, desc: 'Poprawna odpowiedź: do 1000 pkt – im szybciej, tym więcej.' },
   { k: 'bet', icon: '💰', name: 'Wszystko albo nic', n: 4, sec: 12, desc: 'Przed pytaniem obstawiasz 100, 250 albo 500. Dobrze: zyskujesz, źle: tracisz.' },
   { k: 'steal', icon: '🦊', name: 'Złodziej punktów', n: 4, sec: 10, desc: 'Najszybszy z poprawną odpowiedzią kradnie 300 pkt liderowi. Błąd: −100.' },
-  { k: 'final', icon: '🏔️', name: 'Finał: odliczanie', n: 5, sec: 10, desc: 'Pula spada z 1500. Pierwszy poprawny bierze pulę – błędna odpowiedź blokuje Cię na to pytanie.' },
+  { k: 'final', icon: '🎯', name: 'Finał: pojedynek', n: 30, sec: 10, desc: 'Punkty z rund 1–3 zamieniają się w życie ❤️ (100 + 1 za każde 100 pkt). Kto pierwszy odpowie dobrze, strzela w wybranego rywala. Z każdym pytaniem obrażenia rosną, błąd kosztuje 10 ❤️. Wygrywa ostatni, kto przeżyje!' },
 ];
-const SHOW_MAX = 8, BET_SEC = 10;
+const SHOW_MAX = 8, BET_SEC = 10, AIM_SEC = 8, WRONG_HP = 10;
+// finał: życie z punktów, obrażenia rosną z każdym pytaniem (+ premia do 50% za szybkość)
+const finalHp = score => 100 + Math.round(score / 100);
+const finalDmg = (rq, ms) => Math.round((20 + 10 * rq) * (1 + .5 * Math.max(0, 1 - (ms || 0) / 10000)) / 5) * 5;
+const isFinal = () => SHOW_ROUNDS[SHOW.r]?.k === 'final';
+const alive = p => !p.left && !(p.hp != null && p.hp <= 0);
 const HOST_LINES = {
   ok: ['Brawo!', 'Ależ refleks!', 'Tak jest!', 'Mistrzowsko!', 'Publiczność szaleje!'],
   bad: ['Ojej…', 'Niestety nie!', 'Blisko, ale nie!', 'Ups!', 'Następnym razem!'],
@@ -34,6 +40,8 @@ function showSfx(kind) {
     else if (kind === 'buzz') fxTone(ac, { f: 220, type: 'square', d: .18, v: .08, trem: .8, tremF: 30 });
     else if (kind === 'round') FX.fanfare(ac);
     else if (kind === 'join') fxNotes(ac, [660, 880], { step: .07, type: 'sine', v: .1, last: .2 });
+    else if (kind === 'shot') { fxTone(ac, { f: 900, f2: 120, type: 'sawtooth', d: .25, v: .1 }); fxTone(ac, { f: 90, f2: 40, type: 'square', d: .35, v: .12, t: .08 }); }
+    else if (kind === 'hurt') fxTone(ac, { f: 160, f2: 60, type: 'square', d: .5, v: .14, trem: .9, tremF: 22 });
     else if (kind === 'tick') fxTone(ac, { f: 1200, d: .05, v: .06 });
   } catch { /* */ }
 }
@@ -52,8 +60,8 @@ function makeBots(n, level, used) {
 function newGame(o, players) {
   const total = SHOW_ROUNDS.reduce((a, r) => a + r.n, 0), qs = showQuestions(o.deckId, total);
   if (qs.length < 3) { toast('W tej talii za mało fiszek tekstowych z różnymi odpowiedziami (min. 4).', 4500); return false; }
-  players.forEach(p => { p.score = 0; delete p.bet; });
-  Object.assign(SHOW, { deckId: o.deckId, players, qs, qi: 0, r: 0, rq: 0, phase: 'intro', log: [], ans: {}, locked: {}, gain: {}, host: '' });
+  players.forEach(p => { p.score = 0; delete p.bet; delete p.hp; delete p.out; });
+  Object.assign(SHOW, { deckId: o.deckId, players, qs, qi: 0, r: 0, rq: 0, phase: 'intro', log: [], ans: {}, locked: {}, gain: {}, host: '', hit: null, shooter: null, outN: 0 });
   return true;
 }
 function showStartSolo(o) {
@@ -89,17 +97,19 @@ function showHostMsg(m) {
   const p = SHOW.players.find(x => x.id === pid); if (!p) return;
   if (m.t === 'ans' && SHOW.phase === 'question' && m.qi === SHOW.qi) showTakeAnswer(p, +m.k, Math.max(0, Math.min(+m.ms || 0, showRound().sec * 1000)));
   if (m.t === 'bet' && SHOW.phase === 'bet' && [100, 250, 500].includes(+m.v)) { p.bet = +m.v; showBetCheck(); }
-  if (m.t === 'bye') { p.left = true; showRender(); }
+  if (m.t === 'shoot' && SHOW.phase === 'aim' && SHOW.shooter === pid) showShoot(m.id);
+  if (m.t === 'bye') { p.left = true; if (SHOW.phase === 'aim' && SHOW.shooter === pid) showShoot(); else showRender(); }
 }
 // stan gry dla graczy – bez poprawnej odpowiedzi, dopóki nie nastąpi odkrycie
 function showSnapshot() {
-  const ph = SHOW.phase, q = SHOW.qs?.[SHOW.qi], R = SHOW_ROUNDS[SHOW.r] || {}, rev = ph === 'reveal';
+  const ph = SHOW.phase, q = SHOW.qs?.[SHOW.qi], R = SHOW_ROUNDS[SHOW.r] || {}, rev = ph === 'reveal' || ph === 'aim';
   return { t: 'state', phase: ph, pin: SHOW.pin, r: SHOW.r, rq: SHOW.rq, qi: SHOW.qi,
-    players: SHOW.players.map(p => ({ id: p.id, name: p.name, av: p.av, color: p.color, score: p.score, bet: p.bet, bot: !!p.bot, left: !!p.left })),
-    q: q && (ph === 'question' || rev) ? { q: q.q, opts: q.opts, ...(rev ? { a: q.a } : {}) } : null,
+    players: SHOW.players.map(p => ({ id: p.id, name: p.name, av: p.av, color: p.color, score: p.score, bet: p.bet, bot: !!p.bot, left: !!p.left, hp: p.hp, out: p.out })),
+    shooter: SHOW.shooter, hit: SHOW.hit, aimEnd: ph === 'aim' ? Math.max(0, SHOW.aimEnd - Date.now()) : 0,
+    q: q && (ph === 'question' || rev || ph === 'aim') ? { q: q.q, opts: q.opts, ...(rev || ph === 'aim' ? { a: q.a } : {}) } : null,
     left: ph === 'question' ? Math.max(0, R.sec * 1000 - (Date.now() - SHOW.t0)) : ph === 'bet' ? Math.max(0, SHOW.betEnd - Date.now()) : 0,
     ans: Object.fromEntries(Object.entries(SHOW.ans || {}).map(([id, a]) => [id, rev ? { k: a.k } : { done: 1 }])),
-    locked: SHOW.locked, gain: rev ? SHOW.gain : {}, host: SHOW.host, stealInfo: rev ? SHOW.stealInfo : '', winner: rev ? SHOW.winner : null, pool: SHOW.pool };
+    locked: SHOW.locked, gain: rev ? SHOW.gain : {}, host: SHOW.host, stealInfo: rev ? SHOW.stealInfo : '', winner: rev ? SHOW.winner : null, dmg: SHOW.dmg };
 }
 function showRender() { render(); if (SHOW?.role === 'host' && SHOW.ch) SHOW.ch.send(showSnapshot()); }
 
@@ -120,13 +130,14 @@ function showGuestMsg(m) {
   const prev = SHOW.phase, prevQi = SHOW.qi;
   if (m.phase === 'question' && (prev !== 'question' || prevQi !== m.qi)) { SHOW.myK = null; SHOW.lastTick = 0; }
   const R = SHOW_ROUNDS[m.r] || SHOW_ROUNDS[0];
-  Object.assign(SHOW, m, { qs: { [m.qi]: m.q }, t0: m.phase === 'question' ? Date.now() - (R.sec * 1000 - m.left) : SHOW.t0, betEnd: m.phase === 'bet' ? Date.now() + m.left : SHOW.betEnd });
+  Object.assign(SHOW, m, { qs: { [m.qi]: m.q }, t0: m.phase === 'question' ? Date.now() - (R.sec * 1000 - m.left) : SHOW.t0, aimEnd: Date.now() + (m.aimEnd || 0), betEnd: m.phase === 'bet' ? Date.now() + m.left : SHOW.betEnd });
   SHOW.players.forEach(p => { p.me = p.id === SHOW.myId; });
   if (m.phase === 'reveal' && prev !== 'reveal' && m.q) {
     const myK = m.ans[SHOW.myId]?.k ?? SHOW.myK, ok = myK != null && m.q.opts[myK] === m.q.a;
     showSfx(ok && (m.gain[SHOW.myId] || 0) > 0 ? 'ok' : 'bad'); if (!ok) SHOW.log.push({ q: m.q.q, a: m.q.a });
   }
-  if ((m.phase === 'round' || m.phase === 'end') && prev !== m.phase) { showSfx('round'); if (m.phase === 'end' && SHOW.players.slice().sort((a, b) => b.score - a.score)[0]?.id === SHOW.myId) confetti(200); }
+  if (m.hit && m.hit.k !== SHOW._hitK) { SHOW._hitK = m.hit.k; showSfx(m.hit.to === SHOW.myId ? 'hurt' : 'shot'); }
+  if ((m.phase === 'round' || m.phase === 'end') && prev !== m.phase) { showSfx('round'); if (m.phase === 'end' && showRanking()[0]?.id === SHOW.myId) confetti(200); }
   if (m.phase === 'question' && m.ans && Object.keys(m.ans).length > Object.keys(SHOW._ansN || {}).length) showSfx('buzz');
   SHOW._ansN = m.ans;
   render(); if (m.phase === 'question') showTimerLoop();
@@ -136,7 +147,8 @@ function showGuestMsg(m) {
 function showAsk() {
   const R = showRound(), q = SHOW.qs[SHOW.qi];
   SHOW.phase = 'question'; SHOW.ans = {}; SHOW.t0 = Date.now(); SHOW.locked = {}; SHOW.winner = null; SHOW.host = ''; SHOW.myK = null;
-  for (const p of SHOW.players.filter(p => p.bot)) {
+  SHOW.hit = null; SHOW.shooter = null;
+  for (const p of SHOW.players.filter(p => p.bot && alive(p))) {
     const ok = Math.random() < p.acc, wrongs = q.opts.map((_, k) => k).filter(k => q.opts[k] !== q.a);
     const k = ok ? q.opts.indexOf(q.a) : pick(wrongs), ms = Math.min(R.sec * 1000 - 300, (1400 + Math.random() * 5200) * p.fast);
     later(() => showTakeAnswer(p, k, ms), ms);
@@ -150,22 +162,20 @@ function showTimerLoop() {
     if (!SHOW || SHOW.phase !== 'question') return;
     const left = Math.max(0, R.sec * 1000 - (Date.now() - SHOW.t0)), bar = $('#show-timer');
     if (bar) bar.style.width = (left / (R.sec * 1000) * 100) + '%';
-    const pool = $('#show-pool'); if (pool) pool.textContent = showPool();
     const s = Math.ceil(left / 1000); if (s <= 3 && s !== SHOW.lastTick && s > 0) { SHOW.lastTick = s; showSfx('tick'); }
     SHOW.raf = requestAnimationFrame(tick);
   };
   SHOW.raf = requestAnimationFrame(tick);
 }
-const showPool = () => Math.max(100, Math.round((1500 - (Date.now() - SHOW.t0) / 10000 * 1400) / 50) * 50);
-const activePlayers = () => SHOW.players.filter(p => !p.left);
+const activePlayers = () => SHOW.players.filter(alive);
 function showTakeAnswer(p, k, ms) {
   if (SHOW.phase !== 'question' || SHOW.ans[p.id] || SHOW.locked[p.id]) return;
   const R = showRound(), q = SHOW.qs[SHOW.qi];
-  if (R.k === 'final' && SHOW.winner) return;
+  if (R.k === 'final' && (SHOW.winner || !alive(p))) return;
   SHOW.ans[p.id] = { k, ms }; if (!p.me) showSfx('buzz');
   if (R.k === 'final') {
-    if (q.opts[k] === q.a) { SHOW.winner = p.id; SHOW.pool = Math.max(100, Math.round((1500 - ms / 10000 * 1400) / 50) * 50); return showReveal(); }
-    SHOW.locked[p.id] = 1; if (p.me) { showSfx('bad'); SHOW.host = 'Zablokowany! Czekamy na resztę…'; }
+    if (q.opts[k] === q.a) { SHOW.winner = p.id; SHOW.dmg = finalDmg(SHOW.rq, ms); return showReveal(); }
+    SHOW.locked[p.id] = 1; if (p.me) { showSfx('bad'); SHOW.host = `Pudło! −${WRONG_HP} ❤️ i blokada na to pytanie…`; }
   }
   if (activePlayers().every(x => SHOW.ans[x.id])) return showReveal();
   showRender();
@@ -185,25 +195,68 @@ function showReveal() {
       SHOW.stealInfo = `${fastest.name} kradnie ${amt || 300} pkt${amt ? ' od ' + leader.name : ''}!`;
     } else SHOW.stealInfo = '';
   }
-  if (R.k === 'final') for (const p of SHOW.players) gain[p.id] = SHOW.winner === p.id ? SHOW.pool : 0;
-  for (const p of SHOW.players) p.score = Math.max(0, p.score + (gain[p.id] || 0));
+  if (R.k === 'final') {
+    for (const p of SHOW.players) { const a = SHOW.ans[p.id]; if (a && !good(a.k)) { gain[p.id] = -WRONG_HP; hurt(p, WRONG_HP); } }
+  } else for (const p of SHOW.players) p.score = Math.max(0, p.score + (gain[p.id] || 0));
   SHOW.gain = gain; SHOW.phase = 'reveal';
   const mine = SHOW.ans[SHOW.myId];
   if (!SHOW.host) SHOW.host = mine && good(mine.k) ? pick(HOST_LINES.ok) : mine ? pick(HOST_LINES.bad) : pick(HOST_LINES.slow);
   showSfx(mine && good(mine.k) && (gain[SHOW.myId] || 0) > 0 ? 'ok' : 'bad');
   if (!(mine && good(mine.k))) SHOW.log.push({ q: q.q, a: q.a });
+  // finał: najszybszy poprawny celuje w rywala
+  const shooter = R.k === 'final' && SHOW.players.find(p => p.id === SHOW.winner);
+  if (shooter && alive(shooter) && activePlayers().length > 1) {
+    SHOW.phase = 'aim'; SHOW.shooter = shooter.id; SHOW.aimEnd = Date.now() + AIM_SEC * 1000;
+    SHOW.host = shooter.me ? `🎯 Twój strzał! Obrażenia: ${SHOW.dmg} – w kogo celujesz?` : `🎯 ${shooter.name} celuje… (${SHOW.dmg} obrażeń)`;
+    if (shooter.bot) later(() => showShoot(botTarget(shooter)), 1300 + Math.random() * 900);
+    later(() => showShoot(), AIM_SEC * 1000 + (SHOW.role === 'host' ? 600 : 0));
+    return showRender();
+  }
   showRender();
   later(showNext, SHOW.role === 'host' ? 3500 : 2800);
 }
+function hurt(p, n) {
+  if (p.hp == null || p.hp <= 0) return;
+  p.hp = Math.max(0, p.hp - n);
+  if (p.hp <= 0) p.out = ++SHOW.outN;
+}
+function botTarget(me) {
+  const foes = activePlayers().filter(p => p !== me);
+  const ko = foes.filter(p => p.hp <= SHOW.dmg);
+  return (ko.length && Math.random() < .6 ? pick(ko) : foes.sort((a, b) => b.hp - a.hp)[0])?.id;
+}
+// strzał (brak celu / czas minął = w tego, kto ma najwięcej życia)
+function showShoot(id) {
+  if (SHOW.phase !== 'aim') return;
+  showClear();
+  const from = SHOW.players.find(p => p.id === SHOW.shooter), foes = activePlayers().filter(p => p !== from);
+  const to = foes.find(p => p.id === id) || foes.sort((a, b) => b.hp - a.hp)[0];
+  if (to) {
+    hurt(to, SHOW.dmg);
+    SHOW.hit = { k: SHOW.qi, from: from?.id, to: to.id, dmg: SHOW.dmg, ko: to.hp <= 0 };
+    SHOW.gain = { ...SHOW.gain, [to.id]: (SHOW.gain[to.id] || 0) - SHOW.dmg };
+    SHOW.host = `💥 ${from?.name || '?'} trafia ${to.name}: −${SHOW.dmg} ❤️${to.hp <= 0 ? ` – ${to.name} odpada! 💀` : ''}`;
+    showSfx(to.id === SHOW.myId ? 'hurt' : 'shot');
+  }
+  SHOW.phase = 'reveal'; SHOW.shooter = null;
+  showRender();
+  later(showNext, SHOW.role === 'host' ? 3200 : 2600);
+}
+function showFinishGame() {
+  SHOW.phase = 'end'; showSfx('round');
+  confetti(showRanking()[0]?.me ? 220 : 60); showRender();
+}
+// kolejność: kto przetrwał finał (najwięcej ❤️), potem kto odpadł później, na końcu punkty
+const showRanking = () => SHOW.players.slice().sort((a, b) =>
+  ((b.hp ?? 0) > 0) - ((a.hp ?? 0) > 0) || (b.hp > 0 && a.hp > 0 ? b.hp - a.hp : 0) || (b.out || 0) - (a.out || 0) || b.score - a.score);
 function showNext() {
   if (SHOW.phase !== 'reveal') return;
   SHOW.qi++; SHOW.rq++;
+  if (isFinal() && (activePlayers().length <= 1 || SHOW.qi >= SHOW.qs.length)) return showFinishGame();
   if (SHOW.rq >= showRound().n) {
     SHOW.r++; SHOW.rq = 0;
-    if (SHOW.r >= SHOW_ROUNDS.length || SHOW.qi >= SHOW.qs.length) {
-      SHOW.phase = 'end'; showSfx('round');
-      confetti(SHOW.players.slice().sort((a, b) => b.score - a.score)[0].me ? 220 : 60); return showRender();
-    }
+    if (SHOW.r >= SHOW_ROUNDS.length || SHOW.qi >= SHOW.qs.length) return showFinishGame();
+    if (isFinal()) SHOW.players.forEach(p => { p.hp = p.left ? 0 : finalHp(p.score); });
     SHOW.phase = 'round'; showSfx('round'); return showRender();
   }
   if (showRound().k === 'bet') return showBetPhase();
@@ -219,12 +272,14 @@ function showBetCheck() { if (SHOW.phase === 'bet' && activePlayers().every(p =>
 
 // ---------- widoki
 function showBoard(compact) {
-  const lead = Math.max(...SHOW.players.map(p => p.score));
+  const hpMode = SHOW.players.some(p => p.hp != null), maxHp = Math.max(1, ...SHOW.players.map(p => finalHp(p.score)));
+  const lead = hpMode ? Math.max(...SHOW.players.map(p => p.hp)) : Math.max(...SHOW.players.map(p => p.score));
   return `<div class="sh-board${compact ? ' compact' : ''}${SHOW.players.length > 4 ? ' many' : ''}">${SHOW.players.map(p => {
     const a = SHOW.ans?.[p.id], g = SHOW.phase === 'reveal' ? SHOW.gain?.[p.id] : null;
-    return `<div class="sh-pl${p.me ? ' me' : ''}${p.score === lead && lead > 0 ? ' lead' : ''}${p.left ? ' left' : ''}" style="--pc:${p.color}">
+    const hit = SHOW.hit && SHOW.phase === 'reveal' && SHOW.hit.to === p.id, dead = hpMode && p.hp <= 0;
+    return `<div class="sh-pl${p.me ? ' me' : ''}${(hpMode ? p.hp : p.score) === lead && lead > 0 ? ' lead' : ''}${p.left || dead ? ' left' : ''}${hit ? ' hit' : ''}${SHOW.shooter === p.id ? ' aim' : ''}" style="--pc:${p.color}">
       <span class="sh-av">${p.me && S.profile.avatarImg ? `<img src="${safeImg(S.profile.avatarImg)}" alt="">` : esc(p.av)}${SHOW.phase === 'question' && a ? '<i class="sh-buzz">🔔</i>' : ''}${SHOW.locked?.[p.id] ? '<i class="sh-buzz">🔒</i>' : ''}${SHOW.phase === 'bet' && p.bet && !p.me ? '<i class="sh-buzz">💰</i>' : ''}</span>
-      <b class="nm">${esc(p.name)}</b><span class="sh-sc">${p.score}</span>${g ? `<em class="${g > 0 ? 'up' : 'down'}">${g > 0 ? '+' : ''}${g}</em>` : ''}</div>`; }).join('')}</div>`;
+      <b class="nm">${esc(p.name)}</b>${hpMode ? `<span class="sh-sc">${dead ? '💀' : '❤️ ' + p.hp}</span><span class="sh-hp"><i style="width:${Math.max(0, p.hp) / maxHp * 100}%"></i></span>` : `<span class="sh-sc">${p.score}</span>`}${g ? `<em class="${g > 0 ? 'up' : 'down'}">${g > 0 ? '+' : ''}${g}</em>` : ''}</div>`; }).join('')}</div>`;
 }
 const chipList = () => `<div class="sh-chips">${SHOW.players.map(p => `<span class="sh-chip${p.left ? ' left' : ''}" style="--pc:${p.color}">${esc(p.av)} ${esc(p.name)}${p.me ? ' (Ty)' : ''}${p.bot ? ' 🤖' : ''}</span>`).join('')}</div>`;
 ROUTES.show = (parts, q) => {
@@ -278,23 +333,33 @@ ROUTES.show = (parts, q) => {
       <div class="sh-host">🎤 ${me.bet ? `Postawione: <b>${me.bet}</b>. Czekamy na resztę…` : `Ile stawiasz? Masz <b>${me.score || 0}</b> pkt.`}</div>
       <div class="sh-bets">${[100, 250, 500].map(v => `<button class="${me.bet === v ? 'on' : ''}" data-act="show-bet" data-v="${v}" ${me.bet ? 'disabled' : ''}><b>${v}</b><small>pkt</small></button>`).join('')}</div></div>` };
   }
+  // --- finał: celowanie
+  if (SHOW.phase === 'aim') {
+    const sh = SHOW.players.find(p => p.id === SHOW.shooter), mineShot = SHOW.shooter === SHOW.myId, qq = SHOW.qs[SHOW.qi];
+    const foes = SHOW.players.filter(p => alive(p) && p.id !== SHOW.shooter);
+    return { focus: true, html: `<div class="sh-stage">${head(`${R.icon} ${R.name}`, `<span class="small">💥 ${SHOW.dmg}</span>`)}${showBoard(true)}
+      ${qq ? `<p class="center small muted" style="margin:6px 0">${fmt(qq.q)} → <b class="c-rev">${fmt(qq.a)}</b></p>` : ''}
+      <div class="sh-host">🎤 ${mineShot ? `🎯 <b>Twój strzał!</b> W kogo celujesz? (−${SHOW.dmg} ❤️)` : `🎯 <b>${esc(sh?.name || '?')}</b> celuje… (−${SHOW.dmg} ❤️)`}</div>
+      ${mineShot ? `<div class="sh-targets">${foes.map(p => `<button data-act="show-shoot" data-id="${esc(p.id)}" style="--pc:${p.color}"><span>${esc(p.av)}</span><b>${esc(p.name)}</b><small>❤️ ${p.hp}${p.hp <= SHOW.dmg ? ' · 💀 KO!' : ''}</small></button>`).join('')}</div>
+        <p class="center small muted">Brak wyboru w ${AIM_SEC} s = strzał w tego, kto ma najwięcej ❤️</p>` : '<div class="sh-wait"><div class="sh-crosshair">🎯</div></div>'}</div>` };
+  }
   // --- koniec: podium
   if (SHOW.phase === 'end') {
-    const rank = SHOW.players.slice().sort((a, b) => b.score - a.score), myPlace = rank.findIndex(p => p.id === SHOW.myId) + 1;
+    const rank = showRanking(), myPlace = rank.findIndex(p => p.id === SHOW.myId) + 1;
     const pod = [rank[1], rank[0], rank[2]].filter(Boolean);
     return { focus: true, html: `<div class="sh-stage">${head('🏆 Wyniki')}
-      <div class="sh-host">🎤 ${myPlace === 1 ? 'Mamy zwycięzcę – to Ty! 🎉' : myPlace === 2 ? 'Srebro! Było blisko!' : myPlace === 3 ? 'Brąz – podium jest Twoje!' : 'Dzięki za grę – rewanż?'}</div>
-      <div class="sh-podium">${pod.map(p => { const place = rank.indexOf(p) + 1; return `<div class="sh-step p${place}" style="--pc:${p.color}"><span class="sh-av">${esc(p.av)}</span><b class="nm">${esc(p.name)}</b><small>${p.score} pkt</small><div class="sh-block">${['🥇', '🥈', '🥉'][place - 1]}</div></div>`; }).join('')}</div>
-      ${rank.slice(3).map((p, i) => `<p class="center small">${i + 4}. ${esc(p.name)} – ${p.score} pkt</p>`).join('')}
+      <div class="sh-host">🎤 ${myPlace === 1 ? (rank[0].hp > 0 ? 'Ostatni na placu boju – wygrywasz! 🎉' : 'Mamy zwycięzcę – to Ty! 🎉') : myPlace === 2 ? 'Srebro! Było blisko!' : myPlace === 3 ? 'Brąz – podium jest Twoje!' : 'Dzięki za grę – rewanż?'}</div>
+      <div class="sh-podium">${pod.map(p => { const place = rank.indexOf(p) + 1; return `<div class="sh-step p${place}" style="--pc:${p.color}"><span class="sh-av">${esc(p.av)}</span><b class="nm">${esc(p.name)}</b><small>${p.hp > 0 ? '❤️ ' + p.hp : (p.hp != null ? '💀 ' : '') + p.score + ' pkt'}</small><div class="sh-block">${['🥇', '🥈', '🥉'][place - 1]}</div></div>`; }).join('')}</div>
+      ${rank.slice(3).map((p, i) => `<p class="center small">${i + 4}. ${esc(p.name)} – ${p.hp > 0 ? '❤️ ' + p.hp : '💀'} · ${p.score} pkt</p>`).join('')}
       ${SHOW.log.length ? `<details class="card"><summary><b>Do powtórki (${SHOW.log.length})</b></summary>${SHOW.log.slice(0, 15).map(l => `<div class="qwrong"><div class="small">${fmt(l.q)}</div><b class="c-rev">${fmt(l.a)}</b></div>`).join('')}</details>` : ''}
       <div class="row">${guest ? '<p class="small muted grow">Prowadzący może zacząć kolejną grę w tym samym lobby.</p>' : `<button class="primary grow" data-act="show-again">🔁 Jeszcze raz</button>`}<button class="grow" data-act="show-exit">Zakończ</button></div></div>` };
   }
   // --- pytanie / odkrycie odpowiedzi
   const qq = SHOW.qs[SHOW.qi]; if (!qq) return { focus: true, html: `<div class="sh-stage">${head('🎤')}<div class="sh-wait"><div class="spinner"></div></div></div>` };
-  const rev = SHOW.phase === 'reveal', mine = SHOW.ans?.[SHOW.myId], myK = mine?.k ?? SHOW.myK, answered = !!mine || SHOW.myK != null || SHOW.locked?.[SHOW.myId];
-  return { focus: true, html: `<div class="sh-stage">${head(`${R.icon} ${R.name}`, `<span class="small">${SHOW.rq + 1}/${R.n}</span>`)}
+  const rev = SHOW.phase === 'reveal', mine = SHOW.ans?.[SHOW.myId], myK = mine?.k ?? SHOW.myK, dead = R.k === 'final' && showMe().hp != null && showMe().hp <= 0, answered = !!mine || SHOW.myK != null || SHOW.locked?.[SHOW.myId] || dead;
+  return { focus: true, html: `<div class="sh-stage">${head(`${R.icon} ${R.name}`, `<span class="small">${R.k === 'final' ? `#${SHOW.rq + 1}` : `${SHOW.rq + 1}/${R.n}`}</span>`)}
     ${showBoard(true)}
-    ${R.k === 'final' && !rev ? `<div class="sh-pool">Pula: <b><span id="show-pool">${showPool()}</span></b></div>` : ''}
+    ${R.k === 'final' && !rev ? `<div class="sh-pool">💥 Obrażenia: <b>${20 + 10 * SHOW.rq}–${finalDmg(SHOW.rq, 0)}</b> <small>(im szybciej, tym mocniej)</small></div>` : ''}
     ${R.k === 'bet' && !rev ? `<div class="sh-pool">Twój zakład: <b>${showMe().bet || 100}</b></div>` : ''}
     <div class="sh-q">${fmt(qq.q)}</div>
     <div class="sh-timer"><div id="show-timer" style="width:${rev ? 0 : Math.max(0, (R.sec * 1000 - (Date.now() - SHOW.t0)) / (R.sec * 10))}%"></div></div>
@@ -303,8 +368,8 @@ ROUTES.show = (parts, q) => {
       const cls = rev ? (ok ? ' ok' : myK === k ? ' bad' : ' dim') : myK === k ? ' picked' : '';
       return `<button class="sh-opt${cls}" style="--ac:${SHOW_ANS[k]}" data-act="show-ans" data-k="${k}" ${rev || answered ? 'disabled' : ''}>
         <i>${'ABCD'[k]}</i><span>${fmt(o)}</span>${rev ? `<em>${who.map(p => `<u style="background:${p.color}" title="${esc(p.name)}"></u>`).join('')}</em>` : ''}</button>`; }).join('')}</div>
-    ${rev ? `<div class="sh-host">🎤 ${esc(SHOW.host)}${SHOW.stealInfo && R.k === 'steal' ? `<br><small>${esc(SHOW.stealInfo)}</small>` : ''}${R.k === 'final' && SHOW.winner ? `<br><small>${esc(SHOW.players.find(p => p.id === SHOW.winner)?.name || '')} bierze ${SHOW.pool} pkt!</small>` : ''}</div>`
-      : answered && !rev ? `<div class="sh-host">🎤 ${SHOW.locked?.[SHOW.myId] ? 'Zablokowany! Czekamy na resztę…' : 'Odpowiedź przyjęta – czekamy na resztę…'}</div>` : SHOW.host ? `<div class="sh-host">🎤 ${esc(SHOW.host)}</div>` : ''}</div>` };
+    ${rev ? `<div class="sh-host">🎤 ${esc(SHOW.host)}${SHOW.stealInfo && R.k === 'steal' ? `<br><small>${esc(SHOW.stealInfo)}</small>` : ''}</div>`
+      : answered && !rev ? `<div class="sh-host">🎤 ${dead ? '💀 Odpadłeś – oglądasz finał do końca.' : SHOW.locked?.[SHOW.myId] ? `Pudło! −${WRONG_HP} ❤️ – czekamy na resztę…` : 'Odpowiedź przyjęta – czekamy na resztę…'}</div>` : SHOW.host ? `<div class="sh-host">🎤 ${esc(SHOW.host)}</div>` : ''}</div>` };
 };
 
 Object.assign(ACTIONS, {
@@ -342,8 +407,13 @@ Object.assign(ACTIONS, {
     if (SHOW.role === 'guest') { if (SHOW.myK != null) return; SHOW.myK = k; SHOW.ch.send({ t: 'ans', k, ms: Date.now() - SHOW.t0, qi: SHOW.qi }); return render(); }
     showTakeAnswer(showMe(), k, Date.now() - SHOW.t0);
   },
+  'show-shoot': el => {
+    if (SHOW?.phase !== 'aim' || SHOW.shooter !== SHOW.myId) return;
+    if (SHOW.role === 'guest') { SHOW.ch.send({ t: 'shoot', id: el.dataset.id }); SHOW.host = 'Strzał oddany!'; SHOW.shooter = null; return render(); }
+    showShoot(el.dataset.id);
+  },
   'show-again': () => {
-    if (SHOW.role === 'host') { showClear(); SHOW.phase = 'lobby'; SHOW.players = SHOW.players.filter(p => !p.bot && !p.left); SHOW.players.forEach(p => { p.score = 0; }); return showRender(); }
+    if (SHOW.role === 'host') { showClear(); SHOW.phase = 'lobby'; SHOW.players = SHOW.players.filter(p => !p.bot && !p.left); SHOW.players.forEach(p => { p.score = 0; delete p.hp; delete p.out; }); return showRender(); }
     const o = S.settings.show; showClear(); SHOW = null; showStartSolo(o);
   },
   'show-exit': () => {
