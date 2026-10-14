@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '44';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '45';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -606,8 +606,12 @@ function viewDeck(id, q) {
     <button class="block sm${d.mix ? ' primary' : ''}" data-act="deck-mix" data-id="${id}">🔀 Przeplatanie: ${d.mix ? 'włączone – nowe karty w losowej kolejności' : 'wyłączone (stuknij, by mieszać terminy z obrazami)'}</button>
   </div>
   <div class="card">
-    <div class="row nowrap"><h2 class="grow" style="margin:0">Fiszki (${notes.length})</h2>
-      <button class="sm primary" data-go="#/add?deck=${id}">➕ Dodaj</button></div>
+    <div class="row nowrap"><h2 class="grow" style="margin:0;white-space:nowrap">Fiszki (${notes.length})</h2>
+      ${notes.length ? `<button class="sm${NOTE_SEL ? ' primary' : ''}" data-act="note-selmode">${NOTE_SEL ? 'Anuluj' : '☑️ Zaznacz'}</button>` : ''}
+      ${NOTE_SEL ? '' : `<button class="sm primary" data-go="#/add?deck=${id}">➕ Dodaj</button>`}</div>
+    ${NOTE_SEL ? `<div class="selbar row nowrap"><span class="grow small"><b>${NOTE_SEL.size}</b> zaznaczonych</span>
+      <button class="sm" data-act="note-selall" data-id="${id}">${NOTE_SEL.size === notes.length ? 'Odznacz' : 'Wszystkie'}</button>
+      <button class="sm danger-fill" data-act="note-seldel" ${NOTE_SEL.size ? '' : 'disabled'}>🗑 Usuń</button></div>` : ''}
     <div class="spacer"></div>
     <input id="note-search" type="search" placeholder="Szukaj…">
     <div id="notes">${notesList(notes, '')}</div>
@@ -615,6 +619,25 @@ function viewDeck(id, q) {
   <div class="row"><button data-act="anki-export" data-deck="${id}">⬇️ Eksport do Anki</button></div>
   <div class="row"><button class="danger" data-act="reset-deck" data-id="${id}">Resetuj postęp</button>
     <button class="danger" data-act="delete-deck" data-id="${id}">Usuń talię</button></div>`;
+}
+let NOTE_SEL = null;   // tryb zaznaczania (Set id fiszek) w widoku talii
+// pasek „Usunięto · Cofnij” – przywraca z kosza wpisy zrobione tym usunięciem
+function undoBar(text, entries) {
+  document.querySelector('.undobar')?.remove();
+  const el = document.createElement('div'); el.className = 'undobar';
+  el.innerHTML = `<span class="grow">${esc(text)}</span><button class="sm">↩ Cofnij</button>`;
+  el.querySelector('button').onclick = () => {
+    if (typeof restoreTrash === 'function') entries.forEach(e => restoreTrash(e));
+    el.remove(); save(); toast('Przywrócono ✓'); render();
+  };
+  document.body.append(el); clearTimeout(undoBar.t); undoBar.t = setTimeout(() => el.remove(), 7000);
+}
+function deleteNotes(ids) {
+  const before = typeof TRASH !== 'undefined' ? TRASH.length : 0;
+  ids.forEach(id => { const n = noteById(id); if (n) deleteNote(n); });
+  save();   // obrazów nie czyścimy od razu – „Cofnij” przywraca fiszkę razem z obrazem
+  const entries = typeof TRASH !== 'undefined' ? TRASH.slice(before) : [];
+  undoBar(`Usunięto ${ids.length} ${plural(ids.length, 'fiszkę', 'fiszki', 'fiszek')}`, entries);
 }
 function notesList(notes, query) {
   const qn = norm(query);
@@ -626,10 +649,13 @@ function notesList(notes, query) {
     return { n, a, b, tag, img };
   }).filter(r => !qn || norm(r.a + ' ' + r.b + ' ' + (r.n.hint || '')).includes(qn)).slice(0, 300);
   if (!rows.length) return '<p class="muted">Brak fiszek.</p>';
-  return rows.map(r => `<div class="note" data-go="#/edit/${r.n.id}">
+  return rows.map(r => NOTE_SEL ? `<div class="note sel${NOTE_SEL.has(r.n.id) ? ' on' : ''}" data-act="note-sel" data-id="${r.n.id}">
+    <span class="nsel">${NOTE_SEL.has(r.n.id) ? '✓' : ''}</span>${r.img ? `<img src="${r.img}" alt="">` : ''}
+    <div class="t"><div><b>${esc(r.a)}</b></div><div class="muted small">${esc(r.b)}</div></div></div>`
+    : `<div class="note" data-go="#/edit/${r.n.id}">
     ${r.img ? `<img src="${r.img}" alt="">` : ''}
     <div class="t"><div><b>${esc(r.a)}</b></div><div class="muted small">${esc(r.b)}</div></div>
-    ${r.tag ? `<span class="tag">${esc(r.tag)}</span>` : ''}</div>`).join('');
+    ${r.tag ? `<span class="tag">${esc(r.tag)}</span>` : ''}<button class="ghost sm note-del" data-act="note-del" data-id="${r.n.id}" title="Usuń fiszkę">🗑</button></div>`).join('');
 }
 
 // ------------------------------------------------------------ Nauka
@@ -1583,9 +1609,9 @@ const ACTIONS = {
 function act(name, el = document.body, e) { const fn = ACTIONS[name]; if (fn) fn(el, e); }
 
 document.addEventListener('click', e => {
-  const g = e.target.closest('[data-go]');
-  if (g) { e.preventDefault(); go(g.dataset.go); return; }
-  const a = e.target.closest('[data-act]');
+  const g = e.target.closest('[data-go]'), a0 = e.target.closest('[data-act]');
+  if (g && !(a0 && g.contains(a0) && a0 !== g)) { e.preventDefault(); go(g.dataset.go); return; }
+  const a = a0;
   if (a && !a.disabled) { e.preventDefault(); act(a.dataset.act, a, e); }
 });
 document.addEventListener('change', e => {
@@ -1654,3 +1680,16 @@ async function init() {
 }
 // start po wczytaniu wszystkich skryptów (anki.js, scan.js)
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+Object.assign(ACTIONS, {
+  'note-del': el => { deleteNotes([el.dataset.id]); render(); },
+  'note-selmode': () => { NOTE_SEL = NOTE_SEL ? null : new Set(); render(); },
+  'note-sel': el => { const id = el.dataset.id; NOTE_SEL.has(id) ? NOTE_SEL.delete(id) : NOTE_SEL.add(id); render(); },
+  'note-selall': el => { const ids = S.notes.filter(n => n.deckId === el.dataset.id).map(n => n.id); NOTE_SEL = NOTE_SEL.size === ids.length ? new Set() : new Set(ids); render(); },
+  'note-seldel': () => {
+    const ids = [...NOTE_SEL]; if (!ids.length) return;
+    if (ids.length > 1 && !confirm(`Usunąć ${ids.length} ${plural(ids.length, 'fiszkę', 'fiszki', 'fiszek')}? (Możesz cofnąć albo przywrócić z kosza.)`)) return;
+    NOTE_SEL = null; deleteNotes(ids); render();
+  },
+});
+window.addEventListener('hashchange', () => { NOTE_SEL = null; });

@@ -955,3 +955,17 @@ body.focus main { padding-top: calc(10px + var(--sat)); }
 @media (max-width: 600px) {
   body:not(.compact) .row > button.grow:not(.sm) { padding-left: 10px; padding-right: 10px; font-size: 15px; line-height: 1.25; }
 }
+/* Usuwanie fiszek z listy */
+.note { position: relative; }
+.note .note-del { flex: none; opacity: .55; font-size: 17px; padding: 6px 8px; min-height: 0; margin-left: auto; }
+.note .note-del:hover { opacity: 1; }
+.note.sel { cursor: pointer; }
+.note.sel.on { background: var(--accent-soft); border-radius: 12px; }
+.nsel { flex: none; width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--line); display: grid; place-items: center; font-weight: 800; color: #fff; margin-right: 4px; }
+.note.sel.on .nsel { background: var(--accent); border-color: var(--accent); }
+.selbar { margin-top: 10px; padding: 8px 10px; background: var(--card2); border-radius: 12px; }
+button.danger-fill { background: var(--lrn); color: #fff; }
+.undobar { position: fixed; left: 12px; right: 12px; bottom: calc(var(--tabs-h) + 12px + env(safe-area-inset-bottom)); z-index: 60; max-width: 520px; margin: 0 auto;
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px; border-radius: 16px; background: #1f2937; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.3); animation: slideup .25s ease; }
+.undobar button { background: rgba(255,255,255,.15); color: #fff; }
+body.focus .undobar { bottom: calc(16px + env(safe-area-inset-bottom)); }
