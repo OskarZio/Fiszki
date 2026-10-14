@@ -171,16 +171,23 @@ function profilePopHTML() {
     <div class="row" style="margin-top:10px"><button class="grow" data-act="pp-photo">📷 Własne zdjęcie</button>${p.avatarImg ? '<button class="grow" data-act="pp-photo-del">Usuń zdjęcie</button>' : ''}</div>
     <div class="spacer"></div><button class="primary block" data-act="pp-goto">👤 Otwórz profil</button></div>`;
 }
+// okienko bez przewijania: tło stoi w miejscu, a zawartość mieści się na ekranie
+const ppClose = () => { document.querySelector('.pp-overlay')?.remove(); document.documentElement.classList.remove('noscroll'); };
 function showProfilePop() {
   let el = document.querySelector('.pp-overlay');
-  if (!el) { el = document.createElement('div'); el.className = 'dr-overlay pp-overlay'; el.addEventListener('click', e => { if (e.target === el) el.remove(); }); document.body.append(el); }
+  if (!el) {
+    el = document.createElement('div'); el.className = 'dr-overlay pp-overlay';
+    el.addEventListener('click', e => { if (e.target === el) ppClose(); });
+    el.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    document.body.append(el); document.documentElement.classList.add('noscroll');
+  }
   el.innerHTML = profilePopHTML();
 }
 const ppTouch = () => { S.profile.mod = Date.now(); if (typeof publishAt !== 'undefined') publishAt = 0; save(); render(); if (document.querySelector('.pp-overlay')) showProfilePop(); };
 Object.assign(ACTIONS, {
   'pp-open': () => showProfilePop(),
-  'pp-close': () => document.querySelector('.pp-overlay')?.remove(),
-  'pp-goto': () => { document.querySelector('.pp-overlay')?.remove(); go('#/me'); },
+  'pp-close': () => ppClose(),
+  'pp-goto': () => { ppClose(); go('#/me'); },
   'pp-emoji': el => { S.profile.avatar = el.dataset.e; S.profile.avatarImg = null; ppTouch(); toast(`Awatar: ${el.dataset.e} ✓`); },
   'pp-photo': async () => {
     const f = await pickFile('image/*'); if (!f) return;
