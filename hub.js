@@ -30,11 +30,11 @@ ROUTES.me = () => {
   const tile = (go, icon, val, label) => `<button class="mtile" data-go="${go}"><span>${icon}</span><b>${val}</b><small>${label}</small></button>`;
   return { tab: 'profile', html: `
   <div class="row nowrap"><h1 class="grow">Profil</h1><button class="iconbtn" data-go="#/more" title="Ustawienia">⚙️</button></div>
-  <div class="card me-head"><div class="row nowrap" style="gap:14px">
-      <span class="av-big" data-act="avatar-photo" style="cursor:pointer">${avatarHTML(S.profile, 64)}</span>
+  <div class="card me-head"><div class="row nowrap" style="gap:14px;margin-bottom:12px">
+      <button class="pp-av sm-av" data-act="pp-open" title="Profil i awatar">${avatarHTML(S.profile, 60)}<i>✏️</i></button>
       <div class="grow" style="min-width:0"><b class="nm" style="display:block;font-size:22px">${esc(S.profile.nick || 'Ty')}</b>
-        <div class="small muted">Poziom ${lvl} · ${levelTitle(lvl)}</div>
-        <div class="row small nowrap" style="margin-top:6px"><div class="grow">${progress((xp - a) / (b - a), true)}</div><span class="muted">${xp - a}/${b - a} XP</span></div></div></div></div>
+        <div class="small muted">stuknij awatar, żeby go zmienić</div></div></div>
+    ${xpCardHTML()}</div>
   <div class="mtiles">
     ${tile('#/shop', '💎', typeof coins === 'function' ? coins() : 0, 'kryształy')}
     ${tile('#/more', '🔥', streak(), plural(streak(), 'dzień', 'dni', 'dni') + ' z rzędu')}
@@ -70,7 +70,7 @@ for (const r of Object.keys(HUB_OF)) {
 function homeChipHTML() {
   if (appMode() !== 'full') return '';
   const lvl = levelOf(xpTotal()), n = profileBadge();
-  return `<button class="hdrchip" data-go="#/me">${avatarHTML(S.profile, 22)}<b>${lvl}</b><span>💎 ${typeof coins === 'function' ? coins() : 0}</span>${n ? '<i class="dot"></i>' : ''}</button>`;
+  return `<button class="hdrchip" data-act="pp-open">${avatarHTML(S.profile, 22)}<b>${lvl}</b><span>💎 ${typeof coins === 'function' ? coins() : 0}</span>${n ? '<i class="dot"></i>' : ''}</button>`;
 }
 // ⚡ Skróty na Starcie – zwijane, z wyborem, co ma się w nich pokazywać
 const SHORTCUTS = {
@@ -129,3 +129,62 @@ if (typeof updateMsgBadge === 'function') { const um0 = updateMsgBadge; updateMs
 window.addEventListener('hashchange', () => { const v = $('#view'); if (!v || S?.settings?.anim === false) return; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); setTimeout(() => v.classList.remove('enter'), 450); });
 // linki z kotwicą (np. Profil → „Import / eksport Anki”) przewijają do sekcji po otwarciu strony
 document.addEventListener('click', e => { const a = e.target.closest?.('a[data-anchor]'); if (a) setTimeout(() => document.getElementById(a.dataset.anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); });
+
+// ---------- ⭐ Doświadczenie (XP) i okienko profilu
+const AVATAR_EMOJI = ['🦊', '🐼', '🐱', '🐶', '🦁', '🐯', '🐸', '🐵', '🐨', '🐧', '🦉', '🦄', '🐙', '🐲', '🦋', '🐢', '🧠', '🚀', '😎', '🤓', '👻', '🤖', '🔥', '⭐'];
+function xpToday() {
+  const t0 = dayStart(); let xp = 0;
+  for (const l of S.log) if (l.t >= t0) xp += l.n ? 3 : l.g > 1 ? 2 : 1;
+  for (const g of S.games) if ((g.t || 0) >= t0) xp += Math.round((g.correct || 0) / 2);
+  for (const b of S.battles || []) if ((b.t || 0) >= t0) xp += b.won === 1 ? 30 : 10;
+  for (const k in S.ach) if (S.ach[k] >= t0) xp += 25;
+  return xp;
+}
+function xpInfo() {
+  const xp = xpTotal(), lvl = levelOf(xp), a = levelStart(lvl), b = levelStart(lvl + 1);
+  const nextTitleLvl = (Math.floor((lvl - 1) / 3) + 1) * 3 + 1;   // tytuł zmienia się co 3 poziomy
+  return { xp, lvl, cur: xp - a, need: b - a, left: b - xp, pct: (xp - a) / (b - a), title: levelTitle(lvl), nextTitle: levelTitle(nextTitleLvl), nextTitleLvl, today: xpToday() };
+}
+function xpCardHTML(compact) {
+  const x = xpInfo();
+  return `<div class="xpcard${compact ? ' compact' : ''}">
+    <div class="row nowrap" style="gap:12px"><span class="lvl big">${x.lvl}</span>
+      <div class="grow" style="min-width:0"><b class="nm" style="display:block;font-size:17px">Poziom ${x.lvl} · ${x.title}</b>
+        <div class="small muted">${x.xp} XP łącznie${x.today ? ` · <span class="c-rev">+${x.today} dziś</span>` : ''}</div></div></div>
+    <div class="xpbar"><div style="width:${Math.max(3, x.pct * 100)}%"></div><span>${x.cur} / ${x.need} XP</span></div>
+    <div class="row nowrap small"><span class="grow">Do poziomu <b>${x.lvl + 1}</b> brakuje <b>${x.left} XP</b></span>${x.nextTitle !== x.title ? `<span class="muted">„${x.nextTitle}” od ${x.nextTitleLvl}</span>` : ''}</div>
+    ${compact ? '' : `<details class="small muted xpinfo"><summary>Skąd brać XP?</summary>
+      <ul class="perks"><li>Powtórka: <b>1 XP</b>, poprawna: <b>2 XP</b>, nowa karta: <b>3 XP</b></li>
+        <li>Gry pamięciowe: <b>1 XP</b> za każde 2 poprawne</li><li>Bitwa: wygrana <b>30 XP</b>, każda inna <b>10 XP</b></li><li>Osiągnięcie: <b>25 XP</b></li></ul></details>`}</div>`;
+}
+function profilePopHTML() {
+  const x = xpInfo(), elo = typeof myElo === 'function' ? myElo() : 1000, p = S.profile;
+  return `<div class="pp-box card">
+    <button class="iconbtn pp-x" data-act="pp-close">✕</button>
+    <div class="center"><button class="pp-av" data-act="pp-photo" title="Zmień zdjęcie">${avatarHTML(p, 84)}<i>📷</i></button>
+      <h2 class="nm" style="margin:8px 0 0">${esc(p.nick || 'Ty')}</h2></div>
+    ${xpCardHTML(true)}
+    <div class="pp-stats"><div><b>💎 ${typeof coins === 'function' ? coins() : 0}</b><small>kryształy</small></div><div><b>🔥 ${streak()}</b><small>seria</small></div>
+      <div><b>⚔️ ${elo}</b><small>Elo</small></div><div><b>🏅 ${Object.keys(S.ach).length}</b><small>osiągnięcia</small></div></div>
+    <div class="small muted" style="margin:12px 0 6px">Zmień awatar:</div>
+    <div class="pp-emojis">${AVATAR_EMOJI.map(e => `<button class="${!p.avatarImg && p.avatar === e ? 'on' : ''}" data-act="pp-emoji" data-e="${e}">${e}</button>`).join('')}</div>
+    <div class="row" style="margin-top:10px"><button class="grow" data-act="pp-photo">📷 Własne zdjęcie</button>${p.avatarImg ? '<button class="grow" data-act="pp-photo-del">Usuń zdjęcie</button>' : ''}</div>
+    <div class="spacer"></div><button class="primary block" data-act="pp-goto">👤 Otwórz profil</button></div>`;
+}
+function showProfilePop() {
+  let el = document.querySelector('.pp-overlay');
+  if (!el) { el = document.createElement('div'); el.className = 'dr-overlay pp-overlay'; el.addEventListener('click', e => { if (e.target === el) el.remove(); }); document.body.append(el); }
+  el.innerHTML = profilePopHTML();
+}
+const ppTouch = () => { S.profile.mod = Date.now(); if (typeof publishAt !== 'undefined') publishAt = 0; save(); render(); if (document.querySelector('.pp-overlay')) showProfilePop(); };
+Object.assign(ACTIONS, {
+  'pp-open': () => showProfilePop(),
+  'pp-close': () => document.querySelector('.pp-overlay')?.remove(),
+  'pp-goto': () => { document.querySelector('.pp-overlay')?.remove(); go('#/me'); },
+  'pp-emoji': el => { S.profile.avatar = el.dataset.e; S.profile.avatarImg = null; ppTouch(); toast(`Awatar: ${el.dataset.e} ✓`); },
+  'pp-photo': async () => {
+    const f = await pickFile('image/*'); if (!f) return;
+    try { S.profile.avatarImg = await squareAvatar(f); ppTouch(); toast('Zdjęcie profilowe ustawione ✓'); } catch { toast('Nie udało się wczytać zdjęcia'); }
+  },
+  'pp-photo-del': () => { S.profile.avatarImg = null; ppTouch(); },
+});
