@@ -1220,3 +1220,10 @@ label.field { min-width: 0; max-width: 100%; }
 .chart-head .seg { flex: 0 1 auto; }
 @media (max-width: 480px) { .chart-head .seg { flex: 1 1 100%; } .chart-head .seg button { flex: 1; } }
 .kpis small { display: block; line-height: 1.3; margin-top: 2px; }
+/* 🎁 Zaproś znajomego */
+.invite-card { background: linear-gradient(135deg, color-mix(in srgb, #f59e0b 16%, var(--card)), var(--card)); border: 1.5px solid color-mix(in srgb, #f59e0b 40%, transparent); }
+.invite-card .inv-gift { font-size: 40px; animation: invBob 2.4s ease-in-out infinite; }
+@keyframes invBob { 50% { transform: translateY(-4px) rotate(-6deg); } }
+.invite-card .row.nowrap + .row { margin-top: 12px; }
+.invite-card > .row:last-of-type { gap: 8px; }
+.invite-banner { gap: 10px; }
