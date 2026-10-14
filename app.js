@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '38';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '39';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -54,9 +54,13 @@ function download(name, text, type) {
   a.download = name; document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
+// iPhone/iPad nie zna typów takich jak .apkg – z filtrem takie pliki są wyszarzone w „Plikach”.
+// Dlatego na iOS przy nietypowych plikach pokazujemy wszystkie, a typ sprawdzamy po wybraniu.
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function pickFile(accept) {
+  if (IS_IOS && accept && !/(image|audio|video)\/\*/.test(accept)) accept = '';
   return new Promise(res => {
-    const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.style.display = 'none';
+    const i = document.createElement('input'); i.type = 'file'; if (accept) i.accept = accept; i.style.display = 'none';
     i.onchange = () => { res(i.files[0] || null); i.remove(); };
     document.body.append(i); i.click();
   });

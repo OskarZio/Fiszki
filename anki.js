@@ -329,6 +329,9 @@ async function shareOrDownload(blob, name) {
 Object.assign(ACTIONS, {
   'anki-import': async () => {
     const f = await pickFile('.apkg,.colpkg,application/octet-stream,application/zip'); if (!f) return;
+    // sprawdź, czy to paczka Anki (ZIP zaczyna się od „PK”) – na iPhonie można wybrać dowolny plik
+    const head = new Uint8Array(await f.slice(0, 2).arrayBuffer());
+    if (!(head[0] === 0x50 && head[1] === 0x4b)) return toast(`„${f.name}” to nie plik z Anki. Wybierz plik .apkg (Anki → Eksportuj → Paczka talii).`, 5000);
     const keep = $('#anki-progress') ? $('#anki-progress').checked : true;
     try {
       const r = await importAnki(f, keep, msg => toast(msg, 60000));
