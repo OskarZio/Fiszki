@@ -40,13 +40,19 @@ function qbTake(cat, n, used) {
 }
 const SHOW_MAX = 8, PICK_SEC = 12, BET_SEC = 10, AIM_SEC = 8, WRONG_HP = 10;
 // finał: życie z punktów, obrażenia rosną z każdym pytaniem (+ premia do 50% za szybkość)
-const finalHp = score => 100 + Math.round(score / 100);
-const DMG_CALM = 4;   // tyle pierwszych pytań finału ze stałymi obrażeniami
-const finalBase = rq => 25 + 10 * Math.max(0, rq - DMG_CALM + 1);
-const finalDmg = (rq, ms) => Math.round(finalBase(rq) * (1 + .5 * Math.max(0, 1 - (ms || 0) / 15000)) / 5) * 5;
+const finalHp = score => (SHOW?.hpBase || 100) + Math.round(score / 100);
+// tempo finału: obrażenia stałe przez „calm” pytań, potem rosną o „step”; premia za szybkość do „bonus”
+const SHOW_PACE = {
+  soft: { name: 'Łagodne', base: 10, step: 5, calm: 6, bonus: .25 },
+  normal: { name: 'Normalne', base: 15, step: 5, calm: 5, bonus: .3 },
+  hard: { name: 'Ostre', base: 20, step: 10, calm: 4, bonus: .5 },
+};
+const pace = () => SHOW_PACE[SHOW?.pace] || SHOW_PACE.normal;
+const finalBase = rq => pace().base + pace().step * Math.max(0, rq - pace().calm + 1);
+const finalDmg = (rq, ms) => Math.round(finalBase(rq) * (1 + pace().bonus * Math.max(0, 1 - (ms || 0) / (showRound().sec * 1000))) / 5) * 5;
 // mini-runda 🧛 Wampir: co 4. pytanie finału trafienie leczy strzelającego o zadane obrażenia
-const isVamp = rq => (rq + 1) % 4 === 0;
-const isFinal = () => SHOW_ROUNDS[SHOW.r]?.k === 'final';
+const isVamp = rq => SHOW?.vamp !== false && (rq + 1) % 4 === 0;
+const isFinal = () => showRound()?.k === 'final';
 const alive = p => !p.left && !(p.hp != null && p.hp <= 0);
 const HOST_LINES = {
   ok: ['Brawo!', 'Ależ refleks!', 'Tak jest!', 'Mistrzowsko!', 'Publiczność szaleje!'],
@@ -86,10 +92,13 @@ function makeBots(n, level, used) {
 function newGame(o, players) {
   const cat = o.src !== 'deck';
   if (cat && !QB) { toast('Nie udało się wczytać bazy pytań – sprawdź internet.', 4000); return false; }
-  const total = SHOW_ROUNDS.reduce((a, r) => a + r.n, 0), qs = cat ? [] : showQuestions(o.deckId, total);
+  const c = showCfg(), rounds = buildRounds(c);
+  if (!rounds.length) { toast('Włącz co najmniej jedną rundę w ustawieniach gry'); return false; }
+  const total = rounds.reduce((a, r) => a + r.n, 0), qs = cat ? [] : showQuestions(o.deckId, total);
   if (!cat && qs.length < 3) { toast('W tej talii za mało fiszek tekstowych z różnymi odpowiedziami (min. 4).', 4500); return false; }
   players.forEach(p => { p.score = 0; delete p.bet; delete p.hp; delete p.out; });
-  Object.assign(SHOW, { deckId: o.deckId, src: cat ? 'cat' : 'deck', used: new Set(), cat: null, catsDone: [], rewarded: false, players, qs, qi: 0, r: 0, rq: 0, phase: 'intro', log: [], ans: {}, locked: {}, gain: {}, host: '', hit: null, shooter: null, outN: 0 });
+  Object.assign(SHOW, { rounds, pace: c.pace, hpBase: c.hp, vamp: c.vamp, deckId: o.deckId, src: cat ? 'cat' : 'deck', used: new Set(), cat: null, catsDone: [], rewarded: false, players, qs, qi: 0, r: 0, rq: 0, phase: 'intro', log: [], ans: {}, locked: {}, gain: {}, host: '', hit: null, shooter: null, outN: 0 });
+  if (rounds[0].k === 'final') players.forEach(p => { p.hp = finalHp(0); });   // sam finał: wszyscy z tym samym życiem
   return true;
 }
 function showStartSolo(o) {
@@ -97,7 +106,15 @@ function showStartSolo(o) {
   if (!newGame(o, [selfPlayer('me'), ...makeBots(o.bots, o.level, 1)])) { SHOW = null; return; }
   go('#/show'); setTimeout(() => showSfx('round'), 200);
 }
-const showRound = () => SHOW_ROUNDS[SHOW.r];
+const showRound = () => (SHOW.rounds || SHOW_ROUNDS)[SHOW.r];
+// ustawienia gry (prowadzący): które rundy, ile pytań, czas, tempo finału, życie na start, wampir
+const SHOW_CFG_DEF = { on: { speed: true, bet: true, steal: true, final: true }, n: { speed: 5, bet: 4, steal: 4 }, sec: 15, pace: 'normal', hp: 100, vamp: true };
+const showCfg = () => { const c = S.settings.show.cfg || {}; return { ...SHOW_CFG_DEF, ...c, on: { ...SHOW_CFG_DEF.on, ...c.on }, n: { ...SHOW_CFG_DEF.n, ...c.n } }; };
+function buildRounds(c) {
+  const P = SHOW_PACE[c.pace] || SHOW_PACE.normal;
+  return SHOW_ROUNDS.filter(r => c.on[r.k]).map(r => ({ ...r, n: r.k === 'final' ? 30 : c.n[r.k] || r.n, sec: c.sec + (r.k === 'bet' ? 2 : 0),
+    desc: r.k !== 'final' ? r.desc : `Punkty zamieniają się w życie ❤️ (${c.hp} + 1 za każde 100 pkt). Kto pierwszy odpowie dobrze, strzela w rywala. Obrażenia: ${P.base} przez ${P.calm} pytań, potem +${P.step} z każdym pytaniem.${c.vamp ? ' Co 4. pytanie 🧛 Wampir: trafienie leczy Ciebie.' : ''} Błąd: −10 ❤️. Wygrywa ostatni żywy!` }));
+}
 const showClear = () => { (SHOW.timers || []).forEach(clearTimeout); SHOW.timers = []; cancelAnimationFrame(SHOW.raf); };
 const later = (fn, ms) => SHOW.timers.push(setTimeout(() => { if (SHOW) fn(); }, ms));
 
@@ -131,10 +148,10 @@ function showHostMsg(m) {
 }
 // stan gry dla graczy – bez poprawnej odpowiedzi, dopóki nie nastąpi odkrycie
 function showSnapshot() {
-  const ph = SHOW.phase, q = SHOW.qs?.[SHOW.qi], R = SHOW_ROUNDS[SHOW.r] || {}, rev = ph === 'reveal' || ph === 'aim';
+  const ph = SHOW.phase, q = SHOW.qs?.[SHOW.qi], R = (SHOW.rounds || SHOW_ROUNDS)[SHOW.r] || {}, rev = ph === 'reveal' || ph === 'aim';
   return { t: 'state', phase: ph, pin: SHOW.pin, r: SHOW.r, rq: SHOW.rq, qi: SHOW.qi,
     players: SHOW.players.map(p => ({ id: p.id, name: p.name, av: p.av, color: p.color, score: p.score, bet: p.bet, bot: !!p.bot, left: !!p.left, hp: p.hp, out: p.out, gif: p.gif })),
-    shooter: SHOW.shooter, hit: SHOW.hit, src: SHOW.src, cat: SHOW.cat, picker: SHOW.picker, catOpts: SHOW.catOpts, pickLeft: ph === 'pick' ? Math.max(0, SHOW.pickEnd - Date.now()) : 0, aimEnd: ph === 'aim' ? Math.max(0, SHOW.aimEnd - Date.now()) : 0,
+    rounds: SHOW.rounds, pace: SHOW.pace, hpBase: SHOW.hpBase, vamp: SHOW.vamp, shooter: SHOW.shooter, hit: SHOW.hit, src: SHOW.src, cat: SHOW.cat, picker: SHOW.picker, catOpts: SHOW.catOpts, pickLeft: ph === 'pick' ? Math.max(0, SHOW.pickEnd - Date.now()) : 0, aimEnd: ph === 'aim' ? Math.max(0, SHOW.aimEnd - Date.now()) : 0,
     q: q && (ph === 'question' || rev || ph === 'aim') ? { q: q.q, opts: q.opts, ...(rev || ph === 'aim' ? { a: q.a } : {}) } : null,
     left: ph === 'question' ? Math.max(0, R.sec * 1000 - (Date.now() - SHOW.t0)) : ph === 'bet' ? Math.max(0, SHOW.betEnd - Date.now()) : 0,
     ans: Object.fromEntries(Object.entries(SHOW.ans || {}).map(([id, a]) => [id, rev ? { k: a.k } : { done: 1 }])),
@@ -158,7 +175,7 @@ function showGuestMsg(m) {
   if (m.t !== 'state') return;
   const prev = SHOW.phase, prevQi = SHOW.qi;
   if (m.phase === 'question' && (prev !== 'question' || prevQi !== m.qi)) { SHOW.myK = null; SHOW.lastTick = 0; }
-  const R = SHOW_ROUNDS[m.r] || SHOW_ROUNDS[0];
+  const RS = m.rounds || SHOW_ROUNDS, R = RS[m.r] || RS[0];
   Object.assign(SHOW, m, { qs: { [m.qi]: m.q }, t0: m.phase === 'question' ? Date.now() - (R.sec * 1000 - m.left) : SHOW.t0, aimEnd: Date.now() + (m.aimEnd || 0), pickEnd: Date.now() + (m.pickLeft || 0), betEnd: m.phase === 'bet' ? Date.now() + m.left : SHOW.betEnd });
   SHOW.players.forEach(p => { p.me = p.id === SHOW.myId; });
   if (m.phase === 'reveal' && prev !== 'reveal' && m.q) {
@@ -296,7 +313,7 @@ function showNext() {
   if (isFinal() && (activePlayers().length <= 1 || SHOW.qi >= SHOW.qs.length)) return showFinishGame();
   if (SHOW.rq >= showRound().n) {
     SHOW.r++; SHOW.rq = 0;
-    if (SHOW.r >= SHOW_ROUNDS.length || (SHOW.src === 'deck' && SHOW.qi >= SHOW.qs.length)) return showFinishGame();
+    if (SHOW.r >= SHOW.rounds.length || (SHOW.src === 'deck' && SHOW.qi >= SHOW.qs.length)) return showFinishGame();
     if (isFinal()) SHOW.players.forEach(p => { p.hp = p.left ? 0 : finalHp(p.score); });
     SHOW.phase = 'round'; showSfx('round'); return showRender();
   }
@@ -370,7 +387,7 @@ ROUTES.show = (parts, q) => {
   if (!SHOW) {
     const o = S.settings.show = S.settings.show || { bots: 3, level: 'mid', src: 'cat' }, deck = o.src === 'deck';
     return { focus: true, html: `<div class="sh-stage setup">${head('🎤 Teleturniej')}
-      <div class="sh-logo">🎤<b>Fiszkowy Show</b><small>4 rundy · ${QB_CATS.length} kategorii · ze znajomymi albo z botami</small></div>
+      <div class="sh-logo">🎤<b>Fiszkowy Show</b><small>${(n => `${n} ${plural(n, 'runda', 'rundy', 'rund')}`)(buildRounds(showCfg()).length)} · ${QB_CATS.length} kategorii · ze znajomymi albo z botami</small></div>
       <div class="card"><h3 style="margin-top:0">🔑 Dołącz do gry</h3><p class="small muted" style="margin-top:0">Wpisz PIN, który widzi prowadzący.</p>
         <div class="row nowrap"><input id="sh-pin" class="grow sh-pin-in" inputmode="numeric" maxlength="6" placeholder="PIN" value="${esc(q?.get('pin') || '')}"><button class="primary" data-act="show-join">Dołącz</button></div></div>
       <div class="card"><h3 style="margin-top:0">🎬 Nowa gra</h3>
@@ -378,13 +395,14 @@ ROUTES.show = (parts, q) => {
           <button class="${deck ? 'on' : ''}" data-act="show-src" data-v="deck"><span>📚</span><b>Moje fiszki</b><small>Pytania z wybranej talii</small></button></div>
         ${deck ? `<label class="field"><span>Talia z pytaniami</span><select id="sh-deck">${S.decks.map(d => `<option value="${d.id}" ${o.deckId === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>`
           : `<div class="sh-catlist">${QB_CATS.map(c => `<span>${c.icon} ${c.name}</span>`).join('')}</div><p class="small muted" style="margin:4px 0 10px">Przed każdą rundą gracz z najmniejszą liczbą punktów wybiera kategorię.</p>`}
+        ${showCfgHTML()}
         <div class="grid2"><label class="field"><span>Boty</span><select id="sh-bots">${[0, 1, 2, 3].map(n => `<option value="${n}" ${o.bots === n ? 'selected' : ''}>${n ? `${n} ${plural(n, 'bot', 'boty', 'botów')}` : 'bez botów'}</option>`).join('')}</select></label>
           <label class="field"><span>Poziom botów</span><select id="sh-level">${Object.entries(SHOW_LEVELS).map(([k, l]) => `<option value="${k}" ${o.level === k ? 'selected' : ''}>${l.name}</option>`).join('')}</select></label></div>
         <div class="row"><button class="primary grow big-btn" data-act="show-lobby">👥 Stwórz lobby</button><button class="grow big-btn" data-act="show-go">🤖 Graj z botami</button></div>
-        <details class="small" style="margin-top:10px"><summary>Zasady rund</summary><div class="sh-rounds">${SHOW_ROUNDS.map((r, i) => `<div><span>${r.icon}</span><b>Runda ${i + 1}: ${r.name}</b><small>${r.desc}</small></div>`).join('')}</div></details>
+        <details class="small" style="margin-top:10px"><summary>Zasady rund</summary><div class="sh-rounds">${buildRounds(showCfg()).map((r, i) => `<div><span>${r.icon}</span><b>Runda ${i + 1}: ${r.name}</b><small>${r.desc}</small></div>`).join('')}</div></details>
         <p class="small muted center" style="margin-bottom:0">💎 Za podium: 20 / 12 / 6 kryształów (max 60 dziennie)</p></div></div>` };
   }
-  const R = showRound() || SHOW_ROUNDS[0], guest = SHOW.role === 'guest';
+  const R = (SHOW.rounds && showRound()) || SHOW_ROUNDS[0], guest = SHOW.role === 'guest';
   // --- dołączanie / brak hosta
   if (SHOW.phase === 'joining' || SHOW.phase === 'nohost') {
     return { focus: true, html: `<div class="sh-stage">${head('🎤 Fiszkowy Show')}
@@ -407,7 +425,7 @@ ROUTES.show = (parts, q) => {
   if (SHOW.phase === 'intro' || SHOW.phase === 'round') {
     return { focus: true, html: `<div class="sh-stage">${head('🎤 Fiszkowy Show')}
       ${SHOW.phase === 'intro' ? `<div class="sh-host">🎤 <b>Witamy w Fiszkowym Show!</b><br>Dziś grają: ${SHOW.players.map(p => `<span style="color:${p.color}">${esc(p.name)}</span>`).join(', ')}. Powodzenia!</div>` : showBoard()}
-      <div class="sh-roundcard"><small>Runda ${SHOW.r + 1} z ${SHOW_ROUNDS.length}</small><span>${R.icon}</span><b>${R.name}</b><p>${R.desc}</p></div>
+      <div class="sh-roundcard"><small>Runda ${SHOW.r + 1} z ${(SHOW.rounds || SHOW_ROUNDS).length}</small><span>${R.icon}</span><b>${R.name}</b><p>${R.desc}</p></div>
       ${guest ? '<p class="center small">Prowadzący zaraz zaczyna…</p>' : `<button class="primary block big-btn" data-act="show-round-go">${SHOW.phase === 'intro' ? '▶ Start' : '▶ Dalej'}</button>`}</div>` };
   }
   // --- zakład (runda 2)
@@ -456,7 +474,7 @@ ROUTES.show = (parts, q) => {
   return { focus: true, html: `<div class="sh-stage">${head(`${R.icon} ${R.name}`, `<span class="small">${R.k === 'final' ? `#${SHOW.rq + 1}` : `${SHOW.rq + 1}/${R.n}`}</span>`)}
     ${showBoard(true)}
     ${R.k === 'final' && !rev ? `${isVamp(SHOW.rq) ? '<div class="sh-vamp">🧛 Mini-runda Wampir! Trafienie zabiera rywalowi ❤️ i leczy Ciebie</div>' : ''}
-      <div class="sh-pool">💥 Obrażenia: <b>${finalBase(SHOW.rq)}–${finalDmg(SHOW.rq, 0)}</b> <small>${SHOW.rq < DMG_CALM - 1 ? `(rosną od pytania #${DMG_CALM + 1})` : '(rosną z każdym pytaniem · im szybciej, tym mocniej)'}</small></div>` : ''}
+      <div class="sh-pool">💥 Obrażenia: <b>${finalBase(SHOW.rq)}–${finalDmg(SHOW.rq, 0)}</b> <small>${SHOW.rq < pace().calm - 1 ? `(rosną od pytania #${pace().calm + 1})` : '(rosną z każdym pytaniem · im szybciej, tym mocniej)'}</small></div>` : ''}
     ${R.k === 'bet' && !rev ? `<div class="sh-pool">Twój zakład: <b>${showMe().bet || 100}</b></div>` : ''}
     ${SHOW.src === 'cat' && SHOW.cat ? `<div class="sh-catchip">${qbCat(SHOW.cat).icon} ${qbCat(SHOW.cat).name}</div>` : ''}
     <div class="sh-q">${fmt(qq.q)}</div>
@@ -470,7 +488,7 @@ ROUTES.show = (parts, q) => {
       : answered && !rev ? `<div class="sh-host">🎤 ${dead ? '💀 Odpadłeś – oglądasz finał do końca.' : SHOW.locked?.[SHOW.myId] ? `Pudło! −${WRONG_HP} ❤️ – czekamy na resztę…` : 'Odpowiedź przyjęta – czekamy na resztę…'}</div>` : SHOW.host ? `<div class="sh-host">🎤 ${esc(SHOW.host)}</div>` : ''}</div>` };
 };
 
-const showOpts = solo => ({ src: S.settings.show?.src === 'deck' ? 'deck' : 'cat', deckId: $('#sh-deck')?.value || S.settings.show?.deckId,
+const showOpts = solo => ({ cfg: S.settings.show?.cfg, src: S.settings.show?.src === 'deck' ? 'deck' : 'cat', deckId: $('#sh-deck')?.value || S.settings.show?.deckId,
   bots: solo ? Math.max(1, +$('#sh-bots').value) : +$('#sh-bots').value, level: $('#sh-level').value });
 Object.assign(ACTIONS, {
   'show-open': () => { if (SHOW?.ch) SHOW.ch.close(); SHOW = null; go('#/show'); },
@@ -504,6 +522,7 @@ Object.assign(ACTIONS, {
     if (SHOW.role === 'guest') { SHOW.ch.send({ t: 'pick', c: el.dataset.c }); SHOW.picker = null; return render(); }
     showPickCat(el.dataset.c);
   },
+  'show-cfg-reset': () => { delete S.settings.show.cfg; save(); render(); const d = $('.sh-cfg'); if (d) d.open = true; },
   'show-src': el => { S.settings.show = { ...S.settings.show, src: el.dataset.v }; save(); render(); },
   'show-bet': el => {
     const v = +el.dataset.v;
@@ -528,6 +547,25 @@ Object.assign(ACTIONS, {
     if (SHOW) { showClear(); if (SHOW.ch) { if (SHOW.role === 'guest') SHOW.ch.send({ t: 'bye' }); else SHOW.ch.send({ t: 'state', phase: 'nohost', players: [], pin: SHOW.pin }); SHOW.ch.close(); } }
     SHOW = null; go('#/battles');
   },
+});
+function showCfgHTML() {
+  const c = showCfg(), opt = (v, cur, label = v) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${label}</option>`;
+  return `<details class="sh-cfg"><summary>⚙️ Ustawienia gry <small>(${buildRounds(c).length} rundy · ${c.sec} s · finał ${(SHOW_PACE[c.pace] || SHOW_PACE.normal).name.toLowerCase()})</small></summary>
+    ${SHOW_ROUNDS.map(r => `<div class="sh-cfg-row"><label class="row nowrap grow"><input type="checkbox" data-shcfg="on.${r.k}" ${c.on[r.k] ? 'checked' : ''}><span>${r.icon} ${r.name}</span></label>
+      ${r.k === 'final' ? '<small class="muted">do ostatniego żywego</small>' : `<select data-shcfg="n.${r.k}" ${c.on[r.k] ? '' : 'disabled'}>${[3, 4, 5, 6, 8, 10].map(n => opt(n, c.n[r.k], n + ' pyt.')).join('')}</select>`}</div>`).join('')}
+    <div class="grid2"><label class="field"><span>Czas na odpowiedź</span><select data-shcfg="sec">${[10, 15, 20, 25, 30].map(v => opt(v, c.sec, v + ' s')).join('')}</select></label>
+      <label class="field"><span>Tempo finału</span><select data-shcfg="pace" ${c.on.final ? '' : 'disabled'}>${Object.entries(SHOW_PACE).map(([k, p]) => opt(k, c.pace, `${p.name} (${p.base} → +${p.step})`)).join('')}</select></label>
+      <label class="field"><span>Życie na start finału</span><select data-shcfg="hp" ${c.on.final ? '' : 'disabled'}>${[75, 100, 150, 200].map(v => opt(v, c.hp, v + ' ❤️')).join('')}</select></label>
+      <label class="field"><span>🧛 Wampir co 4. pytanie</span><select data-shcfg="vamp" ${c.on.final ? '' : 'disabled'}>${opt('1', c.vamp ? '1' : '0', 'włączony')}${opt('0', c.vamp ? '1' : '0', 'wyłączony')}</select></label></div>
+    <button class="sm ghost" data-act="show-cfg-reset">↺ Domyślne</button></details>`;
+}
+document.addEventListener('change', e => {
+  const key = e.target.dataset?.shcfg; if (!key) return;
+  const c = showCfg(), [a, b] = key.split('.'), v = e.target.type === 'checkbox' ? e.target.checked : a === 'pace' ? e.target.value : a === 'vamp' ? e.target.value === '1' : +e.target.value;
+  if (b) c[a][b] = v; else c[a] = v;
+  if (!Object.values(c.on).some(Boolean)) { toast('Musi zostać co najmniej jedna runda'); c.on[b] = true; }
+  S.settings.show.cfg = c; save();
+  const open = !!$('.sh-cfg')?.open; render(); if (open) { const d = $('.sh-cfg'); if (d) d.open = true; }
 });
 // lobby: zmiana liczby botów / poziomu
 document.addEventListener('change', e => {

@@ -1201,3 +1201,10 @@ body:has(.sh-stage) #tabs { background: rgba(15,10,46,.85); border-color: rgba(2
 .chat-tools button { padding: 9px 2px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .msg .emo { display: inline; font-style: normal; }
 .gif-row button img { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; object-fit: cover; }
+/* Teleturniej – ustawienia gry */
+.sh-cfg { margin: 10px 0; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.06); }
+.sh-cfg summary { cursor: pointer; font-weight: 700; } .sh-cfg summary small { font-weight: 400; opacity: .7; }
+.sh-cfg-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+.sh-cfg-row label { gap: 8px; cursor: pointer; } .sh-cfg-row input { width: 20px; height: 20px; flex: none; }
+.sh-cfg-row select { width: auto; min-width: 92px; }
+.sh-cfg .grid2 { margin-top: 10px; }
