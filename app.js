@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '43';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '44';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -770,7 +770,8 @@ function viewQuiz(deckId, q) {
       ${it.ok ? '' : `<br><button class="ghost sm" data-act="quiz-override">To była dobra odpowiedź</button>`}</div>`;
   }
   // ABCD: karta pytania tylko tak wysoka, jak treść – żeby zmieściły się wszystkie odpowiedzi
-  return head + `<div class="card flash${type === 'abcd' ? ' qfit' : ''}">${answered ? v.a : v.q}</div>${ui}
+  // ABCD: po odpowiedzi zostaje samo pytanie – dobra odpowiedź świeci na zielono w przyciskach (bez przewijania)
+  return head + `<div class="card flash${type === 'abcd' ? ' qfit' : ''}">${answered && type !== 'abcd' ? v.a : v.q}</div>${ui}
     ${answered ? '<div class="spacer"></div><button class="primary block" data-act="quiz-next">Dalej ›</button>' : ''}`;
 }
 
