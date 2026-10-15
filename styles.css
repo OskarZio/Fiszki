@@ -1236,3 +1236,19 @@ label.field { min-width: 0; max-width: 100%; }
 @media (max-width: 420px) { .grades { gap: 5px; } }
 /* zabezpieczenie: nic nie może poszerzyć strony w poziomie */
 html, body { max-width: 100%; overflow-x: clip; }
+/* fiszka: stuknij, aby obrócić (animacja 3D), gwiazdka, skojarzenie na bieżąco */
+.card.flash { position: relative; }
+.card.flash.tappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.card.flash.flip-out { transition: transform .16s ease-in; transform: perspective(900px) rotateY(90deg); }
+.card.flash.flip-in { animation: cardFlipIn .22s ease-out; }
+@keyframes cardFlipIn { from { transform: perspective(900px) rotateY(-90deg); } to { transform: perspective(900px) rotateY(0); } }
+.flip-tip { font-size: 12px; color: var(--muted); margin-top: 12px; opacity: .8; }
+.star-btn { position: absolute; top: 6px; left: 6px; font-size: 24px; min-height: 40px; color: var(--muted); z-index: 2; }
+.star-btn.on { color: #f59e0b; animation: shPop .35s cubic-bezier(.2,1.5,.4,1); }
+.card.flash .speak { position: absolute; top: 6px; right: 6px; }
+.hint-row { justify-content: center; gap: 6px; flex-wrap: wrap; }
+.hint-add { margin-top: 6px; font-size: 13px; }
+.hint-edit { margin-top: 12px; text-align: left; display: flex; flex-direction: column; gap: 8px; cursor: default; }
+.hint-edit textarea { min-height: 64px; font-size: 16px; }
+@media (prefers-reduced-motion: reduce) { .card.flash.flip-in { animation: none; } }
+.card.flash { padding-top: 48px !important; }

@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '63';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '64';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -404,7 +404,7 @@ function speak(text) {
 }
 function nextCard() {
   const s = SESSION;
-  s.card = pickNext(s); s.shown = false; s.spoken = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
+  s.card = pickNext(s); s.shown = false; s.peek = false; s.editHint = false; s.spoken = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
 }
 function answer(g) {
   const s = SESSION, c = s.card; if (!c) return;
@@ -429,7 +429,7 @@ function undo() {
   const s = SESSION, u = s && s.undo; if (!u) return;
   const c = S.cards.find(x => x.id === u.cardId); if (!c) return;
   c.srs = u.srs; touch(c); S.log = S.log.filter(l => l.id !== u.logId); s.done--; s.undo = null;
-  s.card = c; s.shown = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
+  s.card = c; s.shown = false; s.peek = false; s.editHint = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
   save(); render();
 }
 // nowe karty, które dziś nie zmieściły się w dziennym limicie
@@ -558,6 +558,7 @@ function viewHome() {
   ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
   ${typeof safetyBannerHTML === 'function' ? safetyBannerHTML() : ''}
   ${typeof homeExtrasHTML === 'function' ? homeExtrasHTML() : ''}
+  ${(() => { const st = starredCards('all').length; return st ? `<div class="banner row nowrap"><span class="grow">⭐ <b>${st}</b> ${plural(st, 'oznaczona fiszka', 'oznaczone fiszki', 'oznaczonych fiszek')} – powtórz je osobno</span><button class="sm" data-act="cram-star">Powtórz</button></div>` : ''; })()}
   ${hard ? `<div class="banner row nowrap"><span class="grow">🧠 <b>${hard}</b> ${plural(hard, 'trudna fiszka', 'trudne fiszki', 'trudnych fiszek')} – powtórz bez wpływu na harmonogram</span><button class="sm" data-act="cram-hard">Powtórz</button></div>` : ''}
   <div class="card">
     <div class="row nowrap"><h2 class="grow" style="margin:0">Talie</h2>
@@ -607,6 +608,7 @@ function viewDeck(id, q) {
     <div class="row">
       <button class="grow" data-act="cram-deck" data-id="${id}" ${cards.length ? '' : 'disabled'}>🔁 Przejrzyj całą talię</button>
       <button class="grow" data-act="cram-hard" data-id="${id}" ${hard.length ? '' : 'disabled'}>🧠 Trudne (${hard.length})</button>
+      <button class="grow" data-act="cram-star" data-id="${id}" ${starredCards(id).length ? '' : 'disabled'}>⭐ Oznaczone (${starredCards(id).length})</button>
     </div>
     <div class="spacer"></div>
     <button class="block sm${d.mix ? ' primary' : ''}" data-act="deck-mix" data-id="${id}">🔀 Przeplatanie: ${d.mix ? 'włączone – nowe karty w losowej kolejności' : 'wyłączone (stuknij, by mieszać terminy z obrazami)'}</button>
@@ -665,12 +667,15 @@ function notesList(notes, query) {
 }
 
 // ------------------------------------------------------------ Nauka
+// fiszki oznaczone gwiazdką (⭐ = „cięższe”) – gwiazdka jest na notatce, więc dotyczy obu kierunków
+const starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && noteById(c.noteId)?.star);
 function viewStudy(deckId, mode, q) {
   const all = q.get('all') === '1', key = `${deckId}/${mode}/${q.get('cram') ? 'cram' : ''}${all ? '/all' : ''}`;
   if (!SESSION || SESSION.key !== key) {
     let cram = null;
     if (q.get('cram') === 'hard') cram = difficultCards().filter(c => deckId === 'all' || c.deckId === deckId).map(c => c.id);
     else if (q.get('cram') === 'all') cram = S.cards.filter(c => c.deckId === deckId).map(c => c.id);
+    else if (q.get('cram') === 'star') cram = starredCards(deckId).map(c => c.id);
     else if (q.get('cram') === 'list') cram = (q.get('ids') || '').split(',').filter(Boolean);
     startSession(deckId, mode, cram, all);
   }
@@ -682,7 +687,7 @@ function viewStudy(deckId, mode, q) {
   const head = `
   <div class="studybar">
     <button class="iconbtn" data-act="end-study" data-href="${backHash}">✕</button>
-    <div class="title">${esc(name)}${s.cram ? ' · bez harmonogramu' : s.all ? ' · wszystkie nowe' : ''}</div>
+    <div class="title">${esc(name)}${q.get('cram') === 'star' ? ' · ⭐ oznaczone' : s.cram ? ' · bez harmonogramu' : s.all ? ' · wszystkie nowe' : ''}</div>
     <div class="seg">
       <button class="${mode === 'flip' ? 'on' : ''}" data-act="switch-mode" data-href="#/study/${deckId}/flip${qs}">Fiszki</button>
       <button class="${mode === 'type' ? 'on' : ''}" data-act="switch-mode" data-href="#/study/${deckId}/type${qs}">Wpisz</button>
@@ -701,10 +706,13 @@ function viewStudy(deckId, mode, q) {
       <button class="${!s.all && !s.cram && hiddenNew(deckId) ? '' : 'primary '}block" data-act="end-study" data-href="${backHash}">Gotowe</button>`;
   }
 
-  const v = cardView(c);
-  const hints = v.hints.length && !s.shown
-    ? (s.hint ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>` : `<div><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button></div>`)
-    : (s.shown && v.hints.length ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>` : '');
+  const v = cardView(c), note = noteById(c.noteId);
+  const editHint = s.editHint ? `<div class="hint-edit"><textarea id="hint-in" rows="2" maxlength="300" placeholder="np. „FEMORIS – FEMme na długich nogach”">${esc(note?.hint || '')}</textarea>
+      <div class="row nowrap"><button class="primary sm grow" data-act="hint-save">💾 Zapisz skojarzenie</button><button class="sm ghost" data-act="hint-cancel">Anuluj</button></div></div>` : '';
+  const hintTools = s.editHint ? '' : `<button class="ghost sm hint-add" data-act="hint-edit">${note?.hint ? '✏️ Zmień skojarzenie' : '💡 Dodaj skojarzenie'}</button>`;
+  const hints = s.editHint ? editHint : v.hints.length && !s.shown
+    ? (s.hint ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>${hintTools}` : `<div class="row nowrap hint-row"><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button>${hintTools}</div>`)
+    : (s.shown && v.hints.length ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>${hintTools}` : s.shown ? hintTools : '');
   let typed = '';
   if (s.shown && s.typed !== null) {
     const cls = { ok: 'ok', close: 'close', wrong: 'bad' }[s.verdict];
@@ -713,7 +721,13 @@ function viewStudy(deckId, mode, q) {
   }
   const tts = S.settings.tts && 'speechSynthesis' in window;
   if (tts && !s.spoken) { s.spoken = true; onMount(() => speak(s.shown ? stripHtml(v.a) : stripHtml(v.q))); }
-  const body = `<div class="card flash">${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${s.shown ? v.a : v.q}${typed}${hints}</div>`;
+  const star = `<button class="iconbtn star-btn${note?.star ? ' on' : ''}" data-act="star" title="Oznacz jako trudną (⭐)">${note?.star ? '★' : '☆'}</button>`;
+  // tryb „Fiszki”: stuknięcie w kartę ją obraca (pytanie ↔ odpowiedź)
+  const tap = mode === 'flip' && !s.editHint ? ' data-act="flip-card"' : '';
+  const side = s.shown && !s.peek ? v.a : v.q;
+  const body = `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${side}${s.peek ? '' : typed}${hints}
+    ${tap ? `<div class="flip-tip">${s.shown ? (s.peek ? '↻ stuknij – odpowiedź' : '↻ stuknij – pytanie') : '↻ stuknij, aby obrócić'}</div>` : ''}</div>`;
+  s.flipAnim = false;
 
   let bar;
   if (!s.shown) {
@@ -721,7 +735,7 @@ function viewStudy(deckId, mode, q) {
       onMount(() => { const i = $('#typein'); i.focus({ preventScroll: true }); i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); act('check'); } }); });
       bar = `<input id="typein" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false">
         <button class="primary block" data-act="check">Sprawdź</button>`;
-    } else bar = `<button class="primary block" data-act="show" style="min-height:56px">Pokaż odpowiedź</button>`;
+    } else bar = `<button class="primary block" data-act="flip-card" style="min-height:56px">Pokaż odpowiedź</button>`;
   } else {
     const suggest = { ok: 3, close: 2, wrong: 1 }[s.verdict] || 0;
     const labels = S.settings.grade2 ? ['Nie pamiętam', '', 'Pamiętam', ''] : ['Nie pamiętam', 'Trudne', 'Dobrze', 'Łatwe'];
@@ -1492,6 +1506,26 @@ const ACTIONS = {
   'end-study': el => { SESSION = null; go(el.dataset.href); },
   'switch-mode': el => { if (SESSION) { const [d, , c] = SESSION.key.split('/'); SESSION.key = `${d}/${el.dataset.href.split('/')[3].split('?')[0]}/${c}`; SESSION.mode = SESSION.key.split('/')[1]; } location.replace(el.dataset.href); },
   show: () => { SESSION.shown = true; SESSION.spoken = false; render(); },
+  // obrót karty z animacją (pierwsze stuknięcie = odpowiedź, kolejne = podgląd pytania i z powrotem)
+  'flip-card': () => {
+    const s = SESSION; if (!s?.card || s.editHint) return;
+    const el = document.querySelector('.card.flash');
+    const turn = () => { if (!s.shown) { s.shown = true; s.spoken = false; s.peek = false; } else s.peek = !s.peek; s.flipAnim = true; render(); };
+    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return turn();
+    el.classList.add('flip-out'); setTimeout(turn, 160);
+  },
+  star: () => {
+    const n = SESSION?.card && noteById(SESSION.card.noteId); if (!n) return;
+    n.star = !n.star; touch(n); save(); toast(n.star ? '⭐ Oznaczono – znajdziesz ją w „Oznaczone”' : 'Usunięto gwiazdkę', 1600); render();
+  },
+  'hint-edit': () => { SESSION.editHint = true; render(); onMount(() => $('#hint-in')?.focus()); },
+  'hint-cancel': () => { SESSION.editHint = false; render(); },
+  'hint-save': () => {
+    const n = SESSION?.card && noteById(SESSION.card.noteId); if (!n) return;
+    n.hint = ($('#hint-in')?.value || '').trim().slice(0, 300); touch(n); save();
+    SESSION.editHint = false; SESSION.hint = true; toast(n.hint ? '💡 Skojarzenie zapisane' : 'Usunięto skojarzenie', 1600); render();
+  },
+  'cram-star': el => { const d = el.dataset.id || 'all'; SESSION = null; go(`#/study/${d}/flip?cram=star`); },
   speak: () => { const v = cardView(SESSION.card); speak(stripHtml(SESSION.shown ? v.a : v.q)); },
   hint: () => { SESSION.hint = true; render(); },
   check: () => {
@@ -1643,7 +1677,8 @@ document.addEventListener('change', e => {
 document.addEventListener('keydown', e => {
   if (parseRoute().parts[0] !== 'study' || !SESSION?.card) return;
   if (e.target.matches('input, textarea')) return;
-  if ((e.key === ' ' || e.key === 'Enter') && !SESSION.shown) { e.preventDefault(); act('show'); }
+  if ((e.key === ' ' || e.key === 'Enter') && !SESSION.shown) { e.preventDefault(); act(parseRoute().parts[2] === 'type' ? 'show' : 'flip-card'); }
+  else if (e.key === 's') act('star');
   else if (SESSION.shown && /^[1-4]$/.test(e.key)) answer(+e.key);
   else if (SESSION.shown && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); answer(3); }
   else if (e.key === 'h' && !SESSION.shown) act('hint');
