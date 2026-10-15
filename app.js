@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '65';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '66';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -314,6 +314,7 @@ function cardView(c) {
       q: `<div class="ctext">${clozeHTML(n.text, c.ord, false)}</div>`,
       a: `<div class="ctext">${clozeHTML(n.text, c.ord, true)}</div>${extra}`,
       ans: ms.map(m => m[2].trim()).join(', '), hints, label: clozePlain(n.text),
+      get b() { return this.a; },
     };
   }
   if (n.type === 'occl') {
@@ -325,6 +326,7 @@ function cardView(c) {
       q: title + occlHTML(n, c.ord, false),
       a: title + occlHTML(n, c.ord, true) + `<div class="ansline">${fmt(b.label || '')}</div>${extra}`,
       ans: (b.label || '').trim(), hints, label: `${n.title || 'Obraz'} – luka ${i + 1}`, noteId: n.id,
+      get b() { return this.a; },
     };
   }
   const fwd = c.ord !== 'r';
@@ -334,7 +336,8 @@ function cardView(c) {
   const q = (fwd ? img : '') + `<div class="ctext">${fmt(front)}</div>`;
   const bimg = n.backImageId && IMG[n.backImageId] ? `<img class="cimg" src="${IMG[n.backImageId]}" alt="">` : '';
   const q2 = fwd ? q : bimg + `<div class="ctext">${fmt(front)}</div>`;
-  return { q: q2, a: q2 + `<hr><div class="ctext">${fmt(back)}</div>${fwd ? bimg : img}${extra}`, ans: (back || '').trim(), hints, label: (front || '').trim() || '(obraz)' };
+  const backSide = `${fwd ? bimg : img}<div class="ctext">${fmt(back)}</div>${extra}`;
+  return { q: q2, a: q2 + `<hr><div class="ctext">${fmt(back)}</div>${fwd ? bimg : img}${extra}`, b: backSide, ans: (back || '').trim(), hints, label: (front || '').trim() || '(obraz)' };
 }
 
 // ============================================================ Sprawdzanie wpisanej odpowiedzi
@@ -725,7 +728,15 @@ function viewStudy(deckId, mode, q) {
   // tryb „Fiszki”: stuknięcie w kartę ją obraca (pytanie ↔ odpowiedź)
   const tap = mode === 'flip' && !s.editHint && S.settings.flipCard !== false ? ' data-act="flip-card"' : '';
   const side = s.shown && !s.peek ? v.a : v.q;
-  const body = `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${side}${s.peek ? '' : typed}${hints}
+  // jak w Quizlecie: jedna karta z dwiema stronami, stuknięcie obraca ją o 180°
+  const flip3d = mode === 'flip' && S.settings.flipCard !== false;
+  const hintBox = v.hints.length ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>` : '';
+  const body = flip3d ? `<div class="fc3d${s.shown && !s.peek ? ' flipped' : ''}"${s.editHint ? '' : ' data-act="flip-card"'}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}
+    <div class="fc-inner">
+      <div class="card flash face front">${v.q}${v.hints.length ? (s.hint ? hintBox : `<div><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button></div>`) : ''}<div class="flip-tip">↻ stuknij, aby obrócić</div></div>
+      <div class="card flash face back">${v.b}${s.editHint ? editHint : hintBox + hintTools}<div class="flip-tip">↻ stuknij – pytanie</div></div>
+    </div></div>`
+  : `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${side}${s.peek ? '' : typed}${hints}
     ${tap ? `<div class="flip-tip">${s.shown ? (s.peek ? '↻ stuknij – odpowiedź' : '↻ stuknij – pytanie') : '↻ stuknij, aby obrócić'}</div>` : ''}</div>`;
   s.flipAnim = false;
 
@@ -1510,7 +1521,15 @@ const ACTIONS = {
   show: () => { SESSION.shown = true; SESSION.spoken = false; render(); },
   // obrót karty z animacją (pierwsze stuknięcie = odpowiedź, kolejne = podgląd pytania i z powrotem)
   'flip-card': () => {
-    const s = SESSION; if (!s?.card || s.editHint) return;
+    const s = SESSION; if (!s?.card || s.editHint || s.flipping) return;
+    const box = document.querySelector('.fc3d');
+    if (box) {
+      if (!s.shown) {   // obrót, a po nim pokazujemy przyciski ocen (karta zostaje odwrócona)
+        box.classList.add('flipped'); s.flipping = true;
+        setTimeout(() => { s.flipping = false; s.shown = true; s.spoken = false; s.peek = false; render(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 430);
+      } else { s.peek = !s.peek; box.classList.toggle('flipped', !s.peek); }
+      return;
+    }
     const el = document.querySelector('.card.flash');
     const turn = () => { if (!s.shown) { s.shown = true; s.spoken = false; s.peek = false; } else s.peek = !s.peek; s.flipAnim = true; render(); };
     if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return turn();

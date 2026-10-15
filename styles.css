@@ -1252,3 +1252,16 @@ html, body { max-width: 100%; overflow-x: clip; }
 .hint-edit textarea { min-height: 64px; font-size: 16px; }
 @media (prefers-reduced-motion: reduce) { .card.flash.flip-in { animation: none; } }
 .card.flash { padding-top: 48px !important; }
+/* 🔄 Fiszka jak w Quizlecie: dwie strony, obrót 3D o 180° */
+.fc3d { position: relative; perspective: 1400px; -webkit-perspective: 1400px; cursor: pointer; -webkit-tap-highlight-color: transparent; margin: 14px 0; }
+.fc-inner { display: grid; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform .45s cubic-bezier(.4,.2,.2,1); }
+.fc3d.flipped .fc-inner { transform: rotateY(180deg); }
+.fc-inner > .face { grid-area: 1 / 1; margin: 0 !important; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.fc-inner > .face.back { transform: rotateY(180deg); }
+.fc3d > .star-btn, .fc3d > .speak { position: absolute; top: 6px; z-index: 5; }
+.fc3d > .star-btn { left: 6px; } .fc3d > .speak { right: 6px; }
+.fc3d .face .ctext { font-size: 1.1em; }
+.fc3d .hint-edit { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .fc-inner { transition: none; } }
+/* niewidoczna strona nie może łapać stuknięć (inaczej przyciski na odwrocie nie działają) */
+.fc3d.flipped .face.front, .fc3d:not(.flipped) .face.back { pointer-events: none; }
