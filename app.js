@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '66';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '67';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -733,8 +733,8 @@ function viewStudy(deckId, mode, q) {
   const hintBox = v.hints.length ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>` : '';
   const body = flip3d ? `<div class="fc3d${s.shown && !s.peek ? ' flipped' : ''}"${s.editHint ? '' : ' data-act="flip-card"'}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}
     <div class="fc-inner">
-      <div class="card flash face front">${v.q}${v.hints.length ? (s.hint ? hintBox : `<div><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button></div>`) : ''}<div class="flip-tip">↻ stuknij, aby obrócić</div></div>
-      <div class="card flash face back">${v.b}${s.editHint ? editHint : hintBox + hintTools}<div class="flip-tip">↻ stuknij – pytanie</div></div>
+      <div class="card flash face front">${v.q}${v.hints.length ? (s.hint ? hintBox : `<div><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button></div>`) : ''}<div class="flip-tip">↻ stuknij, aby obrócić<span class="kbd-tip"> · spacja</span></div></div>
+      <div class="card flash face back">${v.b}${s.editHint ? editHint : hintBox + hintTools}<div class="flip-tip">↻ stuknij – pytanie<span class="kbd-tip"> · spacja – obróć · 1–4 – ocena</span></div></div>
     </div></div>`
   : `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${side}${s.peek ? '' : typed}${hints}
     ${tap ? `<div class="flip-tip">${s.shown ? (s.peek ? '↻ stuknij – odpowiedź' : '↻ stuknij – pytanie') : '↻ stuknij, aby obrócić'}</div>` : ''}</div>`;
@@ -1701,6 +1701,8 @@ document.addEventListener('keydown', e => {
   if ((e.key === ' ' || e.key === 'Enter') && !SESSION.shown) { e.preventDefault(); act(parseRoute().parts[2] === 'type' || S.settings.flipCard === false ? 'show' : 'flip-card'); }
   else if (e.key === 's') act('star');
   else if (SESSION.shown && /^[1-4]$/.test(e.key)) answer(+e.key);
+  // karta 3D (jak w Quizlecie): spacja / strzałki obracają kartę tam i z powrotem, oceny pod 1–4
+  else if (SESSION.shown && document.querySelector('.fc3d') && [' ', 'ArrowUp', 'ArrowDown'].includes(e.key)) { e.preventDefault(); act('flip-card'); }
   else if (SESSION.shown && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); answer(3); }
   else if (e.key === 'h' && !SESSION.shown) act('hint');
   else if (e.key === 'z' && (e.metaKey || e.ctrlKey)) undo();

@@ -1265,3 +1265,10 @@ html, body { max-width: 100%; overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) { .fc-inner { transition: none; } }
 /* niewidoczna strona nie może łapać stuknięć (inaczej przyciski na odwrocie nie działają) */
 .fc3d.flipped .face.front, .fc3d:not(.flipped) .face.back { pointer-events: none; }
+/* komputer: większa karta i tekst, podpowiedzi klawiszy */
+.kbd-tip { display: none; }
+@media (hover: hover) and (pointer: fine) { .kbd-tip { display: inline; } .fc3d:hover .fc-inner { filter: brightness(1.04); } }
+@media (min-width: 900px) {
+  .fc3d .face { min-height: 50vh; font-size: calc(28px * var(--card-fs, 1)); padding: 56px 40px 28px; }
+  .fc3d .face .flip-tip { font-size: 13px; }
+}
