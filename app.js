@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '64';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '65';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -709,7 +709,7 @@ function viewStudy(deckId, mode, q) {
   const v = cardView(c), note = noteById(c.noteId);
   const editHint = s.editHint ? `<div class="hint-edit"><textarea id="hint-in" rows="2" maxlength="300" placeholder="np. „FEMORIS – FEMme na długich nogach”">${esc(note?.hint || '')}</textarea>
       <div class="row nowrap"><button class="primary sm grow" data-act="hint-save">💾 Zapisz skojarzenie</button><button class="sm ghost" data-act="hint-cancel">Anuluj</button></div></div>` : '';
-  const hintTools = s.editHint ? '' : `<button class="ghost sm hint-add" data-act="hint-edit">${note?.hint ? '✏️ Zmień skojarzenie' : '💡 Dodaj skojarzenie'}</button>`;
+  const hintTools = s.editHint || S.settings.hintEdit === false ? '' : `<button class="ghost sm hint-add" data-act="hint-edit">${note?.hint ? '✏️ Zmień skojarzenie' : '💡 Dodaj skojarzenie'}</button>`;
   const hints = s.editHint ? editHint : v.hints.length && !s.shown
     ? (s.hint ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>${hintTools}` : `<div class="row nowrap hint-row"><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button>${hintTools}</div>`)
     : (s.shown && v.hints.length ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>${hintTools}` : s.shown ? hintTools : '');
@@ -723,7 +723,7 @@ function viewStudy(deckId, mode, q) {
   if (tts && !s.spoken) { s.spoken = true; onMount(() => speak(s.shown ? stripHtml(v.a) : stripHtml(v.q))); }
   const star = `<button class="iconbtn star-btn${note?.star ? ' on' : ''}" data-act="star" title="Oznacz jako trudną (⭐)">${note?.star ? '★' : '☆'}</button>`;
   // tryb „Fiszki”: stuknięcie w kartę ją obraca (pytanie ↔ odpowiedź)
-  const tap = mode === 'flip' && !s.editHint ? ' data-act="flip-card"' : '';
+  const tap = mode === 'flip' && !s.editHint && S.settings.flipCard !== false ? ' data-act="flip-card"' : '';
   const side = s.shown && !s.peek ? v.a : v.q;
   const body = `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${side}${s.peek ? '' : typed}${hints}
     ${tap ? `<div class="flip-tip">${s.shown ? (s.peek ? '↻ stuknij – odpowiedź' : '↻ stuknij – pytanie') : '↻ stuknij, aby obrócić'}</div>` : ''}</div>`;
@@ -735,7 +735,7 @@ function viewStudy(deckId, mode, q) {
       onMount(() => { const i = $('#typein'); i.focus({ preventScroll: true }); i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); act('check'); } }); });
       bar = `<input id="typein" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false">
         <button class="primary block" data-act="check">Sprawdź</button>`;
-    } else bar = `<button class="primary block" data-act="flip-card" style="min-height:56px">Pokaż odpowiedź</button>`;
+    } else bar = `<button class="primary block" data-act="${S.settings.flipCard === false ? 'show' : 'flip-card'}" style="min-height:56px">Pokaż odpowiedź</button>`;
   } else {
     const suggest = { ok: 3, close: 2, wrong: 1 }[s.verdict] || 0;
     const labels = S.settings.grade2 ? ['Nie pamiętam', '', 'Pamiętam', ''] : ['Nie pamiętam', 'Trudne', 'Dobrze', 'Łatwe'];
@@ -1327,6 +1327,8 @@ function viewMore() {
     <label class="field"><span>Nowych kart dziennie (na talię)</span><input type="number" min="0" max="999" id="set-new" value="${st.newPerDay}"></label>
     <label class="field"><span>Cel dzienny (liczba powtórek)</span><input type="number" min="1" max="2000" id="set-goal" value="${st.goal}"></label>
     <label class="check"><input type="checkbox" id="set-hide" ${st.hideAll ? 'checked' : ''}> Obraz z lukami: domyślnie ukrywaj wszystkie luki</label>
+    <label class="check"><input type="checkbox" data-pers="flipCard" ${st.flipCard !== false ? 'checked' : ''}> 🔄 Obracanie fiszki stuknięciem (animacja) – wyłącz, by wrócić do przycisku „Pokaż odpowiedź”</label>
+    <label class="check"><input type="checkbox" data-pers="hintEdit" ${st.hintEdit !== false ? 'checked' : ''}> 💡 Przycisk „Dodaj skojarzenie” w trakcie nauki</label>
     <details class="adv"><summary>Ustawienia zaawansowane</summary>
       <label class="field"><span>Kroki nauki nowych kart (minuty, oddzielone spacją)</span><input id="set-steps" value="${esc(st.steps)}" placeholder="1 10" inputmode="numeric"></label>
       <label class="field"><span>Kroki po zapomnieniu (minuty)</span><input id="set-relearn" value="${esc(st.relearn)}" placeholder="10" inputmode="numeric"></label>
@@ -1677,7 +1679,7 @@ document.addEventListener('change', e => {
 document.addEventListener('keydown', e => {
   if (parseRoute().parts[0] !== 'study' || !SESSION?.card) return;
   if (e.target.matches('input, textarea')) return;
-  if ((e.key === ' ' || e.key === 'Enter') && !SESSION.shown) { e.preventDefault(); act(parseRoute().parts[2] === 'type' ? 'show' : 'flip-card'); }
+  if ((e.key === ' ' || e.key === 'Enter') && !SESSION.shown) { e.preventDefault(); act(parseRoute().parts[2] === 'type' || S.settings.flipCard === false ? 'show' : 'flip-card'); }
   else if (e.key === 's') act('star');
   else if (SESSION.shown && /^[1-4]$/.test(e.key)) answer(+e.key);
   else if (SESSION.shown && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); answer(3); }
