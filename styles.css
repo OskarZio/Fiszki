@@ -1267,8 +1267,14 @@ html, body { max-width: 100%; overflow-x: clip; }
 .fc3d.flipped .face.front, .fc3d:not(.flipped) .face.back { pointer-events: none; }
 /* komputer: większa karta i tekst, podpowiedzi klawiszy */
 .kbd-tip { display: none; }
-@media (hover: hover) and (pointer: fine) { .kbd-tip { display: inline; } .fc3d:hover .fc-inner { filter: brightness(1.04); } }
+@media (hover: hover) and (pointer: fine) { .kbd-tip { display: inline; } .fc3d:hover .face { box-shadow: 0 10px 30px rgba(0,0,0,.18); } }
 @media (min-width: 900px) {
   .fc3d .face { min-height: 50vh; font-size: calc(28px * var(--card-fs, 1)); padding: 56px 40px 28px; }
   .fc3d .face .flip-tip { font-size: 13px; }
 }
+
+/* pewna zamiana stron w połowie obrotu (Safari bywa, że ignoruje backface-visibility → lustrzane odbicie) */
+.fc-inner > .face { transition: visibility 0s linear .22s; -webkit-transform: translateZ(0); }
+.fc-inner > .face.back { -webkit-transform: rotateY(180deg) translateZ(1px); transform: rotateY(180deg) translateZ(1px); }
+.fc3d:not(.flipped) .face.back, .fc3d.flipped .face.front { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .fc-inner > .face { transition: none; } }
