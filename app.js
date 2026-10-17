@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '68';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '69';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -136,7 +136,7 @@ async function putImage(dataUrl) {
 }
 function referencedImages() {
   const s = new Set();
-  S.notes.forEach(n => { n.imageId && s.add(n.imageId); n.backImageId && s.add(n.backImageId); });
+  S.notes.forEach(n => { n.imageId && s.add(n.imageId); n.backImageId && s.add(n.backImageId); n.hintImg && s.add(n.hintImg); });
   S.palaces.forEach(p => p.stations.forEach(st => st.imageId && s.add(st.imageId)));
   (S.atlases || []).forEach(a => { a.imageId && s.add(a.imageId); (a.draws || []).forEach(d => s.add(d.imageId)); });
   (S.topics || []).forEach(t => t.items.forEach(it => (it.images || []).forEach(g => s.add(g.id))));
@@ -710,12 +710,17 @@ function viewStudy(deckId, mode, q) {
   }
 
   const v = cardView(c), note = noteById(c.noteId);
-  const editHint = s.editHint ? `<div class="hint-edit"><textarea id="hint-in" rows="2" maxlength="300" placeholder="np. „FEMORIS – FEMme na długich nogach”">${esc(note?.hint || '')}</textarea>
+  // skojarzenie: tekst i/lub obrazek (wgrany albo narysowany)
+  const himg = id => id && IMG[id] ? `<img class="hint-img" src="${IMG[id]}" alt="skojarzenie">` : '';
+  const hasHint = v.hints.length > 0 || !!himg(note?.hintImg);
+  const hintInner = (v.hints.length ? '💡 ' + v.hints.map(fmt).join('<br>') : '💡') + himg(note?.hintImg);
+  const editHint = s.editHint ? `<div class="hint-edit"><textarea id="hint-in" rows="2" maxlength="300" placeholder="np. „FEMORIS – FEMme na długich nogach”">${esc(s.hintDraft ?? note?.hint ?? '')}</textarea>
+      ${hintImgToolsHTML(s.hintImgDraft, 'study')}
       <div class="row nowrap"><button class="primary sm grow" data-act="hint-save">💾 Zapisz skojarzenie</button><button class="sm ghost" data-act="hint-cancel">Anuluj</button></div></div>` : '';
-  const hintTools = s.editHint || S.settings.hintEdit === false ? '' : `<button class="ghost sm hint-add" data-act="hint-edit">${note?.hint ? '✏️ Zmień skojarzenie' : '💡 Dodaj skojarzenie'}</button>`;
-  const hints = s.editHint ? editHint : v.hints.length && !s.shown
-    ? (s.hint ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>${hintTools}` : `<div class="row nowrap hint-row"><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button>${hintTools}</div>`)
-    : (s.shown && v.hints.length ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>${hintTools}` : s.shown ? hintTools : '');
+  const hintTools = s.editHint || S.settings.hintEdit === false ? '' : `<button class="ghost sm hint-add" data-act="hint-edit">${note?.hint || note?.hintImg ? '✏️ Zmień skojarzenie' : '💡 Dodaj skojarzenie'}</button>`;
+  const hints = s.editHint ? editHint : hasHint && !s.shown
+    ? (s.hint ? `<div class="hintbox">${hintInner}</div>${hintTools}` : `<div class="row nowrap hint-row"><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button>${hintTools}</div>`)
+    : (s.shown && hasHint ? `<div class="hintbox">${hintInner}</div>${hintTools}` : s.shown ? hintTools : '');
   let typed = '';
   if (s.shown && s.typed !== null) {
     const cls = { ok: 'ok', close: 'close', wrong: 'bad' }[s.verdict];
@@ -730,10 +735,10 @@ function viewStudy(deckId, mode, q) {
   const side = s.shown && !s.peek ? v.a : v.q;
   // jak w Quizlecie: jedna karta z dwiema stronami, stuknięcie obraca ją o 180°
   const flip3d = mode === 'flip' && S.settings.flipCard !== false;
-  const hintBox = v.hints.length ? `<div class="hintbox">💡 ${v.hints.map(fmt).join('<br>')}</div>` : '';
+  const hintBox = hasHint ? `<div class="hintbox">${hintInner}</div>` : '';
   const body = flip3d ? `<div class="fc3d${s.shown && !s.peek ? ' flipped' : ''}"${s.editHint ? '' : ' data-act="flip-card"'}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}
     <div class="fc-inner">
-      <div class="card flash face front">${v.q}${v.hints.length ? (s.hint ? hintBox : `<div><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button></div>`) : ''}<div class="flip-tip">↻ stuknij, aby obrócić<span class="kbd-tip"> · spacja</span></div></div>
+      <div class="card flash face front">${v.q}${hasHint ? (s.hint ? hintBox : `<div><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button></div>`) : ''}<div class="flip-tip">↻ stuknij, aby obrócić<span class="kbd-tip"> · spacja</span></div></div>
       <div class="card flash face back">${v.b}${s.editHint ? editHint : hintBox + hintTools}<div class="flip-tip">↻ stuknij – pytanie<span class="kbd-tip"> · spacja – obróć · 1–4 – ocena</span></div></div>
     </div></div>`
   : `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${side}${s.peek ? '' : typed}${hints}
@@ -846,7 +851,7 @@ let DRAFT = null;
 function freshDraft(type, deckId) {
   return {
     editId: null, type: type || 'basic', deckId: deckId || S.settings.lastDeck || S.decks[0]?.id,
-    front: '', back: '', hint: '', extra: '', reverse: false, text: '', imageId: null, boxes: [], title: '',
+    front: '', back: '', hint: '', hintImg: null, extra: '', reverse: false, text: '', imageId: null, boxes: [], title: '',
     hideAll: S.settings.hideAll, bulk: '', bulkSep: 'auto', bulkReverse: false, bulkSwap: false, sel: null, draw: true,
   };
 }
@@ -911,6 +916,7 @@ function formBasic(D) {
     : `<button class="sm" data-act="basic-img">🖼️ Dodaj obraz</button><button class="sm" data-act="basic-img-paste">📋 Wklej obraz</button>`}</div>
   ${field('Tył (odpowiedź)', 'back', D.back, { area: true, ph: 'np. Os femoris' })}
   ${field('💡 Skojarzenie / podpowiedź (opcjonalnie)', 'hint', D.hint, { ph: 'np. „FEMORIS – FEMme w RIS-ach” – pokazuje się na żądanie' })}
+  ${hintImgToolsHTML(D.hintImg, 'draft')}
   ${field('Dodatkowe informacje (opcjonalnie)', 'extra', D.extra, { area: true, rows: 2 })}
   <label class="check"><input type="checkbox" data-bind="reverse" ${D.reverse ? 'checked' : ''}> Utwórz też kartę odwrotną (tył → przód)</label>`;
 }
@@ -928,6 +934,7 @@ function formCloze(D) {
   <p class="small muted">Składnia jak w Anki: <code>{{c1::odpowiedź::podpowiedź}}</code>. Każdy numer to osobna karta.</p>
   <div class="card tight" id="cloze-prev">${clozePreview(D.text)}</div>
   ${field('💡 Skojarzenie / podpowiedź (opcjonalnie)', 'hint', D.hint)}
+  ${hintImgToolsHTML(D.hintImg, 'draft')}
   ${field('Dodatkowe informacje (opcjonalnie)', 'extra', D.extra, { area: true, rows: 2 })}`;
 }
 function formOccl(D) {
@@ -944,6 +951,7 @@ function formOccl(D) {
   <div id="boxlist"></div>
   <label class="check"><input type="checkbox" data-bind="hideAll" ${D.hideAll ? 'checked' : ''}> Ukryj wszystkie luki, pytaj o jedną (zalecane)</label>
   ${field('💡 Skojarzenie ogólne (opcjonalnie)', 'hint', D.hint)}
+  ${hintImgToolsHTML(D.hintImg, 'draft')}
   ${field('Dodatkowe informacje (opcjonalnie)', 'extra', D.extra, { area: true, rows: 2 })}
   <button class="danger sm" data-act="occl-clear">Zmień obraz</button>`;
 }
@@ -1079,16 +1087,16 @@ async function saveDraft() {
   if (D.type === 'basic') {
     if (!D.front.trim() && !D.imageId) return toast('Uzupełnij przód fiszki');
     if (!D.back.trim()) return toast('Uzupełnij tył fiszki');
-    fields = { type: 'basic', front: D.front.trim(), back: D.back.trim(), hint: D.hint.trim(), extra: D.extra.trim(), reverse: !!D.reverse, imageId: D.imageId };
+    fields = { type: 'basic', front: D.front.trim(), back: D.back.trim(), hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim(), reverse: !!D.reverse, imageId: D.imageId };
   } else if (D.type === 'cloze') {
     if (!/\{\{c\d+::/.test(D.text)) return toast('Zrób przynajmniej jedną lukę');
-    fields = { type: 'cloze', text: D.text.trim(), hint: D.hint.trim(), extra: D.extra.trim() };
+    fields = { type: 'cloze', text: D.text.trim(), hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim() };
   } else {
     if (!D.imageId) return toast('Najpierw wybierz obraz');
     if (!D.boxes.length) return toast('Narysuj przynajmniej jedną lukę');
     D.boxes.forEach((b, i) => { if (!b.label.trim()) b.label = `Luka ${i + 1}`; });
     fields = { type: 'occl', imageId: D.imageId, boxes: D.boxes.map(({ id, x, y, w, h, label, hint }) => ({ id, x, y, w, h, label: label.trim(), hint: (hint || '').trim() })),
-      title: D.title.trim(), hideAll: !!D.hideAll, hint: D.hint.trim(), extra: D.extra.trim(), style: D.style };
+      title: D.title.trim(), hideAll: !!D.hideAll, hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim(), style: D.style };
   }
   if (D.editId) {
     const n = noteById(D.editId); if (!n) return;
@@ -1106,6 +1114,19 @@ async function saveDraft() {
     if (D.type !== 'occl') setTimeout(() => $('textarea[data-bind]')?.focus(), 50);
   }
 }
+
+// ------------------------------------------------------------ Skojarzenie jako obrazek (zdjęcie albo rysunek)
+function hintImgToolsHTML(id, scope) {
+  const src = id && IMG[id];
+  return `<div class="hint-img-tools">${src ? `<img class="hint-img" src="${src}" alt="">` : ''}
+    <div class="row nowrap"><button type="button" class="sm" data-act="hintimg-pick" data-scope="${scope}">🖼️ ${src ? 'Zmień obrazek' : 'Obrazek'}</button>
+      <button type="button" class="sm" data-act="hintimg-draw" data-scope="${scope}">✏️ ${src ? 'Dorysuj' : 'Narysuj'}</button>
+      ${src ? `<button type="button" class="sm ghost" data-act="hintimg-del" data-scope="${scope}">🗑️</button>` : ''}</div></div>`;
+}
+// zapamiętuje wpisany tekst skojarzenia, żeby nie zniknął przy odświeżeniu widoku
+const keepHintText = scope => { if (scope === 'study' && $('#hint-in')) SESSION.hintDraft = $('#hint-in').value; };
+const setHintImg = (scope, id) => { if (scope === 'draft') DRAFT.hintImg = id; else SESSION.hintImgDraft = id; render(); };
+const hintImgOf = scope => scope === 'draft' ? DRAFT?.hintImg : SESSION?.hintImgDraft;
 
 // ------------------------------------------------------------ Obrazy
 async function compressImage(blob, max = 1600) {
@@ -1539,12 +1560,14 @@ const ACTIONS = {
     const n = SESSION?.card && noteById(SESSION.card.noteId); if (!n) return;
     n.star = !n.star; touch(n); save(); toast(n.star ? '⭐ Oznaczono – znajdziesz ją w „Oznaczone”' : 'Usunięto gwiazdkę', 1600); render();
   },
-  'hint-edit': () => { SESSION.editHint = true; render(); onMount(() => $('#hint-in')?.focus()); },
-  'hint-cancel': () => { SESSION.editHint = false; render(); },
+  'hint-edit': () => { const n = SESSION?.card && noteById(SESSION.card.noteId); Object.assign(SESSION, { editHint: true, hintDraft: null, hintImgDraft: n?.hintImg || null }); render(); onMount(() => $('#hint-in')?.focus()); },
+  'hint-cancel': () => { SESSION.editHint = false; SESSION.hintDraft = null; render(); },
   'hint-save': () => {
     const n = SESSION?.card && noteById(SESSION.card.noteId); if (!n) return;
-    n.hint = ($('#hint-in')?.value || '').trim().slice(0, 300); touch(n); save();
-    SESSION.editHint = false; SESSION.hint = true; toast(n.hint ? '💡 Skojarzenie zapisane' : 'Usunięto skojarzenie', 1600); render();
+    n.hint = ($('#hint-in')?.value || '').trim().slice(0, 300);
+    if (SESSION.hintImgDraft) n.hintImg = SESSION.hintImgDraft; else delete n.hintImg;
+    touch(n); save();
+    SESSION.editHint = false; SESSION.hintDraft = null; SESSION.hint = true; toast(n.hint || n.hintImg ? '💡 Skojarzenie zapisane' : 'Usunięto skojarzenie', 1600); render();
   },
   'cram-star': el => { const d = el.dataset.id || 'all'; SESSION = null; go(`#/study/${d}/flip?cram=star`); },
   speak: () => { const v = cardView(SESSION.card); speak(stripHtml(SESSION.shown ? v.a : v.q)); },
@@ -1581,6 +1604,17 @@ const ACTIONS = {
   'mix-add-img': () => { DRAFT.mixBack = { bulk: DRAFT.bulk, mixOn: DRAFT.mixOn }; DRAFT.type = 'occl'; DRAFT.imageId = null; DRAFT.boxes = []; render(); scrollTo(0, 0); },
   'mix-back': () => { const m = DRAFT.mixBack || {}; DRAFT = { ...freshDraft('mix', DRAFT.deckId), bulk: m.bulk || '', mixOn: m.mixOn }; render(); },
   'deck-mix': el => { const d = deckById(el.dataset.id); if (!d) return; d.mix = !d.mix; touch(d); save(); render(); toast(d.mix ? '🔀 Nowe karty będą się przeplatać losowo' : 'Nowe karty w kolejności dodania'); },
+  'hintimg-pick': async el => {
+    const sc = el.dataset.scope; keepHintText(sc);
+    const f = await pickFile('image/*'); if (!f) return;
+    try { setHintImg(sc, await putImage(await compressImage(f, 900))); } catch (e) { toast(e.message || 'Nie udało się wczytać obrazu'); }
+  },
+  'hintimg-draw': async el => {
+    const sc = el.dataset.scope; keepHintText(sc);
+    const url = await openDrawPad(IMG[hintImgOf(sc)] || null); if (!url) return;
+    setHintImg(sc, await putImage(url));
+  },
+  'hintimg-del': el => { keepHintText(el.dataset.scope); setHintImg(el.dataset.scope, null); },
   'cancel-edit': () => { DRAFT = null; history.back(); },
   'save-draft': () => saveDraft(),
   'delete-note': () => { const n = noteById(DRAFT.editId); if (n && confirm('Usunąć tę fiszkę?')) { const d = n.deckId; deleteNote(n); save(); gcImages(); DRAFT = null; go(`#/deck/${d}`); } },
