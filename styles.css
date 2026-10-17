@@ -1301,3 +1301,4 @@ html, body { max-width: 100%; overflow-x: clip; }
 .star-decks { display: flex; flex-wrap: wrap; gap: 6px; }
 .star-decks button b { margin-left: 4px; color: #f59e0b; }
 .note .item-x { margin-left: 4px; opacity: .55; font-size: 16px; min-height: 36px; padding: 4px 6px; } .note .item-x:hover { opacity: 1; }
+.study-go { flex-direction: column; gap: 0; } .study-go .study-extra { font-size: 11px; font-weight: 400; opacity: .8; }
