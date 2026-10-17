@@ -200,6 +200,7 @@ function onRoomMsg(m) {
     const ok = judge(m.given, it.a);     // sprawdzamy sami
     B.oppAns.push({ i: m.i, given: m.given, ok, ms: m.ms });
     if (ok && B.setup.opts?.live !== false) hitFx('me');
+    maybeFinish();
   }
   if (m.t === 'unans') { const k = B.oppAns.findIndex(a => a.i === m.i); if (k >= 0) B.oppAns.splice(k, 1); toast('⏪ Cofnięcie zadziałało!'); }
   if (m.t === 'sab') receiveSabotage(m.k);
@@ -246,8 +247,8 @@ function submitAnswer(given) {
   B.ch?.send({ t: 'ans', i, given, ms: Date.now() - B.cardStart });
   if (ok) { hitFx('opp'); emit('battleHit'); } else floatText('✗ ' + it.a);
   B.cur++; B.cardStart = Date.now();
-  if (B.cur >= B.order.length) myDone();
-  renderBattle();
+  if (B.cur >= B.order.length) myDone(); else maybeFinish();
+  if (B) renderBattle();
 }
 function myDone() {
   B.myDone = true; B.myTotalMs = Date.now() - B.learnStart; B.phase = 'waitopp';
@@ -258,7 +259,17 @@ function maybeFinish() {
   if (!B || B.phase === 'end') return;
   const mem = B.setup?.mode === 'mem';
   const oppOk = B.oppDone && (!mem || B.oppMem);
-  if (B.myDone && (oppOk || B.oppLeft)) finishBattle();
+  if (B.myDone && (oppOk || B.oppLeft)) return finishBattle();
+  // 💥 KO: koniec, gdy wynik jest już przesądzony (skończony gracz ma więcej, niż rywal może jeszcze zdobyć)
+  if (!mem && B.setup?.mode === 'cards' && B.phase !== 'learn') {
+    const n = B.setup.cards.length, my = B.myAns.filter(a => a.ok).length, opp = B.oppAns.filter(a => a.ok).length;
+    const myMax = my + (n - B.myAns.length), oppMax = opp + (n - B.oppAns.length);
+    if ((B.myDone && oppMax <= my && my > 0) || (B.oppDone && myMax <= opp && opp > 0)) {
+      B.ko = true; if (!B.myTotalMs) B.myTotalMs = Date.now() - B.learnStart; if (!B.oppTotalMs) B.oppTotalMs = Date.now() - B.learnStart + 1;
+      toast(B.myDone && oppMax <= my ? '💥 KO! Przeciwnik nie ma już szans – wygrywasz!' : '💥 KO! Przeciwnik zdobył już tyle, że nie dogonisz', 3000);
+      finishBattle();
+    }
+  }
 }
 function scores() {
   if (B.setup.mode === 'mem') {
@@ -383,7 +394,7 @@ function botNext() {
     const i = bt.queue.shift(), card = B.setup.cards[i];
     const ok = Math.random() < botCardChance(bt.acc, B.setup.cards.length, bt.learn, card.a.length);
     B.oppAns = B.oppAns.filter(x => x.i !== i);
-    B.oppAns.push({ i, given: ok ? card.a : typo(card.a), ok, ms: d }); if (ok && B.setup.opts?.live !== false) hitFx('me');
+    B.oppAns.push({ i, given: ok ? card.a : typo(card.a), ok, ms: d }); if (ok && B.setup.opts?.live !== false) hitFx('me'); maybeFinish(); if (B.phase === 'end') return;
     renderBattle(); botNext();
   });
 }
@@ -643,7 +654,7 @@ ROUTES.battles = (parts, q) => {
         <label class="field"><span>Liczba fiszek</span><input type="number" inputmode="numeric" min="3" max="50" data-btopt="n" value="${o.n}"></label>
         <label class="field"><span>Kierunek</span>${sel('dir', [['qa', 'pytanie → odp.'], ['aq', 'odp. → pytanie'], ['mix', 'mieszany']], o.dir)}</label>
         <label class="field"><span>Czas na naukę</span>${sel('learnSec', [[0, 'bez limitu'], [60, '1 min'], [120, '2 min'], [180, '3 min'], [300, '5 min'], [600, '10 min']], o.learnSec)}</label>
-        <label class="field"><span>Czas na odpowiedź</span>${sel('ansSec', [[0, 'bez limitu'], [10, '10 s'], [15, '15 s'], [25, '25 s'], [45, '45 s'], [60, '60 s']], o.ansSec)}</label>
+        <label class="field"><span>Czas na odpowiedź (tylko ABCD)</span>${sel('ansSec', [[0, 'bez limitu'], [10, '10 s'], [15, '15 s'], [25, '25 s'], [45, '45 s'], [60, '60 s']], o.ansSec)}</label>
         ${mode === 'quiz' ? '' : `<label class="field"><span>Sprawdzanie</span>${sel('tol', [['strict', 'dokładne'], ['normal', 'normalne'], ['lenient', 'łagodne']], o.tol)}</label>`}
         <label class="field"><span>Wynik rywala</span>${sel('live', [['1', 'na żywo'], ['0', 'ukryty do końca']], o.live ? '1' : '0')}</label>
       </div>`
@@ -709,7 +720,7 @@ function friendSetup() {
   const cards = battleCards(deckId, clamp(o.n, 3, 50), o.dir, abcd);
   if (cards.length < 3) { toast('W tej talii jest za mało fiszek tekstowych (min. 3)'); return null; }
   if (abcd && cards.some(c => c.opts.length < 2)) { toast('Do quizu ABCD talia potrzebuje kilku różnych odpowiedzi'); return null; }
-  return { mode: 'cards', deckId, deckName: deckById(deckId)?.name, cards, opts: { learnSec: o.learnSec, ansSec: o.ansSec, tol: o.tol, live: o.live, sab: o.sab, abcd } };
+  return { mode: 'cards', deckId, deckName: deckById(deckId)?.name, cards, opts: { learnSec: o.learnSec, ansSec: abcd ? o.ansSec : 0, tol: o.tol, live: o.live, sab: o.sab, abcd } };
 }
 
 Object.assign(ACTIONS, {

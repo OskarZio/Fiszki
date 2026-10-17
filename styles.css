@@ -1294,3 +1294,10 @@ html, body { max-width: 100%; overflow-x: clip; }
 .draw-sizes button { width: 38px; height: 38px; min-height: 38px; padding: 0 !important; border-radius: 10px; }
 .draw-sizes button i { display: block; border-radius: 50%; background: var(--text); }
 .draw-sizes button.on { outline: 3px solid var(--accent); }
+/* iOS: bez opóźnienia „podwójnego stuknięcia” i bez zaznaczania tekstu przy stuknięciu w kartę */
+.fc3d { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.fc3d textarea, .fc3d input { -webkit-user-select: text; user-select: text; }
+.star-banner { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+.star-decks { display: flex; flex-wrap: wrap; gap: 6px; }
+.star-decks button b { margin-left: 4px; color: #f59e0b; }
+.note .item-x { margin-left: 4px; opacity: .55; font-size: 16px; min-height: 36px; padding: 4px 6px; } .note .item-x:hover { opacity: 1; }

@@ -74,7 +74,7 @@ ROUTES.topic = parts => {
       : it.type === 'gallery' && IMG[it.images?.[0]?.id] ? `<img src="${IMG[it.images[0].id]}" alt="">`
       : `<span style="font-size:26px">${ITEM_ICON[it.type]}</span>`;
     const sub = it.type === 'note' ? htmlText(it.html).slice(0, 80) : it.type === 'gallery' ? `${(it.images || []).length} zdjęć` : hostOf(it.url) + (htmlText(it.html).trim() ? ' · 📝' : '');
-    return `<div class="note" data-go="#/item/${t.id}/${it.id}">${thumb}<div class="t"><div><b>${esc(it.title)}</b></div><div class="small muted">${esc(sub)}</div></div><span class="tag">${ITEM_ICON[it.type]}</span></div>`;
+    return `<div class="note" data-go="#/item/${t.id}/${it.id}">${thumb}<div class="t"><div><b>${esc(it.title)}</b></div><div class="small muted">${esc(sub)}</div></div><span class="tag">${ITEM_ICON[it.type]}</span><button class="iconbtn sm item-x" data-act="item-quickdel" data-tid="${t.id}" data-id="${it.id}" title="Usuń">🗑️</button></div>`;
   }).join('');
   const deckRows = decks.map(d => { const k = deckCounts(d.id); return `<div class="deck"><div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div>${countsHTML(k)}
       <button class="sm ${k.total ? 'primary' : ''}" data-go="#/study/${d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz</button>
@@ -251,6 +251,16 @@ Object.assign(ACTIONS, {
     setTimeout(() => $('#editor')?.focus(), 80);
   },
   'item-rename': el => { const t = topicById(el.dataset.tid), it = t.items.find(x => x.id === el.dataset.id); const n = prompt('Tytuł:', it.title); if (n?.trim()) { it.title = n.trim(); touch(t); save(); render(); } },
+  // usuwanie jednym stuknięciem z listy tematu (z możliwością cofnięcia przez kilka sekund)
+  'item-quickdel': el => {
+    const t = topicById(el.dataset.tid), i = t?.items.findIndex(x => x.id === el.dataset.id); if (!t || i < 0) return;
+    const [it] = t.items.splice(i, 1); touch(t); save(); render();
+    document.querySelector('.undobar')?.remove();
+    const bar = document.createElement('div'); bar.className = 'undobar';
+    bar.innerHTML = `<span class="grow">Usunięto: ${esc(it.title || 'materiał')}</span><button class="sm">↩ Cofnij</button>`;
+    bar.querySelector('button').onclick = () => { if (!t.items.some(x => x.id === it.id)) t.items.splice(Math.min(i, t.items.length), 0, it); touch(t); save(); bar.remove(); toast('Przywrócono ✓'); render(); };
+    document.body.append(bar); setTimeout(() => bar.remove(), 7000);
+  },
   'item-del': el => {
     const t = topicById(el.dataset.tid); if (!confirm('Usunąć ten materiał razem z notatkami?')) return;
     t.items = t.items.filter(x => x.id !== el.dataset.id); touch(t); save(); go(`#/topic/${t.id}`);

@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '69';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '70';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -303,7 +303,7 @@ function occlHTML(n, targetId, reveal, extraCls = '') {
 // Zwraca: q (pytanie), a (odpowiedź), ans (tekst odpowiedzi do wpisywania/testu), hints, label (krótki opis)
 function cardView(c) {
   const n = noteById(c.noteId);
-  if (!n) return { q: '', a: '', ans: '', hints: [], label: '?' };
+  if (!n) return { q: '', a: '', b: '', ans: '', hints: [], label: '?' };
   const extra = n.extra ? `<div class="extra">${fmt(n.extra)}</div>` : '';
   const hints = [];
   if (n.type === 'cloze') {
@@ -356,14 +356,30 @@ function lev(a, b) {
   return prev[n];
 }
 // tol: 'strict' – tylko dokładnie (bez wielkości liter i interpunkcji), 'normal' – drobne literówki, 'lenient' – więcej literówek
+// „z sensem”: liczą się słowa kluczowe (bez spójników), w dowolnej kolejności i z dowolną końcówką (oddychanie ≈ oddychania)
+const STOPW = new Set('i w z na do sie o od po a oraz lub albo czy ze to jest sa jak dla przez przy ten ta te tez jego jej ich nie tak the of and or an is in on'.split(' '));
+const keyWords = s => norm(s).split(' ').filter(w => w.length > 2 && !STOPW.has(w));
+const wordHit = (w, list) => list.some(x => x === w
+  || (w.length >= 4 && x.length >= 4 && (x.startsWith(w.slice(0, Math.max(4, w.length - 3))) || w.startsWith(x.slice(0, Math.max(4, x.length - 3)))))
+  || (w.length >= 5 && lev(w, x) <= (w.length > 8 ? 2 : 1)));
+function meaningMatch(input, correct) {
+  const want = [...new Set(keyWords(correct))], got = keyWords(input);
+  if (!want.length || !got.length) return false;
+  const hit = want.filter(w => wordHit(w, got)).length;
+  if (want.length <= 2) return hit === want.length;          // krótka odpowiedź: wszystkie słowa kluczowe
+  // długie wyjaśnienie: wystarczą najważniejsze pojęcia (≥30%), ale większość wpisanych słów musi pasować (bez „sypania” słowami)
+  if (want.length >= 10) return got.length >= 3 && hit / want.length >= .3 && got.filter(g => wordHit(g, want)).length / got.length >= .5;
+  return hit / want.length >= (want.length >= 6 ? .5 : .6);  // średnia: większość sensu
+}
 function checkAnswer(input, correct, tol = S?.settings?.tolerance || 'normal') {
   const x = norm(input); if (!x) return 'wrong';
-  const alts = [correct, ...String(correct).split(/[\/;|,]| lub | albo /)].map(norm).filter(Boolean);
+  const paren = [...String(correct).matchAll(/\(([^)]+)\)/g)].map(m => m[1]);   // „Kość udowa (os femoris)” → też „kość udowa” i „os femoris”
+  const alts = [correct, String(correct).replace(/\([^)]*\)/g, ' '), ...paren, ...String(correct).split(/[\/;|,]| lub | albo /)].map(norm).filter(Boolean);
   if (alts.includes(x)) return 'ok';
   if (tol === 'strict') return 'wrong';
   const f = tol === 'lenient' ? 0.34 : 0.2;
   const close = alts.some(a => lev(x, a) <= Math.max(1, Math.floor(a.length * f)));
-  return close ? 'close' : 'wrong';
+  return close || meaningMatch(input, correct) ? 'close' : 'wrong';
 }
 
 // ============================================================ Sesja nauki
@@ -407,7 +423,7 @@ function speak(text) {
 }
 function nextCard() {
   const s = SESSION;
-  s.card = pickNext(s); s.shown = false; s.peek = false; s.editHint = false; s.spoken = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
+  s.card = pickNext(s); s.shown = false; s.peek = false; s.editHint = false; s.flipping = false; s.spoken = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
 }
 function answer(g) {
   const s = SESSION, c = s.card; if (!c) return;
@@ -561,7 +577,10 @@ function viewHome() {
   ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
   ${typeof safetyBannerHTML === 'function' ? safetyBannerHTML() : ''}
   ${typeof homeExtrasHTML === 'function' ? homeExtrasHTML() : ''}
-  ${(() => { const st = starredCards('all').length; return st ? `<div class="banner row nowrap"><span class="grow">⭐ <b>${st}</b> ${plural(st, 'oznaczona fiszka', 'oznaczone fiszki', 'oznaczonych fiszek')} – powtórz je osobno</span><button class="sm" data-act="cram-star">Powtórz</button></div>` : ''; })()}
+  ${(() => {   // ⭐ oznaczone – osobno dla każdej talii (zestawu)
+    const per = S.decks.map(d => ({ d, n: starredCards(d.id).length })).filter(x => x.n);
+    return per.length ? `<div class="banner star-banner"><span>⭐ Oznaczone fiszki – powtórz osobno:</span>
+      <div class="star-decks">${per.map(x => `<button class="sm" data-act="cram-star" data-id="${x.d.id}">${esc(x.d.name)} <b>${x.n}</b></button>`).join('')}</div></div>` : ''; })()}
   ${hard ? `<div class="banner row nowrap"><span class="grow">🧠 <b>${hard}</b> ${plural(hard, 'trudna fiszka', 'trudne fiszki', 'trudnych fiszek')} – powtórz bez wpływu na harmonogram</span><button class="sm" data-act="cram-hard">Powtórz</button></div>` : ''}
   <div class="card">
     <div class="row nowrap"><h2 class="grow" style="margin:0">Talie</h2>
@@ -705,6 +724,7 @@ function viewStudy(deckId, mode, q) {
     return head + `<div class="card flash"><div style="font-size:54px">🎉</div><h2>Gratulacje!</h2>
       <p class="muted">${s.done ? `Powtórzono ${s.done} ${plural(s.done, 'kartę', 'karty', 'kart')}.` : 'Na teraz nie ma nic do powtórki.'}</p>
       <p class="muted small">${nextDueText()}</p></div>
+      ${deckId !== 'all' && !s.cram && starredCards(deckId).length ? `<button class="block" data-act="cram-star" data-id="${deckId}">⭐ Powtórz oznaczone z tej talii (${starredCards(deckId).length})</button><div class="spacer"></div>` : ''}
       ${!s.all && !s.cram && hiddenNew(deckId) ? `<button class="primary block" data-go="#/study/${deckId}/${mode}?all=1">📚 Ucz się dalej – wszystkie nowe (${hiddenNew(deckId)})</button><div class="spacer"></div>` : ''}
       <button class="${!s.all && !s.cram && hiddenNew(deckId) ? '' : 'primary '}block" data-act="end-study" data-href="${backHash}">Gotowe</button>`;
   }
@@ -1542,12 +1562,16 @@ const ACTIONS = {
   show: () => { SESSION.shown = true; SESSION.spoken = false; render(); },
   // obrót karty z animacją (pierwsze stuknięcie = odpowiedź, kolejne = podgląd pytania i z powrotem)
   'flip-card': () => {
-    const s = SESSION; if (!s?.card || s.editHint || s.flipping) return;
+    const s = SESSION; if (!s?.card || s.editHint) return;
+    if (s.flipping && Date.now() - (s.flipT || 0) < 450) return; s.flipT = Date.now();
     const box = document.querySelector('.fc3d');
     if (box) {
-      if (!s.shown) {   // obrót, a po nim pokazujemy przyciski ocen (karta zostaje odwrócona)
+      if (!s.shown) {
+        // stan od razu = odwrócona (gdyby coś w tle odświeżyło ekran w trakcie obrotu, karta zostaje odwrócona);
+        // po obrocie dorysowujemy przyciski ocen
+        const card = s.card; s.shown = true; s.spoken = false; s.peek = false;
         box.classList.add('flipped'); s.flipping = true;
-        setTimeout(() => { s.flipping = false; s.shown = true; s.spoken = false; s.peek = false; render(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 430);
+        setTimeout(() => { s.flipping = false; if (SESSION === s && s.card === card) render(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 430);
       } else { s.peek = !s.peek; box.classList.toggle('flipped', !s.peek); }
       return;
     }
