@@ -115,3 +115,20 @@ stickerFx = function (k, from, shiny) { fxStickerFx0(k, from, shiny); playSticke
 Object.assign(ACTIONS, {
   'st-preview': el => stickerFx(el.dataset.id, 'Podgląd', isShiny(el.dataset.id)),
 });
+
+// ✨ hologram: przechylenie telefonu (żyroskop) albo ruch myszki przesuwa tęczę na złotych naklejkach
+(function holoTilt() {
+  const root = document.documentElement; let raf = 0, x = 50, y = 50;
+  const set = (nx, ny) => { x = Math.max(0, Math.min(100, nx)); y = Math.max(0, Math.min(100, ny));
+    if (!raf) raf = requestAnimationFrame(() => { raf = 0; root.style.setProperty('--hx', x.toFixed(1) + '%'); root.style.setProperty('--hy', y.toFixed(1) + '%'); }); };
+  const onTilt = e => { if (e.gamma == null) return; set(50 + e.gamma * 1.6, 50 + ((e.beta || 45) - 45) * 1.2); };
+  let listening = false;
+  const listen = () => { if (listening) return; listening = true; addEventListener('deviceorientation', onTilt); };
+  // iOS pyta o zgodę na czujnik ruchu – tylko po dotknięciu, i tylko gdy na ekranie jest złota naklejka
+  const DOE = window.DeviceOrientationEvent;
+  if (DOE && typeof DOE.requestPermission === 'function') {
+    const ask = e => { if (listening || !e.target.closest?.('.shiny')) return; DOE.requestPermission().then(r => { if (r === 'granted') listen(); }, () => {}); };
+    document.addEventListener('click', ask, true);
+  } else if (DOE) listen();
+  addEventListener('pointermove', e => { if (e.pointerType === 'mouse') set(e.clientX / innerWidth * 100, e.clientY / innerHeight * 100); }, { passive: true });
+})();

@@ -1360,3 +1360,26 @@ html, body { max-width: 100%; overflow-x: clip; }
 .tile[style*="#dc2626"], .reveal[style*="#dc2626"] { box-shadow: 0 0 18px #dc2626aa, inset 0 0 12px #dc262655; }
 .big-st .st-img { width: 1.2em; height: 1.2em; }
 .stk .st-img { width: 1.15em; height: 1.15em; }
+
+/* ✨ hologram złotych naklejek: tęcza przesuwa się przy przechyleniu telefonu / ruchu myszki (--hx, --hy) + co kilka sekund przelatuje błysk */
+.shiny:not(.stfly) { isolation: isolate; }
+.shiny:not(.stfly)::before, .shiny:not(.stfly)::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1; }
+.shiny:not(.stfly)::before {
+  background: linear-gradient(115deg, transparent 18%, rgba(255,64,160,.42) 28%, rgba(255,214,0,.42) 36%, rgba(0,230,160,.42) 44%, rgba(0,170,255,.42) 52%, rgba(170,80,255,.42) 60%, rgba(255,64,160,.42) 68%, transparent 80%);
+  background-size: 300% 300%; background-position: var(--hx, 50%) var(--hy, 50%); mix-blend-mode: hard-light; opacity: .85; transition: background-position .15s linear;
+}
+.shiny:not(.stfly)::after {
+  background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.85) 48%, rgba(255,255,255,.95) 50%, rgba(255,255,255,.85) 52%, transparent 62%);
+  background-size: 260% 100%; background-repeat: no-repeat; background-position: 160% 0; animation: holoSweep 3.6s ease-in-out infinite; mix-blend-mode: soft-light;
+}
+@keyframes holoSweep { 0%, 55% { background-position: 160% 0; } 85%, 100% { background-position: -60% 0; } }
+/* mityczna złota: czerwono-złoty hologram */
+.shiny.mythic:not(.stfly)::before, .shiny[style*="--rc:#dc2626"]:not(.stfly)::before {
+  background-image: linear-gradient(115deg, transparent 15%, rgba(220,38,38,.55) 26%, rgba(251,191,36,.6) 36%, rgba(255,90,40,.55) 46%, rgba(255,230,120,.6) 56%, rgba(190,18,60,.55) 66%, transparent 80%);
+}
+.shiny.mythic, .shiny[style*="--rc:#dc2626"] { box-shadow: 0 0 14px #dc2626, 0 0 6px #fbbf24, inset 0 0 8px #fde68a; border-color: #f59e0b !important; }
+.stfly.shiny small { background: linear-gradient(90deg, #f472b6, #facc15, #34d399, #38bdf8, #a78bfa, #f472b6); background-size: 300% 100%; animation: holoBar 2s linear infinite; color: #1b1d29; }
+.stfly.shiny.mythic small { background: linear-gradient(90deg, #dc2626, #fbbf24, #f97316, #fde68a, #dc2626); background-size: 300% 100%; }
+@keyframes holoBar { to { background-position: 300% 0; } }
+.shiny .st-img, .shiny img { position: relative; z-index: 0; }
+@media (prefers-reduced-motion: reduce) { .shiny::after, .stfly.shiny small { animation: none; } }
