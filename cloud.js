@@ -107,12 +107,26 @@ async function loadCloudFriends() {
   rerenderIf(['rank', '']);
 }
 const clRankRows0 = rankRows;
-rankRows = function () {
-  if (!cloudOn()) return clRankRows0();
-  // podstawiamy znajomych z bazy pod istniejące wyliczanie rankingu
+rankRows = function () { return cloudOn() ? rowsFromProfiles(CLOUD_FRIENDS) : clRankRows0(); };
+// 🌍 ranking wszystkich: aktywni w ostatnich 14 dniach (bez osób, które się ukryły)
+let RANK_SCOPE = 'friends', GLOBAL_PROFILES = [], globalLoaded = 0, globalBusy = false;
+const GLOBAL_TOP = 100;
+async function loadGlobalRank() {
+  if (!cloudOn() || globalBusy) return; globalBusy = true;
+  try {
+    const since = new Date(Date.now() - 14 * DAY).toISOString();
+    const p = await SB.from('profiles').select('id,code,nick,avatar,avatar_img,stats,updated_at').gte('updated_at', since).order('updated_at', { ascending: false }).limit(500);
+    if (p.error) return console.warn(p.error);
+    GLOBAL_PROFILES = (p.data || []).filter(x => x.id !== SB_USER.id && !x.stats?.hideGlobal);
+    globalLoaded = Date.now(); rerenderIf(['rank']);
+  } finally { globalBusy = false; }
+}
+const globalRows = () => rowsFromProfiles(GLOBAL_PROFILES);
+function rowsFromProfiles(list) {
+  // podstawiamy profile z bazy pod istniejące wyliczanie rankingu
   const keepF = S.friends, keepD = FRIEND_DATA;
-  S.friends = CLOUD_FRIENDS.map(p => ({ id: 'sb:' + p.id, code: 'sb:' + p.id, name: p.nick }));
-  FRIEND_DATA = Object.fromEntries(CLOUD_FRIENDS.map(p => ['sb:' + p.id, { ...(p.stats || {}), app: 'fiszki-profil', nick: p.nick || 'Gracz', avatar: p.avatar, avatarImg: p.avatar_img, updated: Date.parse(p.updated_at) }]));
+  S.friends = list.map(p => ({ id: 'sb:' + p.id, code: 'sb:' + p.id, name: p.nick }));
+  FRIEND_DATA = Object.fromEntries(list.map(p => ['sb:' + p.id, { ...(p.stats || {}), app: 'fiszki-profil', nick: p.nick || 'Gracz', avatar: p.avatar, avatarImg: p.avatar_img, updated: Date.parse(p.updated_at) }]));
   try { return clRankRows0(); } finally { S.friends = keepF; FRIEND_DATA = keepD; }
 };
 async function cloudAddFriend(code) {
@@ -138,19 +152,30 @@ function cloudRankRoute() {
   const key = r => RANK_TAB === 'xp' ? r.xp : RANK_TAB === 'elo' ? (r.elo || 1000) : RANK_TAB === 'time' ? r.weekMin || 0 : r[RANK_TAB];
   const val = r => RANK_TAB === 'time' ? `⏱ ${fmtDur((r.weekMin || 0) * MIN)} <small>w tym tyg.</small>` : RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}`
     : RANK_TAB === 'elo' ? eloHTML(r.elo || 1000) : `⭐ ${r.level} <small>${r.xp} XP</small>`;
-  const rows = rankRows().sort((a, b) => key(b) - key(a)), maxToday = Math.max(1, ...rows.map(r => r.today));
+  const all = RANK_SCOPE === 'all';
+  if (all && Date.now() - globalLoaded > 60e3) loadGlobalRank();
+  const sorted = (all ? globalRows() : rankRows()).sort((a, b) => key(b) - key(a) || (b.me ? 1 : 0) - (a.me ? 1 : 0));
+  const myPos = sorted.findIndex(r => r.me);
+  // ranking wszystkich: top 100 + Twoje miejsce, jeśli jesteś niżej
+  const rows = all ? sorted.slice(0, GLOBAL_TOP).concat(myPos >= GLOBAL_TOP ? [sorted[myPos]] : []) : sorted;
+  const posOf = r => sorted.indexOf(r), maxToday = Math.max(1, ...rows.map(r => r.today));
+  const fids = new Set(CLOUD_FRIENDS.map(f => 'sb:' + f.id)), codeOf = id => GLOBAL_PROFILES.find(p => 'sb:' + p.id === id)?.code;
   const code = SB_PROFILE?.code;
   onMount(mountRank);
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Ranking</h1><button class="iconbtn" data-act="cloud-rank-refresh">🔄</button></div>
+  <div class="seg rank-scope" style="display:flex"><button class="grow ${all ? '' : 'on'}" data-act="rank-scope" data-k="friends">👥 Znajomi</button><button class="grow ${all ? 'on' : ''}" data-act="rank-scope" data-k="all">🌍 Wszyscy</button></div>
   <div class="seg" style="display:flex">${tabs.map(([k, l]) => `<button class="grow ${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
-  <div class="card">${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}">
-      <span class="medal">${['🥇', '🥈', '🥉'][i] || i + 1 + '.'}</span><span class="av">${avatarHTML(r, 34)}</span>
+  ${all ? `<p class="small muted center" style="margin:6px 0">${globalLoaded ? `Wszyscy aktywni w ostatnich 14 dniach · ${sorted.length} os. · Twoje miejsce: <b>#${myPos + 1}</b>` : 'Wczytywanie rankingu…'}${S.settings.hideGlobal ? ' · 🙈 jesteś ukryty dla innych' : ''}</p>` : ''}
+  <div class="card">${rows.map((r, i) => { const pos = posOf(r); return `${all && i === GLOBAL_TOP ? '<div class="rank-gap">⋯</div>' : ''}<div class="rankrow${r.me ? ' me' : ''}">
+      <span class="medal">${['🥇', '🥈', '🥉'][pos] || pos + 1 + '.'}</span><span class="av">${avatarHTML(r, 34)}</span>
       <div class="grow"><div class="row nowrap"><b class="grow nickrow"><span class="nm">${esc(r.nick)}</span>${r.me ? '<span>(Ty)</span>' : ''}${typeof showcaseHTML === 'function' ? `<span>${showcaseHTML(r.showcase)}</span>` : ''}</b><span>${val(r)}</span></div>
         ${RANK_TAB === 'today' ? progress(r.today / maxToday, true) : ''}
         <div class="small muted">poziom ${r.level} · 🔥 ${r.streak}${r.me ? ` · ${r.total} powtórek łącznie` : r.updated ? ` · aktywność ${ago(r.updated)}` : ''}</div></div>
-      ${r.me ? '' : `<button class="ghost sm" data-act="cloud-friend-del" data-id="${String(r.id).replace('sb:', '')}">✕</button>`}</div>`).join('')}
-    ${CLOUD_FRIENDS.length ? '' : '<p class="muted small center">Dodaj znajomych kodem, żeby się porównywać 💪</p>'}</div>
+      ${r.me ? '' : all ? (fids.has(r.id) ? '<span class="small muted" title="Znajomy">👥</span>' : codeOf(r.id) ? `<button class="ghost sm" data-act="rank-add" data-code="${esc(codeOf(r.id))}" title="Dodaj do znajomych">➕</button>` : '')
+        : `<button class="ghost sm" data-act="cloud-friend-del" data-id="${String(r.id).replace('sb:', '')}">✕</button>`}</div>`; }).join('')}
+    ${all ? (globalLoaded && sorted.length < 2 ? '<p class="muted small center">Na razie nikogo więcej tu nie ma – zaproś znajomych! 🌍</p>' : '') : CLOUD_FRIENDS.length ? '' : '<p class="muted small center">Dodaj znajomych kodem, żeby się porównywać 💪</p>'}</div>
+  ${all ? `<div class="card"><label class="row nowrap small" style="gap:10px"><input type="checkbox" data-act="rank-hide" ${S.settings.hideGlobal ? 'checked' : ''}><span class="grow"><b>🙈 Nie pokazuj mnie w rankingu wszystkich</b><br><span class="muted">Znajomi dalej widzą Cię w swoim rankingu.</span></span></label></div>` : ''}
   <div class="card"><h3 style="margin-top:0">Znajomi</h3>
     <p class="small">Twój kod: <b class="code-sm">${code || '…'}</b></p>
     <button class="primary block" data-act="cloud-invite" ${code ? '' : 'disabled'}>📤 Zaproś znajomego</button>
@@ -158,6 +183,11 @@ function cloudRankRoute() {
     <div class="row nowrap"><input id="friend-code" class="grow" placeholder="Kod znajomego (8 znaków)" maxlength="40" autocapitalize="characters" style="text-transform:uppercase"><button data-act="cloud-friend-add">Dodaj</button></div>
     <p class="small muted">Ranking pokazuje tylko nick i liczby (powtórki, serię, poziom, Elo) – fiszki zostają prywatne.</p></div>` };
 }
+Object.assign(ACTIONS, {
+  'rank-scope': el => { RANK_SCOPE = el.dataset.k; render(); },
+  'rank-add': el => cloudAddFriend(el.dataset.code),
+  'rank-hide': el => { S.settings.hideGlobal = el.checked; save(); publishCloudProfile().catch(() => {}); toast(el.checked ? '🙈 Nie będzie Cię widać w rankingu wszystkich' : '🌍 Znów jesteś w rankingu wszystkich'); render(); },
+});
 const clFriendRoute0 = ROUTES.friend;
 ROUTES.friend = (parts, q) => {
   if (cloudOn() && /^[0-9A-Za-z]{8}$/.test(parts[1] || '')) { setTimeout(() => cloudAddFriend(parts[1]), 50); return cloudRankRoute(); }

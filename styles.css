@@ -1426,3 +1426,6 @@ html, body { max-width: 100%; overflow-x: clip; }
 #egg-chip.floating { position: fixed; left: 10px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 60; }
 body.focus #egg-chip.floating { bottom: auto; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); }
 #egg-chip.grow { box-shadow: 0 0 0 2px #22c55e66, var(--shadow); }
+
+.rank-scope { margin-bottom: 8px; }
+.rank-gap { text-align: center; color: var(--muted); padding: 2px 0; letter-spacing: .3em; }

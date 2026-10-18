@@ -302,7 +302,7 @@ function myProfile() {
   const best = {}; for (const g of S.games) if (g.correct > (best[g.d] || 0)) best[g.d] = g.correct;
   return { app: 'fiszki-profil', v: 1, nick: S.profile.nick || 'Anonim', avatar: S.profile.avatar || '🦊', avatarImg: safeImg(S.profile.avatarImg), level: levelOf(xp), xp, elo: typeof myElo === 'function' ? myElo() : 1000,
     streak: streak(), day: dayKey(Date.now()), today: reviewsToday(), week, perDay, perMin, total: S.log.length, cards: S.cards.length,
-    mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now() };
+    mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now(), ...(S.settings.hideGlobal ? { hideGlobal: 1 } : {}) };
 }
 async function publishProfile(force) {
   const cfg = S.settings.sync;
