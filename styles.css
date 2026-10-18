@@ -1332,3 +1332,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .lg-row.me { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .lg-pl { width: 28px; text-align: center; font-weight: 800; }
 .lg-pts { font-weight: 800; font-variant-numeric: tabular-nums; }
+/* 👥 wspólna talia */
+.share-box { margin: 8px 0; padding: 8px 12px; border-radius: 14px; background: color-mix(in srgb, #22c55e 9%, var(--card2)); }
+.share-box summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 4px 0; }
+.share-box .row { gap: 8px; }
+.sd-inv { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; } .sd-inv small { opacity: .8; }

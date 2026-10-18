@@ -9,7 +9,7 @@ const MSG_TEXT_MAX = 300, CHALLENGE_TTL = 15 * MIN, NUDGE_GAP = 10 * MIN;
 const myId = () => SB_USER?.id;
 const friendById = id => CLOUD_FRIENDS.find(f => f.id === id);
 const friendName = id => friendById(id)?.nick || 'Znajomy';
-const unreadMsgs = fid => MSGS.filter(m => m.to_id === myId() && !m.read_at && (!fid || m.from_id === fid));
+const unreadMsgs = fid => MSGS.filter(m => m.to_id === myId() && !m.read_at && !m.body?.sd && (!fid || m.from_id === fid));
 const seenKey = () => 'msgSeen-' + myId();
 const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch { /* */ } };
@@ -40,7 +40,7 @@ function handleMsgs(fresh) {
   if (changed) save();
   // powiadomienia tylko o nowych (przy pierwszym uruchomieniu nie zasypujemy starymi)
   const seen = +lsGet(seenKey()) || 0, maxId = Math.max(seen, ...MSGS.map(m => m.id));
-  if (seen) for (const m of fresh.sort((x, y) => x.id - y.id)) if (m.to_id === me && m.id > seen && !m.read_at) notifyMsg(m);
+  if (seen) for (const m of fresh.sort((x, y) => x.id - y.id)) if (m.to_id === me && m.id > seen && !m.read_at && !m.body?.sd) notifyMsg(m);
   lsSet(seenKey(), maxId);
   updateMsgBadge();
   if (CHAT.fid && parseRoute().parts[0] === 'chat') markRead(CHAT.fid);
@@ -86,6 +86,7 @@ const msgSummary = m => {
   if (m.kind === 'gift') { const s = stickerById(m.body.st); return [`🎁 ${who} podarował(a) Ci naklejkę!`, `${s?.e || ''} ${s?.name || ''} – jest już w Twoim albumie`]; }
   if (m.kind === 'nudge') return [`🔔 ${who} przypomina o nauce`, m.body?.text || 'Czas na fiszki! 📚'];
   if (m.kind === 'challenge') return [`⚔️ ${who} wyzywa Cię na bitwę!`, m.body?.deck ? `Talia: ${m.body.deck}` : 'Stuknij, żeby przyjąć'];
+  if (m.body?.sdi) return [`👥 ${who} zaprasza Cię do wspólnej talii`, m.body.sdi.name || ''];
   if (m.body?.gif) return [`🎞️ ${who} wysłał(a) GIF-a`, 'Stuknij, żeby zobaczyć'];
   if (m.body?.st) { const s = stickerById(m.body.st); return [`${s?.e || '🃏'} ${who} wysłał(a) naklejkę`, s?.name || '']; }
   return [`💬 ${who}`, m.body?.text || ''];
@@ -145,6 +146,11 @@ function msgBodyHTML(m, mine) {
       ${!open ? '<small class="muted">wygasło</small>' : mine ? (typeof B !== 'undefined' && B?.code === b.code ? '<button class="sm" data-go="#/battle">Wróć do poczekalni</button>' : '<small class="muted">czeka na przeciwnika</small>')
         : `<button class="sm primary" data-act="chat-accept" data-id="${m.id}">⚔️ Przyjmij wyzwanie</button>`}`;
   }
+  if (b.sdi) {   // 👥 zaproszenie do wspólnej talii
+    const have = typeof deckByShare === 'function' && deckByShare(b.sdi.id);
+    return `<div class="sd-inv">👥 <b>Wspólna talia: ${esc(b.sdi.name || '')}</b><small>${mine ? 'Wysłano zaproszenie' : have ? 'Już jesteś w tej talii ✓' : 'Dodawajcie fiszki razem – każdy uczy się po swojemu'}</small>
+      ${!mine && !have ? `<button class="sm primary" data-act="share-accept" data-id="${m.id}">Dołącz</button>` : have ? `<button class="sm" data-go="#/deck/${have.id}">Otwórz talię</button>` : ''}</div>`;
+  }
   if (b.st) {   // naklejka (bez oddawania – tylko pokazanie)
     const s = stickerById(b.st); if (!s) return '🃏';
     return `<div class="chat-st${b.shiny ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${s.e}</span><small>${esc(s.name)}</small></div>`;
@@ -170,7 +176,7 @@ ROUTES.chat = parts => {
   if (!f) { if (!CLOUD_FRIENDS.length) loadCloudFriends(); return { tab: 'home', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><h1 class="grow">Czat</h1></div><div class="card"><p class="muted">Ładuję znajomego…</p></div>` }; }
   if (CHAT.fid !== fid) CHAT = { fid, pick: false, draft: '' };
   const mySt = ownedStickers().map(stickerById).filter(Boolean), myGifs = typeof GIF_CASE !== 'undefined' ? GIF_CASE.filter(g => hasItem('gif', g.id)) : [];
-  const me = myId(), list = MSGS.filter(m => (m.from_id === me && m.to_id === fid) || (m.from_id === fid && m.to_id === me)).slice(-120);
+  const me = myId(), list = MSGS.filter(m => !m.body?.sd && ((m.from_id === me && m.to_id === fid) || (m.from_id === fid && m.to_id === me))).slice(-120);
   onMount(() => {
     markRead(fid); clearTimeout(inboxTimer); inboxTimer = setTimeout(inboxTick, 4000);
     const box = $('#chat-list'); if (box) box.scrollTop = box.scrollHeight;
@@ -205,7 +211,7 @@ ROUTES.inbox = () => {
   if (!cloudOn()) return { tab: 'home', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Wiadomości</h1></div><div class="card"><p>Wiadomości działają po zalogowaniu na konto.</p><button class="primary" data-go="#/more">Zaloguj się</button></div>` };
   const me = myId();
   const rows = CLOUD_FRIENDS.map(f => {
-    const conv = MSGS.filter(m => m.from_id === f.id || m.to_id === f.id), last = conv[conv.length - 1];
+    const conv = MSGS.filter(m => !m.body?.sd && (m.from_id === f.id || m.to_id === f.id)), last = conv[conv.length - 1];
     return { f, last, unread: unreadMsgs(f.id).length, t: last ? Date.parse(last.created_at) : 0 };
   }).sort((a, b) => b.t - a.t);
   const preview = m => { if (!m) return 'Brak wiadomości'; const [t, b] = msgSummary(m); return (m.from_id === me ? 'Ty: ' : '') + (m.kind === 'text' && !m.body?.st && !m.body?.gif ? m.body?.text || '' : m.from_id === me ? t.replace(/^\S+\s/, '') : t); };
