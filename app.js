@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '72';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '73';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -245,6 +245,35 @@ function reviewsToday() {
   for (let i = S.log.length - 1; i >= 0 && S.log[i].t >= sod; i--) n++;
   return n;
 }
+// ---------- 🎓 Tryb egzaminu: data egzaminu talii → tyle nowych dziennie, żeby zdążyć, i powtórka tuż przed egzaminem
+const examDay = d => d?.exam ? new Date(d.exam + 'T00:00').getTime() : 0;
+function examInfo(d) {
+  const ex = examDay(d); if (!ex) return null;
+  const today = dayStart(), daysLeft = Math.round((ex - today) / DAY);
+  if (daysLeft < 0) return { past: true, date: ex, daysLeft };
+  const cards = S.cards.filter(c => c.deckId === d.id), intro = introducedToday()[d.id] || 0;
+  const newLeft = cards.filter(c => c.srs.state === 'new').length + intro;   // z dzisiejszymi już zaczętymi
+  const newDays = Math.max(1, daysLeft - 2);                                 // ostatnie 2 dni = tylko powtórki
+  const perDay = daysLeft <= 2 ? newLeft : Math.ceil(newLeft / newDays);
+  const learned = cards.filter(c => c.srs.state !== 'new').length;
+  return { date: ex, daysLeft, newLeft: newLeft - intro, perDay, total: cards.length, learned, ok: perDay <= Math.max(40, S.settings.newPerDay * 2) };
+}
+// dzienny limit nowych dla talii: ustawienie albo więcej, jeśli wymaga tego egzamin
+const deckNewLimit = id => { const e = examInfo(deckById(id)); return e && !e.past ? Math.max(S.settings.newPerDay, e.perDay) : S.settings.newPerDay; };
+const fmtDay = t => new Date(t).toLocaleDateString('pl', { weekday: 'short', day: 'numeric', month: 'short' });
+const inDays = n => n === 0 ? 'dziś' : n === 1 ? 'jutro' : `za ${n} dni`;
+function examCardHTML(d) {
+  const e = examInfo(d);
+  if (!e) return `<details class="exam-set"><summary>🎓 Mam egzamin / kolokwium z tej talii</summary>
+    <label class="field"><span>Data egzaminu</span><input type="date" data-exam="${d.id}" min="${new Date().toISOString().slice(0, 10)}"></label>
+    <p class="small muted">Aplikacja rozłoży nowe fiszki tak, żebyś zdążył, a każda karta wróci na powtórkę dzień przed egzaminem.</p></details>`;
+  if (e.past) return `<div class="exam-box past"><span>🎓 Egzamin był ${fmtDay(e.date)}.</span><button class="sm" data-act="exam-clear" data-id="${d.id}">Usuń datę</button></div>`;
+  const pct = e.total ? Math.round(e.learned / e.total * 100) : 0;
+  return `<div class="exam-box${e.ok ? '' : ' warn'}"><div class="row nowrap"><b class="grow">🎓 Egzamin ${inDays(e.daysLeft)} · ${fmtDay(e.date)}</b><button class="sm ghost" data-act="exam-clear" data-id="${d.id}" title="Usuń datę">✕</button></div>
+    ${progress(pct / 100)}<div class="small">${e.learned}/${e.total} kart rozpoczętych (${pct}%)</div>
+    <div class="small">${e.newLeft > 0 ? `📅 Plan: <b>${e.perDay}</b> nowych dziennie${e.daysLeft > 2 ? ' · ostatnie 2 dni tylko powtórki' : ''}` : '✅ Wszystkie karty rozpoczęte – teraz już tylko powtórki'}</div>
+    ${e.ok ? '' : `<div class="small c-hard">⚠️ Dużo na dzień – zacznij od razu albo przejrzyj całą talię kilka razy („Przejrzyj całą talię”).</div>`}</div>`;
+}
 function deckCounts(deckId, noLimit) {
   const eod = addDays(dayStart(), 1), intro = introducedToday();
   const per = {};
@@ -256,7 +285,7 @@ function deckCounts(deckId, noLimit) {
   }
   let nw = 0, lrn = 0, rev = 0;
   for (const id in per) {
-    nw += noLimit ? per[id].n : Math.min(per[id].n, Math.max(0, S.settings.newPerDay - (intro[id] || 0)));
+    nw += noLimit ? per[id].n : Math.min(per[id].n, Math.max(0, deckNewLimit(id) - (intro[id] || 0)));
     lrn += per[id].l; rev += per[id].r;
   }
   return { nw, lrn, rev, total: nw + lrn + rev };
@@ -409,7 +438,7 @@ function pickNext(sess) {
   if (lrn.length) return lrn[0];
   const rev = pool.filter(c => c.srs.state === 'review' && c.srs.due <= now).sort(byDue);
   const intro = introducedToday();
-  const nwAll = pool.filter(c => c.srs.state === 'new' && (sess.all || (intro[c.deckId] || 0) < S.settings.newPerDay)), key = newOrderKey(nwAll);   // sess.all: bez dziennego limitu
+  const nwAll = pool.filter(c => c.srs.state === 'new' && (sess.all || (intro[c.deckId] || 0) < deckNewLimit(c.deckId))), key = newOrderKey(nwAll);   // sess.all: bez dziennego limitu
   const nw = nwAll.sort((a, b) => key(a) - key(b));
   if (rev.length && (!nw.length || sess.done % 3 !== 2)) return choose(rev);
   if (nw.length) return choose(nw);
@@ -437,6 +466,9 @@ function answer(g) {
     const entry = { id: uid(), c: c.id, d: c.deckId, t: Date.now(), g, n: wasNew ? 1 : 0, ms: Math.min(60000, Date.now() - s.shownAt), m: typed ? 'type' : 'flip', ...(typed ? { v: s.verdict } : {}) };
     s.undo = { cardId: c.id, srs: c.srs, logId: entry.id, mod: c.mod };
     c.srs = schedule(c.srs, g); touch(c); S.log.push(entry); s.done++;
+    // egzamin: każda karta wraca najpóźniej dzień przed egzaminem (powtórka „na świeżo”)
+    const ex = examDay(deckById(c.deckId)), before = ex - DAY + 8 * 3600e3;
+    if (ex > Date.now() + DAY && c.srs.due > before) c.srs = { ...c.srs, due: Math.max(Date.now() + 10 * MIN, before) };
     save();
     emit('review', c, g, wasNew);
   }
@@ -577,6 +609,11 @@ function viewHome() {
   ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
   ${typeof safetyBannerHTML === 'function' ? safetyBannerHTML() : ''}
   ${typeof homeExtrasHTML === 'function' ? homeExtrasHTML() : ''}
+  ${(() => {   // 🎓 najbliższy egzamin
+    const ex = S.decks.map(d => ({ d, e: examInfo(d) })).filter(x => x.e && !x.e.past).sort((a, b) => a.e.date - b.e.date)[0];
+    if (!ex) return '';
+    const k = deckCounts(ex.d.id);
+    return `<div class="banner row nowrap exam-banner"><span class="grow">🎓 <b>${esc(ex.d.name)}</b> – egzamin ${inDays(ex.e.daysLeft)}. Dziś: ${k.nw} nowych + ${k.lrn + k.rev} powtórek</span><button class="sm primary" data-go="#/study/${ex.d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz się</button></div>`; })()}
   ${(() => {   // ⭐ oznaczone – osobno dla każdej talii (zestawu)
     const per = S.decks.map(d => ({ d, n: starredCards(d.id).length })).filter(x => x.n);
     return per.length ? `<div class="banner star-banner"><span>⭐ Oznaczone fiszki – powtórz osobno:</span>
@@ -635,6 +672,7 @@ function viewDeck(id, q) {
       <button class="grow" data-act="cram-star" data-id="${id}" ${starredCards(id).length ? '' : 'disabled'}>⭐ Oznaczone (${starredCards(id).length})</button>
     </div>
     <div class="spacer"></div>
+    ${examCardHTML(d)}
     <button class="block sm${d.mix ? ' primary' : ''}" data-act="deck-mix" data-id="${id}">🔀 Przeplatanie: ${d.mix ? 'włączone – nowe karty w losowej kolejności' : 'wyłączone (stuknij, by mieszać terminy z obrazami)'}</button>
   </div>
   <div class="card">
@@ -1634,6 +1672,7 @@ const ACTIONS = {
     touch(n); save();
     SESSION.editHint = false; SESSION.hintDraft = null; SESSION.hint = true; toast(n.hint || n.hintImg ? '💡 Skojarzenie zapisane' : 'Usunięto skojarzenie', 1600); render();
   },
+  'exam-clear': el => { const d = deckById(el.dataset.id); if (!d) return; delete d.exam; touch(d); save(); render(); },
   'cram-star': el => { const d = el.dataset.id || 'all'; SESSION = null; go(`#/study/${d}/flip?cram=star`); },
   speak: () => { const v = cardView(SESSION.card); speak(stripHtml(SESSION.shown ? v.a : v.q)); },
   hint: () => { SESSION.hint = true; render(); },
@@ -1785,6 +1824,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const el = e.target;
+  if (el.dataset.exam) { const d = deckById(el.dataset.exam); if (d && el.value) { d.exam = el.value; touch(d); save(); toast('🎓 Plan nauki do egzaminu gotowy'); render(); } return; }
   if (el.dataset.actChange === 'deckpick') {
     if (el.value === '__new') {
       const n = prompt('Nazwa nowej talii:');

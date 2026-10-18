@@ -1302,3 +1302,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .star-decks button b { margin-left: 4px; color: #f59e0b; }
 .note .item-x { margin-left: 4px; opacity: .55; font-size: 16px; min-height: 36px; padding: 4px 6px; } .note .item-x:hover { opacity: 1; }
 .study-go { flex-direction: column; gap: 0; } .study-go .study-extra { font-size: 11px; font-weight: 400; opacity: .8; }
+/* 🎓 tryb egzaminu */
+.exam-set { margin: 8px 0; } .exam-set summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 6px 0; }
+.exam-box { margin: 8px 0; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, #6366f1 10%, var(--card2)); display: flex; flex-direction: column; gap: 6px; }
+.exam-box.warn { background: color-mix(in srgb, #f59e0b 14%, var(--card2)); }
+.exam-box.past { flex-direction: row; align-items: center; justify-content: space-between; }
