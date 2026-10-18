@@ -1326,3 +1326,9 @@ html, body { max-width: 100%; overflow-x: clip; }
 .weak-card { display: flex; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); } .weak-card:last-child { border-bottom: 0; }
 .wk-n { width: 26px; height: 26px; border-radius: 50%; background: var(--card2); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; }
 .wlink { padding: 6px 0; gap: 8px; border-bottom: 1px solid var(--line); } .wlink:last-child { border-bottom: 0; } .wl-i { font-size: 22px; width: 30px; text-align: center; }
+/* 🏆 liga tygodnia */
+.league { background: linear-gradient(135deg, color-mix(in srgb, #f59e0b 12%, var(--card)), var(--card)); }
+.lg-row { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 10px; }
+.lg-row.me { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.lg-pl { width: 28px; text-align: center; font-weight: 800; }
+.lg-pts { font-weight: 800; font-variant-numeric: tabular-nums; }
