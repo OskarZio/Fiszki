@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '74';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '75';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -674,6 +674,7 @@ function viewDeck(id, q) {
       <button class="grow" data-act="cram-deck" data-id="${id}" ${cards.length ? '' : 'disabled'}>🔁 Przejrzyj całą talię</button>
       <button class="grow" data-act="cram-hard" data-id="${id}" ${hard.length ? '' : 'disabled'}>🧠 Trudne (${hard.length})</button>
       <button class="grow" data-act="cram-star" data-id="${id}" ${starredCards(id).length ? '' : 'disabled'}>⭐ Oznaczone (${starredCards(id).length})</button>
+      <button class="grow" data-go="#/weak?deck=${id}">📉 Słabe punkty</button>
     </div>
     <div class="spacer"></div>
     ${examCardHTML(d)}
@@ -1458,7 +1459,7 @@ function viewMore() {
   ${!full && typeof profileCardHTML === 'function' ? profileCardHTML() : ''}
   ${modeCard}
   <div id="anki">${ankiSectionHTML()}</div>
-  <div class="card"><h2 style="margin-top:0">📊 Statystyki</h2>
+  <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">📊 Statystyki</h2><button class="sm" data-go="#/weak">📉 Słabe punkty</button></div>
     <div class="heat">${cells}</div><div class="spacer"></div>
     <div class="kv"><span>Seria dni nauki</span><b>🔥 ${streak()}</b></div>
     <div class="kv"><span>Wszystkie karty</span><b>${total}</b></div>

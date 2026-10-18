@@ -1320,3 +1320,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .pt em { margin-left: auto; font-style: normal; }
 .pt span { flex: 1; }
 .pts-sum { margin-top: 4px; text-align: center; }
+/* 📉 słabe punkty */
+.weak-sec { padding: 8px 0; border-bottom: 1px solid var(--line); } .weak-sec:last-child { border-bottom: 0; }
+.weak-bar { height: 8px; border-radius: 99px; background: var(--card2); overflow: hidden; margin: 4px 0; } .weak-bar i { display: block; height: 100%; border-radius: 99px; }
+.weak-card { display: flex; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); } .weak-card:last-child { border-bottom: 0; }
+.wk-n { width: 26px; height: 26px; border-radius: 50%; background: var(--card2); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; }
