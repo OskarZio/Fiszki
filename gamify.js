@@ -273,13 +273,15 @@ const APP_URL = () => location.href.split('#')[0];
 let FRIEND_DATA = {}, publishAt = 0;
 
 function myProfile() {
-  const perDay = {}; const since = addDays(dayStart(), -13);
-  for (const l of S.log) if (l.t >= since) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + 1; }
+  const perDay = {}, perMin = {}; const since = addDays(dayStart(), -13);
+  for (const l of S.log) if (l.t >= since) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + 1; perMin[k] = (perMin[k] || 0) + Math.min(60000, l.ms || 0) / MIN; }
+  for (const l of S.tlog || []) if (l.t >= since) { const k = dayKey(l.t); perMin[k] = (perMin[k] || 0) + Math.min(60000, l.ms || 0) / MIN; }
+  for (const k in perMin) perMin[k] = Math.round(perMin[k] * 10) / 10;
   const week = Object.entries(perDay).filter(([k]) => k >= dayKey(addDays(dayStart(), -6))).reduce((a, [, n]) => a + n, 0);
   const xp = xpTotal();
   const best = {}; for (const g of S.games) if (g.correct > (best[g.d] || 0)) best[g.d] = g.correct;
   return { app: 'fiszki-profil', v: 1, nick: S.profile.nick || 'Anonim', avatar: S.profile.avatar || '🦊', avatarImg: safeImg(S.profile.avatarImg), level: levelOf(xp), xp, elo: typeof myElo === 'function' ? myElo() : 1000,
-    streak: streak(), day: dayKey(Date.now()), today: reviewsToday(), week, perDay, total: S.log.length, cards: S.cards.length,
+    streak: streak(), day: dayKey(Date.now()), today: reviewsToday(), week, perDay, perMin, total: S.log.length, cards: S.cards.length,
     mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now() };
 }
 async function publishProfile(force) {
@@ -326,9 +328,10 @@ function rankRows() {
   const norm = p => {
     const per = p.perDay || {};
     const week = Object.entries(per).filter(([k]) => k >= weekFrom && k <= today).reduce((a, [, n]) => a + n, 0);
+    const weekMin = Object.entries(p.perMin || {}).filter(([k]) => k >= weekFrom && k <= today).reduce((a, [, n]) => a + (+n || 0), 0);
     const lastDay = Object.keys(per).sort().pop();
     const streakAlive = p.day === today || lastDay === dayKey(addDays(dayStart(), -1)) || lastDay === today;
-    return { nick: p.nick, avatar: p.avatar, avatarImg: p.avatarImg, elo: +p.elo || 1000, today: p.day === today ? p.today : (per[today] || 0), week, streak: streakAlive ? p.streak : 0, level: p.level || 1, xp: p.xp || 0, total: p.total || 0, updated: p.updated, ach: p.ach || 0, showcase: p.showcase || [] };
+    return { weekMin, nick: p.nick, avatar: p.avatar, avatarImg: p.avatarImg, elo: +p.elo || 1000, today: p.day === today ? p.today : (per[today] || 0), week, streak: streakAlive ? p.streak : 0, level: p.level || 1, xp: p.xp || 0, total: p.total || 0, updated: p.updated, ach: p.ach || 0, showcase: p.showcase || [] };
   };
   const me = { ...norm(myProfile()), me: true };
   const rows = S.friends.map(f => FRIEND_DATA[f.code]?.app ? { ...norm(FRIEND_DATA[f.code]), id: f.id, err: FRIEND_DATA[f.code].err } : { nick: f.name || 'Znajomy', avatar: '❔', id: f.id, today: 0, week: 0, streak: 0, level: 0, xp: 0, err: FRIEND_DATA[f.code]?.err || 'brak danych' });
@@ -341,9 +344,9 @@ ROUTES.rank = () => {
     rankLoaded = Date.now();
     Promise.all([publishProfile(true).catch(e => toast('Profil: ' + e.message, 3000)), refreshFriends()]).then(() => { if (parseRoute().parts[0] === 'rank') render(); });
   }
-  const tabs = [['today', 'Dziś'], ['week', 'Tydzień'], ['streak', 'Seria'], ['xp', 'Poziom'], ['elo', 'Elo']];
-  const val = r => RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}` : RANK_TAB === 'elo' ? eloHTML(r.elo || 1000) : `⭐ ${r.level} <small>${r.xp} XP</small>`;
-  const key = r => RANK_TAB === 'xp' ? r.xp : RANK_TAB === 'elo' ? (r.elo || 1000) : r[RANK_TAB];
+  const tabs = [['today', 'Dziś'], ['week', 'Tydzień'], ['time', '⏱ Czas'], ['streak', 'Seria'], ['xp', 'Poziom'], ['elo', 'Elo']];
+  const val = r => RANK_TAB === 'time' ? `⏱ ${fmtDur((r.weekMin || 0) * MIN)} <small>w tym tyg.</small>` : RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}` : RANK_TAB === 'elo' ? eloHTML(r.elo || 1000) : `⭐ ${r.level} <small>${r.xp} XP</small>`;
+  const key = r => RANK_TAB === 'xp' ? r.xp : RANK_TAB === 'elo' ? (r.elo || 1000) : RANK_TAB === 'time' ? r.weekMin || 0 : r[RANK_TAB];
   const rows = rankRows().sort((a, b) => key(b) - key(a));
   const medal = i => ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;
   const maxToday = Math.max(1, ...rows.map(r => r.today));

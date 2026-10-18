@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '79';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '80';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -118,7 +118,7 @@ function blankState() {
   return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS), ...extraState() };
 }
 // pola dodane w kolejnych wersjach (tematy, znajomi, gry, osiągnięcia, system liczbowy)
-function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [], events: [], logins: [] }; }
+function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [], events: [], logins: [], tlog: [] }; }
 
 // Proste zdarzenia, na które reagują moduły (osiągnięcia, ranking…)
 const HOOKS = {};
@@ -413,6 +413,7 @@ function checkAnswer(input, correct, tol = S?.settings?.tolerance || 'normal') {
 
 // ============================================================ Sesja nauki
 let SESSION = null;
+setInterval(() => { const el = document.getElementById('sess-time'); if (el && SESSION && document.visibilityState === 'visible') el.textContent = fmtClock(sessLiveMs(SESSION)); }, 1000);
 // ---------- zapamiętana sesja nauki: przejście na inną kartę/aplikację albo zamknięcie przez iOS nie kasuje postępu
 const SESS_KEY = 'studySess', SESS_TTL = 12 * HOUR;
 function saveSess() {
@@ -420,7 +421,7 @@ function saveSess() {
   try {
     if (!s.card) return localStorage.removeItem(SESS_KEY);   // skończona – nie ma czego wznawiać
     localStorage.setItem(SESS_KEY, JSON.stringify({ key: s.key, hash: location.hash, deckId: s.deckId, mode: s.mode, all: s.all, cram: s.cram, done: s.done,
-      cardId: s.card.id, shown: !!s.shown, t: Date.now() }));
+      cardId: s.card.id, shown: !!s.shown, timeMs: s.timeMs || 0, t: Date.now() }));
   } catch { /* */ }
 }
 function loadSess() { try { const j = JSON.parse(localStorage.getItem(SESS_KEY) || 'null'); return j && Date.now() - j.t < SESS_TTL ? j : null; } catch { return null; } }
@@ -429,7 +430,7 @@ function restoreSess(key) {
   const j = loadSess(); if (!j || j.key !== key) return false;
   const card = S.cards.find(c => c.id === j.cardId);
   SESSION = { all: j.all, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
-    done: j.done || 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: Date.now() };
+    done: j.done || 0, timeMs: j.timeMs || 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: Date.now() };
   if (card && (!SESSION.cram || SESSION.cram[0] === card.id)) { SESSION.card = card; SESSION.shown = !!j.shown && j.mode === 'flip'; }
   else nextCard();
   return true;
@@ -477,7 +478,9 @@ function nextCard() {
 }
 function answer(g) {
   const s = SESSION, c = s.card; if (!c) return;
+  const spent = Math.min(60000, Date.now() - (s.shownAt || Date.now())); s.timeMs = (s.timeMs || 0) + spent;
   if (s.cram) {
+    (S.tlog = S.tlog || []).push({ id: uid(), t: Date.now(), d: c.deckId, ms: spent }); save();
     s.undo = null; s.cram.shift();
     if (g === 1) s.cram.splice(Math.min(3, s.cram.length), 0, c.id);
     else s.done++;
@@ -701,6 +704,7 @@ function viewDeck(id, q) {
       <button class="grow" data-act="cram-hard" data-id="${id}" ${hard.length ? '' : 'disabled'}>🧠 Trudne (${hard.length})</button>
       <button class="grow" data-act="cram-star" data-id="${id}" ${starredCards(id).length ? '' : 'disabled'}>⭐ Oznaczone (${starredCards(id).length})</button>
       <button class="grow" data-go="#/weak?deck=${id}">📉 Słabe punkty</button>
+      <button class="grow" data-act="cram-img" data-id="${id}" ${imageCards(id).length ? '' : 'disabled'}>🖼️ Tylko obrazy (${imageCards(id).length})</button>
     </div>
     <div class="spacer"></div>
     ${examCardHTML(d)}
@@ -784,6 +788,20 @@ function splitPoints(raw) {
   return { lead, pts };
 }
 const ptSuggest = (got, n) => got >= n ? 3 : got / n >= .5 ? 2 : 1;
+// ---------- 🖼️ fiszki z obrazem (obraz z lukami, zdjęcie na fiszce albo obrazek w treści z importu)
+const noteHasImage = n => !!n && (n.type === 'occl' || !!n.imageId || !!n.backImageId || /<img/i.test((n.front || '') + (n.back || '') + (n.text || '')));
+const imageCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && noteHasImage(noteById(c.noteId)));
+// ---------- ⏱ czas nauki: czas od pokazania karty do oceny (max 60 s na kartę, więc odłożony telefon nie nabija czasu)
+// zwykłe powtórki – w S.log (ms), powtórki bez harmonogramu – w S.tlog (żeby nie zawyżały liczby powtórek / ligi / kryształów)
+function studyMsBetween(from, to = Infinity) {
+  let ms = 0;
+  for (const l of S.log) if (l.t >= from && l.t < to) ms += Math.min(60000, l.ms || 0);
+  for (const l of S.tlog || []) if (l.t >= from && l.t < to) ms += Math.min(60000, l.ms || 0);
+  return ms;
+}
+const fmtDur = ms => { const m = Math.round(ms / MIN); if (m < 1) return ms > 0 ? '<1 min' : '0 min'; const h = Math.floor(m / 60); return h ? `${h} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}` : `${m} min`; };
+const fmtClock = ms => { const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), x = t % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
+const sessLiveMs = s => (s.timeMs || 0) + (s.card ? Math.min(60000, Date.now() - (s.shownAt || Date.now())) : 0);
 // fiszki oznaczone gwiazdką (⭐ = „cięższe”) – gwiazdka jest na notatce, więc dotyczy obu kierunków
 const starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && noteById(c.noteId)?.star);
 function viewStudy(deckId, mode, q) {
@@ -793,6 +811,7 @@ function viewStudy(deckId, mode, q) {
     if (q.get('cram') === 'hard') cram = difficultCards().filter(c => deckId === 'all' || c.deckId === deckId).map(c => c.id);
     else if (q.get('cram') === 'all') cram = S.cards.filter(c => c.deckId === deckId).map(c => c.id);
     else if (q.get('cram') === 'star') cram = starredCards(deckId).map(c => c.id);
+    else if (q.get('cram') === 'img') cram = imageCards(deckId).map(c => c.id);
     else if (q.get('cram') === 'list') cram = (q.get('ids') || '').split(',').filter(Boolean);
     if (!restoreSess(key)) { startSession(deckId, mode, cram, all); SESSION.key = key; }
   }
@@ -805,20 +824,21 @@ function viewStudy(deckId, mode, q) {
   const head = `
   <div class="studybar">
     <button class="iconbtn" data-act="end-study" data-href="${backHash}">✕</button>
-    <div class="title">${esc(name)}${q.get('cram') === 'star' ? ' · ⭐ oznaczone' : s.cram ? ' · bez harmonogramu' : s.all ? ' · wszystkie nowe' : ''}</div>
+    <div class="title">${esc(name)}${q.get('cram') === 'star' ? ' · ⭐ oznaczone' : q.get('cram') === 'img' ? ' · 🖼️ obrazy' : s.cram ? ' · bez harmonogramu' : s.all ? ' · wszystkie nowe' : ''}</div>
     <div class="seg">
       <button class="${mode === 'flip' ? 'on' : ''}" data-act="switch-mode" data-href="#/study/${deckId}/flip${qs}">Fiszki</button>
       <button class="${mode === 'type' ? 'on' : ''}" data-act="switch-mode" data-href="#/study/${deckId}/type${qs}">Wpisz</button>
     </div>
   </div>
   ${progress(s.done / Math.max(1, s.done + rem))}
-  <div class="row small muted study-meta" style="margin-top:6px"><span class="grow">Zrobione: ${s.done}</span>
+  <div class="row small muted study-meta" style="margin-top:6px"><span class="grow">Zrobione: ${s.done} · ⏱ <span id="sess-time">${fmtClock(sessLiveMs(s))}</span></span>
     ${s.cram ? `<span>Zostało: ${rem}</span>` : countsHTML(deckCounts(deckId))}
     ${s.undo ? '<button class="ghost sm" data-act="undo">↶ Cofnij</button>' : ''}</div>`;
 
   if (!c) {
     return head + `<div class="card flash"><div style="font-size:54px">🎉</div><h2>Gratulacje!</h2>
-      <p class="muted">${s.done ? `Powtórzono ${s.done} ${plural(s.done, 'kartę', 'karty', 'kart')}.` : 'Na teraz nie ma nic do powtórki.'}</p>
+      <p class="muted">${s.done ? `Powtórzono ${s.done} ${plural(s.done, 'kartę', 'karty', 'kart')} w ⏱ <b>${fmtDur(s.timeMs || 0)}</b>.` : 'Na teraz nie ma nic do powtórki.'}</p>
+      <p class="small muted">Dziś uczysz się już ${fmtDur(studyMsBetween(dayStart()))}.</p>
       <p class="muted small">${nextDueText()}</p></div>
       ${deckId !== 'all' && !s.cram && starredCards(deckId).length ? `<button class="block" data-act="cram-star" data-id="${deckId}">⭐ Powtórz oznaczone z tej talii (${starredCards(deckId).length})</button><div class="spacer"></div>` : ''}
       ${!s.all && !s.cram && hiddenNew(deckId) ? `<button class="primary block" data-go="#/study/${deckId}/${mode}?all=1">📚 Ucz się dalej – wszystkie nowe (${hiddenNew(deckId)})</button><div class="spacer"></div>` : ''}
@@ -1488,6 +1508,7 @@ function viewMore() {
   ${modeCard}
   <div id="anki">${ankiSectionHTML()}</div>
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">📊 Statystyki</h2><button class="sm" data-go="#/weak">📉 Słabe punkty</button></div>
+    <div class="time-kpis">${[['dziś', studyMsBetween(dayStart())], ['ten tydzień', studyMsBetween(typeof weekStart === 'function' ? weekStart() : addDays(dayStart(), -6))], ['30 dni', studyMsBetween(addDays(dayStart(), -29))], ['łącznie', studyMsBetween(0)]].map(([l, v]) => `<div><b>${fmtDur(v)}</b><small>⏱ ${l}</small></div>`).join('')}</div>
     <div class="heat">${cells}</div><div class="spacer"></div>
     <div class="kv"><span>Seria dni nauki</span><b>🔥 ${streak()}</b></div>
     <div class="kv"><span>Wszystkie karty</span><b>${total}</b></div>
@@ -1639,7 +1660,7 @@ function mergeState(R) {
   const ids = new Set(S.log.map(l => l.id));
   for (const l of R.log || []) if (!ids.has(l.id)) S.log.push(l);
   S.log.sort((a, b) => a.t - b.t);
-  for (const key of ['games', 'wallet', 'items', 'battles', 'logins']) {
+  for (const key of ['games', 'wallet', 'items', 'battles', 'logins', 'tlog']) {
     S[key] = S[key] || []; const ids = new Set(S[key].map(x => x.id));
     for (const x of R[key] || []) if (!ids.has(x.id)) S[key].push(x);
   }
@@ -1741,6 +1762,7 @@ const ACTIONS = {
   },
   'exam-clear': el => { const d = deckById(el.dataset.id); if (!d) return; delete d.exam; touch(d); save(); render(); },
   'pt-toggle': el => { const s = SESSION; if (!s?.pts) return; const i = +el.dataset.i; s.pts.has(i) ? s.pts.delete(i) : s.pts.add(i); render(); },
+  'cram-img': el => { const d = el.dataset.id || 'all'; SESSION = null; dropSess(); go(`#/study/${d}/flip?cram=img`); },
   'cram-star': el => { const d = el.dataset.id || 'all'; SESSION = null; go(`#/study/${d}/flip?cram=star`); },
   speak: () => { const v = cardView(SESSION.card); speak(stripHtml(SESSION.shown ? v.a : v.q)); },
   hint: () => { SESSION.hint = true; render(); },
