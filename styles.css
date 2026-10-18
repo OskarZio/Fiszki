@@ -1338,3 +1338,5 @@ html, body { max-width: 100%; overflow-x: clip; }
 .share-box .row { gap: 8px; }
 .sd-inv { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; } .sd-inv small { opacity: .8; }
 .time-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 10px 0; } .time-kpis div { background: var(--card2); border-radius: 12px; padding: 8px 4px; text-align: center; } .time-kpis b { display: block; font-size: 15px; } .time-kpis small { font-size: 11px; color: var(--muted); }
+.badge .hardtag.t-easy { color: #b45309; } .badge .hardtag.t-mid { color: #64748b; } .badge .hardtag.t-hard { color: #ca8a04; }
+.badge .hardtag.t-vhard { color: #7c3aed; } .badge .hardtag.t-legend { color: #db2777; } .badge .hardtag.t-plat { color: #0891b2; }

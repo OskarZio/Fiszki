@@ -150,6 +150,19 @@ const ACHIEVEMENTS = [
 ];
 // Platyna: wszystkie pozostałe osiągnięcia
 ACHIEVEMENTS.push(H('platinum', '🏆', 'Platyna', 'Zdobądź wszystkie pozostałe osiągnięcia', c => c.others, ACHIEVEMENTS.length));
+// 💎 nagrody wg trudności: im cięższe osiągnięcie, tym więcej kryształów
+const ACH_TIERS = [
+  { k: 'easy', name: '🥉 Łatwe', gems: 30 }, { k: 'mid', name: '🥈 Średnie', gems: 75 }, { k: 'hard', name: '🥇 Trudne', gems: 150 },
+  { k: 'vhard', name: '💀 Bardzo trudne', gems: 300 }, { k: 'legend', name: '👑 Legendarne', gems: 600 }, { k: 'plat', name: '🏆 Platyna', gems: 2000 },
+];
+const ACH_TIER_OF = {};
+[['mid', 'rev_500 rev_1000 day_200 goal_7 streak_7 combo_50 cards_100 mature_10 quiz_perfect pins_20 materials_10 game_all numbers_20 numbers_40 words_25 images_30 rank_1 battle_10 winstreak_3 cases_10 legendary daily_7 saboteur'],
+ ['hard', 'rev_5000 goal_30 streak_30 cards_1000 mature_100 games_50 numbers_80 cards_52 major_100 battle_50 shiny_10 cases_100 jackpot perfect_abcd quests_30 gifts_10 elo_1500'],
+ ['vhard', 'rev_10000 streak_100 mature_500 typed_1000 perfect_battle winstreak_10 battle_100 shiny_legend'],
+ ['legend', 'streak_365 rev_25000 day_500 mature_1000 streak_200 numbers_160 album_full legends_all elo_2000 gems_5000'],
+ ['plat', 'platinum']].forEach(([k, ids]) => ids.split(' ').forEach(id => { ACH_TIER_OF[id] = k; }));
+const achTier = id => ACH_TIERS.find(t => t.k === (ACH_TIER_OF[id] || 'easy'));
+ACHIEVEMENTS.forEach(a => { const t = achTier(a.id); a.reward = t.gems; a.tier = t.k; a.hard = ['vhard', 'legend', 'plat'].includes(t.k); });
 const achReward = id => ACHIEVEMENTS.find(a => a.id === id)?.reward || 30;
 
 let achTimer, lastLevel = null;
@@ -160,7 +173,7 @@ function checkAchievements(quiet) {
   const levelUp = lastLevel != null && lvl > lastLevel; lastLevel = lvl;
   if (fresh.length) { DB.set('state', S); }
   if (quiet) return;
-  if (fresh.length === 1) celebrate(`${fresh[0].hard ? '💀 ' : ''}${fresh[0].icon} ${fresh[0].name}`, `${fresh[0].desc} · +${fresh[0].reward} 💎`);
+  if (fresh.length === 1) celebrate(`${fresh[0].hard ? '💀 ' : ''}${fresh[0].icon} ${fresh[0].name}`, `${fresh[0].desc} · +${fresh[0].reward} 💎 (${achTier(fresh[0].id).name.slice(3)})`);
   else if (fresh.length > 1) celebrate(`🏆 ${fresh.length} nowe osiągnięcia!`, fresh.map(a => a.icon + ' ' + a.name).join(' · '));
   else if (levelUp) celebrate(`⭐ Poziom ${lvl}!`, levelTitle(lvl));
 }
@@ -259,10 +272,10 @@ ROUTES.ach = () => {
   <div class="card center"><div class="lvl big">${lvl}</div><b>${levelTitle(lvl)}</b><p class="small muted">${xp} XP · do poziomu ${lvl + 1}: ${levelStart(lvl + 1) - xp} XP</p>
     <p class="small muted">XP: 1 za powtórkę, 2 za poprawną, 3 za nową kartę, punkty z gier i 25 za każde osiągnięcie.</p>
     ${progress(got.length / ACHIEVEMENTS.length)}<p class="small">${got.length} z ${ACHIEVEMENTS.length} odblokowanych</p></div>
-  ${[['', ACHIEVEMENTS.filter(a => !a.hard)], ['💀 Trudne osiągnięcia · po 150 💎', ACHIEVEMENTS.filter(a => a.hard)]].map(([title, list]) => `${title ? `<h2 style="margin:22px 0 4px">${title}</h2><p class="small muted" style="margin:0 0 10px">Zdobyte ${list.filter(a => S.ach[a.id]).length} z ${list.length}. Na prawdziwych kolekcjonerów i mistrzów.</p>` : ''}
+  ${ACH_TIERS.map(t => [`${t.name} · po ${t.gems} 💎`, ACHIEVEMENTS.filter(a => a.tier === t.k)]).filter(([, l]) => l.length).map(([title, list]) => `<h2 style="margin:22px 0 4px">${title}</h2><p class="small muted" style="margin:0 0 10px">Zdobyte ${list.filter(a => S.ach[a.id]).length} z ${list.length}</p>
   <div class="badges">${list.map(a => {
     const done = !!S.ach[a.id], cur = Math.min(a.goal, a.v(ctx));
-    return `<div class="badge${done ? ' on' : ''}${a.hard ? ' hard' : ''}"><div class="bi">${a.icon}</div><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>${a.hard ? '<small class="hardtag">💀 +150 💎</small>' : ''}
+    return `<div class="badge${done ? ' on' : ''}${a.hard ? ' hard' : ''}"><div class="bi">${a.icon}</div><b>${esc(a.name)}</b><small>${esc(a.desc)}</small><small class="hardtag t-${a.tier}">+${a.reward} 💎</small>
       ${done ? `<small class="c-rev">✓ ${new Date(S.ach[a.id]).toLocaleDateString('pl')}</small>` : a.goal > 1 ? `${progress(cur / a.goal, true)}<small>${cur}/${a.goal}</small>` : ''}</div>`;
   }).join('')}</div>`).join('')}` };
 };
