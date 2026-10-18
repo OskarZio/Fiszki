@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '86';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '87';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -118,7 +118,7 @@ function blankState() {
   return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS), ...extraState() };
 }
 // pola dodane w kolejnych wersjach (tematy, znajomi, gry, osiągnięcia, system liczbowy)
-function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [], events: [], logins: [], tlog: [] }; }
+function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [], events: [], logins: [], tlog: [], eggs: [] }; }
 
 // Proste zdarzenia, na które reagują moduły (osiągnięcia, ranking…)
 const HOOKS = {};
@@ -1660,12 +1660,18 @@ function mergeState(R) {
   const ids = new Set(S.log.map(l => l.id));
   for (const l of R.log || []) if (!ids.has(l.id)) S.log.push(l);
   S.log.sort((a, b) => a.t - b.t);
-  for (const key of ['games', 'wallet', 'items', 'battles', 'logins', 'tlog']) {
+  for (const key of ['games', 'wallet', 'items', 'battles', 'logins', 'tlog', 'eggs']) {
     S[key] = S[key] || []; const ids = new Set(S[key].map(x => x.id));
     for (const x of R[key] || []) if (!ids.has(x.id)) S[key].push(x);
   }
   for (const k in R.ach || {}) S.ach[k] = Math.min(R.ach[k], S.ach[k] || Infinity);
-  for (const k in R.stats || {}) S.stats[k] = Math.max(R.stats[k] || 0, S.stats[k] || 0);
+  // liczby: większa wygrywa; teksty (np. data „nagroda za tydzień odebrana”, kod polecenia): późniejsza / istniejąca
+  for (const k in R.stats || {}) {
+    const a = S.stats[k], b = R.stats[k];
+    if (typeof a === 'number' && typeof b === 'number') S.stats[k] = Math.max(a, b);
+    else if (a == null || (typeof a === 'number' && isNaN(a))) S.stats[k] = b;
+    else if (typeof a === 'string' && typeof b === 'string') S.stats[k] = a > b ? a : b;
+  }
   if (R.major && (R.major.mod || 0) > (S.major.mod || 0)) S.major = R.major;
   if (R.profile && (R.profile.mod || 0) > (S.profile.mod || 0)) S.profile = R.profile;
   S.tomb = tomb;

@@ -55,8 +55,9 @@ function hardContext() {
   const shiny = st.filter(x => typeof isShiny === 'function' && isShiny(x.id));
   const b = S.battles || [];
   return {
-    stickersOwned: st.filter(x => x.r !== 'mythic' && has(x.id)).length, mythic: st.filter(x => x.r === 'mythic' && has(x.id)).length,
-    legendsOwned: st.filter(x => x.r === 'legendary' && has(x.id)).length,
+    stickersOwned: st.filter(x => x.r !== 'mythic' && !x.hatch && has(x.id)).length, hatchOwned: st.filter(x => x.hatch && has(x.id)).length,
+    eggsOk: (S.eggs || []).filter(e => e.ok).length, egg90: (S.eggs || []).some(e => e.ok && e.min >= 90) ? 1 : 0, mythic: st.filter(x => x.r === 'mythic' && has(x.id)).length,
+    legendsOwned: st.filter(x => x.r === 'legendary' && !x.hatch && has(x.id)).length,
     shinyCount: shiny.length, shinyLegend: shiny.some(x => x.r === 'legendary') ? 1 : 0,
     elo: typeof myElo === 'function' ? myElo() : 1000,
     perfectBattle: b.filter(x => x.mode === 'cards' && x.won === 1 && x.n >= 10 && x.my === x.n && !x.bot).length,
@@ -148,6 +149,11 @@ const ACHIEVEMENTS = [
   H('numbers_160', '🧠', 'Liczby – mistrz świata', 'Bezbłędnie 160 cyfr', c => c.numbers, 160),
   H('mythic', '🔴', 'Mit', 'Wylosuj mityczną naklejkę (0,1%)', c => c.mythic, 1),
   H('gifts_10', '🎁', 'Hojne serce', 'Podaruj znajomym 10 naklejek', c => c.giftsSent || 0, 10),
+  A('egg_1', '🐣', 'Pierwsze wyklucie', 'Wysiedź jajko w inkubatorze', c => c.eggsOk || 0, 1),
+  A('egg_10', '🪺', 'Gniazdo', 'Wysiedź 10 jajek', c => c.eggsOk || 0, 10),
+  H('egg_50', '🐔', 'Kwoka', 'Wysiedź 50 jajek', c => c.eggsOk || 0, 50),
+  H('egg_90', '🧘', 'Mnich skupienia', 'Wysiedź jajko 90 min albo dłużej', c => c.egg90 || 0, 1),
+  H('hatch_all', '🐲', 'Hodowca', 'Zbierz wszystkie naklejki z inkubatora', c => c.hatchOwned || 0, 8),
 ];
 // Platyna: wszystkie pozostałe osiągnięcia
 ACHIEVEMENTS.push(H('platinum', '🏆', 'Platyna', 'Zdobądź wszystkie pozostałe osiągnięcia', c => c.others, ACHIEVEMENTS.length));
@@ -157,9 +163,9 @@ const ACH_TIERS = [
   { k: 'vhard', name: '💀 Bardzo trudne', gems: 300 }, { k: 'legend', name: '👑 Legendarne', gems: 600 }, { k: 'plat', name: '🏆 Platyna', gems: 2000 },
 ];
 const ACH_TIER_OF = {};
-[['mid', 'rev_500 rev_1000 day_200 goal_7 streak_7 combo_50 cards_100 mature_10 quiz_perfect pins_20 materials_10 game_all numbers_20 numbers_40 words_25 images_30 rank_1 battle_10 winstreak_3 cases_10 legendary daily_7 saboteur'],
- ['hard', 'rev_5000 goal_30 streak_30 cards_1000 mature_100 games_50 numbers_80 cards_52 major_100 battle_50 shiny_10 cases_100 jackpot perfect_abcd quests_30 gifts_10 elo_1500'],
- ['vhard', 'rev_10000 streak_100 mature_500 typed_1000 perfect_battle winstreak_10 battle_100 shiny_legend'],
+[['mid', 'rev_500 rev_1000 day_200 goal_7 streak_7 combo_50 cards_100 mature_10 quiz_perfect pins_20 materials_10 game_all numbers_20 numbers_40 words_25 images_30 rank_1 battle_10 winstreak_3 cases_10 legendary daily_7 saboteur egg_10 egg_90'],
+ ['hard', 'rev_5000 goal_30 streak_30 cards_1000 mature_100 games_50 numbers_80 cards_52 major_100 battle_50 shiny_10 cases_100 jackpot perfect_abcd quests_30 gifts_10 elo_1500 egg_50'],
+ ['vhard', 'rev_10000 streak_100 mature_500 typed_1000 perfect_battle winstreak_10 battle_100 shiny_legend hatch_all'],
  ['legend', 'mythic streak_365 rev_25000 day_500 mature_1000 streak_200 numbers_160 album_full legends_all elo_2000 gems_5000'],
  ['plat', 'platinum']].forEach(([k, ids]) => ids.split(' ').forEach(id => { ACH_TIER_OF[id] = k; }));
 const achTier = id => ACH_TIERS.find(t => t.k === (ACH_TIER_OF[id] || 'easy'));

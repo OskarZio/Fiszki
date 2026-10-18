@@ -25,6 +25,9 @@ const STICKERS = [
   ST('volcano', '🌋', 'Erupcja', 'epic'), ST('ninja', '🥷', 'Ninja', 'epic'), ST('wizard', '🧙', 'Czarodziej', 'epic'),
   ST('trophy', '🏆', 'Mistrz', 'legendary'), ST('comet', '☄️', 'Kometa', 'legendary'), ST('galaxy', '🌌', 'Galaktyka', 'legendary'), ST('trident', '🔱', 'Trójząb', 'legendary'),
   ST('soldiercat', '🪖', 'Kot żołnierz', 'mythic', 'assets/stickers/kot-zolnierz.webp'),
+  // 🥚 tylko z inkubatora (egg.js) – nie wypadają ze skrzynek
+  ...[ST('chick', '🐣', 'Pisklę', 'common'), ST('hatchling', '🐥', 'Kurczaczek', 'common'), ST('penguin', '🐧', 'Pingwin', 'rare'), ST('parrot', '🦜', 'Papuga', 'rare'),
+    ST('dino', '🦕', 'Dinozaur', 'epic'), ST('trex', '🦖', 'T-Rex', 'epic'), ST('dragonling', '🐲', 'Smoczek', 'legendary'), ST('swan', '🦢', 'Złoty łabędź', 'legendary')].map(s => ({ ...s, hatch: true })),
 ];
 // 🔴 ultra rzadkie dropy w każdej skrzynce: mityczna naklejka i mega pula kryształów (po 0,1%)
 const MYTHIC_P = .1, MEGA_GEMS_P = .1, MEGA_GEMS = 10000;
@@ -33,7 +36,7 @@ const mythicP = k => CASES[k]?.gif ? 0 : MYTHIC_P;
 const FREE_STICKERS = ['wave', 'thumb', 'phew'];
 const stickerById = id => STICKERS.find(s => s.id === id);
 // cele osiągnięć kolekcjonerskich = aktualna liczba naklejek
-if (typeof ACHIEVEMENTS !== 'undefined') for (const [id, n] of [['album_full', STICKERS.filter(x => x.r !== 'mythic').length], ['legends_all', STICKERS.filter(x => x.r === 'legendary').length]]) { const a = ACHIEVEMENTS.find(x => x.id === id); if (a) a.goal = n; }
+if (typeof ACHIEVEMENTS !== 'undefined') for (const [id, n] of [['album_full', STICKERS.filter(x => x.r !== 'mythic' && !x.hatch).length], ['legends_all', STICKERS.filter(x => x.r === 'legendary' && !x.hatch).length], ['hatch_all', STICKERS.filter(x => x.hatch).length]]) { const a = ACHIEVEMENTS.find(x => x.id === id); if (a) a.goal = n; }
 const CASES = {
   basic: { name: 'Skrzynka nauki', icon: '📦', price: 120, odds: { common: 70, rare: 22, epic: 6.5, legendary: 1.5 } },
   epic: { name: 'Skrzynka mistrza', icon: '🎁', price: 350, odds: { common: 38, rare: 36, epic: 20, legendary: 6 } },
@@ -43,7 +46,7 @@ const CASES = {
 };
 // Komplet naklejek danej rzadkości = jednorazowa premia
 const SET_BONUS = { common: 200, rare: 400, epic: 800, legendary: 2000 };
-const setComplete = r => STICKERS.filter(s => s.r === r).every(s => hasItem('sticker', s.id) || hasItem('shiny', s.id));
+const setComplete = r => STICKERS.filter(s => s.r === r && !s.hatch).every(s => hasItem('sticker', s.id) || hasItem('shiny', s.id));
 const isShiny = id => hasItem('shiny', id);
 const EFFECTS = [
   { id: 'classic', name: 'Konfetti', icon: '🎊', price: 0 },
@@ -91,7 +94,7 @@ function rollRarity(odds) {
   for (const k of ['legendary', 'epic', 'rare', 'common']) { if (r < odds[k]) return k; r -= odds[k]; }
   return 'common';
 }
-const rollSticker = odds => { const r = rollRarity(odds), pool = STICKERS.filter(s => s.r === r); return pool[Math.random() * pool.length | 0]; };
+const rollSticker = odds => { const r = rollRarity(odds), pool = STICKERS.filter(s => s.r === r && !s.hatch); return pool[Math.random() * pool.length | 0]; };
 // Poza naklejkami w skrzynce mogą wypaść kryształy (różne kwoty, rzadko „jackpot”) albo darmowe ponowne losowanie
 const CASE_EXTRA = { gems: 20, respin: 7 };   // % szans
 // progi kryształów (pospolite → legendarne); legendarny drop = 1000 💎
@@ -144,7 +147,7 @@ function caseDrops(k) {
     pool.forEach(g => add(rest * CASE_GIF[k] / 100 / pool.length, { kind: 'gif', g, e: '🎞️', name: g.name || 'GIF', r: 'legendary' }, 'gif'));
     rest *= 1 - CASE_GIF[k] / 100;
   }
-  perRarity(c.odds, STICKERS.filter(s => s.r !== 'mythic'), 'st', s => s);
+  perRarity(c.odds, STICKERS.filter(s => s.r !== 'mythic' && !s.hatch), 'st', s => s);
   return out;
 }
 const pctFmt = p => (p >= 10 ? p.toFixed(1) : p >= 1 ? p.toFixed(2) : p >= .1 ? p.toFixed(2) : p.toFixed(3)).replace(/\.?0+$/, '').replace('.', ',') + '%';
@@ -189,7 +192,7 @@ ROUTES.shop = () => {
       <li>Komplet danej rzadkości daje premię: ${Object.entries(SET_BONUS).map(([r, v]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name.toLowerCase()} +${v}💎${setComplete(r) ? ' ✓' : ''}</span>`).join(', ')}.</li></ul>
     <div class="row small showcase-row"><b class="grow">Gablota:</b><span class="showcase">${showcaseHTML(showcase) || '<span class="muted">pusta – stuknij ☆ przy naklejce</span>'}</span></div>
     <div class="album">${STICKERS.map(s => { const n = itemCount('sticker', s.id), sh = isShiny(s.id), have = n || sh, inSc = showcase.includes(s.id);
-      return `<div class="stk ${s.r}${have ? '' : ' locked'}${sh ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span${have ? ` data-act="st-preview" data-id="${s.id}" style="cursor:pointer" title="Stuknij – animacja i dźwięk"` : ''}>${have ? stE(s) : '❔'}</span><small>${have ? esc(s.name) + (sh ? ' ✨' : '') : RARITY[s.r].name}</small>
+      return `<div class="stk ${s.r}${have ? '' : ' locked'}${sh ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span${have ? ` data-act="st-preview" data-id="${s.id}" style="cursor:pointer" title="Stuknij – animacja i dźwięk"` : ''}>${have ? stE(s) : '❔'}</span><small>${have ? esc(s.name) + (sh ? ' ✨' : '') : RARITY[s.r].name + (s.hatch ? ' · 🥚 z jajka' : '')}</small>
         ${have ? `<button class="sm ghost" data-act="showcase" data-id="${s.id}">${inSc ? '★ w gablocie' : '☆ do gabloty'}</button>` : ''}
         ${n >= 3 && !sh ? `<button class="sm primary" data-act="upgrade" data-id="${s.id}">✨ Ulepsz (3 szt.)</button>` : ''}
         ${n > 1 ? `<button class="sm ghost" data-act="sell-dup" data-id="${s.id}">×${n} · sprzedaj +${RARITY[s.r].sell}💎</button>` : ''}</div>`; }).join('')}</div></div>

@@ -22,7 +22,9 @@ function leagueTable(ws) {
 // nagroda za poprzedni tydzień (gdy było min. 2 grających z punktami)
 function leagueAward() {
   const prev = addDays(weekStart(), -7), key = dayKey(prev);
-  if (S.stats.leagueDone === key) return;
+  // raz na tydzień: znacznik albo już wypłacona nagroda (synchronizacja z innym urządzeniem)
+  if (S.stats.leagueDone === key || (typeof S.stats.leagueDone === 'string' && S.stats.leagueDone > key)) return;
+  if (S.wallet.some(w => w.id === 'league-' + key)) { S.stats.leagueDone = key; save(); return; }
   const people = leaguePeople(); if (people.length < 2) return;
   const tab = leagueTable(prev).filter(r => r.pts > 0);
   S.stats.leagueDone = key;
