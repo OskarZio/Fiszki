@@ -55,7 +55,7 @@ function hardContext() {
   const shiny = st.filter(x => typeof isShiny === 'function' && isShiny(x.id));
   const b = S.battles || [];
   return {
-    stickersOwned: st.filter(x => has(x.id)).length,
+    stickersOwned: st.filter(x => x.r !== 'mythic' && has(x.id)).length, mythic: st.filter(x => x.r === 'mythic' && has(x.id)).length,
     legendsOwned: st.filter(x => x.r === 'legendary' && has(x.id)).length,
     shinyCount: shiny.length, shinyLegend: shiny.some(x => x.r === 'legendary') ? 1 : 0,
     elo: typeof myElo === 'function' ? myElo() : 1000,
@@ -126,7 +126,7 @@ const ACHIEVEMENTS = [
   A('shiny_1', '✨', 'Błyszczy!', 'Ulepsz naklejkę do wersji złotej', c => c.shiny || 0, 1),
   A('saboteur', '🧊', 'Sabotażysta', 'Użyj 10 sabotaży w bitwach', c => c.sabUsed || 0, 10),
   // ---- 💀 trudne (po 150 💎)
-  H('album_full', '🗂️', 'Komplet albumu', 'Zdobądź wszystkie naklejki', c => c.stickersOwned, typeof STICKERS !== 'undefined' ? STICKERS.length : 37),
+  H('album_full', '🗂️', 'Komplet albumu', 'Zdobądź wszystkie naklejki (bez mitycznej)', c => c.stickersOwned, typeof STICKERS !== 'undefined' ? STICKERS.filter(x => x.r !== 'mythic').length : 37),
   H('legends_all', '🌌', 'Panteon', 'Zdobądź wszystkie legendarne naklejki', c => c.legendsOwned, 4),
   H('shiny_10', '💛', 'Skarbiec', 'Miej 10 złotych naklejek', c => c.shinyCount, 10),
   H('shiny_legend', '👑', 'Złota legenda', 'Ulepsz legendarną naklejkę do złotej', c => c.shinyLegend, 1),
@@ -146,6 +146,7 @@ const ACHIEVEMENTS = [
   H('mature_1000', '📚', 'Encyklopedia', '1000 kart opanowanych', c => c.mature, 1000),
   H('streak_200', '🌞', 'Żelazna wola', '200 dni nauki z rzędu', c => c.streak, 200),
   H('numbers_160', '🧠', 'Liczby – mistrz świata', 'Bezbłędnie 160 cyfr', c => c.numbers, 160),
+  H('mythic', '🔴', 'Mit', 'Wylosuj mityczną naklejkę (0,1%)', c => c.mythic, 1),
   H('gifts_10', '🎁', 'Hojne serce', 'Podaruj znajomym 10 naklejek', c => c.giftsSent || 0, 10),
 ];
 // Platyna: wszystkie pozostałe osiągnięcia
@@ -159,7 +160,7 @@ const ACH_TIER_OF = {};
 [['mid', 'rev_500 rev_1000 day_200 goal_7 streak_7 combo_50 cards_100 mature_10 quiz_perfect pins_20 materials_10 game_all numbers_20 numbers_40 words_25 images_30 rank_1 battle_10 winstreak_3 cases_10 legendary daily_7 saboteur'],
  ['hard', 'rev_5000 goal_30 streak_30 cards_1000 mature_100 games_50 numbers_80 cards_52 major_100 battle_50 shiny_10 cases_100 jackpot perfect_abcd quests_30 gifts_10 elo_1500'],
  ['vhard', 'rev_10000 streak_100 mature_500 typed_1000 perfect_battle winstreak_10 battle_100 shiny_legend'],
- ['legend', 'streak_365 rev_25000 day_500 mature_1000 streak_200 numbers_160 album_full legends_all elo_2000 gems_5000'],
+ ['legend', 'mythic streak_365 rev_25000 day_500 mature_1000 streak_200 numbers_160 album_full legends_all elo_2000 gems_5000'],
  ['plat', 'platinum']].forEach(([k, ids]) => ids.split(' ').forEach(id => { ACH_TIER_OF[id] = k; }));
 const achTier = id => ACH_TIERS.find(t => t.k === (ACH_TIER_OF[id] || 'easy'));
 ACHIEVEMENTS.forEach(a => { const t = achTier(a.id); a.reward = t.gems; a.tier = t.k; a.hard = ['vhard', 'legend', 'plat'].includes(t.k); });

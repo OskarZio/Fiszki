@@ -416,7 +416,7 @@ function hitFx(who) {
 function stickerFx(k, from, shiny) {
   const s = stickerById(k); if (!s) return;
   const el = document.createElement('div'); el.className = `stfly ${s.r}${shiny ? ' shiny' : ''}${S.settings.stickerAnim !== false ? ' anim st-' + s.id : ''}`; el.style.setProperty('--rc', RARITY[s.r].color);
-  el.innerHTML = `<span>${s.e}</span><small>${esc(from || 'Ty')}: ${esc(s.name)}${shiny ? ' ✨' : ''}</small>`;
+  el.innerHTML = `<span>${stE(s)}</span><small>${esc(from || 'Ty')}: ${esc(s.name)}${shiny ? ' ✨' : ''}</small>`;
   document.body.append(el); setTimeout(() => el.remove(), 2600);
   if (s.r === 'legendary' || shiny) confetti(60);
 }
@@ -439,7 +439,7 @@ function hpBars() {
   ${reveal ? '' : '<p class="small muted center" style="margin-top:-8px">Wynik przeciwnika zobaczysz na końcu 🤫</p>'}`;
 }
 function stickerBar() {
-  return `<div class="stbar">${ownedStickers().map(id => { const s = stickerById(id); return `<button class="${isShiny(id) ? 'shiny' : ''}" data-act="bt-sticker" data-k="${id}" style="--rc:${RARITY[s.r].color}">${s.e}</button>`; }).join('')}</div>`;
+  return `<div class="stbar">${ownedStickers().map(id => { const s = stickerById(id); return `<button class="${isShiny(id) ? 'shiny' : ''}" data-act="bt-sticker" data-k="${id}" style="--rc:${RARITY[s.r].color}">${stE(s)}</button>`; }).join('')}</div>`;
 }
 function sabotageBar() {
   if (!B.setup.opts?.sab) return '';

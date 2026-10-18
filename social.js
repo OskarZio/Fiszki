@@ -136,7 +136,7 @@ function msgBodyHTML(m, mine) {
   const b = m.body || {};
   if (m.kind === 'gift') {
     const s = stickerById(b.st); if (!s) return '🎁 Prezent';
-    return `<div class="gift-st" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${s.e}</span></div>
+    return `<div class="gift-st" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${stE(s)}</span></div>
       <div>🎁 ${mine ? 'Podarowano' : 'Prezent dla Ciebie'}: <b>${esc(s.name)}</b> <small style="color:${RARITY[s.r].color}">${RARITY[s.r].name}</small></div>`;
   }
   if (m.kind === 'nudge') return `<div>🔔 <b>Przypomnienie:</b> ${esc(b.text || 'Czas na fiszki! 📚')}</div>${mine ? '' : '<button class="sm primary" data-go="#/study/all/flip">▶ Ucz się teraz</button>'}`;
@@ -153,7 +153,7 @@ function msgBodyHTML(m, mine) {
   }
   if (b.st) {   // naklejka (bez oddawania – tylko pokazanie)
     const s = stickerById(b.st); if (!s) return '🃏';
-    return `<div class="chat-st${b.shiny ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${s.e}</span><small>${esc(s.name)}</small></div>`;
+    return `<div class="chat-st${b.shiny ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${stE(s)}</span><small>${esc(s.name)}</small></div>`;
   }
   if (b.gif) {
     const g = typeof gifById === 'function' && gifById(String(b.gif));
@@ -195,11 +195,11 @@ ROUTES.chat = parts => {
     <button data-act="chat-challenge">⚔️ Wyzwij</button></div>
   ${CHAT.pick === 'media' ? `<div class="card tight chat-media">
     <div class="emo-row">${QUICK_EMO.map(e => `<button data-act="chat-emo" data-e="${e}">${e}</button>`).join('')}</div>
-    <b class="small">🃏 Naklejki</b><div class="st-row">${mySt.map(s => `<button class="${isShiny(s.id) ? 'shiny' : ''}" data-act="chat-st" data-id="${s.id}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}">${s.e}</button>`).join('')}</div>
+    <b class="small">🃏 Naklejki</b><div class="st-row">${mySt.map(s => `<button class="${isShiny(s.id) ? 'shiny' : ''}" data-act="chat-st" data-id="${s.id}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}">${stE(s)}</button>`).join('')}</div>
     <b class="small">🎞️ GIF-y</b>${myGifs.length ? `<div class="gif-row">${myGifs.map(g => `<button data-act="chat-gif" data-id="${g.id}" style="--rc:${RARITY[g.r || 'common'].color}">${gifImg(g)}</button>`).join('')}</div>`
       : '<p class="small muted" style="margin:4px 0 0">Nie masz jeszcze GIF-ów – zdobywa się je tylko w skrzynce z GIF-ami (<a href="#/inv">🎒 Ekwipunek</a>).</p>'}</div>` : ''}
   ${CHAT.pick === 'gift' ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
-    ${gifts.length ? `<div class="gift-pick">${gifts.map(s => `<button data-act="chat-gift" data-id="${s.id}" style="--rc:${RARITY[s.r].color}"><span>${s.e}</span><small>${esc(s.name)}</small><em>×${itemCount('sticker', s.id)}</em></button>`).join('')}</div>`
+    ${gifts.length ? `<div class="gift-pick">${gifts.map(s => `<button data-act="chat-gift" data-id="${s.id}" style="--rc:${RARITY[s.r].color}"><span>${stE(s)}</span><small>${esc(s.name)}</small><em>×${itemCount('sticker', s.id)}</em></button>`).join('')}</div>`
       : '<p class="small">Nie masz jeszcze naklejek do podarowania – zdobądź je w <a href="#/shop">skrzynkach</a>. (Startowe 👋👍😅 nie są do oddania.)</p>'}</div>` : ''}
   <div class="chat-list" id="chat-list">${list.length ? list.map(m => { const mine = m.from_id === me; return `<div class="msg ${mine ? 'me' : 'them'} k-${msgKind(m)}">${msgBodyHTML(m, mine)}<small>${hhmm(m.created_at)}${mine && m.read_at ? ' · ✓✓' : ''}</small></div>`; }).join('')
     : `<p class="muted small center">Napisz pierwszą wiadomość, podaruj naklejkę albo wyzwij ${esc(f.nick || 'znajomego')} na bitwę 👋</p>`}</div>

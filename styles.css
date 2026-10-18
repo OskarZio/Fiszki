@@ -1340,3 +1340,21 @@ html, body { max-width: 100%; overflow-x: clip; }
 .time-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 10px 0; } .time-kpis div { background: var(--card2); border-radius: 12px; padding: 8px 4px; text-align: center; } .time-kpis b { display: block; font-size: 15px; } .time-kpis small { font-size: 11px; color: var(--muted); }
 .badge .hardtag.t-easy { color: #b45309; } .badge .hardtag.t-mid { color: #64748b; } .badge .hardtag.t-hard { color: #ca8a04; }
 .badge .hardtag.t-vhard { color: #7c3aed; } .badge .hardtag.t-legend { color: #db2777; } .badge .hardtag.t-plat { color: #0891b2; }
+
+/* zawartość skrzynki + mityczne */
+.st-img { height: 1.1em; width: 1.1em; object-fit: cover; border-radius: 22%; vertical-align: middle; display: inline-block; }
+.drops-ov { position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: calc(10px + var(--sat)) 10px calc(10px + env(safe-area-inset-bottom)); }
+.drops-box { width: min(520px, 100%); max-height: 100%; background: var(--card); color: var(--text); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.35); min-height: 0; }
+.drops-list { overflow-y: auto; min-height: 0; flex: 1; margin: 0 -4px; padding: 0 4px; }
+.drops-list h3 { margin: 12px 0 6px; font-size: 15px; }
+.drop-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 12px; margin-bottom: 5px; border-left: 4px solid var(--rc); background: color-mix(in srgb, var(--rc) 9%, transparent); }
+.drop-row .grow { min-width: 0; display: flex; flex-direction: column; }
+.drop-row .grow b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drop-ic { font-size: 28px; width: 40px; height: 40px; display: grid; place-items: center; flex: none; }
+.drop-ic img { max-width: 40px; max-height: 40px; border-radius: 8px; object-fit: cover; }
+.drop-ic .st-img { width: 40px; height: 40px; }
+.drop-p { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.case .ci, .case b[data-act] { cursor: pointer; }
+.tile[style*="#dc2626"], .reveal[style*="#dc2626"] { box-shadow: 0 0 18px #dc2626aa, inset 0 0 12px #dc262655; }
+.big-st .st-img { width: 1.2em; height: 1.2em; }
+.stk .st-img { width: 1.15em; height: 1.15em; }
