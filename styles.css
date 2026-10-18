@@ -1355,6 +1355,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .drop-ic .st-img { width: 40px; height: 40px; }
 .drop-p { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .case .ci, .case b[data-act] { cursor: pointer; }
+.case button.ghost { background: rgba(255,255,255,.22); color: #fff; font-weight: 700; border: 1px solid rgba(255,255,255,.45); text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.case button.ghost:hover { background: rgba(255,255,255,.32); }
 .tile[style*="#dc2626"], .reveal[style*="#dc2626"] { box-shadow: 0 0 18px #dc2626aa, inset 0 0 12px #dc262655; }
 .big-st .st-img { width: 1.2em; height: 1.2em; }
 .stk .st-img { width: 1.15em; height: 1.15em; }
