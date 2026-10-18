@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '71';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '72';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -788,6 +788,50 @@ function viewStudy(deckId, mode, q) {
 
 // ------------------------------------------------------------ Test (ABCD / pisemny)
 let QUIZ = null;
+// ---------- podobne złe odpowiedzi do ABCD (żeby nie dało się zgadnąć „po dziale”)
+// pool: [{ a, q, ctx }] – a: odpowiedź, q: pytanie, ctx: dział/dodatek (np. „1. Środowisko wodne”)
+const ansKind = a => /^\s*-?\d+([.,]\d+)?\s*[%°a-ząćęłńóśźż.]{0,6}\s*$/i.test(a) ? 'num' : /^[A-ZĄĆĘŁŃÓŚŹŻ][^\s]*(\s[A-ZĄĆĘŁŃÓŚŹŻ][^\s]*)*$/.test(a.trim()) ? 'name' : 'text';
+function similarity(c, x) {
+  let sc = 0;
+  const wa = keyWords(c.a), wb = keyWords(x.a);
+  sc += 3 * wa.filter(w => wordHit(w, wb)).length;                         // wspólne słowa w odpowiedzi (kość udowa ↔ kość piszczelowa)
+  const qa = keyWords(c.q || ''), qb = keyWords(x.q || '');
+  sc += 1.5 * Math.min(4, qa.filter(w => wordHit(w, qb)).length);          // pytania o podobnym temacie
+  if (c.ctx && x.ctx && norm(c.ctx) === norm(x.ctx)) sc += 4;               // ten sam dział / rozdział
+  if (ansKind(c.a) === ansKind(x.a)) sc += 2;                              // liczba ↔ liczba, nazwa ↔ nazwa
+  else if (ansKind(c.a) === 'num' || ansKind(x.a) === 'num') sc -= 4;      // liczba wśród słów od razu odpada – unikamy
+  const la = c.a.length, lb = x.a.length; sc += 2 * (1 - Math.min(1, Math.abs(la - lb) / Math.max(la, lb, 1)));   // podobna długość
+  const na = norm(c.a), nb = norm(x.a);
+  if (na.slice(-3) === nb.slice(-3) && na.length > 4) sc += 1;              // ta sama końcówka (łacina: -us, -is…)
+  if (na[0] === nb[0]) sc += .5;
+  return sc;
+}
+// liczby: jeśli w puli brakuje podobnych, dorabiamy wiarygodne sąsiednie wartości (206 → 204, 212, 196…)
+function nearNumbers(a, n) {
+  const m = String(a).match(/-?\d+([.,]\d+)?/); if (!m) return [];
+  const v = parseFloat(m[0].replace(',', '.')), dec = (m[1] || '').length - 1, out = new Set();
+  const steps = Math.abs(v) >= 1000 && Number.isInteger(v) ? [1, 2, 3, 5, 10, -1, -2, -5, -10] : Number.isInteger(v) ? [1, 2, 3, 4, 6, -1, -2, -3, -4] : [.1, .2, .3, -.1, -.2, -.3];
+  for (const st of shuffle(steps)) {
+    const delta = Number.isInteger(v) && Math.abs(v) > 20 ? Math.round(st * Math.max(1, Math.abs(v) * .03)) : st;
+    const nv = v + delta; if (nv === v || (v > 0 && nv < 0)) continue;
+    out.add(String(a).replace(m[0], dec > 0 ? nv.toFixed(dec).replace('.', m[0].includes(',') ? ',' : '.') : String(Math.round(nv))));
+    if (out.size >= n) break;
+  }
+  return [...out];
+}
+function pickDistractors(c, pool, n = 3) {
+  const seen = new Set([norm(c.a)]), cand = [];
+  // odrobina losowości tylko między podobnie ocenionymi – najbardziej podobne zawsze wygrywają
+  for (const x of pool) { const k = norm(x.a); if (!k || seen.has(k)) continue; seen.add(k); cand.push({ x, s: similarity(c, x) + Math.random() * 1.5 }); }
+  cand.sort((p, q) => q.s - p.s);
+  let out = cand.slice(0, n).map(o => o.x.a);
+  if (ansKind(c.a) === 'num') {   // liczby: wolimy bliskie wartości niż inne liczby z talii
+    const close = nearNumbers(c.a, n).filter(v => !seen.has(norm(v)) && !out.some(o => norm(o) === norm(v)));
+    out = [...close.slice(0, Math.max(0, n - out.filter(o => ansKind(o) === 'num').length)), ...out.filter(o => ansKind(o) === 'num'), ...out].filter((v, i, arr) => arr.findIndex(z => norm(z) === norm(v)) === i).slice(0, n);
+  }
+  return out;
+}
+const distractorEntry = c => { const v = cardView(c), n = noteById(c.noteId); return { a: v.ans, q: stripHtml(v.label || ''), ctx: n?.extra || '' }; };
 
 function buildQuiz(deckId, type, count) {
   const cards = shuffle(S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && cardView(c).ans.trim()));
@@ -796,14 +840,9 @@ function buildQuiz(deckId, type, count) {
     const v = cardView(c);
     let options = null;
     if (type === 'abcd') {
-      const seen = new Set([norm(v.ans)]), opts = [];
-      const sameNote = shuffle(cards.filter(x => x.noteId === c.noteId && x !== c));
-      for (const x of [...sameNote, ...cards]) {
-        if (opts.length >= 3) break;
-        const a = cardView(x).ans, k = norm(a);
-        if (!k || seen.has(k)) continue; seen.add(k); opts.push(a);
-      }
-      options = shuffle([v.ans, ...opts]);
+      // pula: cała talia (a przy „wszystkich” – też inne talie); wybieramy najbardziej podobne odpowiedzi
+      const pool = (deckId === 'all' ? cards : S.cards.filter(x => x.deckId === deckId && cardView(x).ans.trim())).filter(x => x !== c).map(distractorEntry);
+      options = shuffle([v.ans, ...pickDistractors(distractorEntry(c), pool, 3)]);
     }
     return { cardId: c.id, options, given: null, ok: null };
   });

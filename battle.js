@@ -136,7 +136,7 @@ function battleCards(deckId, n, dir, abcd) {
     else continue;
     if (!q?.trim() || !a?.trim() || a.length > 80) continue;
     const flip = dir === 'aq' || (dir === 'mix' && Math.random() < .5 && note.type === 'basic');
-    out.push(flip ? { q: a, a: q } : { q, a });
+    out.push(flip ? { q: a, a: q, ctx: note.extra || '' } : { q, a, ctx: note.extra || '' });
     if (out.length >= n) break;
   }
   if (abcd) addChoices(out, deckId, dir);
@@ -144,18 +144,16 @@ function battleCards(deckId, n, dir, abcd) {
 }
 // Quiz ABCD: 3 błędne odpowiedzi z innych fiszek tej talii (te same dla obu graczy – lecą w ustawieniach bitwy)
 function addChoices(cards, deckId, dir = 'qa') {
-  const pool = new Set(cards.map(c => c.a));
+  // pula złych odpowiedzi z całej talii, z pytaniem i działem – wybieramy najbardziej podobne (pickDistractors w app.js)
+  const pool = [], seen = new Set();
+  const add = (a, q, ctx) => { if (!a || !a.trim() || a.length > 80 || seen.has(a)) return; seen.add(a); pool.push({ a, q: q || '', ctx: ctx || '' }); };
+  cards.forEach(c => add(c.a, c.q, c.ctx));
   for (const c of S.cards.filter(c => c.deckId === deckId)) {
     const note = noteById(c.noteId); if (!note) continue;
-    if (note.type === 'basic') { for (const x of [dir !== 'aq' && note.back, dir !== 'qa' && note.front]) if (x && x.trim() && x.length <= 80) pool.add(x); }
-    else if (note.type === 'cloze') { const v = cardView(c); if (v.ans?.trim() && v.ans.length <= 80) pool.add(v.ans); }
+    if (note.type === 'basic') { if (dir !== 'aq') add(note.back, note.front, note.extra); if (dir !== 'qa') add(note.front, note.back, note.extra); }
+    else if (note.type === 'cloze') { const v = cardView(c); add(v.ans, clozePlain(note.text), note.extra); }
   }
-  const all = [...pool], norm = x => String(x).trim().toLowerCase();
-  for (const c of cards) {
-    // podobna długość = trudniej zgadnąć po wyglądzie
-    const wrong = shuffle(all.filter(x => norm(x) !== norm(c.a))).sort((x, y) => Math.abs(x.length - c.a.length) - Math.abs(y.length - c.a.length)).slice(0, 8);
-    c.opts = shuffle([c.a, ...shuffle(wrong).slice(0, 3)]);
-  }
+  for (const c of cards) c.opts = shuffle([c.a, ...pickDistractors({ a: c.a, q: c.q || '', ctx: c.ctx || '' }, pool.filter(x => x.a !== c.a), 3)]);
 }
 const clozePlainQ = (text, ord) => text.replace(CLOZE_RE, (m, num, ans, hint) => num === ord ? `[${hint || '…'}]` : ans);
 const judge = (given, correct) => !!given && (B.setup.opts?.abcd ? given === correct : checkAnswer(given, correct, B.setup.opts?.tol || 'normal') !== 'wrong');
