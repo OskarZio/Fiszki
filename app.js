@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '78';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '79';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -413,6 +413,27 @@ function checkAnswer(input, correct, tol = S?.settings?.tolerance || 'normal') {
 
 // ============================================================ Sesja nauki
 let SESSION = null;
+// ---------- zapamiętana sesja nauki: przejście na inną kartę/aplikację albo zamknięcie przez iOS nie kasuje postępu
+const SESS_KEY = 'studySess', SESS_TTL = 12 * HOUR;
+function saveSess() {
+  const s = SESSION; if (!s?.key) return;
+  try {
+    if (!s.card) return localStorage.removeItem(SESS_KEY);   // skończona – nie ma czego wznawiać
+    localStorage.setItem(SESS_KEY, JSON.stringify({ key: s.key, hash: location.hash, deckId: s.deckId, mode: s.mode, all: s.all, cram: s.cram, done: s.done,
+      cardId: s.card.id, shown: !!s.shown, t: Date.now() }));
+  } catch { /* */ }
+}
+function loadSess() { try { const j = JSON.parse(localStorage.getItem(SESS_KEY) || 'null'); return j && Date.now() - j.t < SESS_TTL ? j : null; } catch { return null; } }
+const dropSess = () => { try { localStorage.removeItem(SESS_KEY); } catch { /* */ } };
+function restoreSess(key) {
+  const j = loadSess(); if (!j || j.key !== key) return false;
+  const card = S.cards.find(c => c.id === j.cardId);
+  SESSION = { all: j.all, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
+    done: j.done || 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: Date.now() };
+  if (card && (!SESSION.cram || SESSION.cram[0] === card.id)) { SESSION.card = card; SESSION.shown = !!j.shown && j.mode === 'flip'; }
+  else nextCard();
+  return true;
+}
 
 function startSession(deckId, mode, cramIds = null, all = false) {
   SESSION = { all,
@@ -613,6 +634,11 @@ function viewHome() {
   ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
   ${typeof safetyBannerHTML === 'function' ? safetyBannerHTML() : ''}
   ${typeof homeExtrasHTML === 'function' ? homeExtrasHTML() : ''}
+  ${(() => {   // ▶ przerwana nauka (zapamiętana sesja)
+    const j = loadSess(); if (!j || !(j.done > 0 || j.cram)) return '';
+    const d = j.deckId === 'all' ? 'Wszystkie talie' : deckById(j.deckId)?.name; if (!d) return '';
+    const left = j.cram ? j.cram.length : null;
+    return `<div class="banner row nowrap resume-banner"><span class="grow">▶ Dokończ naukę: <b>${esc(d)}</b> · zrobione ${j.done}${left != null ? `, zostało ${left}` : ''}</span><button class="sm primary" data-go="${esc(j.hash)}">Wróć</button><button class="sm ghost" data-act="sess-drop" title="Zapomnij">✕</button></div>`; })()}
   ${(() => {   // 🎓 najbliższy egzamin
     const ex = S.decks.map(d => ({ d, e: examInfo(d) })).filter(x => x.e && !x.e.past).sort((a, b) => a.e.date - b.e.date)[0];
     if (!ex) return '';
@@ -761,16 +787,17 @@ const ptSuggest = (got, n) => got >= n ? 3 : got / n >= .5 ? 2 : 1;
 // fiszki oznaczone gwiazdką (⭐ = „cięższe”) – gwiazdka jest na notatce, więc dotyczy obu kierunków
 const starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && noteById(c.noteId)?.star);
 function viewStudy(deckId, mode, q) {
-  const all = q.get('all') === '1', key = `${deckId}/${mode}/${q.get('cram') ? 'cram' : ''}${all ? '/all' : ''}`;
+  const all = q.get('all') === '1', cq = q.get('cram') || '', key = `${deckId}/${mode}/${cq}${cq === 'list' ? ':' + idHash(q.get('ids') || '') : ''}${all ? '/all' : ''}`;
   if (!SESSION || SESSION.key !== key) {
     let cram = null;
     if (q.get('cram') === 'hard') cram = difficultCards().filter(c => deckId === 'all' || c.deckId === deckId).map(c => c.id);
     else if (q.get('cram') === 'all') cram = S.cards.filter(c => c.deckId === deckId).map(c => c.id);
     else if (q.get('cram') === 'star') cram = starredCards(deckId).map(c => c.id);
     else if (q.get('cram') === 'list') cram = (q.get('ids') || '').split(',').filter(Boolean);
-    startSession(deckId, mode, cram, all);
+    if (!restoreSess(key)) { startSession(deckId, mode, cram, all); SESSION.key = key; }
   }
   const s = SESSION, c = s.card;
+  onMount(saveSess);
   const name = deckId === 'all' ? 'Wszystkie talie' : (deckById(deckId)?.name || '');
   const rem = sessionRemaining(s);
   const backHash = deckId === 'all' ? '#/' : `#/deck/${deckId}`;
@@ -1675,7 +1702,8 @@ const ACTIONS = {
   },
   'cram-hard': el => { const d = el.dataset.id || 'all'; SESSION = null; go(`#/study/${d}/flip?cram=hard`); },
   'cram-deck': el => { SESSION = null; go(`#/study/${el.dataset.id}/flip?cram=all`); },
-  'end-study': el => { SESSION = null; go(el.dataset.href); },
+  'sess-drop': () => { dropSess(); render(); },
+  'end-study': el => { SESSION = null; dropSess(); go(el.dataset.href); },
   'switch-mode': el => { if (SESSION) { const [d, , c] = SESSION.key.split('/'); SESSION.key = `${d}/${el.dataset.href.split('/')[3].split('?')[0]}/${c}`; SESSION.mode = SESSION.key.split('/')[1]; } location.replace(el.dataset.href); },
   show: () => { SESSION.shown = true; SESSION.spoken = false; render(); },
   // obrót karty z animacją (pierwsze stuknięcie = odpowiedź, kolejne = podgląd pytania i z powrotem)
