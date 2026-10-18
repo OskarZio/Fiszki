@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '75';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '76';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1487,6 +1487,7 @@ function viewMore() {
     <button class="primary block" data-act="ics">📅 Dodaj codzienne przypomnienie do kalendarza</button>
     <div class="spacer"></div>
     <button class="block" data-act="badge">🔴 Pokazuj liczbę powtórek na ikonie aplikacji</button>
+    <div class="spacer"></div><button class="block" data-go="#/widget">📲 Skróty i widżet na ekran początkowy</button>
     <p class="small muted">Liczba na ikonie działa po dodaniu aplikacji do ekranu początkowego (iOS 16.4+).</p>
   </div>
 
