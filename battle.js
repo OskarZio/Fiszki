@@ -418,7 +418,7 @@ function stickerFx(k, from, shiny) {
   const el = document.createElement('div'); el.className = `stfly ${s.r}${shiny ? ' shiny' : ''}${S.settings.stickerAnim !== false ? ' anim st-' + s.id : ''}`; el.style.setProperty('--rc', RARITY[s.r].color);
   el.innerHTML = `<span>${stE(s)}</span><small>${esc(from || 'Ty')}: ${esc(s.name)}${shiny ? ' ✨' : ''}</small>`;
   document.body.append(el); setTimeout(() => el.remove(), 2600);
-  if (s.r === 'legendary' || shiny) confetti(60);
+  if (s.r === 'legendary' || s.r === 'mythic' || shiny) confetti(60);
 }
 let lastSticker = 0;
 
