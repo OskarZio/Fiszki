@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '73';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '74';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -472,6 +472,10 @@ function answer(g) {
     save();
     emit('review', c, g, wasNew);
   }
+  // punkty: zapamiętujemy, które elementy uciekły – przy następnej powtórce są oznaczone 🔁
+  if (s.pts) { const n = noteById(c.noteId), sp = n && splitPoints(n.back);
+    if (sp && s.shown) { const m = sp.pts.map((_, i) => i).filter(i => !s.pts.has(i)); if (String(m) !== String(n.ptMiss || [])) { if (m.length) n.ptMiss = m; else delete n.ptMiss; touch(n); save(); } } }
+  s.pts = null;
   s.lastNote = c.noteId;
   nextCard(); render();
   if (!s.card) emit('sessionEnd', s);
@@ -729,6 +733,29 @@ function notesList(notes, query) {
 }
 
 // ------------------------------------------------------------ Nauka
+// ---------- ✅ Odpowiedź w punktach: długą odpowiedź dzielimy na elementy do odhaczenia
+function splitTop(t, sepRe) {   // dzieli tylko poza nawiasami
+  const out = []; let depth = 0, cur = '';
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i]; if ('([{'.includes(ch)) depth++; if (')]}'.includes(ch)) depth = Math.max(0, depth - 1);
+    const m = depth === 0 && t.slice(i).match(sepRe);
+    if (m && m.index === 0) { out.push(cur); cur = ''; i += m[0].length - 1; continue; }
+    cur += ch;
+  }
+  out.push(cur); return out.map(x => x.trim().replace(/[.;,]+$/, '')).filter(Boolean);
+}
+function splitPoints(raw) {
+  const txt = String(raw || '').replace(/<br\s*\/?>|<\/(p|li|div)>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
+  const lines = txt.split(/\n+/).map(x => x.replace(/^\s*([-–•·*]|\d+[.)])\s*/, '').trim()).filter(Boolean);
+  if (lines.length >= 3 && lines.length <= 10) return { lead: '', pts: lines };
+  let t = txt.replace(/\s+/g, ' ').trim(), lead = '';
+  const ci = t.indexOf(':'); if (ci > 0 && ci < 140 && ci < t.length - 10) { lead = t.slice(0, ci).trim(); t = t.slice(ci + 1).trim(); }
+  let pts = splitTop(t, /^;\s*/);
+  if (pts.length < 3) pts = splitTop(t, /^(,\s*| oraz | a także )/);
+  if (pts.length < 3 || pts.length > 10 || pts.some(x => x.length > 110)) return null;
+  return { lead, pts };
+}
+const ptSuggest = (got, n) => got >= n ? 3 : got / n >= .5 ? 2 : 1;
 // fiszki oznaczone gwiazdką (⭐ = „cięższe”) – gwiazdka jest na notatce, więc dotyczy obu kierunków
 const starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && noteById(c.noteId)?.star);
 function viewStudy(deckId, mode, q) {
@@ -796,10 +823,18 @@ function viewStudy(deckId, mode, q) {
   // jak w Quizlecie: jedna karta z dwiema stronami, stuknięcie obraca ją o 180°
   const flip3d = mode === 'flip' && S.settings.flipCard !== false;
   const hintBox = hasHint ? `<div class="hintbox">${hintInner}</div>` : '';
+  // odpowiedź w punktach (fiszki podstawowe z długą odpowiedzią)
+  const sp = S.settings.points !== false && note?.type === 'basic' && c.ord !== 'r' ? splitPoints(note.back) : null;
+  if (sp && !s.pts) s.pts = new Set();
+  const miss = new Set(note?.ptMiss || []);
+  const ptsHTML = sp ? `<div class="pts-box">${sp.lead ? `<div class="pts-lead">${fmt(sp.lead)}:</div>` : ''}
+      <div class="pts-q small muted">Odhacz, co pamiętałeś:</div>
+      ${sp.pts.map((x, i) => `<button class="pt${s.pts.has(i) ? ' on' : ''}${miss.has(i) ? ' miss' : ''}" data-act="pt-toggle" data-i="${i}"><i>${s.pts.has(i) ? '✓' : ''}</i><span>${fmt(x)}</span>${miss.has(i) ? '<em title="ostatnio zapomniane">🔁</em>' : ''}</button>`).join('')}
+      <div class="pts-sum small">Pamiętam <b>${s.pts.size}/${sp.pts.length}</b> → proponuję: <b>${['', 'Nie pamiętam', 'Trudne', 'Dobrze'][ptSuggest(s.pts.size, sp.pts.length)]}</b></div></div>` : '';
   const body = flip3d ? `<div class="fc3d${s.shown && !s.peek ? ' flipped' : ''}"${s.editHint ? '' : ' data-act="flip-card"'}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}
     <div class="fc-inner">
       <div class="card flash face front">${v.q}${hasHint ? (s.hint ? hintBox : `<div><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button></div>`) : ''}<div class="flip-tip">↻ stuknij, aby obrócić<span class="kbd-tip"> · spacja</span></div></div>
-      <div class="card flash face back">${v.b}${s.editHint ? editHint : hintBox + hintTools}<div class="flip-tip">↻ stuknij – pytanie<span class="kbd-tip"> · spacja – obróć · 1–4 – ocena</span></div></div>
+      <div class="card flash face back">${sp ? ptsHTML + (v.b.match(/<img[^>]*>/g) || []).join('') + (note.extra ? `<div class="extra">${fmt(note.extra)}</div>` : '') : v.b}${s.editHint ? editHint : hintBox + hintTools}<div class="flip-tip">↻ stuknij – pytanie<span class="kbd-tip"> · spacja – obróć · 1–4 – ocena</span></div></div>
     </div></div>`
   : `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${side}${s.peek ? '' : typed}${hints}
     ${tap ? `<div class="flip-tip">${s.shown ? (s.peek ? '↻ stuknij – odpowiedź' : '↻ stuknij – pytanie') : '↻ stuknij, aby obrócić'}</div>` : ''}</div>`;
@@ -813,7 +848,7 @@ function viewStudy(deckId, mode, q) {
         <button class="primary block" data-act="check">Sprawdź</button>`;
     } else bar = `<button class="primary block" data-act="${S.settings.flipCard === false ? 'show' : 'flip-card'}" style="min-height:56px">Pokaż odpowiedź</button>`;
   } else {
-    const suggest = { ok: 3, close: 2, wrong: 1 }[s.verdict] || 0;
+    const suggest = { ok: 3, close: 2, wrong: 1 }[s.verdict] || (sp ? ptSuggest(s.pts.size, sp.pts.length) : 0);
     const labels = S.settings.grade2 ? ['Nie pamiętam', '', 'Pamiętam', ''] : ['Nie pamiętam', 'Trudne', 'Dobrze', 'Łatwe'];
     const now = Date.now(), gs = S.settings.grade2 ? [1, 3] : [1, 2, 3, 4];
     bar = `<div class="grades n${gs.length}">${gs.map(g => {
@@ -1460,6 +1495,7 @@ function viewMore() {
     <label class="check"><input type="checkbox" id="set-hide" ${st.hideAll ? 'checked' : ''}> Obraz z lukami: domyślnie ukrywaj wszystkie luki</label>
     <label class="check"><input type="checkbox" data-pers="flipCard" ${st.flipCard !== false ? 'checked' : ''}> 🔄 Obracanie fiszki stuknięciem (animacja) – wyłącz, by wrócić do przycisku „Pokaż odpowiedź”</label>
     <label class="check"><input type="checkbox" data-pers="hintEdit" ${st.hintEdit !== false ? 'checked' : ''}> 💡 Przycisk „Dodaj skojarzenie” w trakcie nauki</label>
+    <label class="check"><input type="checkbox" data-pers="points" ${st.points !== false ? 'checked' : ''}> ✅ Długie odpowiedzi w punktach do odhaczenia</label>
     <details class="adv"><summary>Ustawienia zaawansowane</summary>
       <label class="field"><span>Kroki nauki nowych kart (minuty, oddzielone spacją)</span><input id="set-steps" value="${esc(st.steps)}" placeholder="1 10" inputmode="numeric"></label>
       <label class="field"><span>Kroki po zapomnieniu (minuty)</span><input id="set-relearn" value="${esc(st.relearn)}" placeholder="10" inputmode="numeric"></label>
@@ -1673,6 +1709,7 @@ const ACTIONS = {
     SESSION.editHint = false; SESSION.hintDraft = null; SESSION.hint = true; toast(n.hint || n.hintImg ? '💡 Skojarzenie zapisane' : 'Usunięto skojarzenie', 1600); render();
   },
   'exam-clear': el => { const d = deckById(el.dataset.id); if (!d) return; delete d.exam; touch(d); save(); render(); },
+  'pt-toggle': el => { const s = SESSION; if (!s?.pts) return; const i = +el.dataset.i; s.pts.has(i) ? s.pts.delete(i) : s.pts.add(i); render(); },
   'cram-star': el => { const d = el.dataset.id || 'all'; SESSION = null; go(`#/study/${d}/flip?cram=star`); },
   speak: () => { const v = cardView(SESSION.card); speak(stripHtml(SESSION.shown ? v.a : v.q)); },
   hint: () => { SESSION.hint = true; render(); },
