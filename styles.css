@@ -1429,3 +1429,11 @@ body.focus #egg-chip.floating { bottom: auto; top: calc(8px + env(safe-area-inse
 
 .rank-scope { margin-bottom: 8px; }
 .rank-gap { text-align: center; color: var(--muted); padding: 2px 0; letter-spacing: .3em; }
+
+/* ikony Phosphor (icons.js) */
+svg.ph { width: 1.15em; height: 1.15em; fill: currentColor; vertical-align: -.2em; flex: none; display: inline-block; }
+svg.ph.lead { margin-right: .35em; }
+#tabs a span svg.ph, .hubnav a span svg.ph { width: 1em; height: 1em; vertical-align: middle; }
+.sc > span svg.ph, .mtile > span svg.ph { width: 1em; height: 1em; color: var(--accent); }
+h1 > svg.ph, h2 > svg.ph, h3 > svg.ph, summary > svg.ph, summary > b > svg.ph { color: var(--accent); }
+button.primary svg.ph, .primary svg.ph { color: inherit; }
