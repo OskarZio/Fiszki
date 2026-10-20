@@ -32,11 +32,10 @@ async function refTryJoin() {
   if (Date.now() - born > REF_NEW_DAYS * DAY) { dropRef(); return toast('Link polecający działa tylko dla nowych kont – możesz dodać znajomego kodem w rankingu', 5000); }
   refBusy = true;
   try {
-    const p = await SB.from('profiles').select('*').eq('code', code).maybeSingle();
-    if (p.error || !p.data) { dropRef(); return; }
-    const host = p.data;
+    const host = await findProfileByCode(code);
+    if (!host) { dropRef(); return; }
     if (!CLOUD_FRIENDS.some(f => f.id === host.id)) {
-      const r = await SB.from('friends').insert({ user_id: SB_USER.id, friend_id: host.id });
+      const r = await addFriendByCode(code, host.id);
       if (r.error && !/duplicate|unique/i.test(r.error.message)) return console.warn(r.error);
     }
     S.stats.refJoined = code;

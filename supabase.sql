@@ -97,3 +97,85 @@ do $$ begin
     alter publication supabase_realtime add table public.messages;
   end if;
 end $$;
+
+-- ============================================================
+-- 🔒 ZABEZPIECZENIA (RODO + ochrona przed nadużyciami) – wersja 2026-10-20
+-- Bezpiecznie uruchomić ponownie. Ograniczenia „not valid” nie sprawdzają starych wierszy, tylko nowe zapisy.
+-- ============================================================
+
+-- Limity rozmiarów (ochrona przed zapchaniem bazy / spowolnieniem innych)
+alter table public.profiles drop constraint if exists p_nick, drop constraint if exists p_av, drop constraint if exists p_img, drop constraint if exists p_stats, drop constraint if exists p_upd;
+alter table public.profiles
+  add constraint p_nick check (nick is null or char_length(nick) <= 24) not valid,
+  add constraint p_av check (avatar is null or char_length(avatar) <= 16) not valid,
+  add constraint p_img check (avatar_img is null or avatar_img = '' or (octet_length(avatar_img) < 120000 and avatar_img ~ '^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$')) not valid,
+  add constraint p_stats check (pg_column_size(stats) < 30000) not valid,
+  add constraint p_upd check (updated_at <= now() + interval '5 minutes') not valid;
+alter table public.user_data drop constraint if exists d_size;
+alter table public.user_data add constraint d_size check (pg_column_size(data) < 8000000) not valid;
+alter table public.user_images drop constraint if exists i_size;
+alter table public.user_images add constraint i_size check (octet_length(data) < 3000000 and char_length(id) <= 64) not valid;
+alter table public.friends drop constraint if exists f_self;
+alter table public.friends add constraint f_self check (user_id <> friend_id) not valid;
+
+-- Profil: kodu znajomego i id nie da się zmienić; data aktualizacji zawsze z serwera
+create or replace function public.profile_guard() returns trigger language plpgsql set search_path = '' as $$
+begin
+  if tg_op = 'UPDATE' then new.id := old.id; new.code := old.code; end if;
+  new.updated_at := now();
+  return new;
+end $$;
+drop trigger if exists profile_guard on public.profiles;
+create trigger profile_guard before insert or update on public.profiles for each row execute function public.profile_guard();
+
+-- Profil widzą: właściciel, znajomi i – tylko jeśli ktoś sam włączył ranking wszystkich – inni zalogowani (RODO art. 25)
+drop policy if exists "profile_read" on public.profiles;
+create policy "profile_read" on public.profiles for select to authenticated using (
+  id = auth.uid()
+  or (stats ->> 'showGlobal') = '1'
+  or exists (select 1 from public.friends f where (f.user_id = auth.uid() and f.friend_id = profiles.id) or (f.friend_id = auth.uid() and f.user_id = profiles.id)));
+drop policy if exists "profile_delete" on public.profiles;
+create policy "profile_delete" on public.profiles for delete to authenticated using (auth.uid() = id);
+
+-- Dodawanie znajomego tylko przez znajomość kodu (funkcja), z limitem 30 na godzinę
+create or replace function public.find_profile(p_code text) returns table (id uuid, nick text, avatar text)
+language sql stable security definer set search_path = '' as $$
+  select p.id, p.nick, p.avatar from public.profiles p where p.code = upper(trim(p_code)) and auth.uid() is not null limit 1;
+$$;
+create or replace function public.add_friend(p_code text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare target uuid;
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  select p.id into target from public.profiles p where p.code = upper(trim(p_code));
+  if target is null then raise exception 'not found'; end if;
+  if target = auth.uid() then raise exception 'self'; end if;
+  if (select count(*) from public.friends where user_id = auth.uid() and created_at > now() - interval '1 hour') >= 30 then raise exception 'rate limit'; end if;
+  insert into public.friends (user_id, friend_id) values (auth.uid(), target) on conflict do nothing;
+  return target;
+end $$;
+revoke all on function public.find_profile(text) from public, anon;
+revoke all on function public.add_friend(text) from public, anon;
+grant execute on function public.find_profile(text) to authenticated;
+grant execute on function public.add_friend(text) to authenticated;
+revoke insert on public.friends from authenticated;
+
+-- Wiadomości: limit 30 na minutę, czas i „przeczytane” ustawia serwer
+create or replace function public.msg_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.messages where from_id = new.from_id and created_at > now() - interval '1 minute') >= 30 then
+    raise exception 'rate limit';
+  end if;
+  new.created_at := now(); new.read_at := null;
+  return new;
+end $$;
+drop trigger if exists msg_guard on public.messages;
+create trigger msg_guard before insert on public.messages for each row execute function public.msg_guard();
+
+-- RODO art. 17: użytkownik usuwa swoje konto sam (kaskadowo znikają profil, dane, obrazy, znajomi i wiadomości)
+create or replace function public.delete_my_account() returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  delete from auth.users where id = auth.uid();
+end $$;
+revoke all on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;

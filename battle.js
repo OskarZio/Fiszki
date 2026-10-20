@@ -64,7 +64,7 @@ function battleRowHTML(b) {
 // komputer: rozwijanie po najechaniu myszą
 document.addEventListener('mouseover', e => { const d = e.target.closest?.('.bth'); if (d && matchMedia('(hover: hover)').matches) d.open = true; });
 document.addEventListener('mouseout', e => { const d = e.target.closest?.('.bth'); if (d && matchMedia('(hover: hover)').matches && !d.contains(e.relatedTarget)) d.open = false; });
-const eloHTML = e => { const t = eloTier(e); return `<span class="elo">${t[1]} ${e} <small>${t[2]}</small></span>`; };
+const eloHTML = e => { e = sInt(e, 0, 5000, 1000); const t = eloTier(e); return `<span class="elo">${t[1]} ${e} <small>${t[2]}</small></span>`; };
 function eloDelta(mine, theirs, won, games) {
   const exp = 1 / (1 + 10 ** ((theirs - mine) / 400)), score = won === 1 ? 1 : won === 0 ? .5 : 0;
   return Math.round((games < 10 ? 40 : 24) * (score - exp));
@@ -86,6 +86,7 @@ function channel(topic, onMsg) {
   const chunks = {};
   const recv = m => {
     if (m.t !== 'chunk') return handle(m);
+    if (!(m.n > 0 && m.n <= 200 && m.i >= 0 && m.i < m.n && typeof m.d === 'string') || Object.keys(chunks).length > 20) return;
     const c = chunks[m.cid] || (chunks[m.cid] = []); c[m.i] = m.d;
     if (c.filter(x => x != null).length === m.n) { delete chunks[m.cid]; try { handle(JSON.parse(c.join(''))); } catch { /* */ } }
   };
@@ -177,6 +178,7 @@ function joinRoom(code, fromMatch) {
   hello(); go('#/battle');
 }
 function onRoomMsg(m) {
+  m = sBattleMsg(m); if (!m) return;   // 🔒 tylko znane pola od przeciwnika
   if (!B) return;
   B.lastOpp = Date.now();
   if (B.role === 'host' && m.t === 'join') {
@@ -190,7 +192,7 @@ function onRoomMsg(m) {
   if (m.to && m.to !== MY_ID) return;
   if (m.t === 'full') { toast('Pokój jest już zajęty'); if (B.fromMatch) return ACTIONS['bt-quick'](); return quitBattle(); }
   if (B.role === 'guest' && m.t === 'setup' && B.phase === 'joining') {
-    B.setup = m.setup; B.opp = { id: m.from, ...m.host }; startCountdown(); return;
+    if (!m.setup) return; B.setup = m.setup; B.opp = { id: m.from, ...m.host }; startCountdown(); return;
   }
   if (m.t === 'ready') { B.oppLearnMs = m.ms; B.oppReady = true; }
   if (m.t === 'ans' && B.setup?.mode === 'cards') {
@@ -211,7 +213,7 @@ function onRoomMsg(m) {
   if (m.t === 'bye') { B.oppLeft = true; toast(`${B.opp?.nick || 'Przeciwnik'} opuścił bitwę`, 3000); }
   // rewanż: obie strony muszą się zgodzić; nowy zestaw przygotowuje gospodarz
   if (m.t === 'rm' && B.phase === 'end') { B.rmTheirs = true; toast(`🔁 ${B.opp?.nick || 'Przeciwnik'} chce rewanżu!`, 3500); maybeRematch(); }
-  if (m.t === 'rs' && B.phase === 'end') return restartBattle(m.setup);
+  if (m.t === 'rs' && B.phase === 'end' && m.setup) return restartBattle(m.setup);
   maybeFinish(); renderBattle();
 }
 function startCountdown() {
@@ -692,6 +694,7 @@ function quickMatch() {
   B.code = roomCode(); B.setup = { mode: 'mem', disc, seed: Math.random() * 1e9 | 0, opts: { sab: true } };
   B.ch = channel('fiszki-room-' + B.code, onRoomMsg);
   const lobby = channel(LOBBY, m => {
+    m = sBattleMsg(m); if (!m || !m.room || !m.from) return;
     if (!B || B.phase !== 'seeking' || m.t !== 'seek' || Date.now() - m.ts > 45000) return;
     if (MY_ID > m.from) { stopSeek(); B.ch.close(); B.lobby = null; joinRoom(m.room, true); }
   });

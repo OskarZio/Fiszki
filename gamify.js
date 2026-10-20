@@ -346,12 +346,16 @@ function friendCode(raw) {
 function rankRows() {
   const today = dayKey(Date.now()), weekFrom = dayKey(addDays(dayStart(), -6));
   const norm = p => {
-    const per = p.perDay || {};
+    const per = p.perDay && typeof p.perDay === 'object' ? p.perDay : {};
     const week = Object.entries(per).filter(([k]) => k >= weekFrom && k <= today).reduce((a, [, n]) => a + n, 0);
     const weekMin = Object.entries(p.perMin || {}).filter(([k]) => k >= weekFrom && k <= today).reduce((a, [, n]) => a + (+n || 0), 0);
     const lastDay = Object.keys(per).sort().pop();
     const streakAlive = p.day === today || lastDay === dayKey(addDays(dayStart(), -1)) || lastDay === today;
-    return { weekMin, nick: p.nick, avatar: p.avatar, avatarImg: p.avatarImg, elo: +p.elo || 1000, today: p.day === today ? p.today : (per[today] || 0), week, streak: streakAlive ? p.streak : 0, level: p.level || 1, xp: p.xp || 0, total: p.total || 0, updated: p.updated, ach: p.ach || 0, showcase: p.showcase || [] };
+    // 🔒 dane z cudzych profili: tylko liczby i krótkie teksty (ochrona przed wstrzyknięciem kodu)
+    const n = (v, max = 1e7) => { const x = Math.floor(+v); return Number.isFinite(x) ? Math.max(0, Math.min(max, x)) : 0; };
+    return { weekMin: n(weekMin, 1e5), nick: String(p.nick || 'Gracz').slice(0, 24), avatar: String(p.avatar || '🦊').slice(0, 16), avatarImg: safeImg(p.avatarImg), elo: n(p.elo, 5000) || 1000,
+      today: n(p.day === today ? p.today : per[today]), week: n(week), streak: streakAlive ? n(p.streak, 1e5) : 0, level: n(p.level, 1e4) || 1, xp: n(p.xp, 1e9), total: n(p.total, 1e9),
+      updated: n(p.updated, 1e13) || 0, ach: n(p.ach, 1e4), showcase: (Array.isArray(p.showcase) ? p.showcase : []).filter(id => typeof id === 'string' && /^[a-z0-9_-]{1,24}$/.test(id)).slice(0, 3) };
   };
   const me = { ...norm(myProfile()), me: true };
   const rows = S.friends.map(f => FRIEND_DATA[f.code]?.app ? { ...norm(FRIEND_DATA[f.code]), id: f.id, err: FRIEND_DATA[f.code].err } : { nick: f.name || 'Znajomy', avatar: '❔', id: f.id, today: 0, week: 0, streak: 0, level: 0, xp: 0, err: FRIEND_DATA[f.code]?.err || 'brak danych' });

@@ -20,7 +20,7 @@ const EMOJI_POOL = `🍎 🍌 🍇 🍉 🍓 🍒 🍍 🥥 🥝 🍅 🥕 🌽 
 const SUITS = [['♠', 0], ['♥', 1], ['♦', 1], ['♣', 0]];
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const DECK = SUITS.flatMap(([s]) => RANKS.map(r => r + s));
-const cardHTML = c => `<span class="pcard${/[♥♦]/.test(c) ? ' red' : ''}">${c.replace(/(.+)(.)$/, '<b>$1</b>$2')}</span>`;
+const cardHTML = c => `<span class="pcard${/[♥♦]/.test(c) ? ' red' : ''}">${esc(String(c)).replace(/(.+)(.)$/, '<b>$1</b>$2')}</span>`;
 
 // Fonetyczny system liczbowy (wersja polska): spółgłoski → cyfry, samogłoski i inne litery się nie liczą.
 const MAJOR_TABLE = [['0', 's, z (ś, ź)'], ['1', 't, d'], ['2', 'n (ń)'], ['3', 'm'], ['4', 'r'], ['5', 'l'], ['6', 'j, sz, cz, ż, dż'], ['7', 'k, g'], ['8', 'w, f'], ['9', 'p, b']];
@@ -40,11 +40,11 @@ const majorWord = nn => (S.major.words || {})[nn] || '';
 // ============================================================ Dyscypliny
 const DISC = {
   numbers: { name: 'Liczby', icon: '🔢', unit: 'cyfr', levels: [[20, 60], [40, 60], [80, 60], [120, 120]], group: 2,
-    gen: n => Array.from({ length: n }, () => String(Math.random() * 10 | 0)), tile: x => x },
+    gen: n => Array.from({ length: n }, () => String(Math.random() * 10 | 0)), tile: x => esc(x) },
   words: { name: 'Słowa', icon: '📝', unit: 'słów', levels: [[10, 60], [25, 60], [50, 60], [50, 120]], group: 1,
     gen: n => shuffle([...PL_WORDS]).slice(0, n), tile: x => esc(x) },
   images: { name: 'Obrazy', icon: '🖼️', unit: 'obrazów', levels: [[10, 60], [20, 60], [30, 60], [60, 120]], group: 3,
-    gen: n => shuffle([...EMOJI_POOL]).slice(0, n), tile: x => x },
+    gen: n => shuffle([...EMOJI_POOL]).slice(0, n), tile: x => esc(x) },
   cards: { name: 'Karty', icon: '🃏', unit: 'kart', levels: [[13, 120], [26, 120], [52, 180], [52, 120]], group: 2,
     gen: n => shuffle([...DECK]).slice(0, n), tile: cardHTML },
 };

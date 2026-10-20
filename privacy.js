@@ -114,8 +114,12 @@ async function gdprExport() {
   toast('Pobrano plik z Twoimi danymi ✓');
 }
 // czyszczenie urządzenia (wspólny komputer itp.)
-async function wipeDevice() {
-  try { localStorage.clear(); sessionStorage.clear(); } catch { /* */ }
+async function wipeDevice(keepSession) {
+  try {
+    if (keepSession) for (const k of Object.keys(localStorage)) { if (!/^sb-/.test(k)) localStorage.removeItem(k); }
+    else localStorage.clear();
+    sessionStorage.clear();
+  } catch { /* */ }
   try { await new Promise(r => { const q = indexedDB.deleteDatabase('fiszki'); q.onsuccess = q.onerror = q.onblocked = r; }); } catch { /* */ }
   try { if (window.caches) for (const k of await caches.keys()) await caches.delete(k); } catch { /* */ }
 }
@@ -156,3 +160,5 @@ Object.assign(ACTIONS, {
 // linki w Ustawieniach
 const prMore0 = viewMore;
 viewMore = function () { return prMore0() + `<div class="card small center legal-links"><a href="#/privacy">🔒 Polityka prywatności</a> · <a href="#/terms">Regulamin</a><br><span class="muted">Bez reklam, bez śledzenia, bez plików cookie.</span></div>`; };
+// link z maila (potwierdzenie konta) zostawia tokeny w adresie – usuwamy je z paska adresu i historii
+if (/(access_token|refresh_token)=/.test(location.hash)) history.replaceState(null, '', location.pathname);

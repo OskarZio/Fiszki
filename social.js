@@ -22,8 +22,9 @@ async function loadMsgs() {
     const me = myId();
     const r = await SB.from('messages').select('*').or(`from_id.eq.${me},to_id.eq.${me}`).order('id', { ascending: false }).limit(300);
     if (r.error) { if (!/does not exist|relation/i.test(r.error.message)) console.warn(r.error); return; }
-    const fresh = (r.data || []).filter(m => !MSGS.some(x => x.id === m.id));
-    MSGS = (r.data || []).slice().sort((a, b) => a.id - b.id);
+    const rows = (r.data || []).map(sMsgRow).filter(Boolean);   // 🔒 oczyszczone treści od innych
+    const fresh = rows.filter(m => !MSGS.some(x => x.id === m.id));
+    MSGS = rows.slice().sort((a, b) => a.id - b.id);
     handleMsgs(fresh);
   } finally { msgBusy = false; }
 }
@@ -125,7 +126,7 @@ async function sendMsg(fid, kind, body) {
       : /row-level|policy/i.test(r.error.message) ? 'Możesz pisać tylko do znajomych z rankingu' : 'Błąd: ' + r.error.message, 5000);
     return null;
   }
-  const m = r.data; if (m && !MSGS.some(x => x.id === m.id)) MSGS.push(m);
+  const m = sMsgRow(r.data); if (m && !MSGS.some(x => x.id === m.id)) MSGS.push(m);
   return m;
 }
 const giftable = () => STICKERS.filter(s => itemCount('sticker', s.id) > 0);

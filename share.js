@@ -54,10 +54,13 @@ async function sharePush() {
 function shareApply(m) {
   const b = m.body || {}, d = deckByShare(b.sd); if (!d) return false;
   const sh = d.share; sh.sent = sh.sent || {};
-  if (b.members) sh.members = [...new Set([...(sh.members || []), ...b.members])];
+  // 🔒 zmiany tylko od członków talii; listę członków poszerza tylko właściciel
+  if (!(sh.members || []).includes(m.from_id)) return false;
+  if (b.members && m.from_id === sh.owner) sh.members = [...new Set([...(sh.members || []), ...b.members])].slice(0, 50);
   for (const x of b.notes || []) {
     if (!x?.id || (S.tomb[x.id] && S.tomb[x.id] >= (x.mod || 0))) continue;
     let n = noteById(x.id);
+    if (n && n.deckId !== d.id) continue;      // nie pozwalamy „przejąć” fiszki z innej talii
     if (n && (n.mod || 0) >= (x.mod || 0)) continue;
     if (!n) { n = { ...x, deckId: d.id }; S.notes.push(n); } else Object.assign(n, x, { deckId: d.id });
     n.mod = x.mod || Date.now(); syncCards(n); sh.sent[n.id] = n.mod;

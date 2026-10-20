@@ -127,7 +127,7 @@ function showOpenLobby(o) {
   go('#/show'); render();
 }
 function showHostMsg(m) {
-  if (!SHOW || SHOW.role !== 'host') return;
+  if (!SHOW || SHOW.role !== 'host' || !m || !sKey(m.from)) return;
   const pid = 'p' + m.from;
   if (m.t === 'join') {
     let p = SHOW.players.find(x => x.id === pid);
@@ -140,10 +140,10 @@ function showHostMsg(m) {
     p.left = false; showRender(); return;
   }
   const p = SHOW.players.find(x => x.id === pid); if (!p) return;
-  if (m.t === 'ans' && SHOW.phase === 'question' && m.qi === SHOW.qi) showTakeAnswer(p, +m.k, Math.max(0, Math.min(+m.ms || 0, showRound().sec * 1000)));
+  if (m.t === 'ans' && SHOW.phase === 'question' && m.qi === SHOW.qi) showTakeAnswer(p, sInt(m.k, 0, 5), Math.max(0, Math.min(+m.ms || 0, showRound().sec * 1000)));
   if (m.t === 'bet' && SHOW.phase === 'bet' && [100, 250, 500].includes(+m.v)) { p.bet = +m.v; showBetCheck(); }
-  if (m.t === 'shoot' && SHOW.phase === 'aim' && SHOW.shooter === pid) showShoot(m.id);
-  if (m.t === 'pick' && SHOW.phase === 'pick' && SHOW.picker === pid) showPickCat(m.c);
+  if (m.t === 'shoot' && SHOW.phase === 'aim' && SHOW.shooter === pid) showShoot(SHOW.players.some(x => x.id === m.id) ? m.id : undefined);
+  if (m.t === 'pick' && SHOW.phase === 'pick' && SHOW.picker === pid && (SHOW.catOpts || []).includes(m.c)) showPickCat(m.c);
   if (m.t === 'bye') { p.left = true; if (SHOW.phase === 'aim' && SHOW.shooter === pid) showShoot(); else showRender(); }
 }
 // stan gry dla graczy – bez poprawnej odpowiedzi, dopóki nie nastąpi odkrycie
@@ -171,8 +171,13 @@ function showJoin(pin) {
 }
 function showGuestMsg(m) {
   if (!SHOW || SHOW.role !== 'guest') return;
-  if (m.t === 'full' && m.to === MY_ID) { toast(m.why || 'Nie można dołączyć', 4000); SHOW.phase = 'nohost'; return render(); }
+  if (!m || typeof m !== 'object') return;
+  if (m.t === 'full' && m.to === MY_ID) { toast(sStr(m.why, 80) || 'Nie można dołączyć', 4000); SHOW.phase = 'nohost'; return render(); }
   if (m.t !== 'state') return;
+  // 🔒 stan przyjmujemy tylko od jednego gospodarza (pierwszego, który odpowiedział) i tylko znane pola
+  if (SHOW.hostFrom && m.from !== SHOW.hostFrom) return;
+  const from = m.from; m = sShowState(m); if (m.pin && m.pin !== SHOW.pin) return;
+  SHOW.hostFrom = SHOW.hostFrom || from;
   const prev = SHOW.phase, prevQi = SHOW.qi;
   if (m.phase === 'question' && (prev !== 'question' || prevQi !== m.qi)) { SHOW.myK = null; SHOW.lastTick = 0; }
   const RS = m.rounds || SHOW_ROUNDS, R = RS[m.r] || RS[0];

@@ -34,7 +34,18 @@ function rerenderIf(routes) { if (routes.includes(parseRoute().parts[0] || '')) 
 function setCloudUser(u) {
   const changed = (u?.id || null) !== (SB_USER?.id || null);
   SB_USER = u;
-  if (changed && u) { cloudSync(false).then(loadCloudFriends); }
+  if (changed && u) {
+    // 🔒 inne konto na tym samym urządzeniu: nie mieszamy po cichu cudzych fiszek z nowym kontem
+    const owner = S.settings.ownerUid;
+    if (owner && owner !== u.id && (S.notes.length || S.decks.length > 1)) {
+      if (!confirm('Na tym urządzeniu są fiszki z innego konta.\n\nOK – dołącz je do konta, na które się logujesz\nAnuluj – usuń je z urządzenia i pobierz tylko dane tego konta')) {
+        S.settings.ownerUid = u.id; save();
+        return (typeof wipeDevice === 'function' ? wipeDevice(true) : Promise.resolve()).then(() => location.reload());
+      }
+    }
+    S.settings.ownerUid = u.id; save();
+    cloudSync(false).then(loadCloudFriends);
+  }
   if (changed) rerenderIf(['more', 'me', 'rank', '']);
 }
 
@@ -54,7 +65,7 @@ async function cloudSync(manual) {
     const need = [...used].filter(id => !IMG[id] && remote.has(id));
     for (let i = 0; i < need.length; i += 8) {
       const g = await SB.from('user_images').select('id,data').eq('user_id', uid).in('id', need.slice(i, i + 8)); if (g.error) throw g.error;
-      for (const row of g.data || []) { IMG[row.id] = row.data; await DB.set('img:' + row.id, row.data); }
+      for (const row of g.data || []) { if (!okId(row.id) || !okImgData(row.data)) continue; IMG[row.id] = row.data; await DB.set('img:' + row.id, row.data); }
     }
     const up = [...used].filter(id => IMG[id] && !remote.has(id));
     for (let i = 0; i < up.length; i += 4) {
@@ -71,8 +82,10 @@ async function cloudSync(manual) {
 async function publishCloudProfile() {
   if (!cloudOn()) return;
   const uid = SB_USER.id;
-  const r = await SB.from('profiles').upsert({ id: uid, nick: (S.profile.nick || '').slice(0, 24) || 'Gracz',  // nigdy nie pokazujemy maila innym avatar: S.profile.avatar || '🦊',
-    avatar_img: safeImg(S.profile.avatarImg), stats: myProfile(), updated_at: new Date().toISOString() });
+  // nigdy nie pokazujemy maila innym; zdjęcie awatara idzie tylko w kolumnie avatar_img (nie dublujemy go w stats)
+  const { avatarImg, ...stats } = myProfile();
+  const r = await SB.from('profiles').upsert({ id: uid, nick: (S.profile.nick || '').slice(0, 24) || 'Gracz', avatar: String(S.profile.avatar || '🦊').slice(0, 16),
+    avatar_img: safeImg(avatarImg), stats, updated_at: new Date().toISOString() });
   if (r.error) throw r.error;
   const p = await SB.from('profiles').select('*').eq('id', uid).maybeSingle();
   if (!p.error) SB_PROFILE = p.data;
@@ -129,18 +142,30 @@ function rowsFromProfiles(list) {
   FRIEND_DATA = Object.fromEntries(list.map(p => ['sb:' + p.id, { ...(p.stats || {}), app: 'fiszki-profil', nick: p.nick || 'Gracz', avatar: p.avatar, avatarImg: p.avatar_img, updated: Date.parse(p.updated_at) }]));
   try { return clRankRows0(); } finally { S.friends = keepF; FRIEND_DATA = keepD; }
 };
+// 🔒 nowa baza: profil po kodzie i dodanie znajomego tylko przez funkcje (kod = zaproszenie); stara baza: bezpośrednio
+async function findProfileByCode(code) {
+  const r = SB.rpc ? await SB.rpc('find_profile', { p_code: code }) : { error: { message: 'no rpc' } };
+  if (!r.error) return (Array.isArray(r.data) ? r.data[0] : r.data) || null;
+  const p = await SB.from('profiles').select('id,nick,avatar').eq('code', code).maybeSingle();
+  return p.error ? null : p.data;
+}
+async function addFriendByCode(code, id) {
+  const r = SB.rpc ? await SB.rpc('add_friend', { p_code: code }) : { error: { message: 'no rpc function' } };
+  if (!r.error || !/function|schema cache|does not exist|404/i.test(r.error.message || '')) return r;
+  return SB.from('friends').insert({ user_id: SB_USER.id, friend_id: id });
+}
 async function cloudAddFriend(code) {
   code = String(code || '').trim().toUpperCase().replace(/^.*FRIEND\//, '');
   if (!code) return toast('Wpisz kod znajomego');
   if (code === SB_PROFILE?.code) return toast('To Twój własny kod 🙂');
-  const p = await SB.from('profiles').select('*').eq('code', code).maybeSingle();
-  if (p.error || !p.data) return toast('Nie znaleziono gracza o tym kodzie', 3500);
-  if (CLOUD_FRIENDS.some(f => f.id === p.data.id)) return toast('Ten znajomy już jest w rankingu');
-  if (!confirm(`Dodać ${p.data.avatar || ''} ${p.data.nick || 'gracza'} do rankingu?`)) return;
-  const r = await SB.from('friends').insert({ user_id: SB_USER.id, friend_id: p.data.id });
-  if (r.error) return toast('Błąd: ' + r.error.message, 4000);
+  const p = await findProfileByCode(code);
+  if (!p) return toast('Nie znaleziono gracza o tym kodzie', 3500);
+  if (CLOUD_FRIENDS.some(f => f.id === p.id)) return toast('Ten znajomy już jest w rankingu');
+  if (!confirm(`Dodać ${p.avatar || ''} ${p.nick || 'gracza'} do rankingu?`)) return;
+  const r = await addFriendByCode(code, p.id);
+  if (r.error) return toast(/rate limit/.test(r.error.message) ? 'Za dużo zaproszeń naraz – spróbuj za godzinę' : 'Błąd: ' + r.error.message, 4000);
   S.stats.friendsAdded = (S.stats.friendsAdded || 0) + 1; save();
-  toast(`Dodano ${p.data.nick} ✓`); await loadCloudFriends(); go('#/rank');
+  toast(`Dodano ${p.nick || "znajomego"} ✓`); await loadCloudFriends(); go('#/rank');
 }
 
 const clRankRoute0 = ROUTES.rank;
@@ -225,7 +250,7 @@ function accountCardHTML() {
       <div class="spacer"></div>
       <input id="acc-email" type="email" placeholder="E-mail" autocomplete="email" autocapitalize="off">
       <div class="spacer"></div>
-      <input id="acc-pass" type="password" placeholder="Hasło (min. 6 znaków)" autocomplete="current-password">
+      <input id="acc-pass" type="password" placeholder="Hasło (min. 10 znaków, litery i cyfry)" autocomplete="current-password">
       <div class="spacer"></div>
       <div class="row"><button class="primary grow" data-act="acc-login">Zaloguj</button><button class="grow" data-act="acc-signup">Załóż konto</button></div>
       <p class="small muted">Twoje obecne fiszki zostaną dołączone do konta przy pierwszym logowaniu.</p>
@@ -250,7 +275,7 @@ ROUTES['cloud-help'] = () => {
     <li>Wejdź na <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com</a> i załóż konto (najprościej „Continue with GitHub”).</li>
     <li>Kliknij <b>New project</b>: nazwa np. <i>fiszki</i>, wymyśl hasło do bazy (zapisz je), region <b>Central EU (Frankfurt)</b> → <b>Create</b>. Poczekaj ok. 2 minuty.</li>
     <li>Po lewej otwórz <b>SQL Editor</b> → <b>New query</b>, wklej cały skrypt poniżej i kliknij <b>Run</b>. Ma się pojawić „Success”.</li>
-    <li>Po lewej <b>Authentication → Sign In / Providers → Email</b>: zostaw włączone. Dla prostszego startu możesz wyłączyć <b>Confirm email</b> (wtedy konto działa od razu, bez klikania w link w mailu).</li>
+    <li>Po lewej <b>Authentication → Sign In / Providers → Email</b>: zostaw włączone razem z <b>Confirm email</b> (potwierdzenie e-maila chroni przed fałszywymi kontami). W <b>Authentication → Policies / Passwords</b> ustaw minimalną długość hasła na <b>10</b> i włącz <b>Leaked password protection</b>, jeśli jest dostępne.</li>
     <li><b>Project Settings → API</b> (lub <b>API Keys</b>): skopiuj <b>Project URL</b> oraz klucz <b>anon / publishable</b>. <u>Nie</u> kopiuj klucza <i>service_role / secret</i>.</li>
     <li>W tej aplikacji: <b>Więcej → 🔑 Panel hosta → Supabase</b>: wklej URL i klucz → <b>Zapisz dla wszystkich</b>. Po 1–2 minutach każdy użytkownik zobaczy logowanie w <b>Więcej → Konto</b>.</li>
     <li>Ty i kolega: <b>Więcej → Konto → Załóż konto</b>. Potem w <b>Rankingu</b> wymieńcie się kodami znajomego.</li></ol></div>

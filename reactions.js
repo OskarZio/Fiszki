@@ -15,7 +15,7 @@ let GIF_CASE = [];            // GIF-y do wylosowania w skrzynce (host wgrywa je
 const GIFCASE_PREVIEW = {};   // podgląd świeżo wgranych (zanim GitHub Pages je opublikuje)
 const gifById = id => GIF_CASE.find(g => g.id === id);
 const gifSrcs = g => [GIFCASE_PREVIEW[g.id], g.path + '?v=' + (g.t || 0), rawUrl(g.path)].filter(Boolean);
-const gifImg = (g, cls = '') => { const s = gifSrcs(g); return `<img class="${cls}" src="${s[0]}" data-alt="${esc(JSON.stringify(s.slice(1)))}" onerror="rxFallback(this)" alt="${esc(g.name || '')}" loading="lazy">`; };
+const gifImg = (g, cls = '') => { const s = gifSrcs(g); return `<img class="${cls}" src="${esc(s[0])}" data-alt="${esc(JSON.stringify(s.slice(1)))}" alt="${esc(g.name || '')}" loading="lazy">`; };
 // GIF z kolekcji ustawiony jako reakcja (jeśli nadal go masz)
 const rxGif = k => { const id = S?.settings?.reactions?.[k]?.gid, g = id && gifById(id); return g && typeof hasItem === 'function' && hasItem('gif', id) ? g : null; };   // slot -> { path } – GIF-y ustawione przez hosta dla wszystkich (assets/global.json w repozytorium)
 // kolejność: GIF z ekwipunku → GIF od hosta → domyślny kot
@@ -30,20 +30,27 @@ const rxIsCat = k => !rxGif(k) && !GLOBAL_RX[k]?.path;
 // <img> z listą zapasowych adresów (gdy pierwszy się nie wczyta, próbuje kolejnego)
 function rxImg(k, cls = '') {
   const srcs = rxSrcs(k);
-  return `<img class="${cls}${rxIsCat(k) ? ' rx-default' : ''}" src="${srcs[0]}" data-alt="${esc(JSON.stringify(srcs.slice(1)))}" onerror="rxFallback(this)" alt="">`;
+  return `<img class="${cls}${rxIsCat(k) ? ' rx-default' : ''}" src="${esc(srcs[0])}" data-alt="${esc(JSON.stringify(srcs.slice(1)))}" alt="">`;
 }
+// zapasowe adresy obrazków bez atrybutu onerror (zgodne z Content-Security-Policy)
+document.addEventListener('error', e => { const t = e.target; if (t?.tagName === 'IMG' && t.dataset?.alt) rxFallback(t); }, true);
 window.rxFallback = img => {
   const alt = JSON.parse(img.dataset.alt || '[]'); if (!alt.length) return;
   img.dataset.alt = JSON.stringify(alt.slice(1));
   if (alt[0] === REACT_DEFAULT) img.classList.add('rx-default');
   img.src = alt[0];
 };
+// 🔒 lista z pliku globalnego: tylko pliki z naszego folderu, bezpieczne id, znana rzadkość
+const GIF_PATH_RE = /^assets\/(gifcase|global|reactions)\/[\w.-]+\.(gif|webp|png|jpe?g)$/i;
+const cleanGifCase = list => (Array.isArray(list) ? list : []).filter(g => g && GIF_PATH_RE.test(g.path || '') && /^[\w-]{1,40}$/.test(g.id || ''))
+  .map(g => ({ id: g.id, path: g.path, name: String(g.name || 'GIF').slice(0, 40), r: ['common', 'rare', 'epic', 'legendary'].includes(g.r) ? g.r : 'common', t: +g.t || 0 }));
+const cleanGlobalRx = o => Object.fromEntries(Object.entries(o && typeof o === 'object' ? o : {}).filter(([k, v]) => /^[\w-]{1,24}$/.test(k) && GIF_PATH_RE.test(v?.path || '')).map(([k, v]) => [k, { path: v.path, name: String(v.name || '').slice(0, 60), t: +v.t || 0 }]));
 async function loadGlobalReactions() {
   // pobieramy listę ze strony i z repozytorium naraz – wygrywa nowsza
   const get = url => fetch(url, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
   const [a, b] = await Promise.all([get('assets/global.json?t=' + Date.now()), get(rawUrl('assets/global.json') + '?t=' + Date.now())]);
   const best = [a, b].filter(Boolean).sort((x, y) => (y.updated || 0) - (x.updated || 0))[0];
-  if (best) { GLOBAL_RX = best.reactions || {}; GIF_CASE = Array.isArray(best.gifCase) ? best.gifCase : []; if (typeof render === 'function' && ['shop', 'host', 'case', 'inv', 'chat', 'more'].includes(parseRoute().parts[0])) render(); }
+  if (best) { GLOBAL_RX = cleanGlobalRx(best.reactions); GIF_CASE = cleanGifCase(best.gifCase); if (typeof render === 'function' && ['shop', 'host', 'case', 'inv', 'chat', 'more'].includes(parseRoute().parts[0])) render(); }
 }
 on('start', loadGlobalReactions);
 

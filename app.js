@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '90';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '91';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1649,7 +1649,11 @@ function mergeState(R) {
   for (const key of ['decks', 'notes', 'cards', 'palaces', 'topics', 'friends', 'stickies', 'atlases', 'events']) {
     S[key] = S[key] || [];
     const map = new Map(S[key].map(x => [x.id, x]));
-    for (const r of R[key] || []) { const l = map.get(r.id); if (!l || (r.mod || 0) > (l.mod || 0)) map.set(r.id, r); }
+    for (const r of R[key] || []) {
+      if (!r || typeof r !== 'object' || !okId(r.id)) continue;   // 🔒 import / synchronizacja: tylko poprawne id
+      if (Array.isArray(r.boxes)) r.boxes = r.boxes.filter(b => b && okId(String(b.id)));
+      const l = map.get(r.id); if (!l || (r.mod || 0) > (l.mod || 0)) map.set(r.id, r);
+    }
     S[key] = [...map.values()].filter(x => !tomb[x.id]);
   }
   // ta sama luka utworzona na dwóch urządzeniach – zostaw kartę z większą historią
@@ -1693,7 +1697,7 @@ async function syncNow(manual) {
     const used = referencedImages();
     for (const name in files) {
       const m = name.match(/^img_(.+)\.txt$/);
-      if (m && used.has(m[1]) && !IMG[m[1]]) { const d = await gistText(files[name]); IMG[m[1]] = d; await DB.set('img:' + m[1], d); }
+      if (m && used.has(m[1]) && !IMG[m[1]]) { const d = await gistText(files[name]); if (!okImgData(d) || !okId(m[1])) continue; IMG[m[1]] = d; await DB.set('img:' + m[1], d); }
     }
     const data = { 'data.json': { content: JSON.stringify(exportData()) } };
     if (!gist) gist = await gh('/gists', { method: 'POST', body: JSON.stringify({ description: GIST_DESC, public: false, files: data }) });
@@ -1900,7 +1904,7 @@ const ACTIONS = {
     if (typeof snapshot === 'function') await snapshot('przed importem');
     try {
       const j = JSON.parse(await f.text()); if (j.app !== 'fiszki') throw new Error('to nie jest kopia Fiszek');
-      for (const [id, d] of Object.entries(j.images || {})) { IMG[id] = d; await DB.set('img:' + id, d); }
+      for (const [id, d] of Object.entries(j.images || {})) { if (!okId(id) || !okImgData(d)) continue; IMG[id] = d; await DB.set('img:' + id, d); }
       mergeState(j.data); save(); render(); toast('Zaimportowano ✓');
     } catch (e) { toast('Błąd importu: ' + e.message, 4000); }
   },
