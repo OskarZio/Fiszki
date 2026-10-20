@@ -1437,3 +1437,10 @@ svg.ph.lead { margin-right: .35em; }
 .sc > span svg.ph, .mtile > span svg.ph { width: 1em; height: 1em; color: var(--accent); }
 h1 > svg.ph, h2 > svg.ph, h3 > svg.ph, summary > svg.ph, summary > b > svg.ph { color: var(--accent); }
 button.primary svg.ph, .primary svg.ph { color: inherit; }
+
+/* RODO */
+.legal h2 { margin-top: 0; } .legal h3 { margin: 16px 0 4px; font-size: 16px; } .legal p, .legal li { line-height: 1.5; font-size: 14px; } .legal ul, .legal ol { padding-left: 20px; }
+.consent { align-items: flex-start; gap: 8px; } .consent input { margin-top: 3px; flex: none; }
+.danger-zone { margin: 10px 0; } .danger-zone summary { cursor: pointer; padding: 6px 0; }
+button.danger { color: #dc2626; border: 1px solid #fecaca; background: color-mix(in srgb, #dc2626 6%, var(--card)); }
+.legal-links a { color: var(--accent); }
