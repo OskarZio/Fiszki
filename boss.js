@@ -15,21 +15,16 @@ const hashStr = s => { let h = 2166136261; for (const ch of String(s)) h = Math.
 
 // ---------- 🧙 bohater
 const HERO_MAX = 20;   // maks. poziom – potem prestiż (ewolucja postaci, reset poziomu, stałe bonusy, trudniejsi bossowie, lepsze łupy)
-const HERO_DEF = () => ({ xp: 0, sk: {}, eq: {}, forge: {}, look: 1 + (Math.random() * 1e6 | 0), line: 'scholar', g: Math.random() < .5 ? 'w' : 'm', pr: 0, boost: {}, mod: 0 });
+const HERO_DEF = () => ({ xp: 0, sk: {}, eq: {}, forge: {}, look: 1 + (Math.random() * 1e6 | 0), line: 'cat', g: Math.random() < .5 ? 'w' : 'm', pr: 0, boost: {}, mod: 0 });
 const hero = () => (S.hero = S.hero || HERO_DEF());
 const heroLvAt = xp => { let l = 1; while (l < HERO_MAX && xp >= 80 * Math.pow(l, 1.5)) { xp -= 80 * Math.pow(l, 1.5); l++; } return { lv: l, cur: l >= HERO_MAX ? 1 : xp, need: l >= HERO_MAX ? 1 : 80 * Math.pow(l, 1.5), max: l >= HERO_MAX }; };
 // 🧬 linie postaci: każdy prestiż = ewolucja do kolejnej formy (kobieta / mężczyzna); od 4. prestiżu – coraz mocniejsza aura
-const CHAR_LINES = {
-  scholar: { name: 'Uczony', icon: '📚', st: ['student', 'teacher', 'scientist', 'mage'], forms: ['Student', 'Wykładowca', 'Naukowiec', 'Mag wiedzy'] },
-  medic: { name: 'Medyk', icon: '🩺', st: ['health_worker', 'scientist', 'astronaut', 'superhero'], forms: ['Ratownik', 'Badacz', 'Astronauta', 'Superbohater'] },
-  fable: { name: 'Baśniowy', icon: '🧝', st: ['elf', 'fairy', 'vampire', 'genie'], forms: ['Elf', 'Wróżka', 'Wampir', 'Dżin'] },
-  sleuth: { name: 'Tropiciel', icon: '🕵️', st: ['detective', '*ninja', 'vampire', 'superhero'], forms: ['Detektyw', 'Ninja', 'Łowca nocy', 'Superbohater'] },
-  beast: { name: 'Stworek', icon: '🐣', st: [], forms: ['Pisklę', 'Stworek', 'Bestia', 'Legenda'] },
-};
+const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefined' ? CHARS : {}).map(([k, c]) => [k, { name: c.name, icon: c.icon, forms: c.forms, desc: c.desc, draw: true }])),
+  beast: { name: 'Stworek', icon: '🐣', forms: ['Pisklę', 'Stworek', 'Bestia', 'Legenda'], desc: 'Losowy, jedyny taki potworek.' } };
 const PR_TITLES = ['Nowicjusz', 'Adept', 'Mistrz', 'Arcymistrz', 'Legenda', 'Mityczny', 'Nieśmiertelny'];
 const heroForm = (h = hero(), pr = h.pr || 0) => Math.min(3, pr);
-const heroImgId = (h = hero(), pr = h.pr || 0) => { const L = CHAR_LINES[h.line] || CHAR_LINES.scholar, st = L.st[heroForm(h, pr)]; return !st ? null : st[0] === '*' ? 'h_' + st.slice(1) : `h_${h.g === 'm' ? 'm' : 'w'}_${st}`; };
-const heroFormName = (h = hero()) => (CHAR_LINES[h.line] || CHAR_LINES.scholar).forms[heroForm(h)];
+const heroLine = (h = hero()) => CHAR_LINES[h.line] ? h.line : 'cat';
+const heroFormName = (h = hero()) => CHAR_LINES[heroLine(h)].forms[heroForm(h)];
 // ⏱️ boostery (jak w grach): ×2 doświadczenie, ×2 kryształy, szczęście łupieżcy (+1 przedmiot) – 30 minut od włączenia
 const BOOSTS = { xp2: { name: 'Podwójne XP', desc: 'doświadczenie bohatera ×2', img: 'b_star', price: 120 }, gems2: { name: 'Podwójne kryształy', desc: '💎 z bossów, łupów i jajek ×2', img: 'b_gstar', price: 150 }, loot2: { name: 'Szczęście łupieżcy', desc: '+1 przedmiot w każdej skrzyni', img: 'b_swords', price: 150 } };
 const BOOST_MS = 30 * 60000;
@@ -83,8 +78,8 @@ function heroStats() {
     crit: (sum('crit') + (hasSk('s2') ? 10 : 0)) / 100, def: Math.min(.5, (sum('def') + (hasSk('t2') ? 15 : 0)) / 100), dodge: sum('dodge') / 100, loot: sum('loot') / 100 + .1 * pr, combo0: sum('combo'), weapon: w, forge };
 }
 function heroSVG(cls = '', pr) {
-  const h = hero(), w = h.eq.w, a = h.eq.a, c = h.eq.c, p = pr ?? (h.pr || 0), img = heroImgId(h, p);
-  const body = img ? `<img class="hero-img" src="assets/fluent/${img}.webp" alt="Twój bohater" draggable="false">` : creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Twój bohater' });
+  const h = hero(), w = h.eq.w, a = h.eq.a, c = h.eq.c, p = pr ?? (h.pr || 0), line = heroLine(h);
+  const body = line === 'beast' ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Twój bohater' }) : charSVG(line, heroForm(h, p), h.g === 'm' ? 'm' : 'w');
   return `<div class="hero-fig ${cls} pr-${Math.min(6, p)}">${p ? '<i class="hero-aura"></i>' : ''}${body}
     ${w ? `<span class="hf-w">${gearImg(w)}</span>` : ''}${a ? `<span class="hf-a">${gearImg(a)}</span>` : ''}${c ? `<span class="hf-c">${gearImg(c)}</span>` : ''}</div>`;
 }
@@ -337,7 +332,7 @@ ROUTES.boss = parts => {
 };
 // ---------- 🧙 ekran bohatera
 ROUTES.hero = () => {
-  const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), owned = Object.keys(GEAR).filter(ownsGear), pr = h.pr || 0, line = CHAR_LINES[h.line] || CHAR_LINES.scholar;
+  const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), owned = Object.keys(GEAR).filter(ownsGear), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)];
   return { tab: 'arena', html: `${evolveHTML()}
   <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🧙 Bohater</h1>${coinsHTML()}</div>
   <div class="card center hero-card pr-card-${Math.min(6, pr)}">${heroSVG('lg')}
@@ -349,9 +344,8 @@ ROUTES.hero = () => {
     <div class="evo-chain">${[0, 1, 2, 3].map(i => `<span class="${i <= heroForm() ? 'on' : ''}" title="${line.forms[i]}">${heroSVG('xs', i)}<small>${line.forms[i]}</small></span>`).join('<i>›</i>')}</div>
     <small class="muted">Każdy prestiż to ewolucja w kolejną formę · od 4. prestiżu coraz mocniejsza aura</small></div>
   <div class="card"><h2>🎭 Postać</h2>
-    <div class="seg gender-seg"><button class="${h.g === 'w' ? 'on' : ''}" data-act="hero-g" data-g="w">Kobieta</button><button class="${h.g === 'm' ? 'on' : ''}" data-act="hero-g" data-g="m">Mężczyzna</button></div>
-    <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const fake = { ...h, line: k }, img = heroImgId(fake, 0);
-      return `<button class="char${h.line === k ? ' on' : ''}" data-act="hero-line" data-k="${k}">${img ? `<img src="assets/fluent/${img}.webp" alt="">` : `<span class="char-cr">${creatureSVG(h.look, 'rare')}</span>`}<b>${l.icon} ${l.name}</b><small>${l.forms.join(' → ')}</small></button>`; }).join('')}</div>
+    <div class="seg gender-seg"><button class="${h.g !== 'm' ? 'on' : ''}" data-act="hero-g" data-g="w">Ona</button><button class="${h.g === 'm' ? 'on' : ''}" data-act="hero-g" data-g="m">On</button></div>
+    <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' ? creatureSVG(h.look, 'rare') : charSVG(k, Math.min(3, Math.max(1, h.pr || 0)), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b><small>${esc(l.desc || '')}</small><small class="char-forms">${l.forms.join(' → ')}</small></button>`).join('')}</div>
     ${h.line === 'beast' ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>
   <div class="card"><h2>⏱️ Boostery</h2>
     ${boostChips() ? `<div class="boost-row">${boostChips()}</div>` : '<p class="small muted" style="margin-top:0">Włączasz na 30 minut – jak „podwójne XP” w grach. Wypadają ze skrzyń i z prestiżu, można je też kupić.</p>'}

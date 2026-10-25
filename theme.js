@@ -101,6 +101,7 @@ function personalHTML() {
     ${chk('compact', 'Kompaktowy układ (mniej odstępów)', false)}
     ${chk('tabLabels', 'Podpisy pod ikonami w dolnym pasku')}
     ${chk('anim', 'Animacje i konfetti')}
+    <label class="field"><span>Wygląd naklejek</span>${sel('stStyle', [['svg', '🏷️ Naklejki (własne)'], ['3d', '🧸 Ilustracje 3D'], ['emoji', '😀 Zwykłe emoji']])}</label>
     ${chk('emojiIcons', 'Ikony zamiast emotek w menu i przyciskach')}
     ${chk('stickerAnim', 'Animowane naklejki')}
     ${chk('stickerSound', 'Dźwięki naklejek (np. koza 🐐)')}

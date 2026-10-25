@@ -1710,3 +1710,15 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 @keyframes evoOld { 0%, 20% { filter: none; opacity: 1; } 30%, 40%, 50%, 60%, 70% { filter: brightness(6); } 35%, 45%, 55%, 65% { filter: none; } 80% { filter: brightness(8); opacity: 1; } 100% { opacity: 0; transform: scale(.6); } }
 @keyframes evoNew { 0%, 78% { opacity: 0; transform: scale(1.4); filter: brightness(8); } 100% { opacity: 1; transform: none; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .evo-old, .evo-new, .hero-aura, .boost-chip, .prestige-btn, .mnode.cur .boss-art { animation: none !important; } .evo-old { display: none; } .evo-new { opacity: 1; } }
+
+/* 🏷️ własne naklejki SVG */
+svg.st-img.sv { width: 1.2em; height: 1.2em; vertical-align: -.25em; overflow: visible; filter: drop-shadow(1.4px 0 0 #fff) drop-shadow(-1.4px 0 0 #fff) drop-shadow(0 1.4px 0 #fff) drop-shadow(0 -1.4px 0 #fff) drop-shadow(0 3px 4px rgba(15,23,42,.3)); }
+.stk svg.st-img.sv, .inv-st svg.st-img.sv, .chat-st svg.st-img.sv, .big-st svg.st-img.sv, .tile svg.st-img.sv, .stfly svg.st-img.sv, .egg-hatch svg.st-img.sv, .drop-ic svg.st-img.sv { width: 1.5em; height: 1.5em; }
+.stk > span:first-child svg.st-img.sv { transform: rotate(-5deg); transition: transform .2s; } .stk:hover > span:first-child svg.st-img.sv { transform: rotate(4deg) scale(1.07); }
+.mini-st .stk-cap, .cal-cr .stk-cap, .st-row .stk-cap, .stbar .stk-cap, .showcase .stk-cap, .egg-nest .stk-cap, .inv-st .stk-cap, .ny-cr .stk-cap { display: none; }
+.r-legendary.sv { animation: stGlow 2.6s ease-in-out infinite; }
+@keyframes stGlow { 50% { filter: drop-shadow(1.4px 0 0 #fff) drop-shadow(-1.4px 0 0 #fff) drop-shadow(0 1.4px 0 #fff) drop-shadow(0 -1.4px 0 #fff) drop-shadow(0 0 8px #fbbf24); } }
+/* 🎭 rysowane postacie */
+svg.charsvg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0,0,0,.18)); }
+.char .char-cr { width: 80px; height: 80px; } .char-forms { font-size: 10px !important; opacity: .8; }
+@media (prefers-reduced-motion: reduce) { .r-legendary.sv { animation: none; } }

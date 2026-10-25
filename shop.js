@@ -14,8 +14,11 @@ const ST = (id, e, name, r, img) => ({ id, e, name, r, ...(img ? { img } : {}) }
 // naklejka w HTML: obrazek (naklejki-obrazki, np. mityczna) albo emoji; w zwykłym tekście zostaje s.e
 // ilustracje Fluent 3D (Microsoft, MIT) z białą „wyciętą” obwódką jak prawdziwa naklejka; brak pliku → emoji
 const FLUENT_ST = new Set('thumb cool nerd books coffee monkey sleepy pizza turtle target muscle think phew wave clap fire brain zap rocket owl party angry mind goat clover crown gem unicorn dragon volcano ninja wizard trophy comet galaxy trident chick hatchling penguin parrot dino trex dragonling swan'.split(' '));
+// styl naklejek (Ustawienia → Personalizacja): 'svg' – własne naklejki (domyślnie), '3d' – ilustracje Fluent, 'emoji'
+const stStyle = () => S?.settings?.stStyle || 'svg';
 const stE = s => s?.img ? `<img class="st-img" src="${s.img}" alt="${s.e}" draggable="false">`
-  : s && FLUENT_ST.has(s.id) && S?.settings?.fluent !== false ? `<img class="st-img fl" src="assets/fluent/${s.id}.webp" alt="${s.e}" draggable="false">` : (s?.e || '');
+  : !s ? '' : stStyle() === 'svg' && typeof stickerArt === 'function' && stickerArt(s) ? stickerArt(s)
+  : stStyle() !== 'emoji' && FLUENT_ST.has(s.id) ? `<img class="st-img fl" src="assets/fluent/${s.id}.webp" alt="${s.e}" draggable="false">` : (s.e || '');
 const caseIco = k => ['basic', 'epic', 'daily', 'gif'].includes(k) ? `<img class="case-img" src="assets/fluent/case_${k}.webp" alt="${CASES[k]?.icon || ''}" draggable="false">` : (CASES[k]?.icon || '');
 const STICKERS = [
   ST('thumb', '👍', 'Kciuk', 'common'), ST('cool', '😎', 'Luzak', 'common'), ST('nerd', '🤓', 'Kujon', 'common'), ST('books', '📚', 'Mól książkowy', 'common'),
