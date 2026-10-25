@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '95';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '96';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1679,6 +1679,7 @@ function mergeState(R) {
   }
   if (R.major && (R.major.mod || 0) > (S.major.mod || 0)) S.major = R.major;
   if (R.profile && (R.profile.mod || 0) > (S.profile.mod || 0)) S.profile = R.profile;
+  if (R.hero && typeof R.hero === 'object' && (R.hero.mod || 0) > (S.hero?.mod || 0)) S.hero = R.hero;   // bohater (RPG): nowszy wygrywa
   S.tomb = tomb;
 }
 async function syncNow(manual) {

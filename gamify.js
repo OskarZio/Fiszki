@@ -160,6 +160,13 @@ const ACHIEVEMENTS = [
   A('holo_1', '🌈', 'Hologram', 'Ulepsz naklejkę do wersji holograficznej', c => c.holo || 0, 1),
   H('cr_legend', '👑', 'Królewski wylęg', 'Wykluj legendarnego albo mitycznego stworka', c => c.crLegend || 0, 1),
   H('cr_50', '🪺', 'Pełne gniazdo', 'Wykluj 50 stworków', c => c.crCount || 0, 50),
+  H('boss_stage5', '🐉', 'Pogromca smoków', 'Pokonaj 5. etap bossa w dowolnej talii', c => c.bossStageMax || 0, 5),
+  H('boss_25', '⚔️', 'Legenda Areny', 'Pokonaj 25 bossów', c => c.bossWins || 0, 25),
+  H('loot_legend', '🗡️', 'Legendarny łup', 'Zdobądź legendarny przedmiot ze skrzyni bossa', c => c.lootLegend || 0, 1),
+  A('hero_5', '🧙', 'Bohater', 'Rozwiń bohatera do 5. poziomu', c => c.heroLv || 1, 5),
+  H('hero_15', '🧙‍♂️', 'Arcymag nauki', 'Rozwiń bohatera do 15. poziomu', c => c.heroLv || 1, 15),
+  H('skill_branch', '🌳', 'Mistrz drzewka', 'Wykup całą gałąź umiejętności', c => c.skillBranch || 0, 1),
+  A('potion_10', '🧪', 'Alchemik', 'Użyj 10 mikstur w walkach', c => c.potions || 0, 10),
 ];
 // Platyna: wszystkie pozostałe osiągnięcia
 ACHIEVEMENTS.push(H('platinum', '🏆', 'Platyna', 'Zdobądź wszystkie pozostałe osiągnięcia', c => c.others, ACHIEVEMENTS.length));
@@ -169,10 +176,10 @@ const ACH_TIERS = [
   { k: 'vhard', name: '💀 Bardzo trudne', gems: 300 }, { k: 'legend', name: '👑 Legendarne', gems: 600 }, { k: 'plat', name: '🏆 Platyna', gems: 2000 },
 ];
 const ACH_TIER_OF = {};
-[['mid', 'rev_500 rev_1000 day_200 goal_7 streak_7 combo_50 cards_100 mature_10 quiz_perfect pins_20 materials_10 game_all numbers_20 numbers_40 words_25 images_30 rank_1 battle_10 winstreak_3 cases_10 legendary daily_7 saboteur egg_10 egg_90 boss_1 holo_1'],
- ['hard', 'rev_5000 goal_30 streak_30 cards_1000 mature_100 games_50 numbers_80 cards_52 major_100 battle_50 shiny_10 cases_100 jackpot perfect_abcd quests_30 gifts_10 elo_1500 egg_50 boss_flawless cr_legend'],
- ['vhard', 'rev_10000 streak_100 mature_500 typed_1000 perfect_battle winstreak_10 battle_100 shiny_legend hatch_all boss_10 cr_50'],
- ['legend', 'mythic streak_365 rev_25000 day_500 mature_1000 streak_200 numbers_160 album_full legends_all elo_2000 gems_5000'],
+[['mid', 'rev_500 rev_1000 day_200 goal_7 streak_7 combo_50 cards_100 mature_10 quiz_perfect pins_20 materials_10 game_all numbers_20 numbers_40 words_25 images_30 rank_1 battle_10 winstreak_3 cases_10 legendary daily_7 saboteur egg_10 egg_90 boss_1 holo_1 hero_5 potion_10'],
+ ['hard', 'rev_5000 goal_30 streak_30 cards_1000 mature_100 games_50 numbers_80 cards_52 major_100 battle_50 shiny_10 cases_100 jackpot perfect_abcd quests_30 gifts_10 elo_1500 egg_50 boss_flawless cr_legend boss_stage5 loot_legend'],
+ ['vhard', 'rev_10000 streak_100 mature_500 typed_1000 perfect_battle winstreak_10 battle_100 shiny_legend hatch_all boss_10 cr_50 skill_branch'],
+ ['legend', 'boss_25 hero_15 mythic streak_365 rev_25000 day_500 mature_1000 streak_200 numbers_160 album_full legends_all elo_2000 gems_5000'],
  ['plat', 'platinum']].forEach(([k, ids]) => ids.split(' ').forEach(id => { ACH_TIER_OF[id] = k; }));
 const achTier = id => ACH_TIERS.find(t => t.k === (ACH_TIER_OF[id] || 'easy'));
 ACHIEVEMENTS.forEach(a => { const t = achTier(a.id); a.reward = t.gems; a.tier = t.k; a.hard = ['vhard', 'legend', 'plat'].includes(t.k); });

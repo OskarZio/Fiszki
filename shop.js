@@ -12,7 +12,11 @@ const RARITY = {
 };
 const ST = (id, e, name, r, img) => ({ id, e, name, r, ...(img ? { img } : {}) });
 // naklejka w HTML: obrazek (naklejki-obrazki, np. mityczna) albo emoji; w zwykłym tekście zostaje s.e
-const stE = s => s?.img ? `<img class="st-img" src="${s.img}" alt="${s.e}" draggable="false">` : (s?.e || '');
+// ilustracje Fluent 3D (Microsoft, MIT) z białą „wyciętą” obwódką jak prawdziwa naklejka; brak pliku → emoji
+const FLUENT_ST = new Set('thumb cool nerd books coffee monkey sleepy pizza turtle target muscle think phew wave clap fire brain zap rocket owl party angry mind goat clover crown gem unicorn dragon volcano ninja wizard trophy comet galaxy trident chick hatchling penguin parrot dino trex dragonling swan'.split(' '));
+const stE = s => s?.img ? `<img class="st-img" src="${s.img}" alt="${s.e}" draggable="false">`
+  : s && FLUENT_ST.has(s.id) && S?.settings?.fluent !== false ? `<img class="st-img fl" src="assets/fluent/${s.id}.webp" alt="${s.e}" draggable="false">` : (s?.e || '');
+const caseIco = k => ['basic', 'epic', 'daily', 'gif'].includes(k) ? `<img class="case-img" src="assets/fluent/case_${k}.webp" alt="${CASES[k]?.icon || ''}" draggable="false">` : (CASES[k]?.icon || '');
 const STICKERS = [
   ST('thumb', '👍', 'Kciuk', 'common'), ST('cool', '😎', 'Luzak', 'common'), ST('nerd', '🤓', 'Kujon', 'common'), ST('books', '📚', 'Mól książkowy', 'common'),
   ST('coffee', '☕', 'Kawa', 'common'), ST('monkey', '🙈', 'Nie patrzę', 'common'), ST('sleepy', '😴', 'Śpioch', 'common'), ST('pizza', '🍕', 'Przerwa', 'common'),
@@ -190,7 +194,7 @@ ROUTES.shop = () => {
   ${freeN ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${freeN}</b> darmowe ${plural(freeN, 'skrzynkę', 'skrzynki', 'skrzynek')}: ${freeKinds.map(k => `${CASES[k].icon} ${CASES[k].name} ×${itemCount('case', k)}`).join(', ')}</span>
     <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}
   <div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2><div class="cases">${Object.entries(CASES).filter(([, c]) => !c.freeOnly && (!c.gif || gifCaseReady())).map(([k, c]) => `
-    <div class="case ${k}"><div class="ci" data-act="case-drops" data-k="${k}" role="button" title="Zawartość i szanse">${c.icon}</div><b data-act="case-drops" data-k="${k}">${c.name}</b>
+    <div class="case ${k}"><div class="ci" data-act="case-drops" data-k="${k}" role="button" title="Zawartość i szanse">${caseIco(k)}</div><b data-act="case-drops" data-k="${k}">${c.name}</b>
       <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}${CASE_GIF[k] && legendGifReady() ? `<span style="color:${RARITY.legendary.color}">🎞️ GIF legendarny ${CASE_GIF[k]}%</span>` : ''}<span style="color:#0369a1">💎 do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} · 🔁 jeszcze raz</span>${mythicP(k) ? `<span style="color:${RARITY.mythic.color};font-weight:700">🔴 Mityczna ${pctFmt(MYTHIC_P)}</span>` : ''}<span style="color:${RARITY.mythic.color};font-weight:700">🔴 ${MEGA_GEMS} 💎 ${pctFmt(MEGA_GEMS_P)}</span></div>
       <button class="sm ghost block" data-act="case-drops" data-k="${k}">📋 Zawartość i szanse</button><button class="primary block" data-go="#/case/${k}">Otwórz · ${c.price} 💎</button></div>`).join('')}</div></div>
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">Album naklejek</h2><span class="small muted">${owned}/${STICKERS.length}</span></div>
