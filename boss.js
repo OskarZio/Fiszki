@@ -79,7 +79,7 @@ function heroStats() {
 }
 function heroSVG(cls = '', pr) {
   const h = hero(), w = h.eq.w, a = h.eq.a, c = h.eq.c, p = pr ?? (h.pr || 0), line = heroLine(h);
-  const body = line === 'beast' ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Twój bohater' }) : charSVG(line, heroForm(h, p), h.g === 'm' ? 'm' : 'w');
+  const body = line === 'beast' ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Twój bohater' }) : heroArt(line, heroForm(h, p), h.g === 'm' ? 'm' : 'w');
   return `<div class="hero-fig ${cls} pr-${Math.min(6, p)}">${p ? '<i class="hero-aura"></i>' : ''}${body}
     ${w ? `<span class="hf-w">${gearImg(w)}</span>` : ''}${a ? `<span class="hf-a">${gearImg(a)}</span>` : ''}${c ? `<span class="hf-c">${gearImg(c)}</span>` : ''}</div>`;
 }
@@ -342,10 +342,10 @@ ROUTES.hero = () => {
     ${L.max ? '<button class="primary block prestige-btn" data-act="hero-prestige">🌟 Prestiż i ewolucja</button>' : ''}
     <div class="hero-stats"><span>❤️ <b>${st.hp}</b></span><span>⚔️ <b>×${st.atk.toFixed(2)}</b></span><span>🎯 <b>${Math.round(st.crit * 100)}%</b></span><span>🛡️ <b>${Math.round(st.def * 100)}%</b></span>${st.dodge ? `<span>💨 <b>${Math.round(st.dodge * 100)}%</b></span>` : ''}</div>
     <div class="evo-chain">${[0, 1, 2, 3].map(i => `<span class="${i <= heroForm() ? 'on' : ''}" title="${line.forms[i]}">${heroSVG('xs', i)}<small>${line.forms[i]}</small></span>`).join('<i>›</i>')}</div>
-    <small class="muted">Każdy prestiż to ewolucja w kolejną formę · od 4. prestiżu coraz mocniejsza aura</small></div>
+    <small class="muted">Każdy prestiż to ewolucja – razem z postacią ewoluuje grafika: 8-bit → 16-bit → HD → Legenda. Od 4. prestiżu coraz mocniejsza aura.</small></div>
   <div class="card"><h2>🎭 Postać</h2>
     <div class="seg gender-seg"><button class="${h.g !== 'm' ? 'on' : ''}" data-act="hero-g" data-g="w">Ona</button><button class="${h.g === 'm' ? 'on' : ''}" data-act="hero-g" data-g="m">On</button></div>
-    <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' ? creatureSVG(h.look, 'rare') : charSVG(k, Math.min(3, Math.max(1, h.pr || 0)), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b><small>${esc(l.desc || '')}</small><small class="char-forms">${l.forms.join(' → ')}</small></button>`).join('')}</div>
+    <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, h.pr || 0), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b><small>${esc(l.desc || '')}</small><small class="char-forms">${l.forms.join(' → ')}</small></button>`).join('')}</div>
     ${h.line === 'beast' ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>
   <div class="card"><h2>⏱️ Boostery</h2>
     ${boostChips() ? `<div class="boost-row">${boostChips()}</div>` : '<p class="small muted" style="margin-top:0">Włączasz na 30 minut – jak „podwójne XP” w grach. Wypadają ze skrzyń i z prestiżu, można je też kupić.</p>'}

@@ -1722,3 +1722,6 @@ svg.st-img.sv { width: 1.2em; height: 1.2em; vertical-align: -.25em; overflow: v
 svg.charsvg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0,0,0,.18)); }
 .char .char-cr { width: 80px; height: 80px; } .char-forms { font-size: 10px !important; opacity: .8; }
 @media (prefers-reduced-motion: reduce) { .r-legendary.sv { animation: none; } }
+img.charpx { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; image-rendering: crisp-edges; display: block; filter: drop-shadow(0 4px 0 rgba(0,0,0,.18)); }
+.legend-cat { filter: drop-shadow(0 0 10px #fbbf24) drop-shadow(0 8px 12px rgba(0,0,0,.3)); }
+.st-img[src*="kot-zolnierz-cut"] { object-fit: contain; border-radius: 0; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }

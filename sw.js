@@ -1,7 +1,7 @@
 // Offline: aplikacja działa bez internetu. Zmień numer wersji przy każdej aktualizacji plików.
-const CACHE = 'fiszki-v98';
+const CACHE = 'fiszki-v99';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'assets/reakcja-kot.webp', 'assets/stickers/kot-zolnierz.webp'];
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'assets/reakcja-kot.webp', 'assets/stickers/kot-zolnierz.webp', 'assets/stickers/kot-zolnierz-cut.webp'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

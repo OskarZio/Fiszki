@@ -14,11 +14,7 @@ const CHARS = {
 function charSVG(line, form = 0, g = 'w') {
   const C = CHARS[line] || CHARS.cat, [main, dark, light] = C.c, f = Math.max(0, Math.min(3, form)), id = `h${line}${f}${g}`;
   // legendarna forma kota = zdjęcie z mema w złotej ramie z laurem
-  if (line === 'cat' && f === 3) return `<svg class="charsvg" viewBox="0 0 120 120"><defs><clipPath id="${id}c"><circle cx="60" cy="56" r="40"/></clipPath><radialGradient id="${id}g"><stop offset=".6" stop-color="#fde047"/><stop offset="1" stop-color="#b45309"/></radialGradient></defs>
-    <circle cx="60" cy="56" r="52" fill="#fde04733"/><g fill="#16a34a" stroke="#14532d" stroke-width="1.5">${[0, 1, 2, 3, 4, 5].map(i => `<ellipse cx="${18 + i * 3}" cy="${84 - i * 11}" rx="7" ry="3.5" transform="rotate(${-60 + i * 10} ${18 + i * 3} ${84 - i * 11})"/><ellipse cx="${102 - i * 3}" cy="${84 - i * 11}" rx="7" ry="3.5" transform="rotate(${60 - i * 10} ${102 - i * 3} ${84 - i * 11})"/>`).join('')}</g>
-    <circle cx="60" cy="56" r="44" fill="url(#${id}g)" stroke="#92400e" stroke-width="3"/><image href="assets/stickers/kot-zolnierz.webp" x="20" y="16" width="80" height="80" clip-path="url(#${id}c)" preserveAspectRatio="xMidYMid slice"/>
-    <circle cx="60" cy="56" r="40" fill="none" stroke="#fff7" stroke-width="2"/><path d="M34 102h52l-6 10H40z" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/><text x="60" y="110" text-anchor="middle" font-size="7.5" font-weight="900" fill="#fff" font-family="system-ui">LEGENDA</text>
-    <path d="M60 4l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#fde047" stroke="#92400e" stroke-width="1.5"/></svg>`;
+  if (line === 'cat' && f === 3) return `<svg class="charsvg legend-cat" viewBox="0 0 120 120"><image href="assets/stickers/kot-zolnierz-cut.webp" x="12" y="4" width="96" height="114" preserveAspectRatio="xMidYMid meet"/></svg>`;
   const baby = f === 0, headR = baby ? 32 : 29, hy = baby ? 54 : 50, by = baby ? 92 : 90, bry = baby ? 16 : 21;
   const P = [];
   const stroke = `stroke="${dark}" stroke-width="2.5" stroke-linejoin="round"`;
@@ -98,4 +94,15 @@ function charSVG(line, form = 0, g = 'w') {
   if (g === 'w' && !(line === 'cat' && f >= 1) && !(line === 'frog' && f >= 2)) P.push(`<g transform="translate(${line === 'frog' ? 72 : 76} ${hy - headR + (line === 'owl' ? 6 : 2)}) rotate(15)" fill="#ec4899" stroke="#9d174d" stroke-width="1.5"><path d="M0 0L-10 -6L-10 6Z"/><path d="M0 0L10 -6L10 6Z"/><circle r="3"/></g>`);
   if (f === 3) P.push(`<g fill="#fde68a">${[[14, 30], [106, 26], [18, 70], [104, 74]].map(([x, y]) => `<path d="M${x} ${y - 5}l1.6 3.4 3.4 1.6-3.4 1.6-1.6 3.4-1.6-3.4-3.4-1.6 3.4-1.6z"/>`).join('')}</g>`);
   return `<svg class="charsvg" viewBox="0 0 120 120" role="img" aria-label="${esc(C.forms[f])}"><defs><radialGradient id="${id}h" cx="38%" cy="32%" r="80%"><stop offset="0" stop-color="${light}"/><stop offset=".5" stop-color="${main}"/><stop offset="1" stop-color="${dark}"/></radialGradient></defs>${P.join('')}</svg>`;
+}
+// 🕹️ grafika ewoluuje razem z postacią: forma 1 = 8-bit (24 px), forma 2 = 16-bit (40 px), forma 3 = HD (wektor), forma 4 = legenda.
+// Sprite'y wygenerowane z tych samych rysunków (assets/pixel/<gatunek>-<forma>-<w|m>-<24|40>.png). Styl: Ustawienia → Personalizacja.
+const heroStyle = () => S?.settings?.heroStyle || 'evo';
+function heroArt(line, f = 0, g = 'w') {
+  const px = n => `<img class="charpx" src="assets/pixel/${line}-${f}-${g}-${n}.png" alt="" draggable="false">`;
+  if (line === 'cat' && f === 3) return charSVG(line, f, g);
+  const st = heroStyle();
+  if (st === 'pixel') return px(40);
+  if (st === 'evo' && f < 2) return px(f ? 40 : 24);
+  return charSVG(line, f, g);
 }

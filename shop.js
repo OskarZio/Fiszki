@@ -31,7 +31,7 @@ const STICKERS = [
   ST('crown', '👑', 'Król', 'epic'), ST('gem', '💎', 'Diament', 'epic'), ST('unicorn', '🦄', 'Jednorożec', 'epic'), ST('dragon', '🐉', 'Smok', 'epic'),
   ST('volcano', '🌋', 'Erupcja', 'epic'), ST('ninja', '🥷', 'Ninja', 'epic'), ST('wizard', '🧙', 'Czarodziej', 'epic'),
   ST('trophy', '🏆', 'Mistrz', 'legendary'), ST('comet', '☄️', 'Kometa', 'legendary'), ST('galaxy', '🌌', 'Galaktyka', 'legendary'), ST('trident', '🔱', 'Trójząb', 'legendary'),
-  ST('soldiercat', '🪖', 'Kot żołnierz', 'mythic', 'assets/stickers/kot-zolnierz.webp'),
+  ST('soldiercat', '🪖', 'Kot żołnierz', 'mythic', 'assets/stickers/kot-zolnierz-cut.webp'),
   // 🥚 tylko z inkubatora (egg.js) – nie wypadają ze skrzynek
   ...[ST('chick', '🐣', 'Pisklę', 'common'), ST('hatchling', '🐥', 'Kurczaczek', 'common'), ST('penguin', '🐧', 'Pingwin', 'rare'), ST('parrot', '🦜', 'Papuga', 'rare'),
     ST('dino', '🦕', 'Dinozaur', 'epic'), ST('trex', '🦖', 'T-Rex', 'epic'), ST('dragonling', '🐲', 'Smoczek', 'legendary'), ST('swan', '🦢', 'Złoty łabędź', 'legendary')].map(s => ({ ...s, hatch: true })),
