@@ -5,11 +5,11 @@
    Start pokazuje tylko to, co ważne dziś (nauka, boss, inkubator, metoda dnia); reszta jest w zakładkach.
    Cofnięcie do poprzedniego układu: gałąź „backup-przed-ukladem” w repozytorium. */
 
-HUBS.home = [['', '📚', 'Talie'], ['topics', '📝', 'Notatki'], ['calendar', '📅', 'Terminarz'], ['add', '➕', 'Dodaj']];
-HUBS.arena = [['boss', '🐉', 'Bossowie'], ['battles', '⚔️', 'Bitwy'], ['train', '🧠', 'Gry']];
+HUBS.home = [['', '📚', 'Talie'], ['methods', '📖', 'Metody'], ['calendar', '📅', 'Terminarz'], ['add', '➕', 'Dodaj']];
+HUBS.arena = [['boss', '🐉', 'Bossowie'], ['battles', '⚔️', 'Bitwy']];
 HUBS.friends = [['rank', '🏆', 'Ranking'], ['inbox', '💬', 'Czat']];
 HUBS.profile = [['me', '👤', 'Profil'], ['quests', '📋', 'Wyzwania'], ['shop', '💎', 'Sklep'], ['inv', '🎒', 'Kolekcja']];
-Object.assign(HUB_OF, { '': 'home', topics: 'home', calendar: 'home', add: 'home', boss: 'arena', hero: 'arena', battles: 'arena', train: 'arena', battle: 'arena', show: 'arena',
+Object.assign(HUB_OF, { '': 'home', topics: 'home', methods: 'home', calendar: 'home', add: 'home', train: 'home', boss: 'arena', hero: 'arena', battles: 'arena', battle: 'arena', show: 'arena',
   rank: 'friends', inbox: 'friends', chat: 'friends', friend: 'friends', me: 'profile', quests: 'profile', shop: 'profile', inv: 'profile', ach: 'profile' });
 LAST_HUB.home = ''; LAST_HUB.friends = 'rank'; LAST_HUB.arena = 'boss';
 const fullLayout = () => appMode() === 'full';
@@ -21,6 +21,10 @@ viewHome = function (...a) { return navFor('home', '') + lyHome0(...a); };
 const lyAdd0 = viewAdd;
 viewAdd = function (editId, ...a) { const h = lyAdd0(editId, ...a); return editId ? h : navFor('home', 'add') + h
   + `<div class="card row nowrap add-more"><span class="grow small muted">Szybkie przypomnienie zamiast fiszki?</span><button class="sm" data-act="sticky-new">📌 Karteczka</button></div>`; };
+const lyMethods0 = ROUTES.methods;
+ROUTES.methods = (...a) => { const v = lyMethods0(...a); return !v?.html || !fullLayout() ? v : { ...v, html: navFor('home', 'methods') + v.html }; };
+const lyTrain0 = ROUTES.train;
+ROUTES.train = (...a) => { const v = lyTrain0(...a); return !v?.html || v.focus || !fullLayout() ? v : { ...v, tab: 'home', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/methods">‹</button><span class="small muted">📖 Metody nauki</span></div>` + stripBack(v.html).replace(/<nav class="hubnav">[\s\S]*?<\/nav>/, '') }; };
 const lyTopics0 = ROUTES.topics;
 ROUTES.topics = (...a) => { const v = lyTopics0(...a); return !v?.html || v.focus ? v : { ...v, tab: fullLayout() ? 'home' : v.tab, html: navFor('home', 'topics') + stripBack(v.html) }; };
 // Wyzwania = zadania dnia + skrót do osiągnięć
@@ -42,7 +46,7 @@ homeExtrasHTML = function () {
 };
 
 // dolny pasek: liczniki i podświetlenie (np. talia, inkubator i metody nauki to „Nauka”)
-const LY_HOME_ROUTES = ['', 'deck', 'study', 'add', 'edit', 'topics', 'topic', 'item', 'calendar', 'import', 'egg', 'methods', 'method', 'subject', 'mtrain', 'weak', 'quiz', 'sticky'];
+const LY_HOME_ROUTES = ['', 'train', 'game', 'major', 'palaces', 'palace', 'ptrain', 'deck', 'study', 'add', 'edit', 'topics', 'topic', 'item', 'calendar', 'import', 'egg', 'methods', 'method', 'subject', 'mtrain', 'weak', 'quiz', 'sticky'];
 updateTabBadges = function () {
   const set = (tab, n) => {
     const a = document.querySelector(`#tabs [data-tab=${tab}]`); if (!a) return;

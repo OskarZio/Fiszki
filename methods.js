@@ -125,13 +125,16 @@ const mDeck = () => (deckById(METHOD_DECK) || S.decks.find(d => S.cards.some(c =
 let METHOD_DECK = '';
 
 ROUTES.methods = () => ({ tab: 'home', html: `
-  <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow" style="margin:0">📖 Metody nauki</h1></div>
+  <div class="row nowrap"><h1 class="grow" style="margin:0">📖 Metody nauki</h1></div>
   <div class="card methods-intro"><p style="margin-top:0"><b>Dwie zasady działają w każdym przedmiocie:</b> odpowiadaj z pamięci (testowanie) i powtarzaj w odstępach. Reszta to dobór formatu do przedmiotu.</p>
     <p class="small muted" style="margin-bottom:0">Na podstawie przeglądu badań (metaanalizy, RCT). Przy każdej metodzie siła dowodów: ${Object.values(EV).map(([n, c]) => `<span class="ev" style="--ev:${c}">${n}</span>`).join(' ')}. Ćwicz metodę – rośnie jej poziom ●●●○○ i odblokowujesz wskazówki „doskonal”.</p></div>
+  <div class="card row nowrap mem-cta" data-go="#/train"><span style="font-size:34px">🧠</span><div class="grow"><b>Trening pamięci</b>
+    <div class="small muted">Gry pamięciowe, system liczbowy 00–99 i pałace pamięci – osobna kategoria ćwiczeń</div></div><span>›</span></div>
   <h2>Według przedmiotu</h2>
   <div class="subj-grid">${SUBJECTS.map(s => `<button class="subj" data-go="#/subject/${s.k}"><span>${s.icon}</span><b>${s.name}</b></button>`).join('')}</div>
   <h2>Wszystkie metody</h2>
-  <div class="m-list">${METHODS.map(m => `<button class="m-row" data-go="#/method/${m.id}"><span class="m-ic">${m.icon}</span><span class="grow"><b>${m.name}</b><small>${m.sub}</small><span class="m-meta">${evTag(m.ev)} ${mStars(m.id)}</span></span><span>›</span></button>`).join('')}</div>
+  <div class="m-list">${METHODS.map(m => { const q = m.train ? `data-act="m-train" data-k="${m.train}"` : m.tryIt?.act ? `data-act="${m.tryIt.act}"` : m.tryIt ? `data-act="m-go" data-id="${m.id}"` : '';
+    return `<div class="m-row" data-go="#/method/${m.id}" role="button" tabindex="0"><span class="m-ic">${m.icon}</span><span class="grow"><b>${m.name}</b><small>${m.sub}</small><span class="m-meta">${evTag(m.ev)} ${mStars(m.id)}</span></span>${q ? `<button class="sm primary m-quick" ${q} title="Ćwicz od razu">▶ Trenuj</button>` : ''}<span>›</span></div>`; }).join('')}</div>
   <div class="card avoid"><h3 style="margin-top:0">🚫 Co nie działa (choć wszyscy tak robią)</h3><ul class="small">${AVOID.map(a => `<li>${a}</li>`).join('')}</ul></div>` });
 
 ROUTES.method = parts => {

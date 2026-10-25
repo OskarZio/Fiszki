@@ -253,6 +253,9 @@ mark, .sw { color: inherit; padding: 0 2px; border-radius: 3px; }
 .pcard.red { color: #dc2626; }
 .locus { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0 10px; font-size: 14px; }
 .occl.mini img { max-height: 120px; }
+.occl { --mh: 62vh; } .occl.mini { --mh: 120px; }
+.occl:not(.stage)[style*="--ar"] { width: min(100%, calc(var(--mh) * var(--ar))); }
+.occl:not(.stage)[style*="--ar"] img { width: 100%; height: auto; max-height: none; }
 .occl.mini .pin { width: 20px; height: 20px; margin: -10px 0 0 -10px; font-size: 10px; }
 .occl.mini .pin.target { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
 .digits { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 10px 0; }
@@ -1725,3 +1728,19 @@ svg.charsvg { width: 100%; height: 100%; display: block; overflow: visible; filt
 img.charpx { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; image-rendering: crisp-edges; display: block; filter: drop-shadow(0 4px 0 rgba(0,0,0,.18)); }
 .legend-cat { filter: drop-shadow(0 0 10px #fbbf24) drop-shadow(0 8px 12px rgba(0,0,0,.3)); }
 .st-img[src*="kot-zolnierz-cut"] { object-fit: contain; border-radius: 0; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
+
+/* ✓ nauczone / 🚫 niepotrzebne pod oceną */
+.sus-bar { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: -6px 0 2px; }
+.sus-bar button { font-size: 12px; color: var(--muted); min-height: 32px; padding: 4px 10px; }
+.sus-box { background: var(--chip, rgba(127,127,127,.1)); border-radius: 12px; padding: 8px 10px; }
+
+/* 📁 kategorie na liście talii */
+.deck-cat { display: flex; align-items: center; gap: 8px; padding: 10px 4px 6px; margin-top: 6px; border-top: 1px solid var(--line, rgba(127,127,127,.18)); cursor: pointer; }
+.deck-cat:first-of-type { border-top: 0; }
+.deck-cat.plain { cursor: default; }
+.deck-cat .dc-ic { font-size: 20px; } .deck-cat small { font-size: 12px; text-align: right; }
+.deck-in { padding-left: 14px; border-left: 3px solid var(--accent-soft, rgba(99,102,241,.25)); margin-left: 10px; }
+.m-row { cursor: pointer; }
+.m-row .m-quick { flex: none; min-height: 34px; padding: 4px 10px; font-size: 13px; }
+@media (hover: hover) and (pointer: fine) { .m-row .m-quick { opacity: 0; transition: opacity .15s; } .m-row:hover .m-quick, .m-row:focus-within .m-quick { opacity: 1; } }
+.mem-cta { cursor: pointer; }
