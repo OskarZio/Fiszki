@@ -14,7 +14,7 @@ async function loadCloudConfig() {
   const repo = typeof hostRepo === 'function' ? hostRepo() : 'OskarZio/aa';
   const [a, b] = await Promise.all([get('assets/config.json?t=' + Date.now()), get(`https://raw.githubusercontent.com/${repo}/HEAD/assets/config.json?t=${Date.now()}`)]);
   const c = [a, b].filter(x => x?.supabaseUrl && x?.supabaseAnonKey).sort((x, y) => (y.updated || 0) - (x.updated || 0))[0];
-  return c ? { url: c.supabaseUrl, key: c.supabaseAnonKey } : null;
+  return c ? { url: c.supabaseUrl, key: c.supabaseAnonKey, owner: c.policyOwner || null } : null;
 }
 async function initCloud() {
   try {

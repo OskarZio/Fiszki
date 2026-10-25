@@ -3,7 +3,9 @@
    usunięcie konta (art. 17), wylogowanie z wyczyszczeniem urządzenia. Treść dokumentów: POLICY_* poniżej. */
 
 // ⚠️ Uzupełnij dane administratora (osoby, która prowadzi aplikację) – wymagane przez RODO (art. 13).
-const POLICY_OWNER = { name: '[imię i nazwisko administratora]', email: '[adres e-mail do spraw danych]' };
+// Dane administratora wpisuje host w Panelu hosta (zapisują się w assets/config.json); tu tylko wartości zastępcze.
+const POLICY_OWNER_DEF = { name: '[imię i nazwisko administratora]', email: '[adres e-mail do spraw danych]' };
+const policyOwner = () => ({ ...POLICY_OWNER_DEF, ...(typeof SB_CFG !== 'undefined' && SB_CFG?.owner ? SB_CFG.owner : {}) });
 const POLICY_VERSION = '2026-10-20';
 const consentOk = () => S.stats.consentVer === POLICY_VERSION;
 
@@ -11,7 +13,7 @@ const POLICY_HTML = () => `
 <h2>Polityka prywatności</h2>
 <p class="small muted">Wersja z ${POLICY_VERSION}</p>
 <h3>1. Administrator</h3>
-<p>Administratorem danych jest ${esc(POLICY_OWNER.name)}, kontakt: <b>${esc(POLICY_OWNER.email)}</b>. W każdej sprawie dotyczącej danych możesz napisać na ten adres.</p>
+<p>Administratorem danych jest ${esc(policyOwner().name)}, kontakt: <b>${esc(policyOwner().email)}</b>. W każdej sprawie dotyczącej danych możesz napisać na ten adres.</p>
 <h3>2. Bez konta – dane tylko na Twoim urządzeniu</h3>
 <p>Bez logowania fiszki, zdjęcia, postępy nauki i ustawienia są zapisywane <b>wyłącznie w pamięci Twojej przeglądarki</b> (IndexedDB, localStorage). Nie wysyłamy ich nigdzie. Aplikacja nie używa plików cookie, reklam ani narzędzi analitycznych (śledzących).</p>
 <h3>3. Z kontem w chmurze</h3>
@@ -53,7 +55,7 @@ const TERMS_HTML = () => `
   <li>Konto naruszające regulamin może zostać zablokowane lub usunięte.</li>
   <li>Aplikacja jest dostarczana „tak jak jest”. Dbamy o kopie i bezpieczeństwo, ale rób też własne kopie zapasowe (Ustawienia → Kopia zapasowa).</li>
   <li>Konto możesz w każdej chwili usunąć w aplikacji. Zmiany regulaminu ogłaszamy w aplikacji; przy istotnych zmianach poprosimy o ponowną akceptację.</li>
-  <li>Kontakt i reklamacje: ${esc(POLICY_OWNER.email)}. Konsument może skorzystać z polubownych metod rozwiązywania sporów (np. platforma ODR UE).</li>
+  <li>Kontakt i reklamacje: ${esc(policyOwner().email)}. Konsument może skorzystać z polubownych metod rozwiązywania sporów (np. platforma ODR UE).</li>
 </ol>`;
 
 ROUTES.privacy = () => ({ tab: 'more', html: `<div class="row nowrap"><button class="iconbtn" data-act="back">‹</button><h1 class="grow">Prywatność</h1></div>
@@ -144,7 +146,7 @@ async function gdprDelete() {
   SB_USER = null; SB_PROFILE = null; CLOUD_FRIENDS = [];
   if (wipe) { await wipeDevice(); location.replace(location.pathname); return; }
   render();
-  alert(full ? 'Konto zostało usunięte.' : `Dane konta zostały usunięte. Aby usunąć też login (e-mail), napisz do administratora: ${POLICY_OWNER.email}`);
+  alert(full ? 'Konto zostało usunięte.' : `Dane konta zostały usunięte. Aby usunąć też login (e-mail), napisz do administratora: ${policyOwner().email}`);
 }
 Object.assign(ACTIONS, {
   'gdpr-export': () => gdprExport().catch(e => toast('Błąd: ' + (e.message || e), 4000)),
@@ -162,3 +164,71 @@ const prMore0 = viewMore;
 viewMore = function () { return prMore0() + `<div class="card small center legal-links"><a href="#/privacy">🔒 Polityka prywatności</a> · <a href="#/terms">Regulamin</a><br><span class="muted">Bez reklam, bez śledzenia, bez plików cookie.</span></div>`; };
 // link z maila (potwierdzenie konta) zostawia tokeny w adresie – usuwamy je z paska adresu i historii
 if (/(access_token|refresh_token)=/.test(location.hash)) history.replaceState(null, '', location.pathname);
+
+// ---------- 🛠️ Panel hosta: aktualizacja bazy jednym przyciskiem + dane administratora (RODO)
+const DB_VERSION = '2026-10-20';   // podbijaj razem z public.db_version() w supabase.sql
+let DB_STATE = null, DB_SQL = '';  // null = nie sprawdzono, 'ok', 'old', 'err'; skrypt pobrany z góry (schowek na iPhonie wymaga kliknięcia bez czekania)
+async function dbCheck(quiet) {
+  if (!SB) { DB_STATE = 'err'; return; }
+  try { const r = await SB.rpc('db_version'); DB_STATE = !r.error && r.data === DB_VERSION ? 'ok' : 'old'; }
+  catch { DB_STATE = 'old'; }
+  if (DB_STATE === 'old' && !DB_SQL) DB_SQL = await fetch('supabase.sql', { cache: 'no-store' }).then(r => r.text()).catch(() => '');
+  if (!quiet) render();
+}
+const sbRef = () => (SB_CFG?.url || '').match(/^https:\/\/([a-z0-9-]+)\.supabase\./i)?.[1] || '';
+function dbCardHTML() {
+  if (DB_STATE === null && SB) dbCheck();
+  const st = DB_STATE === 'ok' ? '<b style="color:#16a34a">✓ Baza jest aktualna</b>' : DB_STATE === 'old' ? '<b style="color:#dc2626">⚠️ Baza wymaga aktualizacji (zabezpieczenia i usuwanie kont)</b>' : DB_STATE === 'err' ? 'Najpierw podłącz Supabase (niżej).' : 'Sprawdzam…';
+  const o = policyOwner(), set = SB_CFG?.owner || {};
+  return `<div class="card"><h3 style="margin-top:0">🛠️ Aktualizacja bazy</h3>
+    <p class="small">${st}</p>
+    ${DB_STATE === 'old' ? `<ol class="small steps"><li>Kliknij przycisk niżej – skrypt skopiuje się sam, a w nowej karcie otworzy się edytor SQL Twojego projektu.</li>
+      <li>W Supabase wklej (<b>Ctrl/⌘ + V</b>) i kliknij <b>Run</b>. Dane zostają – skrypt niczego nie usuwa.</li><li>Wróć tutaj i kliknij „Sprawdź ponownie”.</li></ol>
+      <button class="primary block" data-act="db-update">📋 Kopiuj skrypt i otwórz Supabase</button>` : ''}
+    <button class="sm ghost" data-act="db-check">🔄 Sprawdź ponownie</button></div>
+  <div class="card"><h3 style="margin-top:0">🔒 Administrator danych (RODO)</h3>
+    <p class="small muted">Widać to w Polityce prywatności i Regulaminie. Zapisuje się dla wszystkich (potrzebny token GitHub).</p>
+    <label class="field"><span>Imię i nazwisko (lub nazwa)</span><input id="po-name" maxlength="80" value="${esc(set.name || '')}" placeholder="np. Jan Kowalski"></label>
+    <label class="field"><span>E-mail do spraw danych</span><input id="po-email" type="email" maxlength="80" value="${esc(set.email || '')}" placeholder="np. fiszki.kontakt@…"></label>
+    <button class="block" data-act="po-save">💾 Zapisz dla wszystkich</button>
+    ${set.email ? '' : `<p class="small" style="color:#dc2626">Teraz w polityce jest: „${esc(o.email)}” – uzupełnij.</p>`}</div>`;
+}
+const prHost0 = ROUTES.host;
+ROUTES.host = (...a) => {
+  const v = prHost0(...a), mark = '<div class="card"><h3 style="margin-top:0">☁️ Supabase';
+  if (!v?.html?.includes(mark)) return v;
+  return { ...v, html: v.html.replace(mark, dbCardHTML() + mark) };
+};
+Object.assign(ACTIONS, {
+  'db-check': () => { DB_STATE = null; dbCheck(); toast('Sprawdzam bazę…'); },
+  'db-update': async () => {
+    const copy = DB_SQL ? navigator.clipboard.writeText(DB_SQL) : fetch('supabase.sql', { cache: 'no-store' }).then(r => r.text()).then(t => navigator.clipboard.writeText(t));
+    const tab = window.open(sbRef() ? `https://supabase.com/dashboard/project/${sbRef()}/sql/new` : 'https://supabase.com/dashboard', '_blank'); if (tab) tab.opener = null;
+    try {
+      await copy;
+      toast('📋 Skopiowano skrypt – wklej go w Supabase i kliknij Run', 6000);
+    } catch { toast('Nie udało się skopiować – użyj „Instrukcja → Kopiuj” ', 5000); go('#/cloud-help'); }
+    if (!tab) toast('Przeglądarka zablokowała nową kartę – otwórz supabase.com → SQL Editor', 6000);
+  },
+  'po-save': async () => {
+    const name = ($('#po-name')?.value || '').trim().slice(0, 80), email = ($('#po-email')?.value || '').trim().slice(0, 80);
+    if (!name || !/^\S+@\S+\.\S+$/.test(email)) return toast('Wpisz imię/nazwę i poprawny e-mail');
+    if (typeof syncHostFields === 'function') syncHostFields();
+    if (!S.settings.hostToken) return toast('Najpierw wklej token GitHub (wyżej)');
+    try {
+      toast('Zapisuję…', 20000);
+      const f = await ghRepo('assets/config.json');
+      const data = { ...(f ? JSON.parse(utf8b64(f.content)) : {}), policyOwner: { name, email }, updated: Date.now() };
+      await ghRepo('assets/config.json', { method: 'PUT', body: JSON.stringify({ message: 'Administrator danych (RODO)', content: b64utf8(JSON.stringify(data, null, 2)), ...(f ? { sha: f.sha } : {}) }) });
+      if (SB_CFG) SB_CFG.owner = { name, email };
+      toast('Zapisano ✓ (u innych po odświeżeniu)', 4000); render();
+    } catch (e) { toast('Błąd: ' + e.message, 5000); }
+  },
+});
+// przypomnienie na Starcie – tylko dla hosta, gdy baza jest nieaktualna
+const prHome0 = homeExtrasHTML;
+homeExtrasHTML = function () {
+  const host = typeof hostUnlocked === 'function' && hostUnlocked();
+  if (host && SB && DB_STATE === null) dbCheck(true).then(() => DB_STATE === 'old' && rerenderIf(['']));
+  return (host && DB_STATE === 'old' ? `<div class="banner row nowrap"><span class="grow">🛠️ Baza Supabase wymaga aktualizacji (zabezpieczenia).</span><button class="primary sm" data-go="#/host">Zaktualizuj</button></div>` : '') + prHome0();
+};

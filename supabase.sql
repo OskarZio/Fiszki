@@ -179,3 +179,7 @@ begin
 end $$;
 revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
+
+-- Wersja skryptu – aplikacja sprawdza ją w Panelu hosta („Aktualizacja bazy”)
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-20'::text $$;
+grant execute on function public.db_version() to anon, authenticated;
