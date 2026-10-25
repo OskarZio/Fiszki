@@ -1558,3 +1558,40 @@ body.noanim #view.enter > *, body.focus #view.enter > * { animation: none; }
 .cram-grid button:first-child { grid-column: 1 / -1; }
 @media (min-width: 700px) { .cram-grid { grid-template-columns: repeat(4, 1fr); } .cram-grid button:first-child { grid-column: auto; } }
 .deck-foot { display: flex; flex-direction: column; gap: 10px; margin: 18px 0 8px; }
+
+/* 🧮 FSRS */
+.algo-seg { display: flex; width: 100%; margin: 4px 0 10px; } .algo-seg button { flex: 1; }
+.fs-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
+.fs-table th, .fs-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--card2); } .fs-table th { font-size: 12px; color: var(--muted); font-weight: 600; }
+.fs-table tr.on td { background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 700; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+/* 📥 pakiety */
+.pack-cta { width: 100%; text-align: left; gap: 12px; border: 0; font: inherit; cursor: pointer; } .pack-cta .grow { display: flex; flex-direction: column; } .pack-ic { font-size: 28px; }
+.pack-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; max-height: 50vh; overflow: auto; }
+.pack-it { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 10px; background: var(--card2); font-size: 14px; } .pack-it span { color: var(--muted); }
+.pack-it .tag { align-self: flex-start; font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--accent); color: #fff; }
+#pack-in { width: 100%; font-family: ui-monospace, monospace; font-size: 13px; margin-bottom: 10px; }
+/* 📖 metody nauki */
+.ev { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 2px 7px; border-radius: 99px; color: var(--ev); background: color-mix(in srgb, var(--ev) 14%, transparent); }
+.m-lv { color: var(--accent); letter-spacing: 1px; font-size: 12px; }
+.m-list { display: flex; flex-direction: column; gap: 8px; }
+.m-row { display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px; min-height: 0; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); border: 0; font: inherit; color: inherit; }
+.card .m-row { background: var(--card2); box-shadow: none; }
+.m-row .grow { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .m-row small { color: var(--muted); font-size: 12px; } .m-meta { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.m-ic { font-size: 28px; width: 40px; text-align: center; flex: none; }
+.subj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.subj { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px; min-height: 0; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); border: 0; font: inherit; color: inherit; text-align: center; }
+.subj span { font-size: 28px; } .subj b { font-size: 13px; line-height: 1.2; }
+.m-prog { margin-top: 12px; } .pbar { height: 8px; border-radius: 99px; background: var(--card2); overflow: hidden; margin: 6px 0 4px; } .pbar i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.m-steps { padding-left: 20px; } .m-steps li { margin: 6px 0; line-height: 1.45; }
+.m-app { margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.m-tips { display: flex; flex-direction: column; gap: 8px; } .m-tip { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--card2); }
+.m-tip.locked { opacity: .55; } .m-tip span { font-size: 14px; }
+.avoid { background: color-mix(in srgb, #dc2626 6%, var(--card)); } .avoid ul { margin: 0; padding-left: 20px; }
+.methods-home { cursor: pointer; gap: 12px; }
+.mt-q { min-height: 140px; display: grid; place-items: center; text-align: center; }
+.card.flash hr { border: 0; border-top: 1px dashed var(--card2); margin: 12px 0; }
+#mt-txt { width: 100%; margin: 8px 0 10px; }
+.conf-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .conf-row button { display: flex; flex-direction: column; align-items: center; font-size: 26px; min-height: 70px; } .conf-row small { font-size: 12px; }
+.teach-check { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.mt-draw { width: 100%; border-radius: 12px; border: 1px solid var(--card2); margin: 8px 0; }
