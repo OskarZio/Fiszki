@@ -154,7 +154,7 @@ function msgBodyHTML(m, mine) {
   }
   if (b.st) {   // naklejka (bez oddawania – tylko pokazanie)
     const s = stickerById(b.st); if (!s) return '🃏';
-    return `<div class="chat-st${b.shiny ? ' shiny' : ''}" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${stE(s)}</span><small>${esc(s.name)}</small></div>`;
+    return `<div class="chat-st${fxCls(+b.shiny || 0)}" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${stE(s)}</span><small>${esc(s.name)}</small></div>`;
   }
   if (b.gif) {
     const g = typeof gifById === 'function' && gifById(String(b.gif));
@@ -196,7 +196,7 @@ ROUTES.chat = parts => {
     <button data-act="chat-challenge">⚔️ Wyzwij</button></div>
   ${CHAT.pick === 'media' ? `<div class="card tight chat-media">
     <div class="emo-row">${QUICK_EMO.map(e => `<button data-act="chat-emo" data-e="${e}">${e}</button>`).join('')}</div>
-    <b class="small">🃏 Naklejki</b><div class="st-row">${mySt.map(s => `<button class="${isShiny(s.id) ? 'shiny' : ''}" data-act="chat-st" data-id="${s.id}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}">${stE(s)}</button>`).join('')}</div>
+    <b class="small">🃏 Naklejki</b><div class="st-row">${mySt.map(s => `<button class="${fxCls(shinyLv(s.id)).trim()}" data-act="chat-st" data-id="${s.id}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}">${stE(s)}</button>`).join('')}</div>
     <b class="small">🎞️ GIF-y</b>${myGifs.length ? `<div class="gif-row">${myGifs.map(g => `<button data-act="chat-gif" data-id="${g.id}" style="--rc:${RARITY[g.r || 'common'].color}">${gifImg(g)}</button>`).join('')}</div>`
       : '<p class="small muted" style="margin:4px 0 0">Nie masz jeszcze GIF-ów – zdobywa się je tylko w skrzynce z GIF-ami (<a href="#/inv">🎒 Ekwipunek</a>).</p>'}</div>` : ''}
   ${CHAT.pick === 'gift' ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
@@ -237,7 +237,7 @@ Object.assign(ACTIONS, {
   'chat-st': async el => {
     const s = stickerById(el.dataset.id); if (!s || !ownedStickers().includes(s.id)) return;
     CHAT.pick = false; if (typeof playStickerSound === 'function') playStickerSound(s.id);
-    await sendMsg(CHAT.fid, 'text', { st: s.id, ...(isShiny(s.id) ? { shiny: 1 } : {}) }); render();
+    await sendMsg(CHAT.fid, 'text', { st: s.id, ...(shinyLv(s.id) ? { shiny: shinyLv(s.id) } : {}) }); render();
   },
   'chat-gif': async el => {
     const id = el.dataset.id; if (!hasItem('gif', id)) return toast('Tego GIF-a nie masz w ekwipunku');

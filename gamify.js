@@ -56,7 +56,7 @@ function hardContext() {
   const b = S.battles || [];
   return {
     stickersOwned: st.filter(x => x.r !== 'mythic' && !x.hatch && has(x.id)).length, hatchOwned: st.filter(x => x.hatch && has(x.id)).length,
-    eggsOk: (S.eggs || []).filter(e => e.ok).length, egg90: (S.eggs || []).some(e => e.ok && e.min >= 90) ? 1 : 0, mythic: st.filter(x => x.r === 'mythic' && has(x.id)).length,
+    eggsOk: (S.eggs || []).filter(e => e.ok).length, crCount: (S.eggs || []).filter(e => e.cr).length, crLegend: (S.eggs || []).filter(e => ['legendary', 'mythic'].includes(e.cr?.r)).length, egg90: (S.eggs || []).some(e => e.ok && e.min >= 90) ? 1 : 0, mythic: st.filter(x => x.r === 'mythic' && has(x.id)).length,
     legendsOwned: st.filter(x => x.r === 'legendary' && !x.hatch && has(x.id)).length,
     shinyCount: shiny.length, shinyLegend: shiny.some(x => x.r === 'legendary') ? 1 : 0,
     elo: typeof myElo === 'function' ? myElo() : 1000,
@@ -154,6 +154,12 @@ const ACHIEVEMENTS = [
   H('egg_50', '🐔', 'Kwoka', 'Wysiedź 50 jajek', c => c.eggsOk || 0, 50),
   H('egg_90', '🧘', 'Mnich skupienia', 'Wysiedź jajko 90 min albo dłużej', c => c.egg90 || 0, 1),
   H('hatch_all', '🐲', 'Hodowca', 'Zbierz wszystkie naklejki z inkubatora', c => c.hatchOwned || 0, 8),
+  A('boss_1', '⚔️', 'Pogromca', 'Pokonaj pierwszego bossa nauki', c => c.bossWins || 0, 1),
+  H('boss_10', '🗡️', 'Łowca bossów', 'Pokonaj 10 bossów', c => c.bossWins || 0, 10),
+  H('boss_flawless', '🛡️', 'Bez zadrapania', 'Pokonaj bossa bez straty ❤️', c => c.bossFlawless || 0, 1),
+  A('holo_1', '🌈', 'Hologram', 'Ulepsz naklejkę do wersji holograficznej', c => c.holo || 0, 1),
+  H('cr_legend', '👑', 'Królewski wylęg', 'Wykluj legendarnego albo mitycznego stworka', c => c.crLegend || 0, 1),
+  H('cr_50', '🪺', 'Pełne gniazdo', 'Wykluj 50 stworków', c => c.crCount || 0, 50),
 ];
 // Platyna: wszystkie pozostałe osiągnięcia
 ACHIEVEMENTS.push(H('platinum', '🏆', 'Platyna', 'Zdobądź wszystkie pozostałe osiągnięcia', c => c.others, ACHIEVEMENTS.length));
@@ -163,9 +169,9 @@ const ACH_TIERS = [
   { k: 'vhard', name: '💀 Bardzo trudne', gems: 300 }, { k: 'legend', name: '👑 Legendarne', gems: 600 }, { k: 'plat', name: '🏆 Platyna', gems: 2000 },
 ];
 const ACH_TIER_OF = {};
-[['mid', 'rev_500 rev_1000 day_200 goal_7 streak_7 combo_50 cards_100 mature_10 quiz_perfect pins_20 materials_10 game_all numbers_20 numbers_40 words_25 images_30 rank_1 battle_10 winstreak_3 cases_10 legendary daily_7 saboteur egg_10 egg_90'],
- ['hard', 'rev_5000 goal_30 streak_30 cards_1000 mature_100 games_50 numbers_80 cards_52 major_100 battle_50 shiny_10 cases_100 jackpot perfect_abcd quests_30 gifts_10 elo_1500 egg_50'],
- ['vhard', 'rev_10000 streak_100 mature_500 typed_1000 perfect_battle winstreak_10 battle_100 shiny_legend hatch_all'],
+[['mid', 'rev_500 rev_1000 day_200 goal_7 streak_7 combo_50 cards_100 mature_10 quiz_perfect pins_20 materials_10 game_all numbers_20 numbers_40 words_25 images_30 rank_1 battle_10 winstreak_3 cases_10 legendary daily_7 saboteur egg_10 egg_90 boss_1 holo_1'],
+ ['hard', 'rev_5000 goal_30 streak_30 cards_1000 mature_100 games_50 numbers_80 cards_52 major_100 battle_50 shiny_10 cases_100 jackpot perfect_abcd quests_30 gifts_10 elo_1500 egg_50 boss_flawless cr_legend'],
+ ['vhard', 'rev_10000 streak_100 mature_500 typed_1000 perfect_battle winstreak_10 battle_100 shiny_legend hatch_all boss_10 cr_50'],
  ['legend', 'mythic streak_365 rev_25000 day_500 mature_1000 streak_200 numbers_160 album_full legends_all elo_2000 gems_5000'],
  ['plat', 'platinum']].forEach(([k, ids]) => ids.split(' ').forEach(id => { ACH_TIER_OF[id] = k; }));
 const achTier = id => ACH_TIERS.find(t => t.k === (ACH_TIER_OF[id] || 'easy'));

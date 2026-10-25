@@ -43,7 +43,7 @@ function sBattleMsg(m) {
   if ('i' in m) out.i = sInt(m.i, 0, 1000);
   if ('given' in m) out.given = sStr(m.given, 300);
   if ('k' in m) out.k = sId(m.k, /^[a-z0-9_-]{1,24}$/);
-  if ('shiny' in m) out.shiny = sBool(m.shiny);
+  if ('shiny' in m) out.shiny = sInt(m.shiny === true ? 1 : m.shiny, 0, 2);
   if ('answers' in m) out.answers = sArr(m.answers, 300, x => sStr(x, 40));
   if ('room' in m) out.room = sId(m.room, /^[A-Z0-9]{4,10}$/);
   return out;
@@ -54,7 +54,7 @@ function sMsgBody(b) {
   const out = {};
   if ('text' in b) out.text = sStr(b.text, 1000);
   if ('st' in b) out.st = sId(b.st, /^[a-z0-9_-]{1,24}$/);
-  if ('shiny' in b) out.shiny = sBool(b.shiny) ? 1 : 0;
+  if ('shiny' in b) out.shiny = sInt(b.shiny === true ? 1 : b.shiny, 0, 2);
   if ('gif' in b) out.gif = sId(b.gif);
   if ('code' in b) out.code = sId(b.code, /^[A-Z0-9]{4,10}$/);
   if ('deck' in b) out.deck = sStr(b.deck, 80);

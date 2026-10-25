@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '93';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '94';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -519,7 +519,7 @@ function sessionRemaining(s) {
 }
 
 // ============================================================ Router i renderowanie
-let MOUNT = [];
+let MOUNT = [], LAST_VIEW_PATH = null;
 const onMount = fn => MOUNT.push(fn);
 
 function parseRoute() {
@@ -563,6 +563,7 @@ function render() {
   if (typeof applyPersonal === 'function') applyPersonal();
   document.body.classList.toggle('noanim', !S.settings.anim);
   $('#view').innerHTML = html;
+  { const pth = parts.join('/'); $('#view').classList.toggle('enter', pth !== LAST_VIEW_PATH); LAST_VIEW_PATH = pth; }   // animacja wejścia tylko przy zmianie ekranu
   $$('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
   MOUNT.forEach(fn => fn());
 }
@@ -699,7 +700,7 @@ function viewDeck(id, q) {
       <button class="grow" data-go="#/quiz/${id}?type=type" ${cards.length ? '' : 'disabled'}>✍️ Test pisemny</button>
     </div>
     <div class="spacer"></div>
-    <div class="row">
+    <div class="cram-grid">
       <button class="grow" data-act="cram-deck" data-id="${id}" ${cards.length ? '' : 'disabled'}>🔁 Przejrzyj całą talię</button>
       <button class="grow" data-act="cram-hard" data-id="${id}" ${hard.length ? '' : 'disabled'}>🧠 Trudne (${hard.length})</button>
       <button class="grow" data-act="cram-star" data-id="${id}" ${starredCards(id).length ? '' : 'disabled'}>⭐ Oznaczone (${starredCards(id).length})</button>
@@ -722,9 +723,9 @@ function viewDeck(id, q) {
     <input id="note-search" type="search" placeholder="Szukaj…">
     <div id="notes">${notesList(notes, '')}</div>
   </div>
-  <div class="row"><button data-act="anki-export" data-deck="${id}">⬇️ Eksport do Anki</button></div>
-  <div class="row"><button class="danger" data-act="reset-deck" data-id="${id}">Resetuj postęp</button>
-    <button class="danger" data-act="delete-deck" data-id="${id}">Usuń talię</button></div>`;
+  <div class="deck-foot"><button data-act="anki-export" data-deck="${id}">⬇️ Eksport do Anki</button>
+    <div class="row"><button class="danger grow" data-act="reset-deck" data-id="${id}">Resetuj postęp</button>
+    <button class="danger grow" data-act="delete-deck" data-id="${id}">Usuń talię</button></div></div>`;
 }
 let NOTE_SEL = null;   // tryb zaznaczania (Set id fiszek) w widoku talii
 // pasek „Usunięto · Cofnij” – przywraca z kosza wpisy zrobione tym usunięciem

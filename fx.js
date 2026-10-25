@@ -113,7 +113,7 @@ const fxStickerFx0 = stickerFx;
 stickerFx = function (k, from, shiny) { fxStickerFx0(k, from, shiny); playStickerSound(k, shiny); };
 
 Object.assign(ACTIONS, {
-  'st-preview': el => stickerFx(el.dataset.id, 'Podgląd', isShiny(el.dataset.id)),
+  'st-preview': el => stickerFx(el.dataset.id, 'Podgląd', shinyLv(el.dataset.id)),
 });
 
 // ✨ hologram: przechylenie telefonu (żyroskop) albo ruch myszki przesuwa tęczę na złotych naklejkach
