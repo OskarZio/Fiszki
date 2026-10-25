@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '103';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '104';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -617,11 +617,14 @@ function viewHome() {
   const dayFrac = today / Math.max(1, today + all.total);
   const deckRow = d => {
     const k = deckCounts(d.id);
+    if (d.done) return `<div class="deck deck-done">
+      <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div><span class="small done-tag">🎓 zdane</span>
+      <button class="sm" data-act="deck-menu" data-id="${d.id}" title="Opcje talii">⋯</button></div>`;
     return `<div class="deck">
       <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div>
       ${countsHTML(k)}
       <button class="sm ${k.total ? 'primary' : ''}" data-go="#/study/${d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz</button>
-      <button class="sm" data-go="#/deck/${d.id}">⋯</button>
+      <button class="sm" data-act="deck-menu" data-id="${d.id}" title="Opcje talii">⋯</button>
     </div>`;
   };
   // 📁 kategorie (tematy) na liście talii: nagłówek kategorii → jej talie; reszta „bez kategorii”
@@ -664,7 +667,7 @@ function viewHome() {
     const left = j.cram ? j.cram.length : null;
     return `<div class="banner row nowrap resume-banner"><span class="grow">▶ Dokończ naukę: <b>${esc(d)}</b> · zrobione ${j.done}${left != null ? `, zostało ${left}` : ''}</span><button class="sm primary" data-go="${esc(j.hash)}">Wróć</button><button class="sm ghost" data-act="sess-drop" title="Zapomnij">✕</button></div>`; })()}
   ${(() => {   // 🎓 najbliższy egzamin
-    const ex = S.decks.map(d => ({ d, e: examInfo(d) })).filter(x => x.e && !x.e.past).sort((a, b) => a.e.date - b.e.date)[0];
+    const ex = S.decks.map(d => ({ d, e: examInfo(d) })).filter(x => x.e && !x.e.past && !x.d.done).sort((a, b) => a.e.date - b.e.date)[0];
     if (!ex) return '';
     const k = deckCounts(ex.d.id);
     return `<div class="banner row nowrap exam-banner"><span class="grow">🎓 <b>${esc(ex.d.name)}</b> – egzamin ${inDays(ex.e.daysLeft)}. Dziś: ${k.nw} nowych + ${k.lrn + k.rev} powtórek</span><button class="sm primary" data-go="#/study/${ex.d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz się</button></div>`; })()}
@@ -730,6 +733,7 @@ function viewDeck(id, q) {
     <div class="spacer"></div>
     ${(() => { const sus = cards.filter(c => c.sus); if (!sus.length) return ''; const kn = sus.filter(c => c.sus === 'known').length;
       return `<div class="sus-box row nowrap"><span class="grow small">🙈 Poza powtórkami: <b>${sus.length}</b>${kn ? ` · ✓ nauczone ${kn}` : ''}${sus.length - kn ? ` · 🚫 niepotrzebne ${sus.length - kn}` : ''}</span><button class="sm" data-act="sus-restore" data-id="${id}">Przywróć</button></div><div class="spacer"></div>`; })()}
+    <button class="block sm${d.done ? ' primary' : ''}" data-act="deck-done" data-id="${id}" data-v="${d.done ? 0 : 1}">${d.done ? '↩️ Talia zdana – przywróć do nauki' : '🎓 Opanowane – zdałem, bez powtórek'}</button><div class="spacer"></div>
     ${examCardHTML(d)}
     ${typeof shareCardHTML === 'function' ? shareCardHTML(d) : ''}
     <button class="block sm${d.mix ? ' primary' : ''}" data-act="deck-mix" data-id="${id}">🔀 Przeplatanie: ${d.mix ? 'włączone – nowe karty w losowej kolejności' : 'wyłączone (stuknij, by mieszać terminy z obrazami)'}</button>
@@ -933,6 +937,8 @@ function viewStudy(deckId, mode, q) {
   return head + body + susBar + `<div class="answerbar">${bar}</div>`;
 }
 // ✓ nauczone / 🚫 niepotrzebne: karta wypada z powtórek (przywrócisz ją w widoku talii)
+// przywrócenie z „opanowanych”: nowe karty wracają jako nowe, reszta – na powtórkę, jeśli była odłożona na rok
+function unSus(c) { if (c.preSrs) { c.srs = c.preSrs; delete c.preSrs; } else if (c.srs.due > Date.now() + 300 * DAY) c.srs = { ...c.srs, due: Date.now(), ivl: Math.min(c.srs.ivl, 30) }; }
 const SUS_NAME = { known: 'nauczona – bez powtórek', skip: 'niepotrzebna' };
 function suspendCard(k) {
   const s = SESSION, c = s?.card; if (!c) return;
@@ -1792,7 +1798,7 @@ const ACTIONS = {
     el.classList.add('flip-out'); setTimeout(turn, 160);
   },
   'card-sus': el => suspendCard(el.dataset.k),
-  'sus-restore': el => { let n = 0; S.cards.forEach(c => { if (c.deckId === el.dataset.id && c.sus) { delete c.sus; if (c.srs.due > Date.now() + 300 * DAY) c.srs = { ...c.srs, due: Date.now(), ivl: Math.min(c.srs.ivl, 30) }; touch(c); n++; } }); save(); toast(`↩️ Przywrócono ${n} ${plural(n, 'kartę', 'karty', 'kart')}`); render(); },
+  'sus-restore': el => { let n = 0; S.cards.forEach(c => { if (c.deckId === el.dataset.id && c.sus) { delete c.sus; delete c.doneDeck; unSus(c); touch(c); n++; } }); const d = deckById(el.dataset.id); if (d?.done) { delete d.done; touch(d); } save(); toast(`↩️ Przywrócono ${n} ${plural(n, 'kartę', 'karty', 'kart')}`); render(); },
   star: () => {
     const n = SESSION?.card && noteById(SESSION.card.noteId); if (!n) return;
     n.star = !n.star; touch(n); save(); toast(n.star ? '⭐ Oznaczono – znajdziesz ją w „Oznaczone”' : 'Usunięto gwiazdkę', 1600); render();
@@ -1843,6 +1849,32 @@ const ACTIONS = {
   },
   'mix-add-img': () => { DRAFT.mixBack = { bulk: DRAFT.bulk, mixOn: DRAFT.mixOn }; DRAFT.type = 'occl'; DRAFT.imageId = null; DRAFT.boxes = []; render(); scrollTo(0, 0); },
   'mix-back': () => { const m = DRAFT.mixBack || {}; DRAFT = { ...freshDraft('mix', DRAFT.deckId), bulk: m.bulk || '', mixOn: m.mixOn }; render(); },
+  // ⋯ przy talii: menu (otwórz, dodaj, zdane – opanowane, przywróć)
+  'deck-menu': el => {
+    const d = deckById(el.dataset.id); if (!d) return;
+    document.querySelector('.dmenu-ov')?.remove();
+    const ov = document.createElement('div'); ov.className = 'dmenu-ov';
+    ov.innerHTML = `<div class="dmenu" role="dialog" aria-label="Opcje talii"><b class="dmenu-t">${esc(d.name)}</b>
+      <button data-go="#/deck/${d.id}">📂 Otwórz talię</button><button data-go="#/add?deck=${d.id}">➕ Dodaj fiszki</button>
+      ${d.done ? `<button class="primary" data-act="deck-done" data-id="${d.id}" data-v="0">↩️ Przywróć do nauki</button>`
+        : `<button class="primary" data-act="deck-done" data-id="${d.id}" data-v="1">🎓 Opanowane – zdałem, bez powtórek</button>`}
+      <small class="muted">${d.done ? 'Talia wróci do powtórek (zaległe karty od razu).' : 'Wszystkie fiszki znikną z powtórek, a talia przestanie się liczyć do nauki na dziś. W każdej chwili przywrócisz.'}</small>
+      <button class="ghost" data-act="dmenu-close">Anuluj</button></div>`;
+    ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-go],[data-act]')) setTimeout(() => ov.remove()); });
+    document.body.append(ov);
+  },
+  'dmenu-close': () => document.querySelector('.dmenu-ov')?.remove(),
+  'deck-done': el => {
+    const d = deckById(el.dataset.id); if (!d) return; const on = el.dataset.v === '1';
+    if (on && !confirm(`Oznaczyć „${d.name}” jako zdaną? Wszystkie fiszki znikną z powtórek.`)) return;
+    let n = 0;
+    for (const c of S.cards) if (c.deckId === d.id) {
+      if (on && !c.sus) { c.sus = 'known'; c.doneDeck = 1; if (c.srs.state === 'new') c.preSrs = c.srs, c.srs = { ...c.srs, state: 'review', due: Date.now() + 365 * DAY, ivl: 365, reps: 1 }; touch(c); n++; }
+      if (!on && c.doneDeck) { delete c.sus; delete c.doneDeck; unSus(c); touch(c); n++; }
+    }
+    if (on) d.done = Date.now(); else delete d.done; touch(d); save();
+    toast(on ? `🎓 „${d.name}” zdana – ${n} ${plural(n, 'fiszka', 'fiszki', 'fiszek')} bez powtórek. Gratulacje!` : `↩️ „${d.name}” wraca do nauki`, 3000); if (on) confetti(120); render();
+  },
   'deck-mix': el => { const d = deckById(el.dataset.id); if (!d) return; d.mix = !d.mix; touch(d); save(); render(); toast(d.mix ? '🔀 Nowe karty będą się przeplatać losowo' : 'Nowe karty w kolejności dodania'); },
   'hintimg-pick': async el => {
     const sc = el.dataset.scope; keepHintText(sc);
@@ -2036,7 +2068,7 @@ Object.assign(ACTIONS, {
   'note-selall': el => { const ids = S.notes.filter(n => n.deckId === el.dataset.id).map(n => n.id); NOTE_SEL = NOTE_SEL.size === ids.length ? new Set() : new Set(ids); render(); },
   'note-selsus': () => {
     const ids = NOTE_SEL; let n = 0;
-    S.cards.forEach(c => { if (ids.has(c.noteId) && !c.sus) { c.sus = 'known'; if (c.srs.state === 'new') c.srs = { ...c.srs, state: 'review', due: Date.now() + 365 * DAY, ivl: 365, reps: 1 }; touch(c); n++; } });
+    S.cards.forEach(c => { if (ids.has(c.noteId) && !c.sus) { c.sus = 'known'; if (c.srs.state === 'new') c.preSrs = c.srs, c.srs = { ...c.srs, state: 'review', due: Date.now() + 365 * DAY, ivl: 365, reps: 1 }; touch(c); n++; } });
     NOTE_SEL = null; save(); toast(`✓ ${n} ${plural(n, 'karta opanowana', 'karty opanowane', 'kart opanowanych')} – bez powtórek. Przywrócisz je w tej talii.`, 3500); render();
   },
   'note-seldel': () => {
