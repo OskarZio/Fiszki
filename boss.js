@@ -4,7 +4,7 @@
      dłuższa walka, mocniejsze ataki i zdolności (leczenie, tarcza, mgła, szał). Walka = Twoje prawdziwe powtórki.
    • Tura: odpowiadasz (Twój cios), boss liczy do ataku (widzisz zapowiedź), zła odpowiedź = kontra bossa.
    • Bohater: poziom i doświadczenie z walk, punkty umiejętności (3 gałęzie), ekwipunek (broń, pancerz, talizman), mikstury,
-     kowal (ulepszanie broni). Po wygranej – skrzynia z łupami (przedmioty, mikstury, pył ✨, kryształy, złote jaja). */
+     kowal (ulepszanie broni). Po wygranej – skrzynia z łupami (przedmioty, mikstury, kryształy, boostery, złote jaja). */
 
 const BOSS_REQ = 15, BOSS_ME_BASE = 100;
 const BOSS_NAMES = [['Prokrastynator', 'Szepcze: „zrobisz to jutro”.'], ['Krzywa Zapominania', 'Zjada wszystko, czego nie powtórzysz.'], ['Pan Rozkojarzony', 'Kusi powiadomieniami.'],
@@ -217,7 +217,7 @@ function grantLoot(it, key) {
 const lootHTML = it => it.k === 'gear' ? `${gearImg(it.id)}<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? `masz już → +${it.n} 💎` : RARITY[it.r].name}</small>`
   : it.k === 'potion' ? `${potionSVG(it.id)}<b>${POTIONS[it.id].name}${it.n > 1 ? ' ×' + it.n : ''}</b><small>${POTIONS[it.id].desc}</small>`
   : it.k === 'boost' ? `<img class="gear-img" src="assets/fluent/${BOOSTS[it.id].img}.webp" alt=""><b>${BOOSTS[it.id].name}</b><small>30 min · ${BOOSTS[it.id].desc}</small>`
-  : it.k === 'dust' ? `<span class="loot-big">✨</span><b>+${it.n} pyłu</b><small>do hologramów</small>` : it.k === 'egg' ? `<span class="loot-big">👑</span><b>Złote jajo</b><small>do inkubatora</small>` : `<span class="loot-big">💎</span><b>+${it.n}</b><small>kryształy</small>`;
+  : it.k === 'dust' ? `<span class="loot-big">💎</span><b>+${Math.round(it.n * DUST_RATE)}</b><small>kryształy</small>` : it.k === 'egg' ? `<span class="loot-big">👑</span><b>Złote jajo</b><small>do inkubatora</small>` : `<span class="loot-big">💎</span><b>+${it.n}</b><small>kryształy</small>`;
 function bossEnd(won) {
   const B = BOSS, b = B.b, d = deckById(b.deck); B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); bossSay(won ? 'bossDown' : 'bossWins');
   const flawless = won && B.lostHp === 0, hs = B.hs, key = `boss-${b.deck}-${b.stage}`;
@@ -302,7 +302,7 @@ ROUTES.boss = parts => {
       <h2 style="margin:6px 0">${won ? `🏆 ${esc(b.name)} pokonany!` : `💀 ${esc(b.name)} wygrywa…`}</h2>
       <p class="small muted">${B.ok} dobrych · ${B.bad} błędów · najlepsza seria ${B.best} · +${B.xp} XP bohatera${won && B.flawless ? ' · <b>bez straty ❤️</b>' : ''}</p>
       ${won ? `<div class="chest-wrap"><div class="chest">${chestSVG()}</div><div class="loot">${B.loot.map((it, i) => `<div class="loot-it" style="--d:${.9 + i * .25}s;--rc:${RARITY[it.r || 'rare'].color}">${lootHTML(it)}</div>`).join('')}</div></div>
-        <p class="small">+${B.gems} 💎 za etap ${b.stage + 1}. Następny etap: dłuższa walka i mocniejsze ataki.</p>` : '<p class="small">+3 ✨ pyłu na pocieszenie. Ulepsz bohatera albo kup mikstury i spróbuj znowu.</p>'}
+        <p class="small">+${B.gems} 💎 za etap ${b.stage + 1}. Następny etap: dłuższa walka i mocniejsze ataki.</p>` : '<p class="small">+9 💎 na pocieszenie. Ulepsz bohatera albo kup mikstury i spróbuj znowu.</p>'}
       ${(B.missed || []).length ? `<button class="block" data-act="boss-cram">🔁 Powtórz ${B.missed.length} ${plural(B.missed.length, 'fiszkę', 'fiszki', 'fiszek')}, których nie pamiętałeś</button>` : ''}
       <div class="row" style="margin-top:10px"><button class="primary grow" data-act="boss-again">${won ? 'Następny etap ⚔️' : 'Spróbuj ponownie'}</button><button class="grow" data-go="#/boss">🗺️ Mapa</button><button class="grow" data-go="#/hero">🧙 Bohater</button></div>
     </div>` };
@@ -342,7 +342,7 @@ ROUTES.hero = () => {
     ${L.max ? '<button class="primary block prestige-btn" data-act="hero-prestige">🌟 Prestiż i ewolucja</button>' : ''}
     <div class="hero-stats"><span>❤️ <b>${st.hp}</b></span><span>⚔️ <b>×${st.atk.toFixed(2)}</b></span><span>🎯 <b>${Math.round(st.crit * 100)}%</b></span><span>🛡️ <b>${Math.round(st.def * 100)}%</b></span>${st.dodge ? `<span>💨 <b>${Math.round(st.dodge * 100)}%</b></span>` : ''}</div>
     <div class="evo-chain">${[0, 1, 2, 3].map(i => `<span class="${i <= heroForm() ? 'on' : ''}" title="${line.forms[i]}">${heroSVG('xs', i)}<small>${line.forms[i]}</small></span>`).join('<i>›</i>')}</div>
-    <small class="muted">Każdy prestiż to ewolucja – razem z postacią ewoluuje grafika: 8-bit → 16-bit → HD → Legenda. Od 4. prestiżu coraz mocniejsza aura.</small></div>
+    <small class="muted">Każdy prestiż to ewolucja w kolejną formę – w pixelowych postaciach sprite rośnie i ma więcej detali. Od 4. prestiżu coraz mocniejsza aura.</small></div>
   <div class="card"><h2>🎭 Postać</h2>
     <div class="seg gender-seg"><button class="${h.g !== 'm' ? 'on' : ''}" data-act="hero-g" data-g="w">Ona</button><button class="${h.g === 'm' ? 'on' : ''}" data-act="hero-g" data-g="m">On</button></div>
     <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, h.pr || 0), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b><small>${esc(l.desc || '')}</small><small class="char-forms">${l.forms.join(' → ')}</small></button>`).join('')}</div>

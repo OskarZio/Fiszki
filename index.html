@@ -21,12 +21,13 @@
 <body>
   <main id="view"><div class="loading">Ładowanie…</div></main>
   <nav id="tabs">
-    <a href="#/" data-tab="home"><span>🏠</span>Start</a>
-    <a href="#/add" data-tab="add"><span>➕</span>Dodaj</a>
-    <a href="#/topics" data-tab="topics"><span>📚</span>Tematy</a>
-    <a href="#/battles" data-tab="arena" class="full-tab"><span>⚔️</span>Arena</a>
+    <a href="#/" data-tab="home"><span>📚</span>Nauka</a>
+    <a href="#/add" data-tab="add" class="min-only"><span>➕</span>Dodaj</a>
+    <a href="#/topics" data-tab="topics" class="min-only"><span>📝</span>Tematy</a>
+    <a href="#/boss" data-tab="arena" class="full-tab"><span>⚔️</span>Przygoda</a>
+    <a href="#/rank" data-tab="friends" class="full-tab"><span>👥</span>Znajomi</a>
     <a href="#/palaces" data-tab="palaces" class="min-tab"><span>🏛️</span>Pałace</a>
-    <a href="#/me" data-tab="profile" class="full-tab"><span>👤</span>Profil</a>
+    <a href="#/me" data-tab="profile" class="full-tab"><span>👤</span>Ty</a>
     <a href="#/more" data-tab="more" class="min-only"><span>⚙️</span>Ustawienia</a>
   </nav>
   <div id="toast" role="status"></div>
@@ -74,5 +75,6 @@
   <script src="import.js"></script>
   <script src="methods.js"></script>
   <script src="privacy.js"></script>
+  <script src="layout.js"></script>
 </body>
 </html>

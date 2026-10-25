@@ -55,13 +55,16 @@ const CASES = {
 const SET_BONUS = { common: 200, rare: 400, epic: 800, legendary: 2000 };
 const setComplete = r => STICKERS.filter(s => s.r === r && !s.hatch).every(s => hasItem('sticker', s.id) || hasItem('shiny', s.id));
 const isShiny = id => hasItem('shiny', id);
-// 🌈 trzeci poziom: złota → holograficzna (za pył gwiezdny ✨ z bossów i rozbijania duplikatów)
+// 🌈 trzeci poziom: złota → holograficzna (za kryształy). Jedna waluta: dawny „pył gwiezdny” = kryształy (1 pył = 3 💎).
 const isHolo = id => hasItem('holo', id);
 const shinyLv = id => isHolo(id) ? 2 : isShiny(id) ? 1 : 0;
 const fxCls = lv => lv >= 2 ? ' shiny holo' : lv ? ' shiny' : '';
-const dust = () => itemCount('dust', 'dust');
-const addDust = (n, id) => addItem('dust', 'dust', n, id || uid());
-const HOLO_COST = { common: 20, rare: 40, epic: 80, legendary: 150, mythic: 400 };
+const DUST_RATE = 3;
+const dust = () => coins();
+const addDust = (n, id) => { if (!S.wallet.some(w => w.id === (id || ''))) S.wallet.push({ id: id || uid(), n: Math.round(n * DUST_RATE), why: 'dust', t: Date.now() }); };
+const HOLO_COST = { common: 60, rare: 120, epic: 240, legendary: 450, mythic: 1200 };
+// przeniesienie starego pyłu na kryształy (raz; stałe id – synchronizacja nie dubluje)
+on('start', () => { const n = itemCount('dust', 'dust'); if (n > 0) { addItem('dust', 'dust', -n, 'dust-mig-' + n); S.wallet.push({ id: 'dust-mig-' + n, n: n * DUST_RATE, why: 'dust', t: Date.now() }); save(); } });
 const DUST_OF = { common: 2, rare: 5, epic: 12, legendary: 30, mythic: 150 };
 const EFFECTS = [
   { id: 'classic', name: 'Konfetti', icon: '🎊', price: 0 },
@@ -203,7 +206,7 @@ ROUTES.shop = () => {
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">Album naklejek</h2><span class="small muted">${owned}/${STICKERS.length}</span></div>
     <ul class="small muted perks"><li>Wysyłasz je przeciwnikowi w bitwie albo <b>podarujesz znajomemu</b> (💬 w rankingu). Stuknij naklejkę, żeby zobaczyć animację i usłyszeć jej dźwięk.</li>
       <li><b>3 duplikaty → złota wersja ✨</b> – złoty połysk w albumie, profilu i bitwach.</li>
-      <li><b>Złota + pył gwiezdny → hologram 🌈</b> – tęczowy połysk, który zmienia się przy przechylaniu telefonu. Pył zdobywasz, pokonując <a href="#/boss">bossów</a> albo rozbijając duplikaty. Masz <b>${dust()} ✨</b>.</li>
+      <li><b>Złota + kryształy → hologram 🌈</b> – tęczowy połysk, który zmienia się przy przechylaniu telefonu. Kryształy zdobywasz m.in., pokonując <a href="#/boss">bossów</a> albo rozbijając duplikaty. Masz <b>${dust()} ✨</b>.</li>
       <li>Wystaw do 3 naklejek w <b>gablocie</b> – widzą je znajomi w rankingu i przeciwnicy w bitwie.</li>
       <li>Komplet danej rzadkości daje premię: ${Object.entries(SET_BONUS).map(([r, v]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name.toLowerCase()} +${v}💎${setComplete(r) ? ' ✓' : ''}</span>`).join(', ')}.</li></ul>
     <div class="row small showcase-row"><b class="grow">Gablota:</b><span class="showcase">${showcaseHTML(showcase) || '<span class="muted">pusta – stuknij ☆ przy naklejce</span>'}</span></div>
@@ -212,8 +215,8 @@ ROUTES.shop = () => {
       return `<div class="stk ${s.r}${have ? '' : ' locked'}${fxCls(lv)}" style="--rc:${RARITY[s.r].color}"><span${have ? ` data-act="st-preview" data-id="${s.id}" style="cursor:pointer" title="Stuknij – animacja i dźwięk"` : ''}>${have ? stE(s) : '❔'}</span><small>${have ? esc(s.name) + (lv >= 2 ? ' 🌈' : sh ? ' ✨' : '') : RARITY[s.r].name + (s.hatch ? ' · 🥚 z jajka' : '')}</small>
         ${have ? `<button class="sm ghost" data-act="showcase" data-id="${s.id}">${inSc ? '★ w gablocie' : '☆ do gabloty'}</button>` : ''}
         ${n >= 3 && !sh ? `<button class="sm primary" data-act="upgrade" data-id="${s.id}">✨ Ulepsz (3 szt.)</button>` : ''}
-        ${sh && lv < 2 ? `<button class="sm holo-btn" data-act="holo-up" data-id="${s.id}">🌈 Hologram · ${HOLO_COST[s.r]} ✨</button>` : ''}
-        ${n > 1 ? `<div class="dup-row"><button class="sm ghost" data-act="sell-dup" data-id="${s.id}">×${n} · +${RARITY[s.r].sell}💎</button><button class="sm ghost" data-act="dust-dup" data-id="${s.id}" title="Rozbij duplikat na pył gwiezdny">+${DUST_OF[s.r]} ✨</button></div>` : ''}</div>`; }).join('')}</div></div>
+        ${sh && lv < 2 ? `<button class="sm holo-btn" data-act="holo-up" data-id="${s.id}">🌈 Hologram · ${HOLO_COST[s.r]} 💎</button>` : ''}
+        ${n > 1 ? `<div class="dup-row"><button class="sm ghost" data-act="sell-dup" data-id="${s.id}">×${n} · sprzedaj +${RARITY[s.r].sell}💎</button></div>` : ''}</div>`; }).join('')}</div></div>
   <div class="card row nowrap inv-cta" data-go="#/inv"><span style="font-size:34px">🎒</span><div class="grow"><b>Ekwipunek</b>
     <div class="small muted">GIF-y (${typeof GIF_CASE !== 'undefined' ? GIF_CASE.filter(g => hasItem('gif', g.id)).length : 0}), naklejki (${owned}/${STICKERS.length}), skrzynki do otwarcia</div></div><span style="font-size:22px">›</span></div>
   <div class="card"><h2 style="margin-top:0">Efekty zwycięstwa</h2><div class="effects">${EFFECTS.map(e => {
@@ -322,13 +325,13 @@ Object.assign(ACTIONS, {
   },
   'holo-up': el => {
     const s = stickerById(el.dataset.id), cost = HOLO_COST[s.r]; if (!isShiny(s.id) || isHolo(s.id)) return;
-    if (dust() < cost) return toast(`Brakuje ${cost - dust()} ✨ pyłu – pokonaj bossa albo rozbij duplikaty`, 4000);
-    addDust(-cost); addItem('holo', s.id); S.stats.holo = (S.stats.holo || 0) + 1; save();
+    if (!spend(cost, 'holo-' + s.id)) return;
+    addItem('holo', s.id); S.stats.holo = (S.stats.holo || 0) + 1; save();
     celebrate(`🌈 Hologram: ${s.e} ${s.name}`, 'Przechyl telefon – tęcza się przesuwa'); render();
   },
   'dust-dup': el => {
     const s = stickerById(el.dataset.id); if (itemCount('sticker', s.id) < 2) return;
-    addItem('sticker', s.id, -1); addDust(DUST_OF[s.r]); save(); toast(`✨ +${DUST_OF[s.r]} pyłu gwiezdnego (masz ${dust()})`); render();
+    addItem('sticker', s.id, -1); addDust(DUST_OF[s.r]); save(); toast(`💎 +${DUST_OF[s.r] * DUST_RATE}`); render();
   },
   'sell-dup': el => {
     const s = stickerById(el.dataset.id); if (itemCount('sticker', s.id) < 2) return;

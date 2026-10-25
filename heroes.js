@@ -95,14 +95,14 @@ function charSVG(line, form = 0, g = 'w') {
   if (f === 3) P.push(`<g fill="#fde68a">${[[14, 30], [106, 26], [18, 70], [104, 74]].map(([x, y]) => `<path d="M${x} ${y - 5}l1.6 3.4 3.4 1.6-3.4 1.6-1.6 3.4-1.6-3.4-3.4-1.6 3.4-1.6z"/>`).join('')}</g>`);
   return `<svg class="charsvg" viewBox="0 0 120 120" role="img" aria-label="${esc(C.forms[f])}"><defs><radialGradient id="${id}h" cx="38%" cy="32%" r="80%"><stop offset="0" stop-color="${light}"/><stop offset=".5" stop-color="${main}"/><stop offset="1" stop-color="${dark}"/></radialGradient></defs>${P.join('')}</svg>`;
 }
-// 🕹️ grafika ewoluuje razem z postacią: forma 1 = 8-bit (24 px), forma 2 = 16-bit (40 px), forma 3 = HD (wektor), forma 4 = legenda.
-// Sprite'y wygenerowane z tych samych rysunków (assets/pixel/<gatunek>-<forma>-<w|m>-<24|40>.png). Styl: Ustawienia → Personalizacja.
-const heroStyle = () => S?.settings?.heroStyle || 'evo';
+// 🕹️ styl postaci: gatunki pixelowe (kot, żaba, pies, chomik) są pixel art we wszystkich formach – sprite rośnie i ma więcej detali
+// z każdą ewolucją (24 → 32 → 40 → 48 px); sowa, lis i stworek są gładkie (wektor). Legendarny kot = wycięty kot z mema.
+// Ustawienia → Personalizacja: „mieszany” (domyślnie), „zawsze pixel art”, „zawsze gładki”.
+const PIXEL_LINES = ['cat', 'frog', 'dog', 'hamster'], PX_SIZES = [24, 32, 40, 48];
+const heroStyle = () => ({ evo: 'mix' }[S?.settings?.heroStyle] || S?.settings?.heroStyle || 'mix');
+const isPixelLine = line => heroStyle() === 'pixel' || (heroStyle() === 'mix' && PIXEL_LINES.includes(line));
 function heroArt(line, f = 0, g = 'w') {
-  const px = n => `<img class="charpx" src="assets/pixel/${line}-${f}-${g}-${n}.png" alt="" draggable="false">`;
   if (line === 'cat' && f === 3) return charSVG(line, f, g);
-  const st = heroStyle();
-  if (st === 'pixel') return px(40);
-  if (st === 'evo' && f < 2) return px(f ? 40 : 24);
-  return charSVG(line, f, g);
+  if (!isPixelLine(line)) return charSVG(line, f, g);
+  return `<img class="charpx" src="assets/pixel/${line}-${f}-${g}-${PX_SIZES[f]}.png" alt="" draggable="false">`;
 }
