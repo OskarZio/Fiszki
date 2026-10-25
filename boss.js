@@ -14,9 +14,35 @@ const BOSS_MOVES = ['Cios zapomnienia', 'Fala prokrastynacji', 'Podchwytliwe pyt
 const hashStr = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
 
 // ---------- 🧙 bohater
-const HERO_DEF = () => ({ xp: 0, sk: {}, eq: {}, forge: {}, look: 1 + (Math.random() * 1e6 | 0), mod: 0 });
+const HERO_MAX = 20;   // maks. poziom – potem prestiż (ewolucja postaci, reset poziomu, stałe bonusy, trudniejsi bossowie, lepsze łupy)
+const HERO_DEF = () => ({ xp: 0, sk: {}, eq: {}, forge: {}, look: 1 + (Math.random() * 1e6 | 0), line: 'scholar', g: Math.random() < .5 ? 'w' : 'm', pr: 0, boost: {}, mod: 0 });
 const hero = () => (S.hero = S.hero || HERO_DEF());
-const heroLvAt = xp => { let l = 1; while (xp >= 80 * Math.pow(l, 1.5)) { xp -= 80 * Math.pow(l, 1.5); l++; } return { lv: l, cur: xp, need: 80 * Math.pow(l, 1.5) }; };
+const heroLvAt = xp => { let l = 1; while (l < HERO_MAX && xp >= 80 * Math.pow(l, 1.5)) { xp -= 80 * Math.pow(l, 1.5); l++; } return { lv: l, cur: l >= HERO_MAX ? 1 : xp, need: l >= HERO_MAX ? 1 : 80 * Math.pow(l, 1.5), max: l >= HERO_MAX }; };
+// 🧬 linie postaci: każdy prestiż = ewolucja do kolejnej formy (kobieta / mężczyzna); od 4. prestiżu – coraz mocniejsza aura
+const CHAR_LINES = {
+  scholar: { name: 'Uczony', icon: '📚', st: ['student', 'teacher', 'scientist', 'mage'], forms: ['Student', 'Wykładowca', 'Naukowiec', 'Mag wiedzy'] },
+  medic: { name: 'Medyk', icon: '🩺', st: ['health_worker', 'scientist', 'astronaut', 'superhero'], forms: ['Ratownik', 'Badacz', 'Astronauta', 'Superbohater'] },
+  fable: { name: 'Baśniowy', icon: '🧝', st: ['elf', 'fairy', 'vampire', 'genie'], forms: ['Elf', 'Wróżka', 'Wampir', 'Dżin'] },
+  sleuth: { name: 'Tropiciel', icon: '🕵️', st: ['detective', '*ninja', 'vampire', 'superhero'], forms: ['Detektyw', 'Ninja', 'Łowca nocy', 'Superbohater'] },
+  beast: { name: 'Stworek', icon: '🐣', st: [], forms: ['Pisklę', 'Stworek', 'Bestia', 'Legenda'] },
+};
+const PR_TITLES = ['Nowicjusz', 'Adept', 'Mistrz', 'Arcymistrz', 'Legenda', 'Mityczny', 'Nieśmiertelny'];
+const heroForm = (h = hero(), pr = h.pr || 0) => Math.min(3, pr);
+const heroImgId = (h = hero(), pr = h.pr || 0) => { const L = CHAR_LINES[h.line] || CHAR_LINES.scholar, st = L.st[heroForm(h, pr)]; return !st ? null : st[0] === '*' ? 'h_' + st.slice(1) : `h_${h.g === 'm' ? 'm' : 'w'}_${st}`; };
+const heroFormName = (h = hero()) => (CHAR_LINES[h.line] || CHAR_LINES.scholar).forms[heroForm(h)];
+// ⏱️ boostery (jak w grach): ×2 doświadczenie, ×2 kryształy, szczęście łupieżcy (+1 przedmiot) – 30 minut od włączenia
+const BOOSTS = { xp2: { name: 'Podwójne XP', desc: 'doświadczenie bohatera ×2', img: 'b_star', price: 120 }, gems2: { name: 'Podwójne kryształy', desc: '💎 z bossów, łupów i jajek ×2', img: 'b_gstar', price: 150 }, loot2: { name: 'Szczęście łupieżcy', desc: '+1 przedmiot w każdej skrzyni', img: 'b_swords', price: 150 } };
+const BOOST_MS = 30 * 60000;
+const boostOn = k => (hero().boost?.[k] || 0) > Date.now();
+const boostLeft = k => Math.max(0, (hero().boost?.[k] || 0) - Date.now());
+const gemMul = () => boostOn('gems2') ? 2 : 1;
+function activateBoost(k) {
+  if (itemCount('boost', k) < 1) return;
+  const h = hero(); h.boost = h.boost || {}; addItem('boost', k, -1);
+  h.boost[k] = Math.max(Date.now(), h.boost[k] || 0) + BOOST_MS; h.mod = Date.now(); save();
+  toast(`⏱️ ${BOOSTS[k].name} aktywne przez ${Math.round(boostLeft(k) / 60000)} min`); render();
+}
+const boostChips = () => Object.keys(BOOSTS).filter(boostOn).map(k => `<span class="boost-chip">${BOOSTS[k].name} · ${Math.ceil(boostLeft(k) / 60000)} min</span>`).join('');
 const heroLv = () => heroLvAt(hero().xp).lv;
 const SKILLS = [
   { b: 'str', icon: '⚔️', name: 'Siła', nodes: [['s1', 'Mocny cios', '+15% obrażeń'], ['s2', 'Krytyk', '+10% szans na cios krytyczny (×2)'], ['s3', 'Szał', 'seria 6+ daje ×2,5 zamiast ×2'], ['s4', 'Egzekucja', 'boss poniżej 25% ❤️ → obrażenia ×1,5']] },
@@ -25,7 +51,7 @@ const SKILLS = [
 ];
 const SK_REQ_LV = [1, 3, 6, 10];   // od którego poziomu bohatera można kupić węzeł 1..4 w gałęzi
 const hasSk = id => !!hero().sk[id];
-const skPoints = () => heroLv() - Object.keys(hero().sk).length;   // 1 punkt na start + 1 za każdy kolejny poziom
+const skPoints = () => heroLv() + (hero().pr || 0) - Object.keys(hero().sk).length;   // 1 na start + 1 za poziom + 1 za każdy prestiż
 // ekwipunek (grafiki Fluent 3D)
 const GEAR = {
   w_dagger: { slot: 'w', name: 'Sztylet zakuwacza', r: 'common', atk: 10, img: 'g_dagger' },
@@ -52,12 +78,14 @@ const potionN = k => itemCount('potion', k);
 function heroStats() {
   const h = hero(), lv = heroLv(), eq = Object.values(h.eq).map(id => GEAR[id]).filter(Boolean), w = GEAR[h.eq.w], forge = h.forge[h.eq.w] || 0;
   const sum = k => eq.reduce((a, g) => a + (g[k] || 0), 0);
-  return { lv, hp: BOSS_ME_BASE + 5 * (lv - 1) + sum('hp') + (hasSk('t1') ? 25 : 0), atk: 1 + .02 * (lv - 1) + sum('atk') / 100 + forge * .06 + (hasSk('s1') ? .15 : 0),
-    crit: (sum('crit') + (hasSk('s2') ? 10 : 0)) / 100, def: (sum('def') + (hasSk('t2') ? 15 : 0)) / 100, dodge: sum('dodge') / 100, loot: sum('loot') / 100, combo0: sum('combo'), weapon: w, forge };
+  const pr = h.pr || 0;
+  return { lv, pr, hp: BOSS_ME_BASE + 5 * (lv - 1) + sum('hp') + (hasSk('t1') ? 25 : 0) + 10 * pr, atk: 1 + .02 * (lv - 1) + sum('atk') / 100 + forge * .06 + (hasSk('s1') ? .15 : 0) + .05 * pr,
+    crit: (sum('crit') + (hasSk('s2') ? 10 : 0)) / 100, def: Math.min(.5, (sum('def') + (hasSk('t2') ? 15 : 0)) / 100), dodge: sum('dodge') / 100, loot: sum('loot') / 100 + .1 * pr, combo0: sum('combo'), weapon: w, forge };
 }
-function heroSVG(cls = '') {
-  const h = hero(), w = h.eq.w, a = h.eq.a, c = h.eq.c;
-  return `<div class="hero-fig ${cls}">${creatureSVG(h.look, heroLv() >= 10 ? 'legendary' : heroLv() >= 5 ? 'epic' : 'rare', { label: 'Twój bohater' })}
+function heroSVG(cls = '', pr) {
+  const h = hero(), w = h.eq.w, a = h.eq.a, c = h.eq.c, p = pr ?? (h.pr || 0), img = heroImgId(h, p);
+  const body = img ? `<img class="hero-img" src="assets/fluent/${img}.webp" alt="Twój bohater" draggable="false">` : creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Twój bohater' });
+  return `<div class="hero-fig ${cls} pr-${Math.min(6, p)}">${p ? '<i class="hero-aura"></i>' : ''}${body}
     ${w ? `<span class="hf-w">${gearImg(w)}</span>` : ''}${a ? `<span class="hf-a">${gearImg(a)}</span>` : ''}${c ? `<span class="hf-c">${gearImg(c)}</span>` : ''}</div>`;
 }
 
@@ -71,23 +99,53 @@ function deckBoss(d) {
   return { deck: d.id, stage: st, seed, name, desc, title: `Strażnik talii „${d.name}”`, lv: st + 1 + Math.floor(learned / 60), len, learned,
     hp: Math.round(len * 10 * (.8 + .12 * st)), atk: 12 + 3 * st, every: st >= 3 ? 2 : 3, abil };
 }
-const bossArt = (b, cls = '') => `<div class="boss-art ${cls}">${creatureSVG(b.seed, b.stage >= 3 ? 'mythic' : 'epic', { boss: true, label: b.name })}</div>`;
+// 🌍 bossowie świata: walczysz fiszkami ze WSZYSTKICH talii; więksi, groźniejsi, lepsze nagrody (co 2. etap booster)
+const WORLD_REQ = 40;
+const WORLD_BOSSES = [['Smok Sesji', 'Pożera całe semestry naraz.', 'w_dragon'], ['Ogr Zaległości', 'Rośnie z każdą odłożoną powtórką.', 'w_ogre'], ['Pajęczyca Rozproszeń', 'Oplata myśli powiadomieniami.', 'w_spider'],
+  ['Kosmita Ściągawek', 'Przyleciał podejrzeć Twoje odpowiedzi.', 'w_alien'], ['Robot Wkuwacz', 'Zna tylko wkuwanie na pamięć.', 'w_robot'], ['Duch Zapomnienia', 'Przenika przez nieutrwaloną wiedzę.', 'w_ghost'], ['Ośmiornica Terminów', 'Osiem macek, osiem kolokwiów.', 'w_octo'], ['Kościej Egzaminator', 'Pytał już Twoich dziadków.', 'w_skull']];
+const learnedAll = () => S.cards.filter(c => c.srs.state !== 'new' && noteById(c.noteId)).length;
+function worldBoss() {
+  const st = S.stats.worldStage || 0, [name, desc, img] = WORLD_BOSSES[st % WORLD_BOSSES.length], learned = learnedAll(), len = Math.max(15, Math.min(learned, 20 + 5 * st, 50));
+  const abil = ['rage', ...Object.keys(BOSS_ABIL).filter(a => a !== 'rage').slice(0, Math.min(3, 1 + Math.floor(st / 2)))];
+  return { deck: 'world', world: true, stage: st, seed: 777 + st * 31, img, name, desc, title: 'Boss świata – wszystkie talie', lv: st + 3, len, learned, hp: Math.round(len * 13 * (.8 + .12 * st)), atk: 16 + 4 * st, every: st >= 2 ? 2 : 3, abil };
+}
+const bossArt = (b, cls = '') => b.img ? `<div class="boss-art world ${cls}"><img src="assets/fluent/${b.img}.webp" alt="${esc(b.name)}" draggable="false"></div>`
+  : `<div class="boss-art ${cls}">${creatureSVG(b.seed, b.stage >= 3 ? 'mythic' : 'epic', { boss: true, label: b.name })}</div>`;
+// 💬 komentarze bossa w trakcie walki – zaczepne, śmieszne, czasem motywujące
+const BOSS_TALK = {
+  start: ['Ha! Kolejny student, który „uczył się wczoraj”.', 'Twoje fiszki są moje!', 'Zobaczmy, co zostało w tej głowie po imprezie.', 'Przygotowałem podchwytliwe pytania. Same podchwytliwe.', 'Ostatni, który przyszedł nieprzygotowany, do dziś pisze poprawkę.'],
+  hit: ['Auć! Skąd to wiesz?!', 'Dobra, to akurat było łatwe.', 'Hmpf. Szczęściarz.', 'Kto Ci to podpowiedział?!', 'Ej, to bolało!'],
+  crit: ['KRYTYK?! Kto Cię tego nauczył?!', 'Ała! Ty naprawdę powtarzałeś!', 'To nie fair, Ty masz FSRS!'],
+  combo: ['Seria?! Przestań się uczyć regularnie!', 'Za dobrze Ci idzie… podejrzane.', 'Nie lubię ludzi, którzy robią powtórki codziennie.'],
+  low: ['N-nie… jeszcze nie skończyłem!', 'Jeszcze jedno dobre słowo i mnie nie ma!', 'Dobra, dobra, przyznaję – coś umiesz.'],
+  miss: ['HA! Na tyle Cię stać?', 'Pudło! Może jednak trzeba było powtórzyć?', 'Słabo Ci idzie… ale nie płacz, mam więcej pytań!', 'Tego nie było na slajdach? Było. Na każdym.', 'Brawo, prawie! Prawie robi różnicę.'],
+  meLow: ['Jeszcze trochę i wracasz do zeszytu!', 'Słyszę już szelest poprawki…', 'Poddaj się, mikstury nie uratują wiedzy!'],
+  attack: ['Przyjmij to: cios zapomnienia!', 'Masz! Termin się zbliża!', 'Mój ulubiony atak: pytanie spoza materiału!'],
+  potion: ['Mikstura? Oszust!', 'Doping! Zgłaszam to dziekanowi!', 'Pij, pij… i tak nie pamiętasz definicji.'],
+  bossDown: ['Nieeee! Wrócę… z większą liczbą fiszek!', 'Pokonałeś mnie… ale za tydzień przyjdzie mój starszy brat.', 'Dobra… zasłużyłeś. Ucz się dalej, bo wrócę.'],
+  bossWins: ['Ha! Wróć, jak powtórzysz materiał!', 'Następnym razem mniej scrollowania, więcej fiszek!', 'Nie martw się – każda porażka to darmowa powtórka. Wróć silniejszy!'],
+};
+const bossSay = k => { if (!BOSS) return; const l = BOSS_TALK[k] || []; BOSS.say = { txt: l[Math.random() * l.length | 0], t: Date.now(), k }; };
 let BOSS = null, BOSS_PICK = { mode: 'flip' };
 try { Object.assign(BOSS_PICK, JSON.parse(localStorage.getItem('bossPick') || '{}')); } catch { /* */ }
 
 function bossStart(deckId) {
-  const d = deckById(deckId); if (!d) return;
-  const b = deckBoss(d);
-  if (b.learned < BOSS_REQ) return toast(`Ten boss budzi się przy ${BOSS_REQ} nauczonych fiszkach – masz ${b.learned}`, 4000);
-  const now = Date.now(), cs = S.cards.filter(c => c.deckId === d.id && c.srs.state !== 'new' && noteById(c.noteId));
+  const world = deckId === 'world', d = world ? null : deckById(deckId); if (!world && !d) return;
+  const b = world ? worldBoss() : deckBoss(d), req = world ? WORLD_REQ : BOSS_REQ;
+  if (b.learned < req) return toast(`Ten boss budzi się przy ${req} nauczonych fiszkach – masz ${b.learned}`, 4000);
+  const now = Date.now(), cs = S.cards.filter(c => (world || c.deckId === d.id) && c.srs.state !== 'new' && noteById(c.noteId));
   const due = shuffle(cs.filter(c => c.srs.due <= now)), rest = shuffle(cs.filter(c => c.srs.due > now)).sort((a, x) => (x.srs.lapses - a.srs.lapses));
   const ids = [...due, ...rest].slice(0, b.len).map(c => c.id), hs = heroStats();
-  BOSS = { b, ids, i: 0, hp: b.hp, max: b.hp, me: hs.hp, meMax: hs.hp, hs, combo: hs.combo0, best: 0, ok: 0, bad: 0, phase: 'fight', shown: false, mode: BOSS_PICK.mode,
+  // skalowanie: silniejszy bohater = silniejszy boss (bohater dalej wygrywa szybciej, ale nigdy jednym ciosem)
+  const scale = (.55 + .45 * hs.atk) * (1 + .15 * hs.pr), hp = Math.round(b.hp * scale);
+  b.atkS = Math.round(b.atk * (.75 + .25 * hs.hp / 100) * (1 + .15 * hs.pr));
+  BOSS = { b, ids, i: 0, hp, max: hp, me: hs.hp, meMax: hs.hp, hs, cap: Math.max(12, Math.round(hp * .15)), combo: hs.combo0, best: 0, ok: 0, bad: 0, phase: 'fight', shown: false, mode: BOSS_PICK.mode,
     shownAt: now, lostHp: 0, timer: b.every, move: pickMove(b), shield: false, fog: false, power: 0, guard: false, potUsed: 0, second: hasSk('t4'), log: [] };
+  bossSay('start');
   go('#/boss/fight'); render();
 }
-const pickMove = b => { const opts = ['hit', ...b.abil.filter(a => a !== 'rage')]; const k = opts[Math.random() * opts.length | 0];
-  return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: b.atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: k === 'heal' || k === 'shield' ? 0 : Math.round(b.atk * .5) }; };
+const pickMove = b => { const opts = ['hit', ...b.abil.filter(a => a !== 'rage')]; const k = opts[Math.random() * opts.length | 0], atk = b.atkS || b.atk;
+  return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: k === 'heal' || k === 'shield' ? 0 : Math.round(atk * .5) }; };
 const bossCard = () => BOSS && S.cards.find(c => c.id === BOSS.ids[BOSS.i]);
 function hurtMe(n, label) {
   const B = BOSS; if (B.guard) { B.guard = false; B.fxMe = { k: 'block', t: Date.now() }; B.log.unshift(`🛡️ Zablokowałeś: ${label}`); return; }
@@ -112,14 +170,15 @@ function bossGrade(g, typedOk) {
     let dmg = 10 * B.hs.atk * comboM * typedM * (g === 4 ? 1.2 : 1) * (crit ? 2 : 1) * (exec ? 1.5 : 1) * (B.power > 0 ? 2 : 1);
     if (B.power > 0) B.power--;
     if (B.shield) { dmg *= .5; B.shield = false; B.log.unshift('🛡️ Tarcza bossa osłabia cios'); }
-    dmg = Math.round(dmg); B.hp = Math.max(0, B.hp - dmg); B.fx = { k: 'boss', n: dmg, crit: crit || comboM >= 2, t: now };
+    dmg = Math.min(B.cap * (crit ? 1.3 : 1), Math.round(dmg)) | 0; B.hp = Math.max(0, B.hp - dmg); B.fx = { k: 'boss', n: dmg, crit: crit || comboM >= 2, t: now };
+    bossSay(crit ? 'crit' : B.combo >= 3 && B.combo % 3 === 0 ? 'combo' : B.hp < B.max * .3 ? 'low' : 'hit');
     if (g === 4 && hasSk('t3')) B.me = Math.min(B.meMax, B.me + 5);
   } else if (g === 2) { if (!hasSk('m2')) B.combo = 0; const d2 = Math.round(5 * B.hs.atk); B.hp = Math.max(0, B.hp - d2); B.fx = { k: 'boss', n: d2, t: now }; }
-  else { B.combo = 0; B.bad++; B.missed = (B.missed || []).concat(c.id); hurtMe(Math.round(B.b.atk * .8), 'Kontra bossa'); }
+  else { B.combo = 0; B.bad++; B.missed = (B.missed || []).concat(c.id); hurtMe(Math.round(B.b.atkS * .8), 'Kontra bossa'); bossSay(B.me < B.meMax * .35 ? 'meLow' : 'miss'); }
   // tura bossa: odliczanie do zapowiedzianego ruchu
   if (B.hp > 0 && --B.timer <= 0) {
     const mv = B.move; B.bossAct = { k: mv.k, t: now };
-    if (mv.k === 'hit') hurtMe(mv.dmg, mv.name);
+    if (mv.k === 'hit') { hurtMe(mv.dmg, mv.name); bossSay('attack'); }
     else if (mv.k === 'heal') { const h = Math.round(B.max * .1); B.hp = Math.min(B.max, B.hp + h); B.log.unshift(`💚 ${B.b.name} leczy się +${h}`); }
     else if (mv.k === 'shield') { B.shield = true; B.log.unshift(`🛡️ ${B.b.name} stawia tarczę`); }
     else if (mv.k === 'fog') { B.fog = true; hurtMe(mv.dmg, 'Mgła'); }
@@ -140,7 +199,7 @@ function usePotion(k) {
   if (k === 'heal') { const h = Math.round(40 * m); B.me = Math.min(B.meMax, B.me + h); B.log.unshift(`🧪 +${h} ❤️`); }
   if (k === 'power') { B.power = Math.round(3 * m); B.log.unshift('🧪 Siła! Kolejne ciosy ×2'); }
   if (k === 'guard') { B.guard = true; B.log.unshift('🧪 Tarcza gotowa'); }
-  B.fxMe = { k: 'potion', t: Date.now() }; save(); render();
+  B.fxMe = { k: 'potion', t: Date.now() }; bossSay('potion'); save(); render();
 }
 // ---------- skrzynia z łupami
 function rollLoot(stage) {
@@ -148,8 +207,9 @@ function rollLoot(stage) {
   const x = Math.random() * 100;
   if (x < 35) { const r = rollRarity(odds), pool = Object.entries(GEAR).filter(([, g]) => g.r === r); const [id] = pool[Math.random() * pool.length | 0] || []; if (id) return { k: 'gear', id, r }; }
   if (x < 65) { const ks = Object.keys(POTIONS), k = ks[Math.random() * ks.length | 0]; return { k: 'potion', id: k, n: 1 + (stage >= 3 ? 1 : 0), r: 'rare' }; }
-  if (x < 85) return { k: 'dust', n: 10 + 5 * stage, r: 'epic' };
-  return { k: 'gems', n: 30 + 15 * stage, r: stage >= 3 ? 'legendary' : 'rare' };
+  if (x < 75) return { k: 'dust', n: 10 + 5 * stage, r: 'epic' };
+  if (x < 85) { const ks = Object.keys(BOOSTS); return { k: 'boost', id: ks[Math.random() * ks.length | 0], r: 'epic' }; }
+  return { k: 'gems', n: (30 + 15 * stage) * gemMul(), r: stage >= 3 ? 'legendary' : 'rare' };
 }
 function grantLoot(it, key) {
   if (it.k === 'gear') { if (ownsGear(it.id)) { it.dup = true; it.n = { common: 40, rare: 90, epic: 200, legendary: 500 }[it.r]; S.wallet.push({ id: key, n: it.n, why: 'loot-dup', t: Date.now() }); } else addItem('gear', it.id, 1, key); }
@@ -157,23 +217,26 @@ function grantLoot(it, key) {
   if (it.k === 'dust') addDust(it.n, key);
   if (it.k === 'gems') S.wallet.push({ id: key, n: it.n, why: 'loot', t: Date.now() });
   if (it.k === 'egg') addItem('egg', 'boss', 1, key);
+  if (it.k === 'boost') addItem('boost', it.id, 1, key);
 }
 const lootHTML = it => it.k === 'gear' ? `${gearImg(it.id)}<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? `masz już → +${it.n} 💎` : RARITY[it.r].name}</small>`
   : it.k === 'potion' ? `${potionSVG(it.id)}<b>${POTIONS[it.id].name}${it.n > 1 ? ' ×' + it.n : ''}</b><small>${POTIONS[it.id].desc}</small>`
+  : it.k === 'boost' ? `<img class="gear-img" src="assets/fluent/${BOOSTS[it.id].img}.webp" alt=""><b>${BOOSTS[it.id].name}</b><small>30 min · ${BOOSTS[it.id].desc}</small>`
   : it.k === 'dust' ? `<span class="loot-big">✨</span><b>+${it.n} pyłu</b><small>do hologramów</small>` : it.k === 'egg' ? `<span class="loot-big">👑</span><b>Złote jajo</b><small>do inkubatora</small>` : `<span class="loot-big">💎</span><b>+${it.n}</b><small>kryształy</small>`;
 function bossEnd(won) {
-  const B = BOSS, b = B.b, d = deckById(b.deck); B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me);
+  const B = BOSS, b = B.b, d = deckById(b.deck); B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); bossSay(won ? 'bossDown' : 'bossWins');
   const flawless = won && B.lostHp === 0, hs = B.hs, key = `boss-${b.deck}-${b.stage}`;
-  const xp = Math.round((B.ok * 6 + (won ? 60 + 30 * b.stage : 10)) * (1 + hs.loot));
+  const xp = Math.round((B.ok * 6 + (won ? 60 + 30 * b.stage : 10)) * (1 + hs.loot) * (boostOn('xp2') ? 2 : 1) * (b.world ? 1.5 : 1));
   const lvBefore = heroLv(); hero().xp += xp; hero().mod = Date.now(); B.xp = xp;
   if (won) {
-    const gems = 30 + 15 * b.stage; if (!S.wallet.some(w => w.id === key)) S.wallet.push({ id: key, n: gems, why: 'boss', t: Date.now() });
-    const n = 1 + (b.stage >= 2 ? 1 : 0) + (b.stage >= 5 ? 1 : 0) + (hasSk('m4') ? 1 : 0) + (flawless ? 1 : 0);
-    B.loot = Array.from({ length: n }, () => rollLoot(b.stage));
+    const gems = (b.world ? 60 + 20 * b.stage : 30 + 15 * b.stage) * gemMul(); if (!S.wallet.some(w => w.id === key)) S.wallet.push({ id: key, n: gems, why: 'boss', t: Date.now() });
+    const n = 1 + (b.stage >= 2 ? 1 : 0) + (b.stage >= 5 ? 1 : 0) + (hasSk('m4') ? 1 : 0) + (flawless ? 1 : 0) + (boostOn('loot2') ? 1 : 0) + (b.world ? 1 : 0);
+    B.loot = Array.from({ length: n }, () => rollLoot(b.stage + 2 * hs.pr));
+    if (b.world && b.stage % 2 === 1) B.loot.push({ k: 'boost', id: Object.keys(BOOSTS)[Math.random() * 3 | 0], r: 'epic' });
     if ((b.stage + 1) % 3 === 0) B.loot.push({ k: 'egg', r: 'legendary' });
     B.loot.forEach((it, i) => grantLoot(it, `${key}-l${i}-${uid()}`));
     if (B.loot.some(x => x.k === 'gear' && x.r === 'legendary' && !x.dup)) S.stats.lootLegend = 1;
-    d.boss = { stage: b.stage + 1, wins: (d.boss?.wins || 0) + 1 }; touch(d);
+    if (b.world) S.stats.worldStage = b.stage + 1; else { d.boss = { stage: b.stage + 1, wins: (d.boss?.wins || 0) + 1 }; touch(d); }
     S.stats.bossWins = (S.stats.bossWins || 0) + 1; S.stats.bossStageMax = Math.max(S.stats.bossStageMax || 0, b.stage + 1); if (flawless) S.stats.bossFlawless = (S.stats.bossFlawless || 0) + 1;
     B.gems = gems; B.flawless = flawless; bossSfx('win');
     setTimeout(() => bossSfx('chest'), 900);
@@ -193,27 +256,46 @@ function bossSfx(k) {
   } catch { /* */ }
 }
 
+// ---------- 🌟 prestiż = ewolucja
+let EVOLVE = null;
+function heroPrestige() {
+  const h = hero(); if (heroLv() < HERO_MAX) return toast(`Prestiż od ${HERO_MAX}. poziomu`);
+  if (!confirm(`Prestiż ${(h.pr || 0) + 1}? Poziom wraca do 1, punkty umiejętności się zerują (dostaniesz je z powrotem przy kolejnych poziomach), ekwipunek zostaje.\n\nStałe bonusy: +5% obrażeń, +10 ❤️, +10% doświadczenia, lepsze łupy. Bossowie też będą silniejsi.`)) return;
+  EVOLVE = { from: h.pr || 0, t: Date.now() };
+  h.pr = (h.pr || 0) + 1; h.xp = 0; h.sk = {}; h.mod = Date.now(); S.stats.prestige = Math.max(S.stats.prestige || 0, h.pr);
+  addItem('boost', 'xp2', 1, 'prestige-' + h.pr); save(); render();
+  setTimeout(() => { EVOLVE = null; celebrate(`🌟 Ewolucja! ${heroFormName()} · ${PR_TITLES[Math.min(6, h.pr)]}`, `Prestiż ${h.pr} · w nagrodę booster „Podwójne XP”`); confetti(260); render(); }, 2600);
+}
+const evolveHTML = () => EVOLVE ? `<div class="evolve-ov"><div class="evo-txt">Co?! Twój bohater ewoluuje!</div><div class="evo-stage"><div class="evo-old">${heroSVG('lg', EVOLVE.from)}</div><div class="evo-new">${heroSVG('lg')}</div></div></div>` : '';
 // ---------- widoki
 const hpBar = (v, max, cls) => `<div class="hpbar ${cls}"><i style="width:${Math.max(0, v / max * 100).toFixed(1)}%"></i><span>${Math.max(0, Math.round(v))} / ${max}</span></div>`;
 const heroBarHTML = () => { const L = heroLvAt(hero().xp), sp = skPoints();
-  return `<div class="card hero-bar row nowrap" data-go="#/hero">${heroSVG('sm')}<div class="grow"><b>Twój bohater · poz. ${L.lv}</b><div class="pbar"><i style="width:${(L.cur / L.need * 100).toFixed(1)}%"></i></div>
+  return `<div class="card hero-bar row nowrap" data-go="#/hero">${heroSVG('sm')}<div class="grow"><b>${heroFormName()} · poz. ${L.lv}${hero().pr ? ` · ★${hero().pr}` : ''}</b><div class="pbar"><i style="width:${(L.cur / L.need * 100).toFixed(1)}%"></i></div>
     <small class="muted">${sp ? `<b style="color:var(--accent)">${sp} ${plural(sp, 'punkt', 'punkty', 'punktów')} umiejętności do wydania!</b>` : 'ekwipunek · drzewko · kowal'}</small></div><span>›</span></div>`; };
 const chestSVG = () => `<svg viewBox="0 0 120 100"><defs><linearGradient id="chw" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#b45309"/><stop offset="1" stop-color="#78350f"/></linearGradient></defs>
   <g class="chest-lid"><path d="M14 40C14 18 34 10 60 10S106 18 106 40Z" fill="url(#chw)" stroke="#451a03" stroke-width="3"/><path d="M14 40H106" stroke="#fbbf24" stroke-width="5"/><path d="M54 12V40M66 12V40" stroke="#fbbf24" stroke-width="4"/></g>
   <rect x="14" y="40" width="92" height="50" rx="6" fill="url(#chw)" stroke="#451a03" stroke-width="3"/><path d="M54 40V90M66 40V90" stroke="#fbbf24" stroke-width="4"/><rect x="52" y="48" width="16" height="16" rx="3" fill="#fde047" stroke="#92400e" stroke-width="2.5"/></svg>`;
 ROUTES.boss = parts => {
   if (parts[1] !== 'fight' || !BOSS) {
-    const ds = S.decks.map(d => ({ d, b: deckBoss(d) })).sort((x, y) => (y.b.learned >= BOSS_REQ) - (x.b.learned >= BOSS_REQ) || y.b.learned - x.b.learned);
+    // 🗺️ mapa bossów: region świata + region każdej talii; ścieżka etapów (pokonane ✓, obecny, kolejne ukryte)
+    const regions = [{ id: 'world', name: '🌍 Świat – wszystkie talie', b: worldBoss(), req: WORLD_REQ }, ...S.decks.map(d => ({ id: d.id, name: d.name, b: deckBoss(d), req: BOSS_REQ }))]
+      .sort((x, y) => (y.b.learned >= y.req) - (x.b.learned >= x.req));
+    const node = (r, st) => { const cur = st === r.b.stage, done = st < r.b.stage, ok = r.b.learned >= r.req;
+      const bb = r.id === 'world' ? { ...r.b, ...(() => { const [name, , img] = WORLD_BOSSES[st % WORLD_BOSSES.length]; return { name, img, stage: st }; })() } : { ...r.b, stage: st, seed: hashStr(r.id) % 100000 + st * 7919 };
+      return `<div class="mnode${cur ? ' cur' : done ? ' done' : ' future'}${ok ? '' : ' sleep'}">${done || cur ? bossArt(bb) : '<span class="mq">?</span>'}<small>${done ? '✓' : 'Etap ' + (st + 1)}</small></div>`; };
     return { tab: 'arena', html: `
-    <div class="row nowrap"><h1 class="grow" style="margin:0">🐉 Bossowie</h1>${coinsHTML()}</div>
+    <div class="row nowrap"><h1 class="grow" style="margin:0">🗺️ Mapa bossów</h1>${coinsHTML()}</div>
     ${heroBarHTML()}
-    <p class="small muted">Każda talia ma swojego bossa. Walczysz fiszkami, które już znasz – zaległe powtórki liczą się do harmonogramu. Pokonany wraca silniejszy, a z każdego etapu wypada skrzynia z łupami.</p>
+    ${boostChips() ? `<div class="boost-row">${boostChips()}</div>` : ''}
     <div class="seg boss-mode"><button class="${BOSS_PICK.mode === 'flip' ? 'on' : ''}" data-act="boss-mode" data-m="flip">🃏 Fiszki</button><button class="${BOSS_PICK.mode === 'type' ? 'on' : ''}" data-act="boss-mode" data-m="type">⌨️ Wpisz · cios ×1,5</button></div>
-    <div class="boss-list">${ds.map(({ d, b }) => { const ok = b.learned >= BOSS_REQ;
-      return `<div class="card boss-row${ok ? '' : ' locked'}"><div class="boss-row-art">${bossArt(b)}</div><div class="grow"><div class="row nowrap"><b class="grow">${esc(b.name)}</b><span class="boss-lv">Etap ${b.stage + 1}</span></div>
-        <small class="muted">${esc(b.title)}</small>
-        <div class="boss-tags">${ok ? `<span>❤️ ${b.hp}</span><span>⚔️ ${b.atk}</span><span>🃏 ${b.len}</span>${b.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}` : `<span>🔒 budzi się przy ${BOSS_REQ} nauczonych fiszkach (masz ${b.learned})</span>`}</div>
-        ${ok ? `<button class="primary block" data-act="boss-start" data-id="${d.id}">⚔️ Walcz</button>` : `<div class="pbar"><i style="width:${b.learned / BOSS_REQ * 100}%"></i></div>`}</div></div>`; }).join('') || '<p class="muted">Dodaj talię z fiszkami, żeby obudzić pierwszego bossa.</p>'}</div>` };
+    ${regions.map(r => { const b = r.b, ok = b.learned >= r.req, from = Math.max(0, b.stage - 2);
+      return `<div class="card region${r.id === 'world' ? ' world' : ''}${ok ? '' : ' locked'}"><div class="row nowrap"><b class="grow">${esc(r.name)}</b><span class="small muted">${b.learned} nauczonych</span></div>
+        <div class="mpath">${Array.from({ length: b.stage - from + 4 }, (_, i) => node(r, from + i)).join('<i class="mline"></i>')}</div>
+        <div class="row nowrap region-cur"><div class="grow"><b>${esc(b.name)}</b> <span class="boss-lv">Etap ${b.stage + 1}</span><div class="small muted">${esc(b.desc)}</div>
+          <div class="boss-tags">${ok ? `<span>❤️ ~${b.hp}</span><span>⚔️ ${b.atk}</span><span>🃏 ${b.len}</span>${b.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}` : `<span>🔒 budzi się przy ${r.req} nauczonych fiszkach</span>`}</div></div>
+          ${ok ? `<button class="primary" data-act="boss-start" data-id="${r.id}">⚔️ Walcz</button>` : ''}</div>
+        ${ok ? '' : `<div class="pbar"><i style="width:${Math.min(100, b.learned / r.req * 100)}%"></i></div>`}</div>`; }).join('')}
+    <p class="small muted center">Boss skaluje się do siły bohatera – mocniejszy bohater wygrywa szybciej, ale żaden boss nie pada od jednego ciosu.</p>` };
   }
   const B = BOSS, b = B.b;
   if (B.phase !== 'fight') {
@@ -221,12 +303,13 @@ ROUTES.boss = parts => {
     return { tab: 'arena', focus: true, html: `
     <div class="card center boss-end ${won ? 'won' : 'lost'}">
       <div class="boss-stage ${won ? 'dead' : 'gloat'}">${bossArt(b)}${won ? '<div class="boss-boom"></div>' : ''}</div>
+      ${B.say?.txt ? `<div class="boss-say end">${esc(B.say.txt)}</div>` : ''}
       <h2 style="margin:6px 0">${won ? `🏆 ${esc(b.name)} pokonany!` : `💀 ${esc(b.name)} wygrywa…`}</h2>
       <p class="small muted">${B.ok} dobrych · ${B.bad} błędów · najlepsza seria ${B.best} · +${B.xp} XP bohatera${won && B.flawless ? ' · <b>bez straty ❤️</b>' : ''}</p>
       ${won ? `<div class="chest-wrap"><div class="chest">${chestSVG()}</div><div class="loot">${B.loot.map((it, i) => `<div class="loot-it" style="--d:${.9 + i * .25}s;--rc:${RARITY[it.r || 'rare'].color}">${lootHTML(it)}</div>`).join('')}</div></div>
         <p class="small">+${B.gems} 💎 za etap ${b.stage + 1}. Następny etap: dłuższa walka i mocniejsze ataki.</p>` : '<p class="small">+3 ✨ pyłu na pocieszenie. Ulepsz bohatera albo kup mikstury i spróbuj znowu.</p>'}
       ${(B.missed || []).length ? `<button class="block" data-act="boss-cram">🔁 Powtórz ${B.missed.length} ${plural(B.missed.length, 'fiszkę', 'fiszki', 'fiszek')}, których nie pamiętałeś</button>` : ''}
-      <div class="row" style="margin-top:10px"><button class="primary grow" data-act="boss-again">${won ? 'Następny etap ⚔️' : 'Spróbuj ponownie'}</button><button class="grow" data-go="#/hero">🧙 Bohater</button></div>
+      <div class="row" style="margin-top:10px"><button class="primary grow" data-act="boss-again">${won ? 'Następny etap ⚔️' : 'Spróbuj ponownie'}</button><button class="grow" data-go="#/boss">🗺️ Mapa</button><button class="grow" data-go="#/hero">🧙 Bohater</button></div>
     </div>` };
   }
   const c = bossCard(), v = c ? cardView(c) : { q: '', a: '' }, now = Date.now(), fx = B.fx && now - B.fx.t < 900 ? B.fx : null, fm = B.fxMe && now - B.fxMe.t < 900 ? B.fxMe : null, act = B.bossAct && now - B.bossAct.t < 900 ? B.bossAct : null;
@@ -234,6 +317,7 @@ ROUTES.boss = parts => {
   return { tab: 'arena', focus: true, html: `
   <div class="studybar"><button class="iconbtn" data-act="boss-quit">✕</button><div class="title">${esc(b.name)} · etap ${b.stage + 1}</div><span class="small muted">${B.i + 1}/${B.ids.length}</span></div>
   <div class="boss-fight${fm?.k === 'hit' ? ' shake-screen' : ''}">
+    ${B.say?.txt ? `<div class="boss-say" key="${B.say.t}">${esc(B.say.txt)}</div>` : ''}
     <div class="boss-top"><div class="boss-stage${fx ? ' hit' : ''}${fx?.crit ? ' crit' : ''}${act ? ' attack' : ''}">${bossArt(b)}${B.shield ? '<span class="boss-shield">🛡️</span>' : ''}${fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">−${fx.n}${fx.crit ? '!' : ''}</b><i class="slash"></i>` : ''}</div>
       <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : BOSS_ABIL[mv.k][0]} <b>${esc(mv.name)}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? 'w następnej turze!' : `za ${B.timer} tury`}</small></div></div>
     ${hpBar(B.hp, B.max, 'boss')}
@@ -253,14 +337,26 @@ ROUTES.boss = parts => {
 };
 // ---------- 🧙 ekran bohatera
 ROUTES.hero = () => {
-  const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), owned = Object.keys(GEAR).filter(ownsGear);
-  return { tab: 'arena', html: `
+  const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), owned = Object.keys(GEAR).filter(ownsGear), pr = h.pr || 0, line = CHAR_LINES[h.line] || CHAR_LINES.scholar;
+  return { tab: 'arena', html: `${evolveHTML()}
   <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🧙 Bohater</h1>${coinsHTML()}</div>
-  <div class="card center hero-card">${heroSVG('lg')}
-    <b style="font-size:20px">${esc(S.profile.nick || 'Bohater')} · poziom ${L.lv}</b>
-    <div class="pbar" style="margin:8px 0 4px"><i style="width:${(L.cur / L.need * 100).toFixed(1)}%"></i></div><small class="muted">${Math.round(L.cur)} / ${Math.round(L.need)} XP do poziomu ${L.lv + 1}</small>
+  <div class="card center hero-card pr-card-${Math.min(6, pr)}">${heroSVG('lg')}
+    <b style="font-size:20px">${esc(S.profile.nick || 'Bohater')} · poziom ${L.lv}${L.max ? ' (MAX)' : ''}</b>
+    <div class="small"><b style="color:var(--accent)">${heroFormName()}</b> · ${PR_TITLES[Math.min(6, pr)]}${pr ? ` · prestiż ${'★'.repeat(Math.min(5, pr))}${pr > 5 ? '+' + (pr - 5) : ''}` : ''}</div>
+    <div class="pbar" style="margin:8px 0 4px"><i style="width:${L.max ? 100 : (L.cur / L.need * 100).toFixed(1)}%"></i></div><small class="muted">${L.max ? 'Maksymalny poziom – czas na prestiż i ewolucję!' : `${Math.round(L.cur)} / ${Math.round(L.need)} XP do poziomu ${L.lv + 1}`}</small>
+    ${L.max ? '<button class="primary block prestige-btn" data-act="hero-prestige">🌟 Prestiż i ewolucja</button>' : ''}
     <div class="hero-stats"><span>❤️ <b>${st.hp}</b></span><span>⚔️ <b>×${st.atk.toFixed(2)}</b></span><span>🎯 <b>${Math.round(st.crit * 100)}%</b></span><span>🛡️ <b>${Math.round(st.def * 100)}%</b></span>${st.dodge ? `<span>💨 <b>${Math.round(st.dodge * 100)}%</b></span>` : ''}</div>
-    <button class="sm ghost" data-act="hero-look">🎲 Zmień wygląd</button></div>
+    <div class="evo-chain">${[0, 1, 2, 3].map(i => `<span class="${i <= heroForm() ? 'on' : ''}" title="${line.forms[i]}">${heroSVG('xs', i)}<small>${line.forms[i]}</small></span>`).join('<i>›</i>')}</div>
+    <small class="muted">Każdy prestiż to ewolucja w kolejną formę · od 4. prestiżu coraz mocniejsza aura</small></div>
+  <div class="card"><h2>🎭 Postać</h2>
+    <div class="seg gender-seg"><button class="${h.g === 'w' ? 'on' : ''}" data-act="hero-g" data-g="w">Kobieta</button><button class="${h.g === 'm' ? 'on' : ''}" data-act="hero-g" data-g="m">Mężczyzna</button></div>
+    <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const fake = { ...h, line: k }, img = heroImgId(fake, 0);
+      return `<button class="char${h.line === k ? ' on' : ''}" data-act="hero-line" data-k="${k}">${img ? `<img src="assets/fluent/${img}.webp" alt="">` : `<span class="char-cr">${creatureSVG(h.look, 'rare')}</span>`}<b>${l.icon} ${l.name}</b><small>${l.forms.join(' → ')}</small></button>`; }).join('')}</div>
+    ${h.line === 'beast' ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>
+  <div class="card"><h2>⏱️ Boostery</h2>
+    ${boostChips() ? `<div class="boost-row">${boostChips()}</div>` : '<p class="small muted" style="margin-top:0">Włączasz na 30 minut – jak „podwójne XP” w grach. Wypadają ze skrzyń i z prestiżu, można je też kupić.</p>'}
+    <div class="shop-grid">${Object.entries(BOOSTS).map(([k, x]) => `<div class="shop-it boost-it${boostOn(k) ? ' on' : ''}"><img class="gear-img" src="assets/fluent/${x.img}.webp" alt=""><b>${x.name}</b><small>${x.desc}</small>
+      <div class="row nowrap" style="gap:4px">${itemCount('boost', k) ? `<button class="sm primary" data-act="boost-on" data-k="${k}">Włącz (${itemCount('boost', k)})</button>` : ''}<button class="sm" data-act="boost-buy" data-k="${k}">${x.price} 💎</button></div></div>`).join('')}</div></div>
   <div class="card"><h2>🎒 Ekwipunek</h2>
     <div class="eq-slots">${['w', 'a', 'c'].map(s => { const id = h.eq[s], g = GEAR[id]; return `<div class="eq-slot" style="--rc:${g ? RARITY[g.r].color : '#94a3b8'}"><small>${SLOT_NAME[s]}</small>${g ? `${gearImg(id)}<b>${esc(g.name)}${s === 'w' && st.forge ? ` +${st.forge}` : ''}</b>` : '<span class="eq-empty">—</span>'}</div>`; }).join('')}</div>
     ${owned.length ? `<div class="gear-grid">${owned.map(id => { const g = GEAR[id], on = h.eq[g.slot] === id; return `<button class="gear${on ? ' on' : ''}" style="--rc:${RARITY[g.r].color}" data-act="hero-eq" data-id="${id}">${gearImg(id)}<b>${esc(g.name)}</b><small>${[g.atk && `⚔️ +${g.atk}%`, g.hp && `❤️ +${g.hp}`, g.def && `🛡️ ${g.def}%`, g.crit && `🎯 +${g.crit}%`, g.desc].filter(Boolean).join(' · ')}</small><i>${on ? '✓ założone' : 'załóż'}</i></button>`; }).join('')}</div>` : '<p class="small muted">Pokonuj bossów – przedmioty wypadają ze skrzyń. Podstawowe kupisz u kowala.</p>'}</div>
@@ -298,10 +394,15 @@ Object.assign(ACTIONS, {
   'boss-pot': el => usePotion(el.dataset.k),
   'boss-quit': () => { if (confirm('Uciec z walki? Boss zostaje, a odpowiedzi do tej pory są zapisane.')) { BOSS = null; go('#/boss'); } },
   'boss-again': () => { const d = BOSS?.b.deck; BOSS = null; if (d) bossStart(d); else go('#/boss'); },
-  'boss-cram': () => { const ids = BOSS.missed || [], d = BOSS.b.deck; BOSS = null; SESSION = null; go(`#/study/${d}/flip?cram=list&ids=${ids.join(',')}`); },
+  'boss-cram': () => { const ids = BOSS.missed || [], d = BOSS.b.deck; BOSS = null; SESSION = null; go(`#/study/${d === 'world' ? 'all' : d}/flip?cram=list&ids=${ids.join(',')}`); },
   'hero-eq': el => { const g = GEAR[el.dataset.id], h = hero(); if (!g) return; h.eq[g.slot] = h.eq[g.slot] === el.dataset.id ? undefined : el.dataset.id; h.mod = Date.now(); save(); render(); },
   'hero-sk': el => { const h = hero(); if (skPoints() < 1) return; h.sk[el.dataset.id] = 1; h.mod = Date.now(); S.stats.skills = Object.keys(h.sk).length; if (SKILLS.some(b => b.nodes.every(([id]) => h.sk[id]))) S.stats.skillBranch = 1; save(); toast('🌳 Nowa umiejętność!'); render(); },
   'hero-look': () => { const h = hero(); h.look = 1 + (Math.random() * 1e6 | 0); h.mod = Date.now(); save(); render(); },
+  'hero-line': el => { const h = hero(); h.line = el.dataset.k; h.mod = Date.now(); save(); render(); },
+  'hero-g': el => { const h = hero(); h.g = el.dataset.g; h.mod = Date.now(); save(); render(); },
+  'hero-prestige': () => heroPrestige(),
+  'boost-on': el => activateBoost(el.dataset.k),
+  'boost-buy': el => { const k = el.dataset.k; if (!spend(BOOSTS[k].price, 'boost')) return; addItem('boost', k, 1); toast(`⏱️ ${BOOSTS[k].name} w ekwipunku – włącz, kiedy chcesz`); render(); },
   'hero-forge': () => { const h = hero(), w = h.eq.w, f = h.forge[w] || 0; if (!w || f >= 5) return; if (!spend((f + 1) * 120, 'forge')) return; h.forge[w] = f + 1; h.mod = Date.now(); save(); toast(`🔨 ${GEAR[w].name} +${f + 1}`); render(); },
   'hero-buy-pot': el => { const p = POTIONS[el.dataset.k]; if (!spend(p.price, 'potion')) return; addItem('potion', el.dataset.k, 1); toast(`🧪 ${p.name} w ekwipunku`); render(); },
   'hero-buy-gear': el => { const id = el.dataset.id; if (ownsGear(id) || !spend(SHOP_GEAR[id], 'gear')) return; addItem('gear', id, 1); toast(`🎒 ${GEAR[id].name}`); render(); },
@@ -310,7 +411,7 @@ Object.assign(ACTIONS, {
 if (typeof HUBS !== 'undefined' && !HUBS.arena.some(x => x[0] === 'boss')) { HUBS.arena.splice(1, 0, ['boss', '🐉', 'Bossowie']); HUB_OF.boss = 'arena'; HUB_OF.hero = 'arena'; }
 // karta na Starcie: najbliższy boss
 function bossHomeHTML() {
-  const best = S.decks.map(d => deckBoss(d)).filter(b => b.learned >= BOSS_REQ).sort((a, b) => a.stage - b.stage)[0];
+  const best = [...(learnedAll() >= WORLD_REQ ? [worldBoss()] : []), ...S.decks.map(d => deckBoss(d)).filter(b => b.learned >= BOSS_REQ)].sort((a, b) => a.stage - b.stage)[0];
   if (!best) return '';
   return `<div class="card row nowrap boss-home" data-go="#/boss"><span class="boss-home-ic">${bossArt(best)}</span><div class="grow"><b>🐉 ${esc(best.name)} · etap ${best.stage + 1}</b>
     <div class="small muted">${esc(best.title)} – pokonaj go powtórkami</div></div><span>›</span></div>`;

@@ -1666,3 +1666,47 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   .sk-branch { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; } .sk-head { grid-column: 1 / -1; text-align: left; font-size: 14px; } .sk-line { display: none; }
   .sk { min-height: 64px; }
 }
+
+/* 🗺️ mapa bossów */
+.region { overflow: hidden; } .region.world { background: linear-gradient(135deg, color-mix(in srgb, #7c3aed 14%, var(--card)), var(--card) 60%); }
+.mpath { display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 14px 4px 6px; scrollbar-width: none; } .mpath::-webkit-scrollbar { display: none; }
+.mnode { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; width: 56px; }
+.mnode .boss-art { width: 48px; height: 48px; } .mnode small { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+.mnode.done .boss-art { filter: grayscale(.8) opacity(.6); } .mnode.done small { color: #16a34a; }
+.mnode.cur { width: 84px; } .mnode.cur .boss-art { width: 78px; height: 78px; animation: bossIdle 2.4s ease-in-out infinite; filter: drop-shadow(0 0 10px #ef444488); } .mnode.cur small { color: #dc2626; }
+.mnode.sleep .boss-art { filter: grayscale(1) brightness(.6); animation: none; }
+.mq { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--card2); color: var(--muted); font-weight: 900; font-size: 20px; border: 2px dashed color-mix(in srgb, var(--muted) 40%, transparent); }
+.mline { flex: 1 0 18px; height: 4px; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--card2) 0 6px, transparent 6px 10px); margin-bottom: 16px; }
+.region-cur { gap: 10px; align-items: flex-start; margin-top: 4px; } .region-cur .grow { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .region-cur > button { align-self: center; }
+.boss-art.world { display: grid; place-items: center; } .boss-art.world img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 8px 14px rgba(0,0,0,.3)); }
+.boost-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; } .boost-chip { padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 800; color: #fff; background: linear-gradient(90deg, #f59e0b, #ef4444); animation: pulse2 2s ease-in-out infinite; }
+.boost-it.on { box-shadow: 0 0 0 3px #f59e0b; }
+/* 💬 komentarze bossa */
+.boss-say { position: relative; margin: 0 auto 6px; max-width: 90%; width: max-content; padding: 8px 14px; border-radius: 16px; background: #1f2937; color: #fff; font-size: 14px; font-weight: 600; text-align: center; animation: sayIn .35s cubic-bezier(.2,1.5,.4,1); }
+.boss-say::after { content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); border: 8px solid transparent; border-top-color: #1f2937; border-bottom: 0; }
+.boss-say.end { margin-bottom: 10px; }
+@keyframes sayIn { from { opacity: 0; transform: translateY(8px) scale(.85); } to { opacity: 1; transform: none; } }
+/* 🧙 postacie, aury prestiżu, ewolucja */
+.hero-img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 8px 12px rgba(0,0,0,.22)); position: relative; z-index: 1; }
+.hero-fig > span { z-index: 2; }
+.hero-aura { position: absolute; inset: -12%; border-radius: 50%; z-index: 0; pointer-events: none; }
+.pr-1 .hero-aura { background: radial-gradient(circle, #e2e8f0aa 30%, transparent 68%); }
+.pr-2 .hero-aura { background: radial-gradient(circle, #fde68aaa 30%, transparent 68%); }
+.pr-3 .hero-aura { background: radial-gradient(circle, #f9a8d4aa 25%, #a78bfa55 50%, transparent 70%); animation: auraPulse 2.4s ease-in-out infinite; }
+.pr-4 .hero-aura, .pr-5 .hero-aura, .pr-6 .hero-aura { background: conic-gradient(#f472b6, #facc15, #34d399, #38bdf8, #a78bfa, #f472b6); filter: blur(10px); opacity: .7; animation: raySpin 6s linear infinite; }
+.pr-6 .hero-aura { opacity: .95; filter: blur(6px); }
+@keyframes auraPulse { 50% { transform: scale(1.08); opacity: .8; } }
+.evo-chain { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 14px 0 4px; } .evo-chain > i { color: var(--muted); font-style: normal; }
+.evo-chain span { display: flex; flex-direction: column; align-items: center; opacity: .35; filter: grayscale(1); } .evo-chain span.on { opacity: 1; filter: none; } .evo-chain small { font-size: 10px; }
+.prestige-btn { margin-top: 10px; background: linear-gradient(90deg, #f59e0b, #ec4899, #8b5cf6); animation: pulse2 1.8s ease-in-out infinite; }
+.gender-seg { display: flex; width: 100%; margin-bottom: 10px; } .gender-seg button { flex: 1; }
+.char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.char { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; min-height: 0; border-radius: 16px; background: var(--card2); border: 2px solid transparent; font: inherit; color: inherit; text-align: center; }
+.char.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--card)); } .char img, .char .char-cr { width: 64px; height: 64px; object-fit: contain; display: block; }
+.char small { font-size: 10.5px; color: var(--muted); line-height: 1.25; }
+.evolve-ov { position: fixed; inset: 0; z-index: 130; background: radial-gradient(circle, #312e81, #0f172a); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
+.evo-txt { font-size: 22px; font-weight: 800; animation: pop .5s; } .evo-stage { position: relative; width: 200px; height: 200px; } .evo-stage > div { position: absolute; inset: 0; display: grid; place-items: center; }
+.evo-old { animation: evoOld 2.4s ease-in forwards; } .evo-new { opacity: 0; animation: evoNew 2.4s ease-out forwards; }
+@keyframes evoOld { 0%, 20% { filter: none; opacity: 1; } 30%, 40%, 50%, 60%, 70% { filter: brightness(6); } 35%, 45%, 55%, 65% { filter: none; } 80% { filter: brightness(8); opacity: 1; } 100% { opacity: 0; transform: scale(.6); } }
+@keyframes evoNew { 0%, 78% { opacity: 0; transform: scale(1.4); filter: brightness(8); } 100% { opacity: 1; transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .evo-old, .evo-new, .hero-aura, .boost-chip, .prestige-btn, .mnode.cur .boss-art { animation: none !important; } .evo-old { display: none; } .evo-new { opacity: 1; } }

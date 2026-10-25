@@ -63,7 +63,7 @@ function eggFinish(E, ok, why) {
     if (E.golden && CR_RANK[r] < 2) r = Math.random() < .25 ? 'legendary' : 'epic';
     rec.cr = { s: seed, r, n: creatureName(seed), no: eggs().filter(x => x.cr).length + 1 };
     if (Math.random() * 100 < EGG_BONUS_ST) { const p = eggPrize(E.min); rec.st = p.id; addItem('sticker', p.id, 1, 'egg-' + E.id); }
-    rec.gems = t.gems;
+    rec.gems = t.gems * (typeof gemMul === 'function' ? gemMul() : 1);
     if (!S.wallet.some(w => w.id === 'egg-' + E.id)) S.wallet.push({ id: 'egg-' + E.id, n: rec.gems, why: 'egg', t: now });
   }
   if (!eggs().some(x => x.id === rec.id)) eggs().push(rec);
