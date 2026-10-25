@@ -179,6 +179,8 @@ function heroSVG(cls = '', pr, h = hero()) {
     ${hd ? `<span class="hf-h">${gearImg(hd)}</span>` : ''}${w ? `<span class="hf-w">${gearImg(w)}</span>` : ''}${a ? `<span class="hf-a">${gearImg(a)}</span>` : ''}${c ? `<span class="hf-c">${gearImg(c)}</span>` : ''}</div>`;
 }
 
+// ikonka bohatera (sama postać, bez ekwipunku) – zamiast ogólnego 🧙
+const heroIcon = (h = hero()) => { const l = heroLine(h), p = h.pr || 0; return `<span class="hero-ic">${l === 'beast' ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: '' }) : heroArt(l, heroForm(h, p), h.g === 'm' ? 'm' : 'w')}</span>`; };
 // ---------- 📈 doświadczenie: z nauki (nowe fiszki, rozdział, cała talia) i z walk
 function giveXP(n, why) {
   const before = heroLv(); hero().xp += Math.round(n); hero().mod = Date.now(); S.stats.heroLv = heroLv();
@@ -247,7 +249,7 @@ ROUTES.hero = () => {
         <div class="row nowrap" style="gap:4px">${itemCount('boost', k) ? `<button class="sm primary" data-act="boost-on" data-k="${k}">Włącz (${itemCount('boost', k)})</button>` : ''}<button class="sm" data-act="boost-buy" data-k="${k}">${x.price} 💎</button></div></div>`).join('')}</div></div>`,
   };
   return { tab: 'arena', html: `${evolveHTML()}
-  <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🧙 Bohater</h1>${coinsHTML()}</div>
+  <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow row nowrap" style="margin:0;gap:8px">${heroIcon()} Bohater</h1>${coinsHTML()}</div>
   <div class="card center hero-card pr-card-${Math.min(6, pr)}">${heroSVG('lg')}
     <b style="font-size:20px">${esc(S.profile.nick || 'Bohater')} · poziom ${L.lv}${L.max ? ' (MAX)' : ''}</b>
     <div class="small"><b style="color:var(--accent)">${heroFormName()}</b> · ${PR_TITLES[Math.min(6, pr)]}${pr ? ` · prestiż ${'★'.repeat(Math.min(5, pr))}${pr > 5 ? '+' + (pr - 5) : ''}` : ''}</div>

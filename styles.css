@@ -1862,3 +1862,8 @@ img.charpx { width: 100%; height: 100%; object-fit: contain; image-rendering: pi
 .hero-tabs { display: grid; grid-template-columns: repeat(4, 1fr); } .hero-tabs button { white-space: normal; line-height: 1.15; font-size: 12.5px; min-height: 44px; padding: 6px 2px; }
 .bf .pot-bar button > svg.potion, .bf .pot-bar button > img.potion { width: 34px !important; height: 34px !important; display: block; margin: auto; }
 .bug { width: 56px; height: 56px; }
+.hero-ic { display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; vertical-align: -.3em; } .hero-ic img, .hero-ic svg { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+h1 .hero-ic { width: 40px; height: 40px; }
+/* hełm niżej, na samej głowie; talizman jako mała przypinka z boku, nie na twarzy */
+.hf-h { width: 50%; height: 50%; left: 25%; top: -11%; }
+.hf-c { width: 24%; height: 24%; left: auto; right: 2%; top: 4%; }

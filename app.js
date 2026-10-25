@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '102';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '103';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -516,7 +516,7 @@ function answer(g) {
 function undo() {
   const s = SESSION, u = s && s.undo; if (!u) return;
   const c = S.cards.find(x => x.id === u.cardId); if (!c) return;
-  if (u.sus) { delete c.sus; touch(c); s.undo = null; s.card = c; s.shown = false; s.shownAt = Date.now(); save(); return render(); }
+  if (u.sus) { delete c.sus; c.srs = u.srs; touch(c); s.undo = null; s.card = c; s.shown = false; s.shownAt = Date.now(); save(); return render(); }
   c.srs = u.srs; touch(c); S.log = S.log.filter(l => l.id !== u.logId); s.done--; s.undo = null;
   s.card = c; s.shown = false; s.peek = false; s.editHint = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
   save(); render();
@@ -740,6 +740,7 @@ function viewDeck(id, q) {
       ${NOTE_SEL ? '' : `<button class="sm primary" data-go="#/add?deck=${id}">➕ Dodaj</button>`}</div>
     ${NOTE_SEL ? `<div class="selbar row nowrap"><span class="grow small"><b>${NOTE_SEL.size}</b> zaznaczonych</span>
       <button class="sm" data-act="note-selall" data-id="${id}">${NOTE_SEL.size === notes.length ? 'Odznacz' : 'Wszystkie'}</button>
+      <button class="sm" data-act="note-selsus" ${NOTE_SEL.size ? '' : 'disabled'} title="Zaznaczone fiszki znikną z powtórek, ale liczą się jako nauczone">✓ Opanowane</button>
       <button class="sm danger-fill" data-act="note-seldel" ${NOTE_SEL.size ? '' : 'disabled'}>🗑 Usuń</button></div>` : ''}
     <div class="spacer"></div>
     <input id="note-search" type="search" placeholder="Szukaj…">
@@ -935,7 +936,7 @@ function viewStudy(deckId, mode, q) {
 const SUS_NAME = { known: 'nauczona – bez powtórek', skip: 'niepotrzebna' };
 function suspendCard(k) {
   const s = SESSION, c = s?.card; if (!c) return;
-  s.undo = { cardId: c.id, sus: true }; c.sus = k; touch(c); save();
+  s.undo = { cardId: c.id, sus: true, srs: c.srs }; c.sus = k; if (k === 'known' && c.srs.state === 'new') c.srs = { ...c.srs, state: 'review', due: Date.now() + 365 * DAY, ivl: 365, reps: 1 }; touch(c); save();
   toast(k === 'known' ? '✓ Oznaczona jako nauczona – nie wróci na powtórki' : '🚫 Karta pominięta – nie wróci na naukę', 2200);
   s.lastNote = c.noteId; nextCard(); render();
 }
@@ -1791,7 +1792,7 @@ const ACTIONS = {
     el.classList.add('flip-out'); setTimeout(turn, 160);
   },
   'card-sus': el => suspendCard(el.dataset.k),
-  'sus-restore': el => { let n = 0; S.cards.forEach(c => { if (c.deckId === el.dataset.id && c.sus) { delete c.sus; touch(c); n++; } }); save(); toast(`↩️ Przywrócono ${n} ${plural(n, 'kartę', 'karty', 'kart')}`); render(); },
+  'sus-restore': el => { let n = 0; S.cards.forEach(c => { if (c.deckId === el.dataset.id && c.sus) { delete c.sus; if (c.srs.due > Date.now() + 300 * DAY) c.srs = { ...c.srs, due: Date.now(), ivl: Math.min(c.srs.ivl, 30) }; touch(c); n++; } }); save(); toast(`↩️ Przywrócono ${n} ${plural(n, 'kartę', 'karty', 'kart')}`); render(); },
   star: () => {
     const n = SESSION?.card && noteById(SESSION.card.noteId); if (!n) return;
     n.star = !n.star; touch(n); save(); toast(n.star ? '⭐ Oznaczono – znajdziesz ją w „Oznaczone”' : 'Usunięto gwiazdkę', 1600); render();
@@ -2033,6 +2034,11 @@ Object.assign(ACTIONS, {
   'note-selmode': () => { NOTE_SEL = NOTE_SEL ? null : new Set(); render(); },
   'note-sel': el => { const id = el.dataset.id; NOTE_SEL.has(id) ? NOTE_SEL.delete(id) : NOTE_SEL.add(id); render(); },
   'note-selall': el => { const ids = S.notes.filter(n => n.deckId === el.dataset.id).map(n => n.id); NOTE_SEL = NOTE_SEL.size === ids.length ? new Set() : new Set(ids); render(); },
+  'note-selsus': () => {
+    const ids = NOTE_SEL; let n = 0;
+    S.cards.forEach(c => { if (ids.has(c.noteId) && !c.sus) { c.sus = 'known'; if (c.srs.state === 'new') c.srs = { ...c.srs, state: 'review', due: Date.now() + 365 * DAY, ivl: 365, reps: 1 }; touch(c); n++; } });
+    NOTE_SEL = null; save(); toast(`✓ ${n} ${plural(n, 'karta opanowana', 'karty opanowane', 'kart opanowanych')} – bez powtórek. Przywrócisz je w tej talii.`, 3500); render();
+  },
   'note-seldel': () => {
     const ids = [...NOTE_SEL]; if (!ids.length) return;
     if (ids.length > 1 && !confirm(`Usunąć ${ids.length} ${plural(ids.length, 'fiszkę', 'fiszki', 'fiszek')}? (Możesz cofnąć albo przywrócić z kosza.)`)) return;

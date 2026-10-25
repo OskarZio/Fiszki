@@ -6,7 +6,7 @@
    Cofnięcie do poprzedniego układu: gałąź „backup-przed-ukladem” w repozytorium. */
 
 HUBS.home = [['', '📚', 'Talie'], ['methods', '📖', 'Metody'], ['calendar', '📅', 'Terminarz'], ['add', '➕', 'Dodaj']];
-HUBS.arena = [['boss', '🐉', 'Bossowie'], ['battles', '⚔️', 'Bitwy']];
+HUBS.arena = [['boss', '🐉', 'Bossowie'], ['coop', '👥', 'Z kolegą'], ['battles', '⚔️', 'Bitwy']];
 HUBS.friends = [['rank', '🏆', 'Ranking'], ['inbox', '💬', 'Czat']];
 HUBS.profile = [['me', '👤', 'Profil'], ['quests', '📋', 'Wyzwania'], ['shop', '💎', 'Sklep'], ['inv', '🎒', 'Kolekcja']];
 Object.assign(HUB_OF, { '': 'home', topics: 'home', methods: 'home', calendar: 'home', add: 'home', train: 'home', boss: 'arena', hero: 'arena', battles: 'arena', battle: 'arena', show: 'arena',

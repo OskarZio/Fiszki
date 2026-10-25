@@ -156,3 +156,6 @@ Object.assign(ACTIONS, {
   'coop-share': el => { const link = el.dataset.link, txt = `Chodź bić hydrę w Fiszkach! Kod lobby: ${COOP.code}`; if (navigator.share) navigator.share({ title: 'Fiszki – lobby', text: txt, url: link }).catch(() => {}); else { navigator.clipboard?.writeText(`${txt} ${link}`); toast('📋 Skopiowano zaproszenie'); } },
 });
 HUB_OF.coop = 'arena';
+// pasek sekcji Przygody nad lobby
+const coopRoute0 = ROUTES.coop;
+ROUTES.coop = (...a) => { const v = coopRoute0(...a); return !v || v.focus ? v : { ...v, html: (typeof hubNav === 'function' ? hubNav('arena', 'coop') : '') + stripBack(v.html.replace('<button class="iconbtn" data-go="#/boss">‹</button>', '')) }; };

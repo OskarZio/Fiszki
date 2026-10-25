@@ -403,7 +403,8 @@ function setupSheetHTML() {
     <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : '<span>⏱️ bez limitu</span>'}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
     ${b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => `<button class="${BOSS_PICK.mode === k ? 'on' : ''}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>cios ${m.mul}</small></button>`).join('')}</div>
       <p class="small muted center" style="margin:4px 0 8px">${MODES[BOSS_PICK.mode].desc} · nagrody ×${String(MODE_REWARD[BOSS_PICK.mode]).replace('.', ',')}</p>
-      <button class="primary block boss-go" data-act="boss-start" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}" ${lives().n ? '' : 'disabled'}>${lives().n ? '⚔️ Walcz' : '🖤 Brak serc'}</button>`
+      <button class="primary block boss-go" data-act="boss-start" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}" ${lives().n ? '' : 'disabled'}>${lives().n ? '⚔️ Walcz sam' : '🖤 Brak serc'}</button>
+      <button class="block" data-go="#/coop">👥 Walcz z kolegą (lobby – Hydra)</button>`
     : `<div class="lock-box"><b>🔒 ${b.lockMsg}</b><div class="pbar"><i style="width:${Math.min(100, b.learned / b.need * 100)}%"></i></div><small class="muted">${b.learned}/${b.need}</small></div>
       ${learnIds.length && d ? `<button class="primary block" data-go="#/study/${d.id}/flip?all=1&only=${learnIds.join(',')}">📖 Naucz się rozdziału (${learnIds.length} nowych)</button>` : ''}`}
   </div>`;
@@ -490,7 +491,7 @@ function endView() {
     <p class="small">${msg}</p>
     ${chest}
     ${B.missed.length ? `<button class="block" data-act="boss-cram">🔁 Powtórz ${B.missed.length} ${plural(B.missed.length, 'fiszkę', 'fiszki', 'fiszek')}, których nie pamiętałeś</button>` : ''}
-    <div class="row" style="margin-top:10px">${B.coop ? '<button class="primary grow" data-go="#/coop">👥 Lobby</button>' : `<button class="primary grow" data-act="boss-again">${won ? 'Dalej ⚔️' : 'Spróbuj ponownie'}</button>`}<button class="grow" data-act="boss-map">🗺️ Mapa</button><button class="grow" data-go="#/hero">🧙 Bohater</button></div>
+    <div class="row" style="margin-top:10px">${B.coop ? '<button class="primary grow" data-go="#/coop">👥 Lobby</button>' : `<button class="primary grow" data-act="boss-again">${won ? 'Dalej ⚔️' : 'Spróbuj ponownie'}</button>`}<button class="grow" data-act="boss-map">🗺️ Mapa</button><button class="grow" data-go="#/hero">${heroIcon()} Bohater</button></div>
     ${livesHTML()}
   </div>` };
 }

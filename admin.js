@@ -61,7 +61,7 @@ viewHome = function (...a) {
 
 // ---------- 🔄 resety własnego postępu w grze
 const RESETS = {
-  hero: ['🧙 Bohater', 'poziom, doświadczenie, drzewka, ekwipunek, mikstury, boostery, serca (postać i płeć zostają)', () => {
+  hero: ['🦸 Bohater', 'poziom, doświadczenie, drzewka, ekwipunek, mikstury, boostery, serca (postać i płeć zostają)', () => {
     const h = hero(), keep = { line: h.line, g: h.g, look: h.look }; S.hero = { ...HERO_DEF(), ...keep, mod: Date.now() };
     S.items = S.items.filter(i => !['gear', 'potion', 'boost'].includes(i.kind)); delete S.stats.heroLv; delete S.stats.prestige; delete S.stats.skills; delete S.stats.skillBranch; }],
   boss: ['🐉 Bossowie', 'pokonane rozdziały i finały, boss świata i kategorii', () => {
