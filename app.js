@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '101';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '102';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -425,7 +425,7 @@ function saveSess() {
   const s = SESSION; if (!s?.key) return;
   try {
     if (!s.card) return localStorage.removeItem(SESS_KEY);   // skończona – nie ma czego wznawiać
-    localStorage.setItem(SESS_KEY, JSON.stringify({ key: s.key, hash: location.hash, deckId: s.deckId, mode: s.mode, all: s.all, cram: s.cram, done: s.done,
+    localStorage.setItem(SESS_KEY, JSON.stringify({ key: s.key, hash: location.hash, deckId: s.deckId, mode: s.mode, all: s.all, cram: s.cram, done: s.done, only: s.only ? [...s.only] : null,
       cardId: s.card.id, shown: !!s.shown, timeMs: s.timeMs || 0, t: Date.now() }));
   } catch { /* */ }
 }
@@ -434,15 +434,15 @@ const dropSess = () => { try { localStorage.removeItem(SESS_KEY); } catch { /* *
 function restoreSess(key) {
   const j = loadSess(); if (!j || j.key !== key) return false;
   const card = S.cards.find(c => c.id === j.cardId);
-  SESSION = { all: j.all, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
+  SESSION = { all: j.all, only: j.only ? new Set(j.only) : null, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
     done: j.done || 0, timeMs: j.timeMs || 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: Date.now() };
   if (card && (!SESSION.cram || SESSION.cram[0] === card.id)) { SESSION.card = card; SESSION.shown = !!j.shown && j.mode === 'flip'; }
   else nextCard();
   return true;
 }
 
-function startSession(deckId, mode, cramIds = null, all = false) {
-  SESSION = { all,
+function startSession(deckId, mode, cramIds = null, all = false, only = null) {
+  SESSION = { all, only: only ? new Set(only) : null,
     key: `${deckId}/${mode}/${cramIds ? 'cram' : ''}`, deckId, mode, cram: cramIds ? shuffle([...cramIds]) : null,
     done: 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: 0,
   };
@@ -459,7 +459,7 @@ const LEARN_OPEN_MAX = 10;
 function pickNext(sess) {
   if (sess.cram) return S.cards.find(c => c.id === sess.cram[0]) || null;
   const now = Date.now();
-  const pool = S.cards.filter(c => !c.sus && (sess.deckId === 'all' || c.deckId === sess.deckId));
+  const pool = S.cards.filter(c => !c.sus && (sess.deckId === 'all' || c.deckId === sess.deckId) && (!sess.only || sess.only.has(c.id)));
   const choose = arr => arr.find(c => c.noteId !== sess.lastNote) || arr[0];
   const byDue = (a, b) => a.srs.due - b.srs.due;
   const lrn = pool.filter(c => isLearning(c) && c.srs.due <= now).sort(byDue);
@@ -525,6 +525,7 @@ function undo() {
 const hiddenNew = deckId => deckCounts(deckId, true).nw - deckCounts(deckId).nw;
 function sessionRemaining(s) {
   if (s.cram) return s.cram.length;
+  if (s.only) { const eod = addDays(dayStart(), 1); return S.cards.filter(c => s.only.has(c.id) && !c.sus && (c.srs.state === 'new' || c.srs.due < eod)).length; }
   const k = deckCounts(s.deckId, s.all); return k.total;
 }
 
@@ -827,7 +828,7 @@ const sessLiveMs = s => (s.timeMs || 0) + (s.card ? Math.min(60000, Date.now() -
 // fiszki oznaczone gwiazdką (⭐ = „cięższe”) – gwiazdka jest na notatce, więc dotyczy obu kierunków
 const starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && noteById(c.noteId)?.star);
 function viewStudy(deckId, mode, q) {
-  const all = q.get('all') === '1', cq = q.get('cram') || '', key = `${deckId}/${mode}/${cq}${cq === 'list' ? ':' + idHash(q.get('ids') || '') : ''}${all ? '/all' : ''}`;
+  const all = q.get('all') === '1', cq = q.get('cram') || '', only = q.get('only') || '', key = `${deckId}/${mode}/${cq}${cq === 'list' ? ':' + idHash(q.get('ids') || '') : ''}${all ? '/all' : ''}${only ? '/only:' + idHash(only) : ''}`;
   if (!SESSION || SESSION.key !== key) {
     let cram = null;
     if (q.get('cram') === 'hard') cram = difficultCards().filter(c => deckId === 'all' || c.deckId === deckId).map(c => c.id);
@@ -835,7 +836,7 @@ function viewStudy(deckId, mode, q) {
     else if (q.get('cram') === 'star') cram = starredCards(deckId).map(c => c.id);
     else if (q.get('cram') === 'img') cram = imageCards(deckId).map(c => c.id);
     else if (q.get('cram') === 'list') cram = (q.get('ids') || '').split(',').filter(Boolean);
-    if (!restoreSess(key)) { startSession(deckId, mode, cram, all); SESSION.key = key; }
+    if (!restoreSess(key)) { startSession(deckId, mode, cram, all, only ? only.split(',') : null); SESSION.key = key; }
   }
   const s = SESSION, c = s.card;
   onMount(saveSess);
@@ -854,7 +855,7 @@ function viewStudy(deckId, mode, q) {
   </div>
   ${progress(s.done / Math.max(1, s.done + rem))}
   <div class="row small muted study-meta" style="margin-top:6px"><span class="grow">Zrobione: ${s.done} · ⏱ <span id="sess-time">${fmtClock(sessLiveMs(s))}</span></span>
-    ${s.cram ? `<span>Zostało: ${rem}</span>` : countsHTML(deckCounts(deckId, s.all))}
+    ${s.cram || s.only ? `<span>Zostało: ${rem}</span>` : countsHTML(deckCounts(deckId, s.all))}
     ${s.undo ? '<button class="ghost sm" data-act="undo">↶ Cofnij</button>' : ''}</div>`;
 
   if (!c) {
