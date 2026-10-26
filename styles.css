@@ -1907,3 +1907,26 @@ h1 .hero-ic { width: 40px; height: 40px; }
 .mates { gap: 10px; } .feat-list { gap: 8px; } .reset-list { gap: 12px; }
 .hero-tabs { gap: 6px; } .hero-card .evo-chain { margin-top: 18px; gap: 6px; }
 @media (min-width: 700px) { .gear-grid, .shop-grid, .char-grid { gap: 14px; } .card + .card { margin-top: 14px; } }
+/* ⚔️ walka: więcej powietrza, karta nie rozpycha się na pusto */
+.bf { gap: 14px; max-width: 680px; margin: 0 auto; }
+.bf-top { gap: 8px; } .bf-boss { gap: 16px; margin-bottom: 4px; }
+.bf .boss-say { margin-bottom: 6px; }
+.bf .think-bar { margin-top: 2px; }
+.bf .boss-me { gap: 12px; padding: 4px 0; } .bf .boss-me .hero-fig.xs { width: 48px; height: 48px; flex: none; }
+.bf .boss-q { flex: 0 1 auto; min-height: 130px; padding: 20px; }
+.bf .boss-log { margin: 2px 0; }
+.bf .abcd-grid { gap: 10px !important; } .bf .abcd { padding: 12px 14px; min-height: 54px; }
+.bf-bottom { padding-top: 6px; gap: 12px; }
+.bf .pot-bar { gap: 10px; }
+@media (min-width: 700px) { .bf { gap: 16px; padding-bottom: 20px; } .bf .boss-q { min-height: 150px; } }
+@media (max-width: 699px) { .bf .boss-q { flex: 1 1 auto; } }
+/* 🗼 błogosławieństwa: karty z odstępami */
+.bless { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0 4px; }
+.bless button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 10px; min-height: 0; border-radius: 16px; background: var(--card2); border: 2px solid transparent; font: inherit; color: inherit; text-align: center; }
+.bless button:hover { border-color: var(--accent); } .bless button span { font-size: 30px; } .bless button b { font-size: 14px; } .bless button small { font-size: 12px; color: var(--muted); line-height: 1.3; }
+.bless button.epic { border-color: color-mix(in srgb, #ec4899 55%, transparent); background: radial-gradient(circle at 50% 20%, color-mix(in srgb, #ec4899 14%, var(--card2)), var(--card2) 70%); }
+.bless button em { font-style: normal; font-size: 10px; font-weight: 800; letter-spacing: .05em; color: #ec4899; }
+.tower-hp { margin: 10px 0 4px; }
+.boss-q.parry, .parry-tag { } .parry-tag { background: #fee2e2 !important; color: #991b1b !important; }
+.parry-bar { height: 6px; margin: 6px 8px 0; border-radius: 99px; background: rgba(153,27,27,.18); overflow: hidden; } .parry-bar i { display: block; height: 100%; background: linear-gradient(90deg, #ef4444, #f97316); transition: width .25s linear; }
+.game-over { font-size: 34px; font-weight: 900; letter-spacing: 4px; color: #dc2626; margin: 8px 0; font-family: ui-monospace, monospace; }

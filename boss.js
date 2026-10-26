@@ -153,8 +153,28 @@ function abcdOpts(c) {
   return shuffle([e.a, ...wrong]);
 }
 // kolejna karta: najpierw zaległy sprawdzian bossa, potem następna z puli
+// 🛡️ parowanie: zapowiedziany cios bossa = szybkie pytanie ABCD; dobrze → blok i kontra, źle / za późno → obrażenia
+const PARRY_MS = 9000;
+function presentParry() {
+  const B = BOSS, pr = B.pendParry; B.pendParry = null;
+  const seen = B.ids.slice(0, Math.max(1, B.i)), pool = shuffle([...seen, ...shuffle([...B.ids])]);
+  for (const id of pool.slice(0, 8)) { const c = S.cards.find(x => x.id === id), opts = c && abcdOpts(c); if (!opts) continue;
+    B.cur = { id, cm: 'abcd', opts, parry: pr, hidden: [] }; B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0; B.ice = null; B.bugs = []; return true; }
+  hurtMe(pr.dmg, pr.name); return false;   // nie ma czym parować – cios wchodzi
+}
+function parryResult(ok, late) {
+  const B = BOSS, pr = B.cur.parry, now = Date.now();
+  if (ok) { const n = dealBoss(Math.max(5, pr.dmg * .6 * B.hs.atk), 'kontra'); B.fxMe = { k: 'block', t: now }; B.fx = { k: 'boss', n, t: now }; B.ult = Math.min(B.hs.ultNeed, B.ult + 1); B.log.unshift(`🛡️ Sparowane: ${pr.name}! Kontra −${n}`); bossSay('proven'); S.stats.parries = (S.stats.parries || 0) + 1; }
+  else { hurtMe(pr.dmg, pr.name + (late ? ' (za późno)' : '')); bossSay('attack'); }
+  B.log = B.log.slice(0, 4); save();
+  if (!bossAlive(B)) return bossEnd(true);
+  if (B.me <= 0 && !B.coop) return bossEnd(false, 'dead');
+  presentCard(); if (!B.cur) return bossEnd(false, 'cards');
+  bossSfx(ok ? 'hit' : 'hurt'); render();
+}
 function presentCard() {
-  const B = BOSS, vi = B.verQ.findIndex(v => v.at <= B.i || B.i >= B.ids.length);
+  const B = BOSS; if (B.pendParry && presentParry()) return;
+  const vi = B.verQ.findIndex(v => v.at <= B.i || B.i >= B.ids.length);
   let id, ver = null;
   if (vi >= 0) { ver = B.verQ.splice(vi, 1)[0]; id = ver.id; } else if (B.i < B.ids.length) id = B.ids[B.i]; else { B.cur = null; return; }
   const c = S.cards.find(x => x.id === id); if (!c) { B.i++; return presentCard(); }
@@ -192,6 +212,7 @@ function bossAnswer(g, how) {
   const B = BOSS, c = bossCard(), cur = B?.cur; if (!B || !c || B.phase !== 'fight' || B.ice || B.bugs?.length) return;
   const now = Date.now(), ms = Math.min(60000, now - B.qAt);
   B.fx = null; B.fxMe = null; B.bossAct = null;
+  if (cur.parry) return parryResult(g >= 3);
   if (cur.ver) return verifyResult(c, g >= 3);
   // harmonogram: zaległe karty liczą się jako powtórka (sprawdziany już nie)
   if (c.srs.due <= now && c.srs.state !== 'new' && !B.down) {
@@ -243,7 +264,7 @@ function afterTurn(g, isVer) {
   // tura bossa: odliczanie do zapowiedzianego ruchu
   if (bossAlive(B) && !B.down && --B.timer <= 0) {
     const mv = B.move; B.bossAct = { k: mv.k, t: now };
-    if (mv.k === 'hit') { hurtMe(mv.dmg, mv.name); bossSay('attack'); }
+    if (mv.k === 'hit') { if (B.down) hurtMe(mv.dmg, mv.name); else B.pendParry = { dmg: mv.dmg, name: mv.name }; bossSay('attack'); }
     else if (mv.k === 'heal') { const h = Math.round(B.max * .08); if (!B.coop) B.hp = Math.min(B.max, B.hp + h); else if (typeof coopHeal === 'function') coopHeal(h); B.log.unshift(`💚 ${B.b.name} leczy się +${h}`); }
     else if (mv.k === 'shield') { B.shield = true; B.log.unshift(`🛡️ ${B.b.name} stawia tarczę`); }
     else if (mv.k === 'ice') { B.pendIce = true; B.log.unshift('❄️ Następna karta zamarznie!'); bossSay('ice'); }
@@ -391,7 +412,14 @@ const thinkMs = B => B.b.think * 1000 * B.hs.time * (B.cur?.cm === 'type' ? 1.6 
 let THINK_HIDDEN = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) THINK_HIDDEN = Date.now(); else if (BOSS && THINK_HIDDEN) { BOSS.qAt += Date.now() - THINK_HIDDEN; THINK_HIDDEN = 0; } });
 setInterval(() => {
-  const B = BOSS; if (!B || B.phase !== 'fight' || !B.b.think || B.shown || B.timeFree > 0 || B.down || document.hidden || parseRoute().parts[1] !== 'fight') return;
+  const P = BOSS;
+  if (P?.phase === 'fight' && P.cur?.parry && P.picked == null && !document.hidden && parseRoute().parts[1] === 'fight') {
+    const f = (Date.now() - P.qAt) / (PARRY_MS * P.hs.time), el = document.querySelector('.parry-bar i');
+    if (el) el.style.width = Math.max(0, 100 - f * 100).toFixed(1) + '%';
+    if (f >= 1) parryResult(false, true);
+    return;
+  }
+  const B = BOSS; if (!B || B.phase !== 'fight' || !B.b.think || B.cur?.parry || B.shown || B.timeFree > 0 || B.down || document.hidden || parseRoute().parts[1] !== 'fight') return;
   const T = thinkMs(B), f = (Date.now() - B.qAt) / T, el = document.querySelector('.think-bar i');
   if (el) { el.style.width = Math.max(0, 100 - f * 100).toFixed(1) + '%'; el.parentElement.classList.toggle('late', f > .7); }
   if (f >= 1) { B.qAt = Date.now(); hurtMe(Math.round(B.b.atk * .5), 'Za długo myślisz'); bossSay('slow'); B.fx = null; save(); if (B.me <= 0 && !B.coop) return bossEnd(false, 'dead'); render(); }
@@ -467,9 +495,9 @@ function fightView() {
     <div class="bf-top">
       ${B.say?.txt ? `<div class="boss-say" key="${B.say.t}">${esc(B.say.txt)}</div>` : ''}
       <div class="bf-boss">${B.coop && typeof coopHeadsHTML === 'function' ? coopHeadsHTML(fx, act) : `<div class="boss-stage${fx ? ' hit' : ''}${fx?.crit ? ' crit' : ''}${act ? ' attack' : ''}">${bossArt(b)}${B.shield ? '<span class="boss-shield">🛡️</span>' : ''}${fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}${fx.crit ? '!' : ''}</b><i class="slash"></i>` : ''}</div>`}
-        <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : BOSS_ABIL[mv.k][0]} <b>${esc(mv.name)}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? 'w następnej turze!' : `za ${B.timer} tury`}</small></div></div>
+        <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : BOSS_ABIL[mv.k][0]} <b>${esc(mv.name)}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
       ${B.coop ? '' : HP_BAR(B.hp, B.max, 'boss')}
-      ${b.think && !B.shown && B.timeFree <= 0 && !B.down ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
+      ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
     </div>
     <div class="row nowrap boss-me${fm?.k === 'hit' ? ' hurt' : ''}">${heroSVG('xs')}${HP_BAR(B.me, B.meMax, 'me')}
       ${B.combo >= 2 ? `<span class="chip combo">🔥 ${B.combo}</span>` : ''}${B.power ? `<span class="chip">💪 ${B.power}</span>` : ''}${B.guard ? `<span class="chip">🛡️${B.guard > 1 ? B.guard : ''}</span>` : ''}${B.poison ? `<span class="chip bad">☠️ ${B.poison}</span>` : ''}${B.silence ? `<span class="chip bad">🔇 ${B.silence}</span>` : ''}${B.timeFree > 0 ? `<span class="chip">⏱️ ${B.timeFree}</span>` : ''}</div>
@@ -477,8 +505,9 @@ function fightView() {
     ${B.coop && typeof coopMatesHTML === 'function' ? coopMatesHTML() : ''}
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
     ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}
-    <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver ? ' ver' : ''}">
+    <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}">
       ${cur?.ver ? '<div class="ver-tag">🔍 Sprawdzian bossa – udowodnij, że to wiesz!</div>' : ''}
+      ${cur?.parry ? `<div class="ver-tag parry-tag">⚠️ ${esc(cur.parry.name)} (−${cur.parry.dmg} ❤️)! Odpowiedz dobrze, żeby sparować${B.picked == null ? `<div class="parry-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / (PARRY_MS * hs.time) * 100).toFixed(1)}%"></i></div>` : ''}</div>` : ''}
       <div class="bq-in">${q}${cur?.hint && !B.shown ? `<div class="hintbox">🔮 ${esc(cur.hint)}</div>` : ''}</div>
       ${B.ice ? `<button class="ice" data-act="boss-ice" style="--crack:${(1 - B.ice.n / B.ice.max).toFixed(2)}"><img src="assets/fluent/g_ice.webp" alt=""><b>❄️ Zamrożone! Stukaj, by rozbić (${B.ice.n})</b></button>` : ''}
       ${(B.bugs || []).map(g => `<button class="bug" data-act="boss-bug" data-k="${g.k}" style="left:${g.x}%;top:${g.y}%;--d:${g.d}s" aria-label="robak"><img src="assets/fluent/${g.img}.webp" alt=""></button>`).join('')}
