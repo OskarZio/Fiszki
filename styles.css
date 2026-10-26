@@ -1880,3 +1880,5 @@ h1 .hero-ic { width: 40px; height: 40px; }
 }
 @keyframes sheetPop { from { transform: translate(-50%, -50%) scale(.9); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
 .charpx.s8 { image-rendering: auto; }
+.abcd.long { font-size: 12.5px; align-items: flex-start; } .abcd span { overflow-wrap: anywhere; }
+.bf .abcd-grid:has(.abcd.long) { grid-template-columns: 1fr; }

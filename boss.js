@@ -129,10 +129,13 @@ function bossBegin(b, extra = {}, p0 = null) {
   const kind = b.kind, mode = BOSS_PICK.mode, p = p0 || bossParams(b, mode), hs = heroStats(), now = Date.now();
   const due = shuffle(b.cards.filter(c => c.srs.state !== 'new' && c.srs.due <= now)), rest = shuffle(b.cards.filter(c => !due.includes(c)));
   const ids = [...due, ...rest].slice(0, p.len).map(c => c.id);
-  const pool = S.cards.filter(c => (kind === 'world' || b.cards.some(x => x.deckId === c.deckId)) && fightable(c)).map(distractorEntry).filter(x => x.a && x.a.length <= 120);
+  // ABCD: złe odpowiedzi najpierw z tych samych talii, a gdy brakuje – ze wszystkich
+  const decks = new Set(b.cards.map(c => c.deckId)), ent = c => distractorEntry(c), okA = x => x.a && x.a.trim() && x.a.length <= ABCD_MAX;
+  const pool = S.cards.filter(c => (kind === 'world' || decks.has(c.deckId)) && fightable(c)).map(ent).filter(okA);
+  const poolAll = pool.length >= 12 ? pool : S.cards.filter(fightable).map(ent).filter(okA);
   BOSS = { b: { ...b, ...p }, mode, ids, i: 0, hp: p.hp, max: p.hp, me: hs.hp, meMax: hs.hp, hs, cap: Math.max(12, Math.round(p.hp * .15)), combo: hs.combo0, best: 0, ok: 0, bad: 0, verOk: 0, caught: 0, fast: 0,
     phase: 'fight', lostHp: 0, timer: p.every, move: null, shield: false, power: 0, guard: 0, potUsed: 0, second: hs.second, ult: 0, poison: 0, silence: 0, timeFree: 0,
-    verQ: [], pendIce: false, pendBugs: 0, log: [], pool, missed: [], dealt: {}, startedAt: now, ...extra };
+    verQ: [], pendIce: false, pendBugs: 0, log: [], pool, poolAll, missed: [], dealt: {}, startedAt: now, ...extra };
   BOSS.move = pickMove(BOSS.b); BOSS_SEL = null;
   presentCard(); bossSay('start');
   go('#/boss/fight'); render();
@@ -140,10 +143,13 @@ function bossBegin(b, extra = {}, p0 = null) {
 const pickMove = b => { const opts = ['hit', 'hit', ...b.abil.filter(a => a !== 'rage')], k = opts[Math.random() * opts.length | 0], atk = b.atk;
   return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: 0 }; };
 const bossCard = () => BOSS?.cur && S.cards.find(c => c.id === BOSS.cur.id);
+const ABCD_MAX = 400;
 const textOk = v => v.ans && v.ans.trim() && v.ans.length <= 120;
 function abcdOpts(c) {
-  const B = BOSS, e = distractorEntry(c); if (!e.a || e.a.length > 120) return null;
-  const wrong = pickDistractors(e, B.pool.filter(x => norm(x.a) !== norm(e.a)), 3); if (wrong.length < 3) return null;
+  const B = BOSS, e = distractorEntry(c); if (!e.a || !e.a.trim() || e.a.length > ABCD_MAX) return null;
+  let wrong = pickDistractors(e, B.pool.filter(x => norm(x.a) !== norm(e.a)), 3);
+  if (wrong.length < 3) wrong = [...wrong, ...pickDistractors(e, B.poolAll.filter(x => norm(x.a) !== norm(e.a) && !wrong.some(w => norm(w) === norm(x.a))), 3 - wrong.length)];
+  if (wrong.length < 3) return null;
   return shuffle([e.a, ...wrong]);
 }
 // kolejna karta: najpierw zaległy sprawdzian bossa, potem następna z puli
@@ -446,7 +452,7 @@ function fightView() {
   const q = cm === 'flip' && B.shown ? v.a : v.q;
   let ctrl = B.down ? `<div class="down-box">💀 Leżysz! ${B.coop ? 'Kolega może Cię reanimować – albo' : ''} odpowiedz dobrze 5×, żeby wstać (${B.selfRev || 0}/5)</div>` : '';
   if (cm === 'abcd') ctrl += `<div class="abcd-grid">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(v.ans);
-      return `<button class="abcd${pk ? right ? ' right' : B.picked === k ? ' wrong' : '' : ''}${hid ? ' hid' : ''}" data-act="boss-pick" data-k="${k}" ${pk || hid || blocked ? 'disabled' : ''}><i>${'ABCD'[k]}</i><span>${esc(o)}</span></button>`; }).join('')}</div>
+      return `<button class="abcd${o.length > 70 ? ' long' : ''}${pk ? right ? ' right' : B.picked === k ? ' wrong' : '' : ''}${hid ? ' hid' : ''}" data-act="boss-pick" data-k="${k}" ${pk || hid || blocked ? 'disabled' : ''}><i>${'ABCD'[k]}</i><span>${esc(o)}</span></button>`; }).join('')}</div>
       ${B.picked != null ? '<button class="primary block" data-act="boss-next">Dalej ›</button>' : ''}`;
   else if (cm === 'type' && !B.shown) ctrl += `<div class="row nowrap"><input id="boss-in" class="grow" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" ${dis}><button class="primary" data-act="boss-check" ${dis}>⚔️</button></div>
       <button class="ghost block small" data-act="boss-show" style="margin-top:4px" ${dis}>Nie wiem – pokaż</button>`;
