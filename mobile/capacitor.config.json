@@ -1,0 +1,10 @@
+{
+  "appId": "pl.oskarzio.fiszki",
+  "appName": "Fiszki",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#f4f5fb",
+    "limitsNavigationsToAppBoundDomains": false
+  }
+}

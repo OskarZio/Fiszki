@@ -1,0 +1,18 @@
+# Sprawdza, czy aplikacja iOS (Capacitor) się kompiluje – symulator, bez podpisu (podpis i wysyłka do App Store robi się w Xcode).
+name: iOS build
+on:
+  push:
+    branches: [master]
+    paths: ['mobile/**', '*.js', '*.html', '*.css', 'assets/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-15
+    defaults: { run: { working-directory: mobile } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npm run sync
+      - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -n 40

@@ -73,7 +73,14 @@ function skVal(eff) {
   return v;
 }
 const hasSk = eff => skVal(eff) > 0;
-const skPoints = () => heroLv() + (hero().pr || 0) - Object.keys(lineSk()).length;
+// 🌳 punkty drzewka osobno dla każdej postaci: zdobywa je ta postać, którą grasz, gdy bohater awansuje (1 na start)
+function linePts(l = heroLine()) {
+  const h = hero();
+  if (!h.spl) h.spl = { [heroLine(h)]: heroLv() + (h.pr || 0) };   // przejście ze wspólnych punktów: dotychczasowe dostaje postać, którą grasz
+  if (h.spl[l] == null) h.spl[l] = Math.max(1, Object.keys(h.sk[l] || {}).length);
+  return h.spl[l];
+}
+const skPoints = (l = heroLine()) => linePts(l) - Object.keys(lineSk(hero(), l)).length;
 
 // ---------- ⏱️ boostery: 30 min; w weekend „Podwójne XP” za darmo, co 3 dni darmowy booster do odebrania
 const BOOSTS = { xp2: { name: 'Podwójne XP', desc: 'doświadczenie bohatera ×2', img: 'b_star', price: 150 }, gems2: { name: 'Podwójne kryształy', desc: '💎 z bossów i łupów ×2', img: 'b_gstar', price: 200 }, loot2: { name: 'Szczęście łupieżcy', desc: '+1 przedmiot w każdej skrzyni', img: 'b_swords', price: 200 } };
@@ -183,8 +190,9 @@ function heroSVG(cls = '', pr, h = hero()) {
 const heroIcon = (h = hero()) => { const l = heroLine(h), p = h.pr || 0; return `<span class="hero-ic">${l === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: '' }) : heroArt(l, heroForm(h, p), h.g === 'm' ? 'm' : 'w')}</span>`; };
 // ---------- 📈 doświadczenie: z nauki (nowe fiszki, rozdział, cała talia) i z walk
 function giveXP(n, why) {
-  const before = heroLv(); hero().xp += Math.round(n); hero().mod = Date.now(); S.stats.heroLv = heroLv();
-  if (heroLv() > before) setTimeout(() => celebrate(`⬆️ Bohater: poziom ${heroLv()}!`, `+1 punkt umiejętności${why ? ' · ' + why : ''}`), 400);
+  const before = heroLv(); linePts(); hero().xp += Math.round(n); hero().mod = Date.now(); S.stats.heroLv = heroLv();
+  if (heroLv() > before) hero().spl[heroLine()] += heroLv() - before;   // punkty dostaje postać, którą grasz
+  if (heroLv() > before) setTimeout(() => celebrate(`⬆️ Bohater: poziom ${heroLv()}!`, `+1 punkt drzewka dla: ${CHAR_LINES[heroLine()].name}${why ? ' · ' + why : ''}`), 400);
 }
 on('review', (c, g, wasNew) => {
   if (typeof BOSS !== 'undefined' && BOSS?.phase === 'fight') return;   // w walce XP liczy walka
@@ -207,7 +215,7 @@ function heroPrestige() {
   const h = hero(); if (heroLv() < HERO_MAX) return toast(`Prestiż od ${HERO_MAX}. poziomu`);
   if (!confirm(`Prestiż ${(h.pr || 0) + 1}? Poziom wraca do 1, drzewka się zerują (punkty wrócą z poziomami), ekwipunek zostaje.\n\nStałe bonusy: +5% obrażeń, +10 ❤️, +10% doświadczenia. Bossowie też będą silniejsi.`)) return;
   EVOLVE = { from: h.pr || 0, t: Date.now() };
-  h.pr = (h.pr || 0) + 1; h.xp = 0; h.sk = {}; h.mod = Date.now(); S.stats.prestige = Math.max(S.stats.prestige || 0, h.pr);
+  h.pr = (h.pr || 0) + 1; h.xp = 0; h.sk = {}; h.spl = {}; h.mod = Date.now(); S.stats.prestige = Math.max(S.stats.prestige || 0, h.pr);
   addItem('boost', 'xp2', 1, 'prestige-' + h.pr); save(); render();
   setTimeout(() => { EVOLVE = null; celebrate(`🌟 Ewolucja! ${heroFormName()} · ${PR_TITLES[Math.min(6, h.pr)]}`, `Prestiż ${h.pr} · w nagrodę booster „Podwójne XP”`); confetti(260); render(); }, 2600);
 }
@@ -222,13 +230,13 @@ ROUTES.hero = () => {
   const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)], ld = lineDef();
   const tabs = [['char', '🎭 Postać'], ['tree', `🌳 Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒 Ekwipunek'], ['shop', '🔨 Kowal']];
   const pane = {
-    char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Każda postać ma inną umiejętność, inny supercios i własne drzewko. Punkty są wspólne – zmiana postaci niczego nie zabiera.</p>
+    char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Każda postać ma inną umiejętność, inny supercios, własne drzewko i <b>własne punkty</b> – zdobywa je, gdy awansujesz, grając nią.</p>
       <div class="seg gender-seg"><button class="${h.g !== 'm' ? 'on' : ''}" data-act="hero-g" data-g="w">Ona</button><button class="${h.g === 'm' ? 'on' : ''}" data-act="hero-g" data-g="m">On</button></div>
-      <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k); return `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>
+      <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k); return `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>${(() => { const n = skPoints(k); return n > 0 ? `<i class="char-pts">🌳 ${n} pkt</i>` : ''; })()}
         <small><b>${d.passive[0]}</b> – ${d.passive[1]}</small><small><b>${d.ult[0]}</b> – ${d.ult[1]}</small></button>`; }).join('')}</div>
       ${h.line === 'beast' && !isPixelLine('beast') ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>`,
     tree: `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🌳 Drzewko: ${esc(line.name)}</h2><span class="sp-badge${sp ? ' on' : ''}">${sp} pkt</span></div>
-      <p class="small muted">Węzły gałęzi odblokowują się na poziomach ${SK_REQ_LV.join(', ')}. 1 punkt za każdy poziom i prestiż.</p>
+      <p class="small muted">Węzły gałęzi odblokowują się na poziomach ${SK_REQ_LV.join(', ')}. Punkty tej postaci: ${linePts()} (1 na start + każdy awans zdobyty nią).</p>
       <div class="skill-tree">${ld.tree.map(([bn, nodes]) => `<div class="sk-branch"><div class="sk-head">${bn}</div>${nodes.map((n, i) => { const got = hasNode(n.id), prev = i === 0 || hasNode(nodes[i - 1].id), lvOk = L.lv >= SK_REQ_LV[i], can = !got && prev && lvOk && sp > 0;
         return `<button class="sk${got ? ' got' : can ? ' can' : ''}" data-act="hero-sk" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${n.name}</b><small>${n.desc}</small>${got ? '<i>✓</i>' : !lvOk ? `<i>🔒 poz. ${SK_REQ_LV[i]}</i>` : !prev ? '<i>🔒</i>' : ''}</button>`; }).join('<span class="sk-line"></span>')}</div>`).join('')}</div>
       ${Object.keys(lineSk()).length ? '<button class="sm ghost" data-act="hero-sk-reset" style="margin-top:10px">↺ Zresetuj drzewko (100 💎)</button>' : ''}</div>`,

@@ -1930,3 +1930,4 @@ h1 .hero-ic { width: 40px; height: 40px; }
 .boss-q.parry, .parry-tag { } .parry-tag { background: #fee2e2 !important; color: #991b1b !important; }
 .parry-bar { height: 6px; margin: 6px 8px 0; border-radius: 99px; background: rgba(153,27,27,.18); overflow: hidden; } .parry-bar i { display: block; height: 100%; background: linear-gradient(90deg, #ef4444, #f97316); transition: width .25s linear; }
 .game-over { font-size: 34px; font-weight: 900; letter-spacing: 4px; color: #dc2626; margin: 8px 0; font-family: ui-monospace, monospace; }
+.char-pts { font-style: normal; font-size: 11px; font-weight: 800; color: #fff; background: var(--accent); border-radius: 99px; padding: 1px 8px; }
