@@ -58,7 +58,17 @@ const LINES = {
 // pozostałe postacie z heroes.js (gdyby doszły nowe) dostają drzewko kota
 const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefined' ? CHARS : {}).map(([k, c]) => [k, { name: c.name, icon: c.icon, forms: c.forms, desc: c.desc, draw: true }])),
   beast: { name: 'Stworek', icon: '🐣', forms: ['Mały stworek', 'Młody stworek', 'Dorosły stworek', 'Stwór z innego wymiaru'], desc: 'Przybysz z innego wymiaru. Nikt nie wie, czego się nauczy.' } };
-const heroLine = (h = hero()) => CHAR_LINES[h.line] ? h.line : 'cat';
+// 🎟️ zdobywanie postaci: Kot Wojak za darmo; reszta – kupno za 💎, poziom konta albo skrzynka bohaterów.
+// Droższa (rzadsza) postać = mocniejsze umiejętności (mnożnik umiejętności biernej, drzewka i superciosu).
+const HERO_TIER = { basic: ['Podstawowa', '#64748b', 1], rare: ['Rzadka', '#8b5cf6', 1.15], epic: ['Epicka', '#ec4899', 1.3], legendary: ['Legendarna', '#f59e0b', 1.5], mythic: ['Mityczna', '#dc2626', 1.7] };
+const HERO_GET = { cat: { t: 'basic' }, hamster: { t: 'rare', price: 3000 }, frog: { t: 'rare', price: 5000 }, dog: { t: 'epic', price: 8000 }, owl: { t: 'epic', acc: 12 },
+  fox: { t: 'legendary', price: 15000 }, beast: { t: 'mythic', acc: 20 } };
+const HERO_CASE = { price: 2000, odds: { rare: 60, epic: 28, legendary: 9, mythic: 3 }, dupPts: 3 };
+let ACC_LV = { t: 0, v: 1 };
+const accLevel = () => { if (Date.now() - ACC_LV.t > 2000) ACC_LV = { t: Date.now(), v: typeof levelOf === 'function' ? levelOf(xpTotal()) : 1 }; return ACC_LV.v; };
+const heroTierMul = (l = hero().line) => HERO_TIER[HERO_GET[l]?.t || 'basic'][2];
+const ownsHero = l => !HERO_GET[l] || HERO_GET[l].t === 'basic' || hasItem('hero', l) || (HERO_GET[l].acc && accLevel() >= HERO_GET[l].acc);
+const heroLine = (h = hero()) => CHAR_LINES[h.line] && ownsHero(h.line) ? h.line : 'cat';
 const lineDef = (l = heroLine()) => LINES[l] || LINES.cat;
 const heroForm = (h = hero(), pr = h.pr || 0) => Math.min(3, pr);
 const heroFormName = (h = hero()) => CHAR_LINES[heroLine(h)].forms[heroForm(h)];
@@ -93,7 +103,7 @@ function skVal(eff) {
   const L = lineDef(), own = lineSk(), tier = lineTier();
   let v = L.passive[2][eff] || 0;
   for (const n of allNodes()) if (own[n.id] && n.eff === eff) v += n.v * (1 + .5 * (tier[n.id] || 0));
-  return v;
+  return v * heroTierMul(heroLine());
 }
 const hasSk = eff => skVal(eff) > 0;
 // 🌳 punkty drzewka osobno dla każdej postaci: zdobywa je ta postać, którą grasz, gdy bohater awansuje (1 na start)
@@ -197,7 +207,7 @@ function heroStats() {
     crit: Math.min(.6, v('crit') / 100), def: Math.min(.5, v('def') / 100), dodge: Math.min(.4, v('dodge') / 100),
     regen: v('regen'), second: v('second') > 0, vamp: v('vamp') / 100, thorns: v('thorns') / 100, time: 1 + v('time') / 100,
     typeM: 1.5 + v('type'), abcdM: .5 + v('abcd'), steady: v('steady') > 0, alch: v('alch') > 0, loot: v('loot'),
-    ultNeed: Math.max(3, 6 - v('ultFast')), ultPow: 1 + v('ultPow') / 100, verify: 1 + v('verify') / 100, first: Math.max(1, v('first')),
+    ultNeed: Math.max(3, 6 - v('ultFast')), ultPow: (1 + v('ultPow') / 100) * heroTierMul(heroLine()), verify: 1 + v('verify') / 100, first: Math.max(1, v('first')),
     exec: v('exec') / 100, combo: 1 + v('combo') / 100, combo0: g('combo'), ice: v('ice') > 0, gems: 1 + v('gems') / 100 };
 }
 const BOSS_ME_BASE = 100;
@@ -254,10 +264,13 @@ ROUTES.hero = () => {
   const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)], ld = lineDef();
   const tabs = [['char', '🎭 Postać'], ['tree', `🌳 Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒 Ekwipunek'], ['shop', '🔨 Kowal']];
   const pane = {
-    char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Każda postać ma inną umiejętność, inny supercios, własne drzewko i <b>własne punkty</b> – zdobywa je, gdy awansujesz, grając nią.</p>
+    char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Kot Wojak jest za darmo. Pozostałe kupisz, wylosujesz w skrzyni bohaterów albo odblokujesz poziomem konta – rzadsze mają mocniejsze umiejętności. Każda postać ma własne drzewko i <b>własne punkty</b>.</p>
       <div class="seg gender-seg"><button class="${h.g !== 'm' ? 'on' : ''}" data-act="hero-g" data-g="w">Ona</button><button class="${h.g === 'm' ? 'on' : ''}" data-act="hero-g" data-g="m">On</button></div>
-      <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k); return `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>${(() => { const n = skPoints(k); return n > 0 ? `<i class="char-pts">🌳 ${n} pkt</i>` : ''; })()}
-        <small><b>${d.passive[0]}</b> – ${d.passive[1]}</small><small><b>${d.ult[0]}</b> – ${d.ult[1]}</small></button>`; }).join('')}</div>
+      <div class="card hero-case row nowrap"><span class="hc-ic">🎰</span><div class="grow"><b>Skrzynka bohaterów</b><div class="small muted">${Object.entries(HERO_CASE.odds).map(([t, p]) => `<span style="color:${HERO_TIER[t][1]}">${HERO_TIER[t][0]} ${p}%</span>`).join(' · ')}<br>Duplikat = +${HERO_CASE.dupPts} pkt drzewka tej postaci</div></div><button class="primary" data-act="hero-case">${HERO_CASE.price} 💎</button></div>
+      <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k), G = HERO_GET[k] || { t: 'basic' }, own = ownsHero(k), T = HERO_TIER[G.t];
+        const lock = own ? '' : `<span class="char-lock">${G.price ? `<i class="char-buy" data-act="hero-buy" data-k="${k}">Kup · ${G.price.toLocaleString('pl')} 💎</i>` : ''}${G.acc ? `<i class="char-acc">🔒 poziom konta ${G.acc} (masz ${accLevel()})</i>` : ''}<i class="char-acc">albo 🎰 skrzynka</i></span>`;
+        return `<button class="char${heroLine(h) === k ? ' on' : ''}${own ? '' : ' locked'}" style="--tc:${T[1]}" data-act="${own ? 'hero-line' : 'hero-locked'}" data-k="${k}"><i class="char-tier">${T[0]} · umiejętności ×${String(T[2]).replace('.', ',')}</i><span class="char-cr">${k === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>${(() => { const n = skPoints(k); return n > 0 ? `<i class="char-pts">🌳 ${n} pkt</i>` : ''; })()}
+        <small><b>${d.passive[0]}</b> – ${d.passive[1]}</small><small><b>${d.ult[0]}</b> – ${d.ult[1]}</small>${lock}</button>`; }).join('')}</div>
       ${h.line === 'beast' && !isPixelLine('beast') ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>`,
     tree: (() => { const pages = treePages(), pg = Math.min(HERO_PAGE, 2), open = pageOpen(pg), done = treeDone(), tier = lineTier(), up = done && HERO_UP;
       return `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🌳 Drzewko: ${esc(line.name)}</h2><span class="sp-badge${sp ? ' on' : ''}">${sp} pkt</span></div>
@@ -310,7 +323,10 @@ Object.assign(ACTIONS, {
   'hero-tier': el => { const h = hero(), t = lineTier(h), id = el.dataset.id; if (skPoints() < 1 || (t[id] || 0) >= 3 || !lineSk(h)[id]) return; t[id] = (t[id] || 0) + 1; h.mod = Date.now();
     if (Object.values(t).filter(x => x >= 3).length >= 36) S.stats.treeHolo = 1; save(); toast(`${TIER_IC[t[id]]} ${TIERS[t[id]]} węzeł!`); render(); },
   'hero-look': () => { const h = hero(); h.look = 1 + (Math.random() * 1e6 | 0); h.mod = Date.now(); save(); render(); },
-  'hero-line': el => { const h = hero(); HERO_PAGE = 0; HERO_UP = false; h.line = el.dataset.k; h.mod = Date.now(); save(); render(); },
+  'hero-locked': el => { const G = HERO_GET[el.dataset.k]; toast(G.price ? `🔒 Ta postać kosztuje ${G.price.toLocaleString('pl')} 💎 – albo wylosuj ją w skrzyni bohaterów` : `🔒 Odblokujesz ją na ${G.acc}. poziomie konta (masz ${accLevel()}) – albo w skrzyni bohaterów`, 3500); },
+  'hero-buy': el => { const k = el.dataset.k, G = HERO_GET[k]; if (!G?.price || ownsHero(k)) return; if (!confirm(`Kupić postać „${CHAR_LINES[k].name}” (${HERO_TIER[G.t][0]}) za ${G.price.toLocaleString('pl')} 💎?`)) return; if (!spend(G.price, 'hero')) return; addItem('hero', k, 1); heroReveal(k, false); },
+  'hero-case': () => heroCaseOpen(),
+  'hero-line': el => { const h = hero(); if (!ownsHero(el.dataset.k)) return; HERO_PAGE = 0; HERO_UP = false; h.line = el.dataset.k; h.mod = Date.now(); save(); render(); },
   'hero-g': el => { const h = hero(); h.g = el.dataset.g; h.mod = Date.now(); save(); render(); },
   'hero-prestige': () => heroPrestige(),
   'boost-on': el => activateBoost(el.dataset.k),
@@ -320,3 +336,26 @@ Object.assign(ACTIONS, {
   'hero-buy-pot': el => { const p = POTIONS[el.dataset.k]; if (!spend(p.price, 'potion')) return; addItem('potion', el.dataset.k, 1); toast(`🧪 ${p.name} w ekwipunku`); render(); },
   'hero-buy-gear': el => { const id = el.dataset.id, g = GEAR[id]; if (!g || ownsGear(id)) return; if (!confirm(`Kupić „${g.name}” (${RARITY[g.r].name}) za ${GEAR_PRICE[g.r]} 💎?`)) return; if (!spend(GEAR_PRICE[g.r], 'gear')) return; addItem('gear', id, 1); toast(`🎒 ${g.name}`); render(); },
 });
+
+// 🎰 skrzynka bohaterów: losuje rzadkość, potem postać tej rzadkości (najpierw te, których nie masz); duplikat = punkty drzewka
+function heroCaseOpen() {
+  const lines = Object.keys(HERO_GET).filter(k => HERO_GET[k].t !== 'basic');
+  if (!confirm(`Otworzyć skrzynkę bohaterów za ${HERO_CASE.price} 💎?`)) return; if (!spend(HERO_CASE.price, 'hero-case')) return;
+  let r = Math.random() * 100, t = 'rare'; for (const [k, p] of Object.entries(HERO_CASE.odds).reverse()) { if (r < p) { t = k; break; } r -= p; }
+  const pool = lines.filter(k => HERO_GET[k].t === t), fresh = pool.filter(k => !ownsHero(k)), k = (fresh.length ? fresh : pool)[Math.random() * (fresh.length || pool.length) | 0];
+  const dup = ownsHero(k);
+  if (dup) { const h = hero(); linePts(k); h.spl[k] += HERO_CASE.dupPts; h.mod = Date.now(); } else addItem('hero', k, 1);
+  S.stats.heroCases = (S.stats.heroCases || 0) + 1; save(); heroReveal(k, dup);
+}
+function heroReveal(k, dup) {
+  const T = HERO_TIER[HERO_GET[k].t], h = hero();
+  document.querySelector('.dmenu-ov')?.remove();
+  const ov = document.createElement('div'); ov.className = 'dmenu-ov hero-reveal';
+  ov.innerHTML = `<div class="dmenu" style="--tc:${T[1]}"><i class="char-tier">${T[0]}</i><div class="hr-art">${heroArt(k, 0, h.g === 'm' ? 'm' : 'w')}</div><b class="dmenu-t">${esc(CHAR_LINES[k].name)}</b>
+    <small>${dup ? `Duplikat → +${HERO_CASE.dupPts} punkty drzewka dla tej postaci` : `Nowa postać! Umiejętności ×${String(T[2]).replace('.', ',')}`}</small>
+    ${dup ? '' : `<button class="primary" data-act="hero-line" data-k="${k}">Graj tą postacią</button>`}<button class="ghost" data-act="dmenu-close">OK</button></div>`;
+  ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-act]')) setTimeout(() => ov.remove()); });
+  document.body.append(ov); if (!dup) confetti(['legendary', 'mythic'].includes(HERO_GET[k].t) ? 260 : 140); render();
+}
+// dotychczasowa (darmowa wtedy) postać zostaje Twoja
+on('start', () => { const h = S.hero; if (h?.line && h.line !== 'cat' && HERO_GET[h.line] && !hasItem('hero', h.line)) { addItem('hero', h.line, 1, 'hero-keep-' + h.line); } });

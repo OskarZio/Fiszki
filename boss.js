@@ -380,7 +380,7 @@ function grantLoot(it, key) {
   if (it.k === 'egg') addItem('egg', 'boss', 1, key);
   if (it.k === 'boost') addItem('boost', it.id, 1, key);
 }
-const lootIcon = it => it.k === 'gear' ? gearImg(it.id) : it.k === 'potion' ? potionSVG(it.id) : it.k === 'boost' ? `<img class="gear-img" src="assets/fluent/${BOOSTS[it.id].img}.webp" alt="">` : it.k === 'egg' ? '<span class="loot-big">👑</span>' : '<span class="loot-big">💎</span>';
+const lootIcon = it => it.k === 'gear' ? gearImg(it.id) : it.k === 'potion' ? potionSVG(it.id) : it.k === 'boost' ? `<img class="gear-img" src="assets/fluent/${BOOSTS[it.id].img}.webp" alt="">` : it.k === 'egg' ? '<span class="loot-big">👑</span>' : `<img class="gear-img gem8" src="${GEM8}" alt="💎">`;
 const lootHTML = it => `${lootIcon(it)}${it.k === 'gear' ? `<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? (it.up ? `DUPLIKAT → ulepszenie +${it.up}` : `DUPLIKAT → +${it.n} 💎`) : RARITY[it.r].name}</small>`
   : it.k === 'potion' ? `<b>${POTIONS[it.id].name}${it.n > 1 ? ' ×' + it.n : ''}</b><small>${POTIONS[it.id].desc}</small>` : it.k === 'boost' ? `<b>${BOOSTS[it.id].name}</b><small>30 min</small>`
   : it.k === 'egg' ? '<b>Złote jajo</b><small>do inkubatora</small>' : `<b>+${it.n}</b><small>kryształy</small>`}`;

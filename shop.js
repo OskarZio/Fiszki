@@ -39,6 +39,8 @@ const STICKERS = [
     ST('dino', '🦕', "Kameleon", 'epic', 'assets/stickers/px/081.webp'), ST('trex', '🦖', "Rekin", 'epic', 'assets/stickers/px/175.webp'), ST('dragonling', '🐲', "Smoczy liść", 'legendary', 'assets/stickers/px/015.webp'), ST('swan', '🦢', "Kaczka", 'legendary', 'assets/stickers/px/126.webp')].map(s => ({ ...s, hatch: true })),
 ];
 // 🔴 ultra rzadkie dropy w każdej skrzynce: mityczna naklejka i mega pula kryształów (po 0,1%)
+// 💎 w skrzynkach jako kryształ 8-bit
+const GEM8 = 'assets/stickers/px/044.webp';
 const MYTHIC_P = .1, MEGA_GEMS_P = .1, MEGA_GEMS = 10000;
 // mityczna naklejka nie wypada ze skrzynki z GIF-ami (tam tylko mega kryształy)
 const mythicP = k => CASES[k]?.gif ? 0 : MYTHIC_P;
@@ -141,13 +143,13 @@ function rollGif(odds, force) {
 }
 function rollPrize(k, odds, force) {
   if (force === 'mythic') return stickerById('soldiercat');
-  if (force === 'mega') return { kind: 'gems', id: 'gems' + MEGA_GEMS, n: MEGA_GEMS, e: '💎', name: `+${MEGA_GEMS} 💎`, r: 'mythic' };
+  if (force === 'mega') return { kind: 'gems', img: GEM8, id: 'gems' + MEGA_GEMS, n: MEGA_GEMS, e: '💎', name: `+${MEGA_GEMS} 💎`, r: 'mythic' };
   if (!force) { const y = Math.random() * 100, mp = mythicP(k); if (y < mp) return rollPrize(k, odds, 'mythic'); if (y < mp + MEGA_GEMS_P) return rollPrize(k, odds, 'mega'); }
   const x = Math.random() * 100;
   if (force === 'lgif') return legendGifReady() ? rollGif({ legendary: 100 }, 'legendary') : rollSticker({ legendary: 100 });
   if (force === 'gems' || force === 'jackpot' || (!force && x < CASE_EXTRA.gems)) {
     const t = GEM_PRIZES[k] || GEM_PRIZES.basic; let y = force === 'jackpot' ? 100 : Math.random() * 100;
-    for (let i = 0; i < t.length; i++) { const [n, p] = t[i]; if (y < p || i === t.length - 1) return { kind: 'gems', id: 'gems' + n, n, e: '💎', name: `+${n} 💎`, r: ['common', 'rare', 'epic', 'legendary'][i] }; y -= p; }
+    for (let i = 0; i < t.length; i++) { const [n, p] = t[i]; if (y < p || i === t.length - 1) return { kind: 'gems', img: GEM8, id: 'gems' + n, n, e: '💎', name: `+${n} 💎`, r: ['common', 'rare', 'epic', 'legendary'][i] }; y -= p; }
   }
   if (force === 'respin' || (!force && x < CASE_EXTRA.gems + CASE_EXTRA.respin)) return { kind: 'respin', id: 'respin', e: '🔁', name: 'Jeszcze raz!', r: 'epic' };
   if (CASES[k]?.gif && gifCaseReady()) return rollGif(odds, force);
@@ -159,9 +161,9 @@ function caseDrops(k) {
   const c = CASES[k], f = (100 - mythicP(k) - MEGA_GEMS_P) / 100, out = [];
   const add = (p, x, group) => out.push({ p, x, group });
   if (mythicP(k)) add(mythicP(k), stickerById('soldiercat'), 'ultra');
-  add(MEGA_GEMS_P, { kind: 'gems', e: '💎', name: `${MEGA_GEMS} kryształów`, r: 'mythic' }, 'ultra');
+  add(MEGA_GEMS_P, { kind: 'gems', img: GEM8, e: '💎', name: `${MEGA_GEMS} kryształów`, r: 'mythic' }, 'ultra');
   const t = GEM_PRIZES[k] || GEM_PRIZES.basic;
-  t.forEach(([n, p], i) => add(f * CASE_EXTRA.gems * p / 100, { kind: 'gems', e: '💎', name: `${n} kryształów`, r: ['common', 'rare', 'epic', 'legendary'][i] }, 'gems'));
+  t.forEach(([n, p], i) => add(f * CASE_EXTRA.gems * p / 100, { kind: 'gems', img: GEM8, e: '💎', name: `${n} kryształów`, r: ['common', 'rare', 'epic', 'legendary'][i] }, 'gems'));
   add(f * CASE_EXTRA.respin, { kind: 'respin', e: '🔁', name: 'Losuj jeszcze raz', r: 'epic' }, 'gems');
   let rest = f * (100 - CASE_EXTRA.gems - CASE_EXTRA.respin);
   const perRarity = (odds, pool, group, toX) => {
@@ -210,7 +212,7 @@ ROUTES.shop = () => {
     <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}
   <div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2><div class="cases">${Object.entries(CASES).filter(([, c]) => !c.freeOnly && (!c.gif || gifCaseReady())).map(([k, c]) => `
     <div class="case ${k}"><div class="ci" data-act="case-drops" data-k="${k}" role="button" title="Zawartość i szanse">${caseIco(k)}</div><b data-act="case-drops" data-k="${k}">${c.name}</b>
-      <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}${CASE_GIF[k] && legendGifReady() ? `<span style="color:${RARITY.legendary.color}">🎞️ GIF legendarny ${CASE_GIF[k]}%</span>` : ''}<span style="color:#0369a1">💎 do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} · 🔁 jeszcze raz</span>${mythicP(k) ? `<span style="color:${RARITY.mythic.color};font-weight:700">🪖 Kot żołnierz ${pctFmt(MYTHIC_P)}</span>` : ''}<span style="color:${RARITY.mythic.color};font-weight:700">🔴 ${MEGA_GEMS} 💎 ${pctFmt(MEGA_GEMS_P)}</span></div>
+      <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}${CASE_GIF[k] && legendGifReady() ? `<span style="color:${RARITY.legendary.color}">🎞️ GIF legendarny ${CASE_GIF[k]}%</span>` : ''}<span style="color:#0369a1"><img class="gem8" src="${GEM8}" alt="💎"> do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} · 🔁 jeszcze raz</span>${mythicP(k) ? `<span style="color:${RARITY.mythic.color};font-weight:700">🪖 Kot żołnierz ${pctFmt(MYTHIC_P)}</span>` : ''}<span style="color:${RARITY.mythic.color};font-weight:700">🔴 ${MEGA_GEMS} 💎 ${pctFmt(MEGA_GEMS_P)}</span></div>
       <button class="sm ghost block" data-act="case-drops" data-k="${k}">📋 Zawartość i szanse</button><button class="primary block" data-go="#/case/${k}">Otwórz · ${c.price} 💎</button></div>`).join('')}</div></div>
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">Album naklejek</h2><span class="small muted">${owned}/${STICKERS.length}</span></div>
     <ul class="small muted perks"><li>Wysyłasz je przeciwnikowi w bitwie albo <b>podarujesz znajomemu</b> (💬 w rankingu). Stuknij naklejkę, żeby zobaczyć animację i usłyszeć jej dźwięk.</li>
