@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pobierz Fiszki</title>
+  <meta name="description" content="Fiszki – darmowa aplikacja do nauki z powtórkami, bossami i grą z kolegą. Zainstaluj na iPhonie, Androidzie lub komputerze.">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta property="og:title" content="Fiszki – nauka jak gra">
+  <meta property="og:description" content="Powtórki, bossowie, wieża i walka z kolegą. Za darmo, bez reklam.">
+  <meta property="og:image" content="icons/icon-512.png">
+  <style>
+    :root { --bg: #f4f5fb; --card: #fff; --text: #1b1d29; --muted: #626679; --accent: #4f46e5; --accent2: #9333ea; --line: #e4e6f0; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #11131c; --card: #1b1e2b; --text: #eef0f7; --muted: #9aa0b8; --line: #2a2e40; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom)); }
+    main { max-width: 560px; margin: 0 auto; }
+    .hero { text-align: center; padding: 36px 0 20px; }
+    .hero img { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 12px 30px rgba(79,70,229,.35); }
+    h1 { font-size: 30px; margin: 14px 0 4px; } .sub { color: var(--muted); margin: 0 0 18px; }
+    .btn { display: block; text-align: center; text-decoration: none; font-weight: 800; font-size: 17px; padding: 15px; border-radius: 16px; color: #fff; background: linear-gradient(90deg, var(--accent), var(--accent2)); border: 0; width: 100%; cursor: pointer; }
+    .btn.ghost { background: var(--card); color: var(--accent); border: 2px solid var(--line); margin-top: 10px; }
+    .card { background: var(--card); border-radius: 20px; padding: 18px; margin: 14px 0; box-shadow: 0 2px 10px rgba(20,20,60,.06); }
+    .card h2 { margin: 0 0 10px; font-size: 19px; display: flex; align-items: center; gap: 8px; }
+    .card.me { outline: 3px solid var(--accent); }
+    ol { margin: 0; padding-left: 22px; } li { margin: 6px 0; }
+    .ico { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: var(--bg); vertical-align: -7px; margin: 0 2px; }
+    .ico svg { width: 17px; height: 17px; }
+    .tag { font-size: 12px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 8px; border-radius: 99px; margin-left: auto; }
+    .feat { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; } .feat div { background: var(--bg); border-radius: 14px; padding: 12px; font-size: 14px; } .feat b { display: block; }
+    .small { font-size: 13px; color: var(--muted); }
+    .share { display: flex; gap: 8px; margin-top: 10px; } .share input { flex: 1; min-width: 0; font: inherit; padding: 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--text); }
+    .share button { font: inherit; font-weight: 700; padding: 0 16px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <img src="icons/icon-512.png" alt="Ikona Fiszek">
+    <h1>Fiszki</h1>
+    <p class="sub">Nauka jak gra: powtórki, bossowie, wieża i walka z kolegą. Za darmo, bez reklam, działa offline.</p>
+    <a class="btn" href="./">▶ Otwórz Fiszki</a>
+  </section>
+
+  <div class="card" id="ios"><h2>🍎 iPhone / iPad <span class="tag">bez App Store</span></h2>
+    <ol>
+      <li>W <b>Safari</b> stuknij <a href="./"><b>Otwórz Fiszki</b></a> (na iOS 16.4+ działa też Chrome).</li>
+      <li>Stuknij <b>Udostępnij</b> <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span> na dole ekranu.</li>
+      <li>Przewiń i wybierz <b>Do ekranu początkowego</b> <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg></span>, potem <b>Dodaj</b>.</li>
+      <li>Gotowe – ikona Fiszek jest na ekranie, aplikacja otwiera się na pełnym ekranie i działa bez internetu.</li>
+    </ol>
+    <p class="small">Twoje dane są na telefonie. Zaloguj się w aplikacji (Ty → konto), żeby mieć je też na innych urządzeniach.</p></div>
+
+  <div class="card" id="android"><h2>🤖 Android</h2>
+    <ol><li>Otwórz stronę w <b>Chrome</b>.</li><li>Stuknij <b>Zainstaluj</b> poniżej albo w menu <b>⋮ → Zainstaluj aplikację</b>.</li></ol>
+    <button class="btn ghost" id="install" hidden>📲 Zainstaluj Fiszki</button></div>
+
+  <div class="card" id="pc"><h2>💻 Komputer</h2>
+    <p style="margin:0">Chrome / Edge: ikona <b>Zainstaluj</b> na końcu paska adresu. Albo po prostu korzystaj w przeglądarce.</p></div>
+
+  <div class="card"><h2>✨ Co jest w środku</h2>
+    <div class="feat"><div><b>🧠 Powtórki FSRS</b>uczysz się wtedy, kiedy zapominasz</div><div><b>🐉 Bossowie</b>rozdziały talii, finał, wieża hardcore</div>
+      <div><b>👥 Z kolegą</b>lobby i walka z hydrą</div><div><b>📖 Metody nauki</b>oparte na badaniach</div></div></div>
+
+  <div class="card"><h2>🔗 Wyślij znajomemu</h2>
+    <div class="share"><input id="link" readonly><button id="copy">Kopiuj</button></div>
+    <button class="btn ghost" id="sharebtn" hidden>📤 Udostępnij</button></div>
+</main>
+<script>
+  const url = location.href.split('#')[0];
+  document.getElementById('link').value = url;
+  document.getElementById('copy').onclick = () => { navigator.clipboard?.writeText(url); document.getElementById('copy').textContent = '✓ Skopiowano'; };
+  if (navigator.share) { const b = document.getElementById('sharebtn'); b.hidden = false; b.onclick = () => navigator.share({ title: 'Fiszki', text: 'Ucz się ze mną w Fiszkach – za darmo:', url }).catch(() => {}); }
+  // podświetl instrukcję dla tego urządzenia
+  const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), android = /Android/.test(ua);
+  document.getElementById(ios ? 'ios' : android ? 'android' : 'pc').classList.add('me');
+  if (ios) document.getElementById('ios').scrollIntoView({ block: 'center' });
+  // Android/komputer: prawdziwy przycisk instalacji
+  let ev; addEventListener('beforeinstallprompt', e => { e.preventDefault(); ev = e; document.getElementById('install').hidden = false; });
+  document.getElementById('install').onclick = () => ev?.prompt();
+</script>
+</body>
+</html>
