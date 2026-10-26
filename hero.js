@@ -57,7 +57,7 @@ const LINES = {
 };
 // pozostałe postacie z heroes.js (gdyby doszły nowe) dostają drzewko kota
 const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefined' ? CHARS : {}).map(([k, c]) => [k, { name: c.name, icon: c.icon, forms: c.forms, desc: c.desc, draw: true }])),
-  beast: { name: 'Stworek', icon: '🐣', forms: ['Mały stworek', 'Młody stworek', 'Dorosły stworek', 'Stwór z innego wymiaru'], desc: 'Losowy, jedyny taki potworek.' } };
+  beast: { name: 'Stworek', icon: '🐣', forms: ['Mały stworek', 'Młody stworek', 'Dorosły stworek', 'Stwór z innego wymiaru'], desc: 'Przybysz z innego wymiaru. Nikt nie wie, czego się nauczy.' } };
 const heroLine = (h = hero()) => CHAR_LINES[h.line] ? h.line : 'cat';
 const lineDef = (l = heroLine()) => LINES[l] || LINES.cat;
 const heroForm = (h = hero(), pr = h.pr || 0) => Math.min(3, pr);
@@ -174,13 +174,13 @@ const BOSS_ME_BASE = 100;
 // ---------- 🖼️ postać z ekwipunkiem (hełm na głowie)
 function heroSVG(cls = '', pr, h = hero()) {
   const { w, a, c } = h.eq, hd = h.eq.h, p = pr ?? (h.pr || 0), line = heroLine(h);
-  const body = line === 'beast' ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Bohater' }) : heroArt(line, heroForm(h, p), h.g === 'm' ? 'm' : 'w');
-  return `<div class="hero-fig ${cls} pr-${Math.min(6, p)} ln-${line}">${p ? '<i class="hero-aura"></i>' : ''}${body}
+  const body = line === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Bohater' }) : heroArt(line, heroForm(h, p), h.g === 'm' ? 'm' : 'w');
+  return `<div class="hero-fig ${cls} pr-${Math.min(6, p)} ln-${line}${typeof spriteVars === 'function' ? spriteVars(line, heroForm(h, p)) : ''}">${p ? '<i class="hero-aura"></i>' : ''}${body}
     ${hd ? `<span class="hf-h">${gearImg(hd)}</span>` : ''}${w ? `<span class="hf-w">${gearImg(w)}</span>` : ''}${a ? `<span class="hf-a">${gearImg(a)}</span>` : ''}${c ? `<span class="hf-c">${gearImg(c)}</span>` : ''}</div>`;
 }
 
 // ikonka bohatera (sama postać, bez ekwipunku) – zamiast ogólnego 🧙
-const heroIcon = (h = hero()) => { const l = heroLine(h), p = h.pr || 0; return `<span class="hero-ic">${l === 'beast' ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: '' }) : heroArt(l, heroForm(h, p), h.g === 'm' ? 'm' : 'w')}</span>`; };
+const heroIcon = (h = hero()) => { const l = heroLine(h), p = h.pr || 0; return `<span class="hero-ic">${l === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: '' }) : heroArt(l, heroForm(h, p), h.g === 'm' ? 'm' : 'w')}</span>`; };
 // ---------- 📈 doświadczenie: z nauki (nowe fiszki, rozdział, cała talia) i z walk
 function giveXP(n, why) {
   const before = heroLv(); hero().xp += Math.round(n); hero().mod = Date.now(); S.stats.heroLv = heroLv();
@@ -224,9 +224,9 @@ ROUTES.hero = () => {
   const pane = {
     char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Każda postać ma inną umiejętność, inny supercios i własne drzewko. Punkty są wspólne – zmiana postaci niczego nie zabiera.</p>
       <div class="seg gender-seg"><button class="${h.g !== 'm' ? 'on' : ''}" data-act="hero-g" data-g="w">Ona</button><button class="${h.g === 'm' ? 'on' : ''}" data-act="hero-g" data-g="m">On</button></div>
-      <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k); return `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>
+      <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k); return `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>
         <small><b>${d.passive[0]}</b> – ${d.passive[1]}</small><small><b>${d.ult[0]}</b> – ${d.ult[1]}</small></button>`; }).join('')}</div>
-      ${h.line === 'beast' ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>`,
+      ${h.line === 'beast' && !isPixelLine('beast') ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>`,
     tree: `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🌳 Drzewko: ${esc(line.name)}</h2><span class="sp-badge${sp ? ' on' : ''}">${sp} pkt</span></div>
       <p class="small muted">Węzły gałęzi odblokowują się na poziomach ${SK_REQ_LV.join(', ')}. 1 punkt za każdy poziom i prestiż.</p>
       <div class="skill-tree">${ld.tree.map(([bn, nodes]) => `<div class="sk-branch"><div class="sk-head">${bn}</div>${nodes.map((n, i) => { const got = hasNode(n.id), prev = i === 0 || hasNode(nodes[i - 1].id), lvOk = L.lv >= SK_REQ_LV[i], can = !got && prev && lvOk && sp > 0;

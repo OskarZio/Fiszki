@@ -100,8 +100,11 @@ function charSVG(line, form = 0, g = 'w') {
 // Ustawienia → Personalizacja: „mieszany” (domyślnie), „zawsze pixel art”, „zawsze gładki”.
 // 8-bit: wszystkie postacie domyślnie pixel art. Ręcznie rysowane sprite'y 8-bit (4 ewolucje, rosną z formą) – SPRITE8;
 // pozostałe – automatyczne sprite'y z rysunków (24 → 48 px).
-const PIXEL_LINES = ['cat', 'frog', 'dog', 'owl', 'hamster', 'fox'], PX_SIZES = [24, 32, 40, 48];
-const SPRITE8 = { cat: 1 };
+const PIXEL_LINES = ['cat', 'frog', 'dog', 'owl', 'hamster', 'fox', 'beast'], PX_SIZES = [24, 32, 40, 48];
+const SPRITE8 = { cat: 1, frog: 1, dog: 1, owl: 1, hamster: 1, fox: 1, beast: 1 };
+// obrys sprite'ów 8-bit w % kwadratu: [x0, y0, x1, y1, środek głowy x, szerokość głowy] – żeby hełm siadał na głowie, a broń przy łapie
+const SPRITE_BOX = {"cat":[[28.1,50.0,70.3,99.2,52.3,25.3],[26.6,27.3,74.2,99.2,51.2,28.6],[18.8,14.8,81.2,99.2,49.1,37.5],[11.7,0.8,88.3,99.2,49.7,45.9]],"frog":[[17.2,60.2,82.8,98.4,53.1,39.4],[15.6,56.2,82.8,98.4,53.1,40.3],[7.8,40.6,92.2,98.4,53.3,50.6],[1.6,38.3,98.4,98.4,58.3,58.1]],"dog":[[23.4,60.2,76.6,98.4,59.2,31.9],[20.3,52.3,79.7,98.4,61.6,35.6],[11.7,43.0,87.5,98.4,69.6,45.5],[1.6,35.9,98.4,98.4,78.3,58.1]],"owl":[[32.0,61.7,68.0,99.2,54.0,21.6],[24.2,55.5,75.8,99.2,53.2,25.0],[19.5,50.0,80.5,99.2,53.8,36.6],[0.8,46.9,99.2,98.4,53.5,59.1]],"hamster":[[32.0,64.8,67.2,98.4,53.1,19.5],[25.8,54.7,74.2,98.4,50.8,29.1],[21.9,50.0,78.1,98.4,51.5,32.8],[1.6,43.0,98.4,98.4,53.2,43.8]],"fox":[[30.5,65.6,68.8,98.4,54.6,20.3],[25.8,55.5,73.4,98.4,59.6,23.4],[18.8,50.8,81.2,98.4,67.2,20.3],[1.6,46.9,98.4,98.4,48.1,58.1]],"beast":[[26.6,64.8,72.7,98.4,51.0,27.7],[24.2,55.5,75.8,98.4,55.1,25.0],[19.5,54.7,80.5,98.4,52.2,36.6],[1.6,47.7,98.4,98.4,56.5,58.1]]};
+const spriteVars = (line, f) => { const b = SPRITE8[line] && isPixelLine(line) && SPRITE_BOX[line]?.[f]; if (!b) return ''; const [x0, y0, x1, y1, hx, hw] = b; return ` s8" style="--x0:${x0};--y0:${y0};--x1:${x1};--y1:${y1};--hx:${hx};--hw:${hw};--bh:${y1 - y0}`; };
 const heroStyle = () => ({ evo: 'pixel', mix: 'pixel' }[S?.settings?.heroStyle] || S?.settings?.heroStyle || 'pixel');
 const isPixelLine = line => heroStyle() === 'pixel' && PIXEL_LINES.includes(line);
 function heroArt(line, f = 0, g = 'w') {

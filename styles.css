@@ -1882,3 +1882,28 @@ h1 .hero-ic { width: 40px; height: 40px; }
 .charpx.s8 { image-rendering: auto; }
 .abcd.long { font-size: 12.5px; align-items: flex-start; } .abcd span { overflow-wrap: anywhere; }
 .bf .abcd-grid:has(.abcd.long) { grid-template-columns: 1fr; }
+/* 🎒 ekwipunek na sprite'ach 8-bit: hełm na głowie, broń przy łapie, pancerz i talizman jako małe przypinki */
+.hero-fig.s8 > .hf-h { width: calc(var(--hw) * 1.2%); height: calc(var(--hw) * 1.2%); left: calc((var(--hx) - var(--hw) * .6) * 1%); top: calc((var(--y0) - var(--hw) * .62) * 1%); transform: none; }
+.hero-fig.s8 > .hf-w { width: calc(var(--bh) * .42%); height: calc(var(--bh) * .42%); left: auto; right: calc((96 - var(--x1)) * 1%); top: auto; bottom: 3%; transform: rotate(18deg); }
+.hero-fig.s8 > .hf-a { width: calc(var(--bh) * .3%); height: calc(var(--bh) * .3%); left: calc((var(--x0) - 4) * 1%); top: auto; bottom: 2%; }
+.hero-fig.s8 > .hf-c { width: calc(var(--bh) * .24%); height: calc(var(--bh) * .24%); left: calc((var(--x0) - 2) * 1%); right: auto; top: calc(var(--y0) * 1%); }
+.hero-fig.s8 .gear-img { filter: drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
+/* 🌳 drzewko: większe odstępy, pulsuje tylko poświata (bez powiększania – węzły na siebie nie nachodzą) */
+.skill-tree { gap: 14px; } .sk-branch { gap: 0; } .sk-line { height: 14px; }
+.sk { padding: 10px 8px; }
+.sk.can { animation: skGlow 1.6s ease-in-out infinite; }
+@keyframes skGlow { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); } }
+@media (max-width: 560px) { .sk-branch { gap: 8px; } .skill-tree { gap: 18px; } }
+.hero-fig.s8 > .hf-h { --hs: min(calc(var(--hw) * 1.1%), calc(var(--bh) * .42%), 46%); width: var(--hs); height: var(--hs); left: calc(var(--hx) * 1%); top: calc(var(--y0) * 1%); transform: translate(-50%, -52%); }
+/* ✨ animacje bez powiększania (nic nie nachodzi na sąsiadów) + równe odstępy */
+@keyframes pulseSoft { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 28%, transparent); filter: brightness(1.08); } }
+.sp-badge.on, .boost-chip, .ult-btn.ready, .prestige-btn, .boss-intent.soon, .boost-it.on { animation: pulseSoft 1.6s ease-in-out infinite; }
+.think-bar.late i { animation: none; }
+.gear-grid, .shop-grid { gap: 12px; } .char-grid { gap: 12px; } .eq-slots { gap: 10px; }
+.mode-pick { gap: 10px; } .boss-tags { gap: 6px; } .hero-stats { gap: 10px; } .hero-abil { gap: 10px; margin-top: 12px; }
+.bsheet { gap: 14px; } .bf { gap: 8px; } .bf-ctrl { gap: 8px; } .abcd-grid, .boss-grades { gap: 10px !important; }
+.bpath { gap: 4px; padding: 12px 4px 6px; } .bnode { margin: 0 2px; }
+.boost-row { gap: 8px; margin: 10px 0; } .bregion { margin-bottom: 12px; } .bm-h { margin: 22px 0 10px; }
+.mates { gap: 10px; } .feat-list { gap: 8px; } .reset-list { gap: 12px; }
+.hero-tabs { gap: 6px; } .hero-card .evo-chain { margin-top: 18px; gap: 6px; }
+@media (min-width: 700px) { .gear-grid, .shop-grid, .char-grid { gap: 14px; } .card + .card { margin-top: 14px; } }
