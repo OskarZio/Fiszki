@@ -101,7 +101,7 @@ function personalHTML() {
     ${chk('compact', 'Kompaktowy układ (mniej odstępów)', false)}
     ${chk('tabLabels', 'Podpisy pod ikonami w dolnym pasku')}
     ${chk('anim', 'Animacje i konfetti')}
-    <label class="field"><span>Wygląd bohatera</span>${sel('heroStyle', [['mix', '🕹️ Mieszany (kot, żaba, pies, chomik – pixel art)'], ['pixel', '👾 Wszyscy pixel art'], ['smooth', '✨ Wszyscy gładcy']])}</label>
+    <label class="field"><span>Wygląd bohatera</span>${sel('heroStyle', [['pixel', '👾 8-bit (pixel art)'], ['smooth', '✨ Gładcy (rysowani)']])}</label>
     <label class="field"><span>Wygląd naklejek</span>${sel('stStyle', [['svg', '🏷️ Naklejki (własne)'], ['3d', '🧸 Ilustracje 3D'], ['emoji', '😀 Zwykłe emoji']])}</label>
     ${chk('emojiIcons', 'Ikony zamiast emotek w menu i przyciskach')}
     ${chk('stickerAnim', 'Animowane naklejki')}

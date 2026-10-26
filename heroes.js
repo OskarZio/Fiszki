@@ -4,12 +4,12 @@
    charSVG(line, form 0–3, g 'w'|'m') → <svg>. Bez plików i bez zewnętrznych grafik (poza zdjęciem kota z naklejki). */
 
 const CHARS = {
-  cat: { name: 'Kot Wojak', icon: '🐱', forms: ['Kociak', 'Kot w hełmie', 'Kot Generał', 'Legendarny Kot Żołnierz'], c: ['#f59e0b', '#b45309', '#fde68a'], desc: 'Prosto z legendarnego mema. Nigdy nie odpuszcza kolokwium.' },
-  frog: { name: 'Żabson', icon: '🐸', forms: ['Kijanek', 'Żabson', 'Żabi Rycerz', 'Żabi Król'], c: ['#4ade80', '#15803d', '#dcfce7'], desc: 'Skacze z tematu na temat – i wszystko pamięta.' },
-  dog: { name: 'Pieseł', icon: '🐶', forms: ['Szczeniak', 'Pieseł', 'Pies Detektyw', 'Wielki Pieseł'], c: ['#fb923c', '#c2410c', '#fff7ed'], desc: 'Such nauka. Very powtórki. Wow.' },
-  owl: { name: 'Sowa Sesji', icon: '🦉', forms: ['Sówka', 'Sowa Nocna', 'Sowa Profesor', 'Sowa Arcymag'], c: ['#a78bfa', '#6d28d9', '#ede9fe'], desc: 'Uczy się po nocach, ale śpi 8 godzin. Zawsze.' },
-  hamster: { name: 'Chomik Turbo', icon: '🐹', forms: ['Chomiczek', 'Chomik Kujon', 'Chomik na Energetyku', 'Chomik Turbo'], c: ['#fcd34d', '#b45309', '#fffbeb'], desc: 'Kręci kołem powtórek szybciej niż ktokolwiek.' },
-  fox: { name: 'Lis Spryciarz', icon: '🦊', forms: ['Lisek', 'Lis w bluzie', 'Lis Ninja', 'Kitsune'], c: ['#f97316', '#9a3412', '#ffedd5'], desc: 'Zawsze znajdzie skojarzenie, którego nikt inny nie wymyśli.' },
+  cat: { name: 'Kot Wojak', icon: '🐱', forms: ['Kociak', 'Kot Nastolatek', 'Kot Weteran', 'Legendarny Strażnik'], c: ['#f59e0b', '#b45309', '#fde68a'], desc: 'Prosto z legendarnego mema. Nigdy nie odpuszcza kolokwium.' },
+  frog: { name: 'Żabson', icon: '🐸', forms: ['Żabek', 'Młoda żaba', 'Dorosła żaba', 'Królowa bagien'], c: ['#4ade80', '#15803d', '#dcfce7'], desc: 'Skacze z tematu na temat – i wszystko pamięta.' },
+  dog: { name: 'Pieseł', icon: '🐶', forms: ['Szczeniak', 'Młody pies', 'Dorosły pies', 'Legendarna bestia'], c: ['#fb923c', '#c2410c', '#fff7ed'], desc: 'Such nauka. Very powtórki. Wow.' },
+  owl: { name: 'Sowa Sesji', icon: '🦉', forms: ['Pisklę', 'Młoda sowa', 'Dorosła sowa', 'Mistrzyni nieba'], c: ['#a78bfa', '#6d28d9', '#ede9fe'], desc: 'Uczy się po nocach, ale śpi 8 godzin. Zawsze.' },
+  hamster: { name: 'Chomik Turbo', icon: '🐹', forms: ['Maluch', 'Młody chomik', 'Dorosły chomik', 'Król zapasów'], c: ['#fcd34d', '#b45309', '#fffbeb'], desc: 'Kręci kołem powtórek szybciej niż ktokolwiek.' },
+  fox: { name: 'Lis Spryciarz', icon: '🦊', forms: ['Lisek', 'Młody lis', 'Dorosły lis', 'Lisia legenda'], c: ['#f97316', '#9a3412', '#ffedd5'], desc: 'Zawsze znajdzie skojarzenie, którego nikt inny nie wymyśli.' },
 };
 function charSVG(line, form = 0, g = 'w') {
   const C = CHARS[line] || CHARS.cat, [main, dark, light] = C.c, f = Math.max(0, Math.min(3, form)), id = `h${line}${f}${g}`;
@@ -98,11 +98,14 @@ function charSVG(line, form = 0, g = 'w') {
 // 🕹️ styl postaci: gatunki pixelowe (kot, żaba, pies, chomik) są pixel art we wszystkich formach – sprite rośnie i ma więcej detali
 // z każdą ewolucją (24 → 32 → 40 → 48 px); sowa, lis i stworek są gładkie (wektor). Legendarny kot = wycięty kot z mema.
 // Ustawienia → Personalizacja: „mieszany” (domyślnie), „zawsze pixel art”, „zawsze gładki”.
-const PIXEL_LINES = ['cat', 'frog', 'dog', 'hamster'], PX_SIZES = [24, 32, 40, 48];
-const heroStyle = () => ({ evo: 'mix' }[S?.settings?.heroStyle] || S?.settings?.heroStyle || 'mix');
-const isPixelLine = line => heroStyle() === 'pixel' || (heroStyle() === 'mix' && PIXEL_LINES.includes(line));
+// 8-bit: wszystkie postacie domyślnie pixel art. Ręcznie rysowane sprite'y 8-bit (4 ewolucje, rosną z formą) – SPRITE8;
+// pozostałe – automatyczne sprite'y z rysunków (24 → 48 px).
+const PIXEL_LINES = ['cat', 'frog', 'dog', 'owl', 'hamster', 'fox'], PX_SIZES = [24, 32, 40, 48];
+const SPRITE8 = { cat: 1 };
+const heroStyle = () => ({ evo: 'pixel', mix: 'pixel' }[S?.settings?.heroStyle] || S?.settings?.heroStyle || 'pixel');
+const isPixelLine = line => heroStyle() === 'pixel' && PIXEL_LINES.includes(line);
 function heroArt(line, f = 0, g = 'w') {
-  if (line === 'cat' && f === 3) return charSVG(line, f, g);
   if (!isPixelLine(line)) return charSVG(line, f, g);
+  if (SPRITE8[line]) return `<img class="charpx s8" src="assets/pixel/${line}8-${f}.webp" alt="" draggable="false">`;
   return `<img class="charpx" src="assets/pixel/${line}-${f}-${g}-${PX_SIZES[f]}.png" alt="" draggable="false">`;
 }

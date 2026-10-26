@@ -106,7 +106,8 @@ const bossArt = (b, cls = '') => b.img ? `<div class="boss-art world ${cls}"><im
 const starsHTML = (n, max = STARS_MAX) => `<span class="bstars">${'★'.repeat(Math.min(n, max))}${'☆'.repeat(Math.max(0, max - n))}</span>`;
 
 // ---------- ⚔️ walka
-let BOSS = null, BOSS_PICK = { mode: 'flip' }, BOSS_SEL = null;
+let BOSS = null, BOSS_PICK = { mode: 'flip' }, BOSS_SEL = null, LESSON_RUN = false;
+on('sessionEnd', s => { if (LESSON_RUN && s.cram && S.stats.lesson) { const n = S.stats.lesson.name; delete S.stats.lesson; LESSON_RUN = false; save(); toast(`✅ Lekcja odrobiona – rewanż z ${n} odblokowany!`, 3500); } });
 try { Object.assign(BOSS_PICK, JSON.parse(localStorage.getItem('bossPick') || '{}')); } catch { /* */ }
 const bossPickSave = () => { try { localStorage.setItem('bossPick', JSON.stringify(BOSS_PICK)); } catch { /* */ } };
 function bossSay(k) {
@@ -114,9 +115,12 @@ function bossSay(k) {
   const own = B.b.persona?.[k], l = own && (Math.random() < .7 || !BOSS_TALK[k]) ? own : BOSS_TALK[k] || [];
   if (l.length) B.say = { txt: l[Math.random() * l.length | 0], t: Date.now(), k };
 }
+const bossKey = b => `${b.kind}:${b.id}:${b.i ?? ''}`;
+const lessonFor = b => { const L = S.stats.lesson; return L && L.k === bossKey(b) && L.ids?.some(id => S.cards.some(c => c.id === id)) ? L : null; };
 function bossStart(kind, id, i) {
   const b = bossFor(kind, id, i == null ? null : +i); if (!b) return;
   if (!b.ok) return toast(`🔒 ${b.lockMsg} (${b.learned}/${b.need})`, 4000);
+  if (lessonFor(b)) return toast(`📚 Najpierw lekcja z porażki: powtórz ${lessonFor(b).ids.length} fiszek, na których ${b.name} Cię pokonał`, 4500);
   if (lives().n < 1) return toast(`🖤 Brak serc. Odzyskasz je za ${fmtLeft(LIFE_MS - (Date.now() - lives().t))} albo za ${LIFE_REV - (lives().rev || 0)} powtórek nauki.`, 5000);
   bossBegin(b);
 }
@@ -334,6 +338,7 @@ const chestSVG = () => `<svg viewBox="0 0 120 100"><defs><linearGradient id="chw
 
 function bossEnd(won, why) {
   const B = BOSS, b = B.b, hs = B.hs; if (B.phase !== 'fight') return;
+  if (b.kind === 'tower' && typeof towerEnd === 'function') { B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); bossSay(won ? 'down' : 'win'); bossSfx(won ? 'win' : 'lose'); towerEnd(B, won); save(); return render(); }
   B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); B.why = why; bossSay(won ? 'down' : 'win');
   const flawless = won && B.lostHp === 0, total = B.ok + B.bad, acc = total ? B.ok / total : 0, modeR = MODE_REWARD[B.mode] || 1, rep = b.repeat;
   const kindXP = { ch: 0, fin: 60, cat: 40, world: 50, hydra: 50 }[b.kind] || 0;
@@ -356,7 +361,9 @@ function bossEnd(won, why) {
     S.stats.bossWins = (S.stats.bossWins || 0) + 1; S.stats.bossStageMax = Math.max(S.stats.bossStageMax || 0, b.diff + 1); if (flawless) S.stats.bossFlawless = (S.stats.bossFlawless || 0) + 1;
     B.flawless = flawless; bossSfx('win');
   } else {
-    if (why === 'dead' && !B.coop) { loseLife(); B.lifeLost = true; }
+    if (why === 'dead' && !B.coop) { loseLife(); B.lifeLost = true;
+      // 📚 lekcja z porażki: rewanż dopiero po powtórzeniu fiszek, na których boss Cię pokonał
+      const ids = [...new Set(B.missed)].slice(0, 15); if (ids.length >= 2) { S.stats.lesson = { k: bossKey(b), ids, name: b.name }; B.lesson = ids.length; } }
     bossSfx('lose');
   }
   save();
@@ -401,7 +408,9 @@ function setupSheetHTML() {
       <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : starsHTML(b.stars)}<span class="small muted">${b.repeat ? 'opanowany – powtórka za mniejszą nagrodę' : `trudność ${b.diff + 1}`}</span></div></div>
       <button class="iconbtn" data-act="boss-sel-close">✕</button></div>
     <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : '<span>⏱️ bez limitu</span>'}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
-    ${b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => `<button class="${BOSS_PICK.mode === k ? 'on' : ''}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>cios ${m.mul}</small></button>`).join('')}</div>
+    ${b.ok && lessonFor(b) ? `<div class="lock-box"><b>📚 Lekcja z porażki</b><small>${esc(b.name)} pokonał Cię na tych fiszkach. Powtórz je (${lessonFor(b).ids.length}) – rewanż odblokuje się od razu.</small></div>
+      <button class="primary block" data-act="boss-lesson">📚 Powtórz i wróć do walki</button>`
+    : b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => `<button class="${BOSS_PICK.mode === k ? 'on' : ''}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>cios ${m.mul}</small></button>`).join('')}</div>
       <p class="small muted center" style="margin:4px 0 8px">${MODES[BOSS_PICK.mode].desc} · nagrody ×${String(MODE_REWARD[BOSS_PICK.mode]).replace('.', ',')}</p>
       <button class="primary block boss-go" data-act="boss-start" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}" ${lives().n ? '' : 'disabled'}>${lives().n ? '⚔️ Walcz sam' : '🖤 Brak serc'}</button>
       <button class="block" data-go="#/coop">👥 Walcz z kolegą (lobby – Hydra)</button>`
@@ -490,7 +499,8 @@ function endView() {
     <p class="small muted">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best}${B.verOk ? ` · 🔍 ${B.verOk} sprawdzianów` : ''}${won && B.flawless ? ' · <b>bez straty ❤️</b>' : ''}</p>
     <p class="small">${msg}</p>
     ${chest}
-    ${B.missed.length ? `<button class="block" data-act="boss-cram">🔁 Powtórz ${B.missed.length} ${plural(B.missed.length, 'fiszkę', 'fiszki', 'fiszek')}, których nie pamiętałeś</button>` : ''}
+    ${B.lesson ? `<div class="lock-box" style="margin:8px 0"><b>📚 Lekcja z porażki</b><small>Rewanż odblokuje się, gdy powtórzysz ${B.lesson} ${plural(B.lesson, 'fiszkę', 'fiszki', 'fiszek')}, na których boss Cię pokonał.</small></div><button class="primary block" data-act="boss-lesson">📚 Powtórz teraz</button>` : ''}
+    ${B.missed.length && !B.lesson ? `<button class="block" data-act="boss-cram">🔁 Powtórz ${B.missed.length} ${plural(B.missed.length, 'fiszkę', 'fiszki', 'fiszek')}, których nie pamiętałeś</button>` : ''}
     <div class="row" style="margin-top:10px">${B.coop ? '<button class="primary grow" data-go="#/coop">👥 Lobby</button>' : `<button class="primary grow" data-act="boss-again">${won ? 'Dalej ⚔️' : 'Spróbuj ponownie'}</button>`}<button class="grow" data-act="boss-map">🗺️ Mapa</button><button class="grow" data-go="#/hero">${heroIcon()} Bohater</button></div>
     ${livesHTML()}
   </div>` };
@@ -535,6 +545,7 @@ Object.assign(ACTIONS, {
   'boss-quit': () => { if (!confirm(BOSS?.coop ? 'Opuścić walkę? Kolega walczy dalej sam.' : 'Uciec z walki? Serce zostaje, odpowiedzi do tej pory są zapisane, ale bez nagród.')) return; if (BOSS?.coop && typeof coopLeave === 'function') coopLeave(); BOSS = null; go('#/boss'); },
   'boss-again': () => { const b = BOSS?.b; BOSS = null; if (!b) return go('#/boss'); const nb = bossFor(b.kind, b.id, b.i); BOSS_SEL = nb ? { kind: b.kind, id: b.id, i: b.i ?? null } : null; go('#/boss'); render(); },
   'boss-map': () => { BOSS = null; go('#/boss'); },
+  'boss-lesson': () => { const L = S.stats.lesson; if (!L) return; BOSS = null; BOSS_SEL = null; SESSION = null; LESSON_RUN = true; go(`#/study/all/flip?cram=list&ids=${L.ids.join(',')}`); },
   'boss-cram': () => { const ids = BOSS.missed || []; BOSS = null; SESSION = null; go(`#/study/all/flip?cram=list&ids=${[...new Set(ids)].join(',')}`); },
 });
 // karta na Starcie: najbliższy boss do pokonania

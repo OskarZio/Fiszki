@@ -57,7 +57,7 @@ const LINES = {
 };
 // pozostałe postacie z heroes.js (gdyby doszły nowe) dostają drzewko kota
 const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefined' ? CHARS : {}).map(([k, c]) => [k, { name: c.name, icon: c.icon, forms: c.forms, desc: c.desc, draw: true }])),
-  beast: { name: 'Stworek', icon: '🐣', forms: ['Pisklę', 'Stworek', 'Bestia', 'Legenda'], desc: 'Losowy, jedyny taki potworek.' } };
+  beast: { name: 'Stworek', icon: '🐣', forms: ['Mały stworek', 'Młody stworek', 'Dorosły stworek', 'Stwór z innego wymiaru'], desc: 'Losowy, jedyny taki potworek.' } };
 const heroLine = (h = hero()) => CHAR_LINES[h.line] ? h.line : 'cat';
 const lineDef = (l = heroLine()) => LINES[l] || LINES.cat;
 const heroForm = (h = hero(), pr = h.pr || 0) => Math.min(3, pr);

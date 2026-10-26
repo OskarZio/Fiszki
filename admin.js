@@ -3,7 +3,7 @@
    oraz resety własnego postępu w grze (bohater, bossowie, naklejki, kryształy, osiągnięcia). Fiszek i nauki resety nie ruszają. */
 
 const FEATURES = {
-  boss: ['⚔️ Bossowie i bohater', ['boss', 'hero', 'coop'], 'walki z bossami, lobby, postać, ekwipunek'],
+  boss: ['⚔️ Bossowie i bohater', ['boss', 'hero', 'coop', 'tower'], 'walki z bossami, lobby, postać, ekwipunek'],
   battles: ['🥊 Bitwy 1 na 1', ['battles', 'battle', 'show'], 'pojedynki i teleturniej'],
   friends: ['👥 Znajomi i ranking', ['rank', 'inbox', 'chat', 'friend'], 'ranking, czat, znajomi'],
   shop: ['🛒 Sklep i skrzynki', ['shop'], 'kupowanie skrzynek z naklejkami'],
