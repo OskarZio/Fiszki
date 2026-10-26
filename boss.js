@@ -20,11 +20,40 @@ const BOSS_NAMES = [
   ['Sesjozaur', 'Budzi się raz na semestr.', { start: ['RAAAWR! Sesja przyszła!', 'Spałem cały semestr. A Ty?'], hit: ['Grrr! Uczyłeś się w semestrze?!', 'RAWR… to bolało!'], miss: ['HAHA! Wkuwanie na ostatnią chwilę!', 'Zjem Twoją średnią!'], attack: ['TUPNIĘCIE SESJI!', 'Ryk terminu!'], low: ['Wracam… do snu… na semestr…'], down: ['Wyginąłem… jak wszyscy dinozaury…'], win: ['Do zobaczenia we wrześniu!'] }],
   ['Wielki Prowadzący', 'Zadaje podchwytliwe pytania.', { start: ['Ciekawe… zobaczymy, co pan wie.', 'Proszę mi to wyjaśnić własnymi słowami.'], hit: ['Hmm, dobrze. Ale dlaczego?', 'Poprawnie. Następne będzie trudniejsze.'], miss: ['Przecież to podstawy!', 'Proszę wrócić do literatury.'], attack: ['Pytanie z gwiazdką!', 'A teraz proszę to samo – na odwrót!'], low: ['Widzę, że pan przygotowany…'], down: ['Gratuluję. Szczerze.'], win: ['Zapraszam na konsultacje.'] }],
 ];
-const FINAL_BOSSES = [['Arcyegzaminator', 'Zna każde pytanie z całej talii.', 'w_lion'], ['Hydra Sesji', 'Za każde zapomnienie odrasta jej głowa.', 'w_snake'], ['Król Zaległości', 'Rządzi wszystkim, czego nie powtórzyłeś.', 'w_troll'],
-  ['Skorpion Kolokwiów', 'Jad zapomnienia w ogonie.', 'w_scorpion'], ['Rekin Terminów', 'Wyczuwa strach przed egzaminem.', 'w_shark'], ['Wilk Wkuwacz', 'Wyje do księżyca w noc przed egzaminem.', 'w_wolf']];
-const WORLD_BOSSES = [['Smok Sesji', 'Pożera całe semestry naraz.', 'w_dragon'], ['Ogr Zaległości', 'Rośnie z każdą odłożoną powtórką.', 'w_ogre'], ['Pajęczyca Rozproszeń', 'Oplata myśli powiadomieniami.', 'w_spider'],
-  ['Kosmita Ściągawek', 'Przyleciał podejrzeć Twoje odpowiedzi.', 'w_alien'], ['Robot Wkuwacz', 'Zna tylko wkuwanie na pamięć.', 'w_robot'], ['Duch Zapomnienia', 'Przenika przez nieutrwaloną wiedzę.', 'w_ghost'], ['Ośmiornica Terminów', 'Osiem macek, osiem kolokwiów.', 'w_octo'], ['Kościej Egzaminator', 'Pytał już Twoich dziadków.', 'w_skull']];
-const CAT_BOSSES = [['Goblin Działów', 'Miesza materiał z kilku talii.', 'w_goblin'], ['Kałamarnica Pojęć', 'Każda macka – inny przedmiot.', 'w_squid'], ['Nietoperz Skrótów', 'Lata między tematami.', 'w_bat']];
+// 👾 50 bossów 8-bit (assets/bosses/NN.webp): [nazwa, opis, zaczepka na start]
+const BOSSES50 = [
+  ['Hydra', 'Wiele głów, jedno ciało. Każda odrasta po śmierci.', 'Utnij jedną głowę – wyrosną dwie. Jak zapomniane fiszki!'],
+  ['Smok', 'Latający władca niebios. Ogniste oddechy i potężne szpony.', 'Spalę Twoje notatki na popiół!'], ['Lich', 'Nieumarły czarnoksiężnik. Kontroluje armię szkieletów.', 'Twoja wiedza umrze… a ja ją wskrzeszę jako swoją.'],
+  ['Gigant', 'Olbrzym z kamienia. Zniszczy wszystko na swojej drodze.', 'GRRR. MAŁY CZŁOWIEK. MAŁA WIEDZA.'], ['Król Szkieletów', 'Władca nieumarłych. Dowodzi legionami kości.', 'Kości mam wszystkie. A Ty pamiętasz ich nazwy?'],
+  ['Cthulhu', 'Przedwieczny bóg. Jego obecność oszałamia.', 'Ph\'nglui… zapomniałeś definicji?'], ['Władca Demonów', 'Pan piekieł. Przywołuje inne demony.', 'Witaj w piekle sesji!'],
+  ['Kraken', 'Gigantyczna bestia morska. Rozrywa statki i wyspy.', 'Wciągnę Cię na dno zaległości!'], ['Cyklop', 'Jedno oko, ogromna siła. Rzuca skałami i drzewami.', 'Mam jedno oko – i widzę każdą Twoją pomyłkę.'],
+  ['Minotaur', 'Pół byk, pół człowiek. Władca labiryntu.', 'Z mojego labiryntu wychodzą tylko ci, którzy umieją.'], ['Wilkołak Król', 'Najsilniejszy z wilkołaków. Krwawa pełnia księżyca.', 'Auuu! Pełnia – idealna noc na zapominanie.'],
+  ['Bazyliszek', 'Spojrzenie zabija. Jego cień jest śmiertelny.', 'Spójrz mi w oczy… i powiedz, że to wiesz.'], ['Górski Troll', 'Obrażony przez wszystko. Zabija i niszczy.', 'Obraziłeś mnie samym przyjściem!'],
+  ['Feniks', 'Odradza się z popiołów. Wieczna legenda.', 'Pokonasz mnie – i tak się odrodzę. Jak Twoje błędy.'], ['Królowa Pająków', 'Setki pająków na rozkaz. Sieć śmierci.', 'Moja sieć łapie każdą lukę w pamięci.'],
+  ['Wampir', 'Piękny, ale śmiertelny. Żyje dzięki krwi.', 'Wyssam z Ciebie całą wiedzę…'], ['Krabolot', 'Gigantyczny krab. Zatapia wszystko.', 'Klik-klak! Ciach Twoją serię!'],
+  ['Mroczny Rycerz', 'Nie zginie, dopóki nie zniszczysz jego zbroi.', 'Moja zbroja jest z niepowtórzonych fiszek.'], ['Żywiołak Ognia', 'Czysta energia ognia. Nie da się spowolnić.', 'Szybciej! Płonie Ci czas!'],
+  ['Żywiołak Lodu', 'Lodowa bestia. Zamraża wszystko.', 'Zamrożę Ci mózg w pół słowa.'], ['Mumia', 'Klątwa starożytnego faraona. Nie kończy na śmierci.', 'Spałam 3000 lat – i wciąż pamiętam więcej niż Ty.'],
+  ['Pirania Gigant', 'Olbrzymie piranie. Pożerają wszystko w wodzie.', 'Chrup! Zjadam Twoje odpowiedzi.'], ['Smok Lodu', 'Mroźny władca północy. Zamraża całe krainy.', 'Lodowy oddech skuje Twoją pamięć.'],
+  ['Głębinowy Potwór', 'Mieszka w najciemniejszych otchłaniach.', 'W głębinach Twojej pamięci jest ciemno… i pusto.'], ['Słońce', 'Pochłania życie. Jego promienie parzą.', 'Parzę! Odpowiadaj, zanim się stopisz.'],
+  ['Drakon', 'Mechaniczny smok. Stworzony przez ludzi.', 'BIP. WYKRYTO BRAK WIEDZY.'], ['Krakenskorpion', 'Pół skorpion, pół kraken. Z wody i piasku.', 'Żądło i macki – nie uciekniesz.'],
+  ['Władca Burzy', 'Kontroluje pioruny. Niebo jest jego bronią.', 'Grzmot! Kto nie powtarza, w tego trafia piorun.'], ['Tytan', 'Gigantyczny bóg. Siła natury w jednym.', 'Jestem siłą natury. Ty – siłą przyzwyczajenia.'],
+  ['Strażnik Lochu', 'Chroni starożytne skarby. Nie pozwoli wejść.', 'Hasło? Nie znasz? Nie wejdziesz.'], ['Wąż Kosmiczny', 'Istota z innego wymiaru. Pożera planety.', 'Pożarłem planety. Twoje fiszki to przystawka.'],
+  ['Golem', 'Tworzony z magii i ziemi. Niezniszczalny.', 'KAMIEŃ NIE ZAPOMINA. TY TAK.'], ['Zjawa', 'Duch z przeszłości. Nie zazna spokoju.', 'Buuu… jestem duchem Twojej ostatniej sesji.'],
+  ['Diabłoząb', 'Demon z głębin. Łączy siłę z inteligencją.', 'Siła i rozum. A Ty masz chociaż jedno?'], ['Wielki Pająk', 'Tka sieć śmierci. Poluje w ciemności.', 'Osiem oczu patrzy, jak się mylisz.'],
+  ['Lewiatan', 'Władca oceanów. Zburzy każde wybrzeże.', 'Fala zapomnienia nadchodzi!'], ['Cyber Zygon', 'Połączenie maszyny i potwora.', 'Wgrałem Ci wirusa zapominania.'],
+  ['Kat', 'Szybki, zwinny, zabójczy. Pojawia się z cienia.', 'Nie zobaczysz mnie… dopóki się nie pomylisz.'], ['Krak', 'Mózg z mackami. Kontroluje inne potwory.', 'Mam większy mózg. Dosłownie.'],
+  ['Lodowy Olbrzym', 'Mroźny kolos. Niszczy wszystko.', 'Brrr… zimno Ci? To strach przed kolokwium.'], ['Pustynny Wąż', 'Ziemia go połyka. On połyka ciebie.', 'Sssss… wyschło Ci w głowie?'],
+  ['Władca Roślin', 'Kontroluje naturę. Rośliny są jego armią.', 'Moje korzenie sięgają głębiej niż Twoja wiedza.'], ['Mroźny Wilk', 'Legenda północy. Niezwykła szybkość.', 'Jestem szybszy niż Twoja odpowiedź.'],
+  ['Samuraj Demon', 'Honor i śmierć. Walka do końca.', 'Walcz z honorem. Bez ściągania.'], ['Skorpion Król', 'Władca pustyni. Jego żądło zabija.', 'Jedno ukłucie – i pustka w głowie.'],
+  ['Wielki Robot', 'Stary strażnik cywilizacji. Nadal aktywny.', 'SKANOWANIE… POZIOM WIEDZY: NISKI.'], ['Pająk Czasu', 'Manipuluje czasem. Jego sieć to pułapka.', 'Cofnę czas – do chwili przed nauką.'],
+  ['Bogini Ziemi', 'Przywołuje żywioły. Broni swojego świata.', 'Ziemia pamięta wszystko. A Ty?'], ['Władca Cieni', 'Czysta ciemność. Zabiera dusze.', 'W ciemności nie widać odpowiedzi.'],
+  ['Kosmiczny Tytan', 'Istota spoza wszechświata. Nie ma słabości.', 'Jestem końcem wszechświata. I Twojej serii.'],
+];
+const bossImg = i => `assets/bosses/${String(i + 1).padStart(2, '0')}.webp`;
+// boss nr i z zestawu: nazwa, opis, obrazek, zaczepki (start – własna, reszta z charakteru)
+const bossOf = i => { const [name, desc, line] = BOSSES50[i % 50], P = BOSS_NAMES[i % BOSS_NAMES.length][2]; return { name, desc, img: bossImg(i % 50), persona: { ...P, start: [line] } }; };
+const FINAL_IDX = [0, 1, 5, 6, 7, 35, 28, 49, 22, 30], WORLD_IDX = [27, 24, 30, 13, 2, 4, 48, 8, 9, 39], CAT_IDX = [11, 26, 38, 14, 46];
+const CHAPTER_IDX = BOSSES50.map((_, i) => i).filter(i => ![...FINAL_IDX, ...WORLD_IDX].includes(i));
 const BOSS_TALK = {
   start: ['Ha! Kolejny student, który „uczył się wczoraj”.', 'Twoje fiszki są moje!'], hit: ['Auć!', 'Hmpf. Szczęściarz.'], miss: ['HA! Na tyle Cię stać?', 'Pudło!'], attack: ['Przyjmij to!', 'Masz!'], low: ['N-nie… jeszcze nie skończyłem!'], down: ['Nieeee! Wrócę!'], win: ['Wróć, jak powtórzysz materiał!'],
   crit: ['KRYTYK?! Kto Cię tego nauczył?!', 'To nie fair, Ty masz FSRS!'], combo: ['Seria?! Przestań się uczyć regularnie!', 'Za dobrze Ci idzie… podejrzane.'],
@@ -70,26 +99,26 @@ function bossFor(kind, id, i) {
   const pr = hero().pr || 0;
   if (kind === 'ch') {
     const d = deckById(id), chs = d ? deckChapters(d) : [], cs = chs[i] || []; if (!cs.length) return null;
-    const rec = deckRec(d), stars = rec.ch[i] || 0, single = chs.length === 1, h = hashStr(d.id) + i, [name, desc, persona] = BOSS_NAMES[h % BOSS_NAMES.length];
-    return { kind, id, i, cards: cs, stars, diff: Math.min(STARS_MAX, stars), name, desc, persona, seed: hashStr(d.id) % 100000 + i * 7919,
+    const rec = deckRec(d), stars = rec.ch[i] || 0, single = chs.length === 1, bo = bossOf(single ? FINAL_IDX[hashStr(d.id) % FINAL_IDX.length] : CHAPTER_IDX[(hashStr(d.id) + i * 7) % CHAPTER_IDX.length]);
+    return { kind, id, i, cards: cs, stars, diff: Math.min(STARS_MAX, stars), ...bo, seed: hashStr(d.id) % 100000 + i * 7919,
       title: single ? `Boss talii „${d.name}”` : `Rozdział ${i + 1}/${chs.length} · „${d.name}”`, ok: learnedN(cs) >= cs.length, learned: learnedN(cs), need: cs.length,
       lockMsg: `Naucz się wszystkich ${cs.length} fiszek rozdziału`, repeat: stars >= STARS_MAX, pr };
   }
   if (kind === 'fin') {
     const d = deckById(id), chs = d ? deckChapters(d) : []; if (chs.length < 2) return null;
-    const rec = deckRec(d), stars = rec.fin || 0, cs = chs.flat(), [name, desc, img] = FINAL_BOSSES[hashStr(d.id) % FINAL_BOSSES.length], beaten = chs.filter((_, k) => (rec.ch[k] || 0) >= 1).length;
-    return { kind, id, cards: cs, stars, diff: Math.min(4, 1 + stars), name, desc, img, persona: null, final: true, title: `👑 Finał – cała talia „${d.name}” (${cs.length} fiszek)`,
+    const rec = deckRec(d), stars = rec.fin || 0, cs = chs.flat(), bo = bossOf(FINAL_IDX[hashStr(d.id) % FINAL_IDX.length]), beaten = chs.filter((_, k) => (rec.ch[k] || 0) >= 1).length;
+    return { kind, id, cards: cs, stars, diff: Math.min(4, 1 + stars), ...bo, final: true, title: `👑 Finał – cała talia „${d.name}” (${cs.length} fiszek)`,
       ok: beaten >= chs.length && learnedN(cs) >= cs.length, learned: beaten, need: chs.length, lockMsg: `Pokonaj bossów wszystkich ${chs.length} rozdziałów`, repeat: stars >= STARS_MAX, pr };
   }
   if (kind === 'cat') {
     const t = typeof topicById === 'function' && topicById(id); if (!t) return null;
-    const ds = topicDecks(t, true), cs = S.cards.filter(c => ds.some(d => d.id === c.deckId) && fightable(c)), stars = S.stats['cb_' + t.id] || 0, [name, desc, img] = CAT_BOSSES[hashStr(t.id) % CAT_BOSSES.length];
-    return { kind, id, cards: cs.filter(c => c.srs.state !== 'new'), stars, diff: Math.min(4, 1 + stars), name, desc, img, persona: null, title: `${t.emoji || '📁'} Kategoria „${t.name}” – ${ds.length} talie`,
+    const ds = topicDecks(t, true), cs = S.cards.filter(c => ds.some(d => d.id === c.deckId) && fightable(c)), stars = S.stats['cb_' + t.id] || 0, bo = bossOf(CAT_IDX[hashStr(t.id) % CAT_IDX.length]);
+    return { kind, id, cards: cs.filter(c => c.srs.state !== 'new'), stars, diff: Math.min(4, 1 + stars), ...bo, title: `${t.emoji || '📁'} Kategoria „${t.name}” – ${ds.length} talie`,
       ok: learnedN(cs) >= 30 && ds.length >= 2, learned: learnedN(cs), need: 30, lockMsg: 'Kategoria z min. 2 taliami i 30 nauczonymi fiszkami', repeat: false, len: 40, pr };
   }
   if (kind === 'world') {
-    const st = S.stats.worldStage || 0, [name, desc, img] = WORLD_BOSSES[st % WORLD_BOSSES.length], cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new');
-    return { kind, id: 'world', cards: cs, stars: st, diff: Math.min(4, 1 + Math.floor(st / 2)), name, desc, img, persona: null, title: `🌍 Boss świata · etap ${st + 1} – wszystkie talie`,
+    const st = S.stats.worldStage || 0, bo = bossOf(WORLD_IDX[st % WORLD_IDX.length]), cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new');
+    return { kind, id: 'world', cards: cs, stars: st, diff: Math.min(4, 1 + Math.floor(st / 2)), ...bo, title: `🌍 Boss świata · etap ${st + 1} – wszystkie talie`,
       ok: cs.length >= WORLD_REQ, learned: cs.length, need: WORLD_REQ, lockMsg: `Naucz się ${WORLD_REQ} fiszek z dowolnych talii`, repeat: false, len: 50, pr };
   }
   return null;
@@ -101,7 +130,7 @@ function bossParams(b, mode = BOSS_PICK.mode) {
   return { len, hp: Math.round(len * 10 * (.7 + .1 * diff) * (MODE_HP[mode] || 1) * scale), atk: Math.round((9 + 4 * diff + (big ? 4 : 0)) * (.75 + .25 * hs.hp / 100) * (1 + .12 * b.pr)),
     every: diff >= 2 ? 2 : 3, think: THINK_S[Math.min(4, diff)], abil };
 }
-const bossArt = (b, cls = '') => b.img ? `<div class="boss-art world ${cls}"><img src="assets/fluent/${b.img}.webp" alt="${esc(b.name)}" draggable="false"></div>`
+const bossArt = (b, cls = '') => b.img ? `<div class="boss-art world px ${cls}"><img src="${b.img.includes('/') ? b.img : `assets/fluent/${b.img}.webp`}" alt="${esc(b.name)}" draggable="false"></div>`
   : `<div class="boss-art ${cls}">${creatureSVG(b.seed, b.diff >= 3 ? 'mythic' : 'epic', { boss: true, label: b.name })}</div>`;
 const starsHTML = (n, max = STARS_MAX) => `<span class="bstars">${'★'.repeat(Math.min(n, max))}${'☆'.repeat(Math.max(0, max - n))}</span>`;
 
@@ -461,7 +490,7 @@ ROUTES.boss = parts => {
   <div class="row nowrap"><h1 class="grow" style="margin:0">⚔️ Przygoda</h1>${coinsHTML()}</div>
   ${heroBarHTML()}
   ${boostChips() || freeBoostReady() ? `<div class="boost-row">${boostChips()}${freeBoostReady() ? '<button class="sm primary" data-act="boost-free">🎁 Darmowy booster</button>' : ''}</div>` : ''}
-  <div class="card row nowrap coop-cta" data-go="#/coop"><img class="gear-img" src="assets/fluent/w_snake.webp" alt=""><div class="grow"><b>👥 Walcz z kolegą – Hydra</b><div class="small muted">Lobby na 2–4 osoby: każdy uczy się swoich fiszek, razem bijecie głowy hydry i reanimujecie się nawzajem</div></div><span>›</span></div>
+  <div class="card row nowrap coop-cta" data-go="#/coop"><img class="gear-img" src="assets/bosses/01.webp" alt=""><div class="grow"><b>👥 Walcz z kolegą – Hydra</b><div class="small muted">Lobby na 2–4 osoby: każdy uczy się swoich fiszek, razem bijecie głowy hydry i reanimujecie się nawzajem</div></div><span>›</span></div>
   <h2 class="bm-h">📚 Twoje talie <small class="muted">rozdziały po ${CH_SIZE} fiszek · finał = cała talia</small></h2>
   ${decks.map(({ d, chs }, k) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars).length;
     return `<details class="card bregion"${k < 2 ? ' open' : ''}><summary class="row nowrap"><b class="grow">${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} ${plural(chs.length, 'rozdział', 'rozdziały', 'rozdziałów')}${fin?.stars ? ' · 👑' : ''}</span></summary>

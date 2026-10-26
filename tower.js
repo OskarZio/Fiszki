@@ -18,9 +18,8 @@ const FLOOR_HEAL = .35;   // po każdym piętrze wraca 35% ❤️
 const tower = () => hero().tower || null;
 const towerBest = () => S.stats.towerBest || 0;
 function towerBoss(T) {
-  const f = T.floor, guard = f % TOWER_GUARD === 0, pool = guard ? [...FINAL_BOSSES, ...WORLD_BOSSES] : BOSS_NAMES;
-  const pick = pool[(f * 7 + (T.seed || 0)) % pool.length], cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new');
-  const [name, desc, x] = pick, img = typeof x === 'string' ? x : null, persona = typeof x === 'object' ? x : null;
+  const f = T.floor, guard = f % TOWER_GUARD === 0, pool = guard ? FINAL_IDX : CHAPTER_IDX.concat(WORLD_IDX);
+  const bo = bossOf(pool[(f * 7 + (T.seed || 0)) % pool.length]), cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new'), { name, desc, img, persona } = bo;
   return { kind: 'tower', id: 'tower', i: f, name: guard ? `${name} – strażnik piętra` : name, desc, img, persona, seed: 4242 + f * 131, diff: Math.min(4, Math.floor(f / 3)), stars: 0,
     cards: cs, ok: cs.length >= TOWER_REQ, repeat: false, pr: hero().pr || 0, len: Math.min(20, 6 + f), title: `🗼 Wieża · piętro ${f}${guard ? ' · strażnik' : ''}`, final: guard };
 }

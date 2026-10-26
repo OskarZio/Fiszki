@@ -66,10 +66,33 @@ const SK_REQ_LV = [1, 4, 8, 13];   // od którego poziomu można kupić 1., 2., 
 const lineSk = (h = hero(), l = heroLine(h)) => (h.sk[l] = h.sk[l] || {});
 const hasNode = id => !!lineSk()[id];
 // suma efektu: węzły drzewka obecnej postaci + umiejętność bierna
+// 📖 3 strony drzewka: strona I – własne węzły postaci; II i III – mocniejsze gałęzie (odblokowane po ukończeniu poprzedniej strony).
+// Po ukończeniu wszystkich 3 stron każdy węzeł ulepszysz: ✨ złoty → 💠 platynowy → 🌈 holograficzny (każdy stopień +50% efektu, 1 pkt).
+const PAGE_N = ['I', 'II', 'III'], PAGE_MUL = [1, .75, .6], TIERS = ['', 'Złoty', 'Platynowy', 'Holograficzny'], TIER_IC = ['', '✨', '💠', '🌈'];
+const EFF_ALT = { second: ['hp', 20], steady: ['combo', 30], alch: ['gems', 10], ultFast: ['ultPow', 20], ice: ['time', 15] };
+const EFF_DESC = { dmg: v => `+${v}% obrażeń`, crit: v => `+${v}% krytyka`, hp: v => `+${v} ❤️`, def: v => `−${v}% obrażeń`, dodge: v => `+${v}% uniku`, regen: v => `dobra odpowiedź leczy ${v} ❤️`,
+  type: v => `wpisywanie: cios +${Math.round(v * 100)}%`, abcd: v => `ABCD: cios +${Math.round(v * 100)}%`, loot: v => `+${v} przedmiot w skrzyni`, ultPow: v => `supercios +${v}%`, time: v => `+${v}% czasu do namysłu`,
+  verify: v => `sprawdzian: bonus +${v}%`, vamp: v => `${v}% obrażeń wraca jako ❤️`, first: v => `pierwszy cios ×${v}`, exec: v => `boss < 25% ❤️ → +${v}%`, combo: v => `seria rośnie +${v}% szybciej`,
+  xp: v => `+${v}% doświadczenia`, gems: v => `+${v}% 💎 z walk`, thorns: v => `odbija ${v}% obrażeń` };
+const roundV = (eff, v) => ['type', 'abcd'].includes(eff) ? Math.round(v * 100) / 100 : eff === 'first' ? Math.round(v * 4) / 4 : Math.max(1, Math.round(v));
+const PAGES_CACHE = {};
+function treePages(l = heroLine()) {
+  if (PAGES_CACHE[l]) return PAGES_CACHE[l];
+  const T = lineDef(l).tree;
+  return (PAGES_CACHE[l] = [T, ...[1, 2].map(p => T.map(([bn, nodes]) => [`${bn} ${PAGE_N[p]}`, nodes.map(n => {
+    let [eff, v] = EFF_ALT[n.eff] || [n.eff, n.v]; v = roundV(eff, v * PAGE_MUL[p]);
+    return { id: `${n.id}_${p + 1}`, name: `${n.name} ${PAGE_N[p]}`, desc: EFF_DESC[eff] ? EFF_DESC[eff](v) : n.desc, eff, v };
+  })]))]);
+}
+const allNodes = (l = heroLine()) => treePages(l).flat().flatMap(([, ns]) => ns);
+const pageDone = (p, l = heroLine()) => treePages(l)[p].every(([, ns]) => ns.every(n => lineSk(hero(), l)[n.id]));
+const pageOpen = (p, l = heroLine()) => p === 0 || pageDone(p - 1, l);
+const treeDone = (l = heroLine()) => pageDone(2, l);
+const lineTier = (h = hero(), l = heroLine(h)) => ((h.skt = h.skt || {})[l] = h.skt[l] || {});
 function skVal(eff) {
-  const L = lineDef(), own = lineSk();
+  const L = lineDef(), own = lineSk(), tier = lineTier();
   let v = L.passive[2][eff] || 0;
-  for (const [, nodes] of L.tree) for (const n of nodes) if (own[n.id] && n.eff === eff) v += n.v;
+  for (const n of allNodes()) if (own[n.id] && n.eff === eff) v += n.v * (1 + .5 * (tier[n.id] || 0));
   return v;
 }
 const hasSk = eff => skVal(eff) > 0;
@@ -80,7 +103,8 @@ function linePts(l = heroLine()) {
   if (h.spl[l] == null) h.spl[l] = Math.max(1, Object.keys(h.sk[l] || {}).length);
   return h.spl[l];
 }
-const skPoints = (l = heroLine()) => linePts(l) - Object.keys(lineSk(hero(), l)).length;
+const skSpent = (l = heroLine()) => Object.keys(lineSk(hero(), l)).length + Object.values(lineTier(hero(), l)).reduce((a, t) => a + t, 0);
+const skPoints = (l = heroLine()) => linePts(l) - skSpent(l);
 
 // ---------- ⏱️ boostery: 30 min; w weekend „Podwójne XP” za darmo, co 3 dni darmowy booster do odebrania
 const BOOSTS = { xp2: { name: 'Podwójne XP', desc: 'doświadczenie bohatera ×2', img: 'b_star', price: 150 }, gems2: { name: 'Podwójne kryształy', desc: '💎 z bossów i łupów ×2', img: 'b_gstar', price: 200 }, loot2: { name: 'Szczęście łupieżcy', desc: '+1 przedmiot w każdej skrzyni', img: 'b_swords', price: 200 } };
@@ -213,9 +237,9 @@ on('review', (c, g, wasNew) => {
 let EVOLVE = null;
 function heroPrestige() {
   const h = hero(); if (heroLv() < HERO_MAX) return toast(`Prestiż od ${HERO_MAX}. poziomu`);
-  if (!confirm(`Prestiż ${(h.pr || 0) + 1}? Poziom wraca do 1, drzewka się zerują (punkty wrócą z poziomami), ekwipunek zostaje.\n\nStałe bonusy: +5% obrażeń, +10 ❤️, +10% doświadczenia. Bossowie też będą silniejsi.`)) return;
+  if (!confirm(`Prestiż ${(h.pr || 0) + 1}? Poziom wraca do 1 – a każdy kolejny awans daje nowe punkty drzewka (drzewka i ekwipunek zostają).\n\nStałe bonusy: +5% obrażeń, +10 ❤️, +10% doświadczenia. Bossowie też będą silniejsi.`)) return;
   EVOLVE = { from: h.pr || 0, t: Date.now() };
-  h.pr = (h.pr || 0) + 1; h.xp = 0; h.sk = {}; h.spl = {}; h.mod = Date.now(); S.stats.prestige = Math.max(S.stats.prestige || 0, h.pr);
+  h.pr = (h.pr || 0) + 1; h.xp = 0; h.mod = Date.now(); S.stats.prestige = Math.max(S.stats.prestige || 0, h.pr);
   addItem('boost', 'xp2', 1, 'prestige-' + h.pr); save(); render();
   setTimeout(() => { EVOLVE = null; celebrate(`🌟 Ewolucja! ${heroFormName()} · ${PR_TITLES[Math.min(6, h.pr)]}`, `Prestiż ${h.pr} · w nagrodę booster „Podwójne XP”`); confetti(260); render(); }, 2600);
 }
@@ -225,7 +249,7 @@ const evolveHTML = () => EVOLVE ? `<div class="evolve-ov"><div class="evo-txt">C
 const heroBarHTML = () => { const L = heroLvAt(hero().xp), sp = skPoints();
   return `<div class="card hero-bar row nowrap" data-go="#/hero">${heroSVG('sm')}<div class="grow"><b>${heroFormName()} · poz. ${L.lv}${hero().pr ? ` · ★${hero().pr}` : ''}</b><div class="pbar"><i style="width:${(L.cur / L.need * 100).toFixed(1)}%"></i></div>
     <small class="muted">${sp ? `<b style="color:var(--accent)">${sp} ${plural(sp, 'punkt', 'punkty', 'punktów')} umiejętności do wydania!</b>` : 'postać · drzewko · ekwipunek'}</small></div>${livesHTML()}</div>`; };
-let HERO_TAB = 'char';
+let HERO_TAB = 'char', HERO_PAGE = 0, HERO_UP = false;
 ROUTES.hero = () => {
   const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)], ld = lineDef();
   const tabs = [['char', '🎭 Postać'], ['tree', `🌳 Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒 Ekwipunek'], ['shop', '🔨 Kowal']];
@@ -235,11 +259,17 @@ ROUTES.hero = () => {
       <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k); return `<button class="char${heroLine(h) === k ? ' on' : ''}" data-act="hero-line" data-k="${k}"><span class="char-cr">${k === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>${(() => { const n = skPoints(k); return n > 0 ? `<i class="char-pts">🌳 ${n} pkt</i>` : ''; })()}
         <small><b>${d.passive[0]}</b> – ${d.passive[1]}</small><small><b>${d.ult[0]}</b> – ${d.ult[1]}</small></button>`; }).join('')}</div>
       ${h.line === 'beast' && !isPixelLine('beast') ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>`,
-    tree: `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🌳 Drzewko: ${esc(line.name)}</h2><span class="sp-badge${sp ? ' on' : ''}">${sp} pkt</span></div>
-      <p class="small muted">Węzły gałęzi odblokowują się na poziomach ${SK_REQ_LV.join(', ')}. Punkty tej postaci: ${linePts()} (1 na start + każdy awans zdobyty nią).</p>
-      <div class="skill-tree">${ld.tree.map(([bn, nodes]) => `<div class="sk-branch"><div class="sk-head">${bn}</div>${nodes.map((n, i) => { const got = hasNode(n.id), prev = i === 0 || hasNode(nodes[i - 1].id), lvOk = L.lv >= SK_REQ_LV[i], can = !got && prev && lvOk && sp > 0;
-        return `<button class="sk${got ? ' got' : can ? ' can' : ''}" data-act="hero-sk" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${n.name}</b><small>${n.desc}</small>${got ? '<i>✓</i>' : !lvOk ? `<i>🔒 poz. ${SK_REQ_LV[i]}</i>` : !prev ? '<i>🔒</i>' : ''}</button>`; }).join('<span class="sk-line"></span>')}</div>`).join('')}</div>
-      ${Object.keys(lineSk()).length ? '<button class="sm ghost" data-act="hero-sk-reset" style="margin-top:10px">↺ Zresetuj drzewko (100 💎)</button>' : ''}</div>`,
+    tree: (() => { const pages = treePages(), pg = Math.min(HERO_PAGE, 2), open = pageOpen(pg), done = treeDone(), tier = lineTier(), up = done && HERO_UP;
+      return `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🌳 Drzewko: ${esc(line.name)}</h2><span class="sp-badge${sp ? ' on' : ''}">${sp} pkt</span></div>
+      <div class="seg tree-pages">${pages.map((_, p) => `<button class="${pg === p && !up ? 'on' : ''}" data-act="hero-page" data-p="${p}" ${pageOpen(p) ? '' : 'disabled'}>${pageOpen(p) ? '' : '🔒 '}Strona ${PAGE_N[p]}${pageDone(p) ? ' ✓' : ''}</button>`).join('')}
+        <button class="${up ? 'on' : ''}" data-act="hero-up" ${done ? '' : 'disabled'} title="Po ukończeniu 3 stron">${done ? '' : '🔒 '}✨ Ulepszanie</button></div>
+      <p class="small muted">${up ? 'Każdy węzeł: ✨ złoty → 💠 platynowy → 🌈 holograficzny. Każdy stopień +50% efektu i kosztuje 1 pkt.' : pg === 0 ? `Węzły odblokowują się na poziomach ${SK_REQ_LV.join(', ')}. Ukończ stronę I, żeby otworzyć stronę II.` : `Strona ${PAGE_N[pg]} – mocniejsze gałęzie. ${pg < 2 ? `Ukończ ją, żeby otworzyć stronę ${PAGE_N[pg + 1]}.` : 'Ukończ ją, żeby odblokować ulepszanie węzłów.'}`}
+        Punkty tej postaci: ${linePts()} (1 na start + każdy awans zdobyty nią, także po prestiżu).</p>
+      ${up ? `<div class="up-grid">${pages.map((pgN, p) => `<div class="up-page"><div class="sk-head">Strona ${PAGE_N[p]}</div>${pgN.map(([, ns]) => ns).flat().map(n => { const t = tier[n.id] || 0, can = t < 3 && sp > 0;
+          return `<button class="sk got t${t}" data-act="hero-tier" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${TIER_IC[t]} ${n.name}</b><small>${t ? TIERS[t] + ' · ' : ''}efekt ×${(1 + .5 * t).toFixed(1).replace('.', ',')}</small><i>${t >= 3 ? '🌈 max' : `→ ${TIER_IC[t + 1]} ${TIERS[t + 1]}`}</i></button>`; }).join('')}</div>`).join('')}</div>`
+      : `<div class="skill-tree${open ? '' : ' locked'}">${pages[pg].map(([bn, nodes]) => `<div class="sk-branch"><div class="sk-head">${bn}</div>${nodes.map((n, i) => { const got = hasNode(n.id), prev = i === 0 || hasNode(nodes[i - 1].id), lvOk = pg > 0 || L.lv >= SK_REQ_LV[i], can = open && !got && prev && lvOk && sp > 0, t = tier[n.id] || 0;
+        return `<button class="sk${got ? ' got t' + t : can ? ' can' : ''}" data-act="hero-sk" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${t ? TIER_IC[t] + ' ' : ''}${n.name}</b><small>${n.desc}</small>${got ? '<i>✓</i>' : !lvOk ? `<i>🔒 poz. ${SK_REQ_LV[i]}</i>` : !prev || !open ? '<i>🔒</i>' : ''}</button>`; }).join('<span class="sk-line"></span>')}</div>`).join('')}</div>`}
+      ${Object.keys(lineSk()).length ? '<button class="sm ghost" data-act="hero-sk-reset" style="margin-top:10px">↺ Zresetuj drzewko tej postaci (200 💎, punkty wracają)</button>' : ''}</div>`; })(),
     eq: `<div class="card"><h2 style="margin-top:0">🎒 Założone</h2>
       <div class="eq-slots">${['w', 'h', 'a', 'c'].map(s => { const id = h.eq[s], g = GEAR[id]; return `<div class="eq-slot" style="--rc:${g ? RARITY[g.r].color : '#94a3b8'}"><small>${SLOT_NAME[s]}</small>${g ? `${gearImg(id)}<b>${esc(g.name)}${(h.forge[id] || 0) ? ` +${h.forge[id]}` : ''}</b>` : '<span class="eq-empty">—</span>'}</div>`; }).join('')}</div>
       ${['w', 'h', 'a', 'c'].map(s => { const own = Object.keys(GEAR).filter(id => GEAR[id].slot === s && ownsGear(id)); if (!own.length) return '';
@@ -273,10 +303,14 @@ ROUTES.hero = () => {
 Object.assign(ACTIONS, {
   'hero-tab': el => { HERO_TAB = el.dataset.k; render(); },
   'hero-eq': el => { const g = GEAR[el.dataset.id], h = hero(); if (!g) return; h.eq[g.slot] = h.eq[g.slot] === el.dataset.id ? undefined : el.dataset.id; h.mod = Date.now(); save(); render(); },
-  'hero-sk': el => { const h = hero(); if (skPoints() < 1) return; lineSk(h)[el.dataset.id] = 1; h.mod = Date.now(); S.stats.skills = Object.keys(lineSk(h)).length; if (lineDef().tree.some(([, ns]) => ns.every(n => lineSk(h)[n.id]))) S.stats.skillBranch = 1; save(); toast('🌳 Nowa umiejętność!'); render(); },
-  'hero-sk-reset': () => { if (!confirm('Zresetować drzewko tej postaci za 100 💎? Punkty wrócą do rozdania.')) return; if (!spend(100, 'sk-reset')) return; hero().sk[heroLine()] = {}; hero().mod = Date.now(); save(); render(); },
+  'hero-sk': el => { const h = hero(); if (skPoints() < 1) return; lineSk(h)[el.dataset.id] = 1; if (pageDone(HERO_PAGE) && HERO_PAGE < 2) { HERO_PAGE++; setTimeout(() => celebrate(`📖 Strona ${PAGE_N[HERO_PAGE]} drzewka odblokowana!`, 'Nowe, mocniejsze gałęzie'), 200); } else if (treeDone() && !HERO_UP) setTimeout(() => celebrate('✨ Całe drzewko ukończone!', 'Teraz ulepszaj węzły: złote → platynowe → holograficzne'), 200); h.mod = Date.now(); S.stats.skills = Object.keys(lineSk(h)).length; if (lineDef().tree.some(([, ns]) => ns.every(n => lineSk(h)[n.id]))) S.stats.skillBranch = 1; save(); toast('🌳 Nowa umiejętność!'); render(); },
+  'hero-sk-reset': () => { if (!confirm('Zresetować drzewko tej postaci za 200 💎? Wszystkie strony i ulepszenia wrócą jako punkty.')) return; if (!spend(200, 'sk-reset')) return; const h = hero(); h.sk[heroLine()] = {}; lineTier(h); h.skt[heroLine()] = {}; HERO_PAGE = 0; HERO_UP = false; h.mod = Date.now(); save(); render(); },
+  'hero-page': el => { HERO_PAGE = +el.dataset.p; HERO_UP = false; render(); },
+  'hero-up': () => { if (treeDone()) { HERO_UP = true; render(); } },
+  'hero-tier': el => { const h = hero(), t = lineTier(h), id = el.dataset.id; if (skPoints() < 1 || (t[id] || 0) >= 3 || !lineSk(h)[id]) return; t[id] = (t[id] || 0) + 1; h.mod = Date.now();
+    if (Object.values(t).filter(x => x >= 3).length >= 36) S.stats.treeHolo = 1; save(); toast(`${TIER_IC[t[id]]} ${TIERS[t[id]]} węzeł!`); render(); },
   'hero-look': () => { const h = hero(); h.look = 1 + (Math.random() * 1e6 | 0); h.mod = Date.now(); save(); render(); },
-  'hero-line': el => { const h = hero(); h.line = el.dataset.k; h.mod = Date.now(); save(); render(); },
+  'hero-line': el => { const h = hero(); HERO_PAGE = 0; HERO_UP = false; h.line = el.dataset.k; h.mod = Date.now(); save(); render(); },
   'hero-g': el => { const h = hero(); h.g = el.dataset.g; h.mod = Date.now(); save(); render(); },
   'hero-prestige': () => heroPrestige(),
   'boost-on': el => activateBoost(el.dataset.k),
