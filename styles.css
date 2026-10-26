@@ -1934,3 +1934,6 @@ h1 .hero-ic { width: 40px; height: 40px; }
 .install-cta { gap: 12px; background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 12%, var(--card)), var(--card) 65%); } .install-ic { width: 46px; height: 46px; border-radius: 12px; flex: none; }
 .install-btns { display: flex; align-items: center; gap: 4px; }
 .install-steps { margin: 4px 0; padding-left: 22px; text-align: left; } .install-steps li { margin: 8px 0; } .ish { display: inline-block; padding: 0 4px; border-radius: 6px; background: var(--card2); }
+.case.cats { background: linear-gradient(160deg, #f59e0b, #b45309); } .case.animals { background: linear-gradient(160deg, #16a34a, #0d9488); }
+.case.food { background: linear-gradient(160deg, #ef4444, #f97316); } .case.magic { background: linear-gradient(160deg, #7c3aed, #0f172a); }
+.case.cats .ci, .case.animals .ci, .case.food .ci, .case.magic .ci { font-size: 48px; }
