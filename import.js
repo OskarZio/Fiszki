@@ -50,9 +50,9 @@ function importPack(P) {
 }
 let IMPORT_TXT = '', IMPORT_SRC = '';
 ROUTES.import = (parts, q) => {
-  const f = q.get('f') || '';
-  if (f && f !== IMPORT_SRC && /^assets\/imports\/[\w.-]+\.txt$/.test(f)) {
-    IMPORT_SRC = f;
+  const f = q.get('f') || '', fv = f + '#' + (q.get('v') || '');   // ?v=… wymusza ponowne pobranie (zaktualizowany pakiet)
+  if (f && fv !== IMPORT_SRC && /^assets\/imports\/[\w.-]+\.txt$/.test(f)) {
+    IMPORT_SRC = fv;
     fetch(f + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => { IMPORT_TXT = t; render(); })
       .catch(() => toast('Nie udało się pobrać pakietu – spróbuj za 1–2 min (GitHub publikuje plik)', 5000));
   }

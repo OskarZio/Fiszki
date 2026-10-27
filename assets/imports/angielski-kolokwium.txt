@@ -1,4 +1,4 @@
-// Angielski kolokwium – z Quizletu (Oskar_Ziolkowski), 100 pojęć z PDF; literówki poprawione – oryginał w skojarzeniu
+// Angielski kolokwium – z Quizletu (Oskar_Ziolkowski), 108 pojęć; literówki poprawione – oryginał w skojarzeniu
 #fiszki
 #talia: Angielski kolokwium
 #przedmiot: lang
@@ -103,3 +103,11 @@ Nie blokuj kolan | Do not lock your knees
 Trzymaj swoje kolana razem | Keep your knees together
 Stopy na ziemi | Feet on the floor
 Nogi rozstawione tak szeroko jak to możliwe | The legs as far apart as possible
+Unieś swoje pośladki z podłogi | Raise your buttocks from the floor
+Unieś barki z podłogi | Raise your shoulders from the floor
+Unieś swoją lewą nogę | Raise your left leg
+Przyciągnij kolano do klatki piersiowej | Bring your knee to the chest
+Utrzymaj tę pozycję przez 10 s | Hold this position for a count of 10
+Powtórz 10 razy | Repeat 10 times
+Wykonaj to ćwiczenie 5 razy | Do this exercise 5 times
+Wygnij plecy w łuk | Arch your back
