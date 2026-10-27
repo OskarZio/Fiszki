@@ -319,7 +319,7 @@ function myProfile() {
   const best = {}; for (const g of S.games) if (g.correct > (best[g.d] || 0)) best[g.d] = g.correct;
   return { app: 'fiszki-profil', v: 1, nick: S.profile.nick || 'Anonim', avatar: S.profile.avatar || '🦊', avatarImg: safeImg(S.profile.avatarImg), level: levelOf(xp), xp, elo: typeof myElo === 'function' ? myElo() : 1000,
     streak: streak(), day: dayKey(Date.now()), today: reviewsToday(), week, perDay, perMin, total: S.log.length, cards: S.cards.length,
-    mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now(), ...(S.settings.showGlobal ? { showGlobal: 1 } : {}) };
+    mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now(), ...(S.stats.wboss ? { wboss: S.stats.wboss } : {}), ...(S.settings.showGlobal ? { showGlobal: 1 } : {}) };
 }
 async function publishProfile(force) {
   const cfg = S.settings.sync;
@@ -372,7 +372,7 @@ function rankRows() {
     const n = (v, max = 1e7) => { const x = Math.floor(+v); return Number.isFinite(x) ? Math.max(0, Math.min(max, x)) : 0; };
     return { weekMin: n(weekMin, 1e5), nick: String(p.nick || 'Gracz').slice(0, 24), avatar: String(p.avatar || '🦊').slice(0, 16), avatarImg: safeImg(p.avatarImg), elo: n(p.elo, 5000) || 1000,
       today: n(p.day === today ? p.today : per[today]), week: n(week), streak: streakAlive ? n(p.streak, 1e5) : 0, level: n(p.level, 1e4) || 1, xp: n(p.xp, 1e9), total: n(p.total, 1e9),
-      updated: n(p.updated, 1e13) || 0, ach: n(p.ach, 1e4), showcase: (Array.isArray(p.showcase) ? p.showcase : []).filter(id => typeof id === 'string' && /^[a-z0-9_-]{1,24}$/.test(id)).slice(0, 3) };
+      updated: n(p.updated, 1e13) || 0, ach: n(p.ach, 1e4), wboss: p.wboss && typeof weekId === 'function' && p.wboss.w === weekId() ? n(p.wboss.dmg, 1e8) : 0, showcase: (Array.isArray(p.showcase) ? p.showcase : []).filter(id => typeof id === 'string' && /^[a-z0-9_-]{1,24}$/.test(id)).slice(0, 3) };
   };
   const me = { ...norm(myProfile()), me: true };
   const rows = S.friends.map(f => FRIEND_DATA[f.code]?.app ? { ...norm(FRIEND_DATA[f.code]), id: f.id, err: FRIEND_DATA[f.code].err } : { nick: f.name || 'Znajomy', avatar: '❔', id: f.id, today: 0, week: 0, streak: 0, level: 0, xp: 0, err: FRIEND_DATA[f.code]?.err || 'brak danych' });
@@ -385,8 +385,8 @@ ROUTES.rank = () => {
     rankLoaded = Date.now();
     Promise.all([publishProfile(true).catch(e => toast('Profil: ' + e.message, 3000)), refreshFriends()]).then(() => { if (parseRoute().parts[0] === 'rank') render(); });
   }
-  const tabs = [['today', 'Dziś'], ['week', 'Tydzień'], ['time', '⏱ Czas'], ['streak', 'Seria'], ['xp', 'Poziom'], ['elo', 'Elo']];
-  const val = r => RANK_TAB === 'time' ? `⏱ ${fmtDur((r.weekMin || 0) * MIN)} <small>w tym tyg.</small>` : RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}` : RANK_TAB === 'elo' ? eloHTML(r.elo || 1000) : `⭐ ${r.level} <small>${r.xp} XP</small>`;
+  const tabs = [['today', 'Dziś'], ['week', 'Tydzień'], ['time', '⏱ Czas'], ['streak', 'Seria'], ['xp', 'Poziom'], ['elo', 'Elo'], ['wboss', '🏆 Boss']];
+  const val = r => RANK_TAB === 'wboss' ? `🏆 ${(r.wboss || 0).toLocaleString('pl')} <small>obrażeń</small>` : RANK_TAB === 'time' ? `⏱ ${fmtDur((r.weekMin || 0) * MIN)} <small>w tym tyg.</small>` : RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}` : RANK_TAB === 'elo' ? eloHTML(r.elo || 1000) : `⭐ ${r.level} <small>${r.xp} XP</small>`;
   const key = r => RANK_TAB === 'xp' ? r.xp : RANK_TAB === 'elo' ? (r.elo || 1000) : RANK_TAB === 'time' ? r.weekMin || 0 : r[RANK_TAB];
   const rows = rankRows().sort((a, b) => key(b) - key(a));
   const medal = i => ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;

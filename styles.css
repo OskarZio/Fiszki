@@ -1959,3 +1959,28 @@ img.gem8 { width: 1.15em; height: 1.15em; vertical-align: -.22em; object-fit: co
 .hero-reveal .dmenu { align-items: center; text-align: center; border-top: 4px solid var(--tc); } .hero-reveal .char-tier { position: static; font-size: 13px; }
 .hr-art { width: 160px; height: 160px; animation: pop .5s; } .hr-art img { width: 100%; height: 100%; object-fit: contain; }
 .tower-modes { margin: 12px 0 4px; }
+/* ⚔️ walka+: słabość, fazy, wydarzenia, runy, pomocnik, nagrody za styl */
+.weak-tag { font-size: 12px; font-weight: 700; color: var(--accent); text-align: center; padding: 4px 10px; border-radius: 99px; background: color-mix(in srgb, var(--accent) 10%, transparent); align-self: center; }
+.hpbar.boss.ph1 i { background: linear-gradient(90deg, #b91c1c, #ea580c); } .hpbar.boss.ph2 i { background: linear-gradient(90deg, #7f1d1d, #dc2626); animation: pulseSoft 1.2s infinite; }
+.phase-banner { top: 22%; background: linear-gradient(90deg, #7f1d1d, #ea580c) !important; }
+.ev-tag { background: #ede9fe !important; color: #5b21b6 !important; }
+.ev-chest { position: absolute; z-index: 15; right: 14px; top: 34%; display: flex; flex-direction: column; align-items: center; font-size: 40px; min-height: 0; padding: 6px 10px; border-radius: 16px; border: 3px solid #f59e0b; background: #fffbeb; box-shadow: 0 8px 24px rgba(245,158,11,.5); animation: evBounce .6s ease-in-out infinite alternate; }
+.ev-chest small { font-size: 12px; font-weight: 800; color: #b45309; } @keyframes evBounce { to { transform: translateY(-8px) rotate(4deg); } }
+.runes { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 6px 0; width: 100%; }
+.rune-seq { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.rune { display: grid; place-items: center; width: 58px; height: 58px; font-size: 30px; border-radius: 16px; background: color-mix(in srgb, var(--c) 18%, var(--card)); border: 3px solid color-mix(in srgb, var(--c) 60%, transparent); min-height: 0; padding: 0; }
+.rune.flash { opacity: .15; animation: runeFlash .7s both; } @keyframes runeFlash { 0% { opacity: .15; transform: scale(.8); } 30% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 20px var(--c); } 70% { opacity: 1; transform: scale(1); } 100% { opacity: .15; } }
+.rune-pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; } .rune-pad .rune { width: 66px; height: 66px; font-size: 32px; } .rune-pad .rune:active { transform: scale(.92); box-shadow: 0 0 16px var(--c); }
+.rune-dots { display: flex; gap: 6px; } .rune-dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--card2); } .rune-dots i.on { background: var(--accent); }
+.pet-btn { position: relative; width: 50px; height: 50px; min-height: 0; padding: 2px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); flex: none; } .pet-btn svg { width: 100%; height: 100%; } .pet-btn small { position: absolute; right: -4px; bottom: -4px; font-size: 14px; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0; }
+.badge-st { display: flex; flex-direction: column; align-items: center; padding: 8px 12px; border-radius: 14px; background: linear-gradient(135deg, #fef3c7, #fde68a); color: #78350f; font-size: 12px; font-weight: 700; animation: pop .4s backwards; } .badge-st b { font-size: 22px; } .badge-st small { font-size: 10px; }
+.pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.pet { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; min-height: 0; border-radius: 14px; background: var(--card2); border: 2px solid transparent; font: inherit; color: inherit; text-align: center; } .pet.on { border-color: var(--accent); }
+.pet .pet-cr { width: 56px; height: 56px; } .pet .pet-cr svg { width: 100%; height: 100%; } .pet b { font-size: 12px; } .pet small { font-size: 10.5px; color: var(--muted); }
+.weekly-cta, .bestiary-cta { cursor: pointer; gap: 12px; } .weekly-cta { background: linear-gradient(120deg, color-mix(in srgb, #f59e0b 16%, var(--card)), var(--card) 60%); } .wk-art { width: 60px; height: 60px; flex: none; } .wk-art .boss-art { width: 60px; height: 60px; }
+.bestiary-cta .grow { display: flex; flex-direction: column; gap: 6px; }
+.weekly-score { font-size: 44px; font-weight: 900; color: #f59e0b; font-family: ui-monospace, monospace; }
+.bestiary { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.bst { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); text-align: center; } .bst .boss-art { width: 72px; height: 72px; } .bst b { font-size: 12px; } .bst small { font-size: 10px; color: var(--muted); }
+.bst.unk .boss-art img { filter: brightness(0) opacity(.35); }

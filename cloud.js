@@ -173,9 +173,9 @@ ROUTES.rank = (...a) => cloudOn() ? cloudRankRoute() : clRankRoute0(...a);
 let cloudRankLoaded = 0;
 function cloudRankRoute() {
   if (Date.now() - cloudRankLoaded > 60e3) { cloudRankLoaded = Date.now(); publishCloudProfile().then(loadCloudFriends).catch(() => {}); }
-  const tabs = [['today', 'Dziś'], ['week', 'Tydzień'], ['time', '⏱ Czas'], ['streak', 'Seria'], ['xp', 'Poziom'], ['elo', 'Elo']];
-  const key = r => RANK_TAB === 'xp' ? r.xp : RANK_TAB === 'elo' ? (r.elo || 1000) : RANK_TAB === 'time' ? r.weekMin || 0 : r[RANK_TAB];
-  const val = r => RANK_TAB === 'time' ? `⏱ ${fmtDur((r.weekMin || 0) * MIN)} <small>w tym tyg.</small>` : RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}`
+  const tabs = [['today', 'Dziś'], ['week', 'Tydzień'], ['time', '⏱ Czas'], ['streak', 'Seria'], ['xp', 'Poziom'], ['elo', 'Elo'], ['wboss', '🏆 Boss']];
+  const key = r => RANK_TAB === 'wboss' ? r.wboss || 0 : RANK_TAB === 'xp' ? r.xp : RANK_TAB === 'elo' ? (r.elo || 1000) : RANK_TAB === 'time' ? r.weekMin || 0 : r[RANK_TAB];
+  const val = r => RANK_TAB === 'wboss' ? `🏆 ${(r.wboss || 0).toLocaleString('pl')} <small>obrażeń</small>` : RANK_TAB === 'time' ? `⏱ ${fmtDur((r.weekMin || 0) * MIN)} <small>w tym tyg.</small>` : RANK_TAB === 'today' ? `${r.today} <small>powt.</small>` : RANK_TAB === 'week' ? `${r.week} <small>powt.</small>` : RANK_TAB === 'streak' ? `🔥 ${r.streak}`
     : RANK_TAB === 'elo' ? eloHTML(r.elo || 1000) : `⭐ ${r.level} <small>${r.xp} XP</small>`;
   const all = RANK_SCOPE === 'all';
   if (all && Date.now() - globalLoaded > 60e3) loadGlobalRank();

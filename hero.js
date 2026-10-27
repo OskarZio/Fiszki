@@ -282,7 +282,7 @@ ROUTES.hero = () => {
       : `<div class="skill-tree${open ? '' : ' locked'}">${pages[pg].map(([bn, nodes]) => `<div class="sk-branch"><div class="sk-head">${bn}</div>${nodes.map((n, i) => { const got = hasNode(n.id), prev = i === 0 || hasNode(nodes[i - 1].id), lvOk = pg > 0 || L.lv >= SK_REQ_LV[i], can = open && !got && prev && lvOk && sp > 0, t = tier[n.id] || 0;
         return `<button class="sk${got ? ' got t' + t : can ? ' can' : ''}" data-act="hero-sk" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${t ? TIER_IC[t] + ' ' : ''}${n.name}</b><small>${n.desc}</small>${got ? '<i>✓</i>' : !lvOk ? `<i>🔒 poz. ${SK_REQ_LV[i]}</i>` : !prev || !open ? '<i>🔒</i>' : ''}</button>`; }).join('<span class="sk-line"></span>')}</div>`).join('')}</div>`}
       ${Object.keys(lineSk()).length ? '<button class="sm ghost" data-act="hero-sk-reset" style="margin-top:10px">↺ Zresetuj drzewko tej postaci (200 💎, punkty wracają)</button>' : ''}</div>`; })(),
-    eq: `<div class="card"><h2 style="margin-top:0">🎒 Założone</h2>
+    eq: petCardHTML() + `<div class="card"><h2 style="margin-top:0">🎒 Założone</h2>
       <div class="eq-slots">${['w', 'h', 'a', 'c'].map(s => { const id = h.eq[s], g = GEAR[id]; return `<div class="eq-slot" style="--rc:${g ? RARITY[g.r].color : '#94a3b8'}"><small>${SLOT_NAME[s]}</small>${g ? `${gearImg(id)}<b>${esc(g.name)}${(h.forge[id] || 0) ? ` +${h.forge[id]}` : ''}</b>` : '<span class="eq-empty">—</span>'}</div>`; }).join('')}</div>
       ${['w', 'h', 'a', 'c'].map(s => { const own = Object.keys(GEAR).filter(id => GEAR[id].slot === s && ownsGear(id)); if (!own.length) return '';
         return `<h3>${SLOT_NAME[s]}</h3><div class="gear-grid">${own.map(id => { const g = GEAR[id], on = h.eq[g.slot] === id, f = h.forge[id] || 0;
@@ -358,3 +358,13 @@ function heroReveal(k, dup) {
 }
 // dotychczasowa (darmowa wtedy) postać zostaje Twoja
 on('start', () => { const h = S.hero; if (h?.line && h.line !== 'cat' && HERO_GET[h.line] && !hasItem('hero', h.line)) { addItem('hero', h.line, 1, 'hero-keep-' + h.line); } });
+
+// 🐾 pomocnik w walce: wyklute stworki z inkubatora – raz na walkę, moc zależy od rzadkości
+function petCardHTML() {
+  const list = typeof eggs === 'function' ? eggs().filter(x => x.ok && x.cr) : [], h = hero();
+  return `<div class="card"><h2 style="margin-top:0">🐾 Pomocnik w walce</h2>
+    ${list.length ? `<p class="small muted" style="margin-top:0">Stworek z inkubatora idzie z Tobą do walki i raz na walkę pomaga. Rzadszy = mocniejszy.</p>
+    <div class="pet-grid">${list.slice(-24).reverse().map(x => `<button class="pet${h.pet === x.id ? ' on' : ''}" style="--rc:${RARITY[x.cr.r].color}" data-act="hero-pet" data-id="${x.id}"><span class="pet-cr">${creatureSVG(x.cr.s, x.cr.r)}</span><b>${esc(x.cr.n)}</b><small>${RARITY[x.cr.r].name} · ${typeof PET_FX !== 'undefined' ? (PET_FX[x.cr.r] || PET_FX.common)[0] : ''}</small></button>`).join('')}</div>`
+    : '<p class="small muted" style="margin:0">Wykluj stworka w 🥚 Inkubatorze (sesja skupienia) – będzie Ci pomagał w walkach.</p><button class="sm" data-go="#/egg" style="margin-top:8px">🥚 Inkubator</button>'}</div>`;
+}
+ACTIONS['hero-pet'] = el => { const h = hero(); h.pet = h.pet === el.dataset.id ? null : el.dataset.id; h.mod = Date.now(); save(); toast(h.pet ? '🐾 Pomocnik wybrany' : 'Bez pomocnika'); render(); };
