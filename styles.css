@@ -1997,3 +1997,18 @@ img.gem8 { width: 1.15em; height: 1.15em; vertical-align: -.22em; object-fit: co
 .hero-tabs { gap: 8px; margin: 16px 0 14px; } .seg.hero-tabs button { padding-left: 2px !important; padding-right: 2px !important; } .hero-tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 58px; padding: 8px 2px; font-size: 12px; min-width: 0; }
 .hero-tabs button i { font-style: normal; font-size: 18px; line-height: 1; } .hero-tabs button span { max-width: 100%; overflow-wrap: normal; word-break: keep-all; line-height: 1.15; }
 .gem8 { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; image-rendering: pixelated; object-fit: contain; margin: 0 .05em; }
+/* v119: nic nie może być szersze niż ekran telefonu (konfetti, liczby obrażeń, długie słowa, obrazki) */
+html, body { max-width: 100%; overflow-x: clip; }
+main, #view, #view > *, .card, .boss-q, .boss-wrap, .boss-stage { max-width: 100%; min-width: 0; box-sizing: border-box; }
+img, svg, video, canvas, iframe, table, pre { max-width: 100%; }
+.card, .boss-q, button, p, h1, h2, h3, li, .small { overflow-wrap: break-word; }
+.boss-q *, .opt, .choice { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 760px) { main { width: 100%; } }
+.swatches { grid-template-columns: repeat(8, minmax(0, 1fr)); } .swatches > .swatch { min-width: 0; padding: 0 !important; }
+.cases { grid-template-columns: repeat(2, minmax(0, 1fr)); } .subj-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .mode-pick { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cases > *, .subj-grid > *, .mode-pick > *, .hero-abil > *, .hero-tabs > * { min-width: 0; }
+@media (max-width: 370px) {
+  .swatches { grid-template-columns: repeat(6, minmax(0, 1fr)); } .mode-pick, .subj-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cases { grid-template-columns: minmax(0, 1fr); } main { padding-left: 12px; padding-right: 12px; }
+}
+.effects { grid-template-columns: repeat(auto-fill, minmax(min(84px, 100%), 1fr)) !important; } .effects > * { min-width: 0; padding-left: 4px !important; padding-right: 4px !important; }
