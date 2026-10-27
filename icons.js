@@ -12,7 +12,7 @@ const phSVG = (name, cls = '') => `<svg class="ph ${cls}" viewBox="0 0 256 256" 
   document.body.prepend(s);
 })();
 const PH_SEL = '#tabs a > span, .hubnav a > span, .sc > span, .mtile > span, h1, h2, h3, summary, summary > b, .studybar .title, button, .seg button, .banner > span, .card > b, label > span > b, .row > b.grow';
-const PH_SKIP = '.hintbox, .hint-chip, #gc-fab, #gc-panel, .runes, .ev-chest, .bless, .badge-st, .stk, .st-row, .stbar, .tile, .inv-st, .chat-st, .mini-st, .egg-pick, .egg-hatch, .egg-nest, .egg-cal, .egg-wrap, .drop-ic, .big-st, .ci, .av, .av-big, .sh-av, .avimg, .avemoji, .pp-av, .pp-emojis, .emoji-big, .emo-row, .emo, .rx-thumb, .rx-default, .rx-card, .gift-pick, .cpick, .sh-pickbar, .medal, .reveal, .stfly, .msg, .fc3d, .face, .celebrate, [data-noic], [contenteditable]';
+const PH_SKIP = '.hint-dot, .hintbox, .hint-chip, #gc-fab, #gc-panel, .runes, .ev-chest, .bless, .badge-st, .stk, .st-row, .stbar, .tile, .inv-st, .chat-st, .mini-st, .egg-pick, .egg-hatch, .egg-nest, .egg-cal, .egg-wrap, .drop-ic, .big-st, .ci, .av, .av-big, .sh-av, .avimg, .avemoji, .pp-av, .pp-emojis, .emoji-big, .emo-row, .emo, .rx-thumb, .rx-default, .rx-card, .gift-pick, .cpick, .sh-pickbar, .medal, .reveal, .stfly, .msg, .fc3d, .face, .celebrate, [data-noic], [contenteditable]';
 const PH_RE = /^(\s*)((?:\p{Extended_Pictographic}|[\u2190-\u21FF\u2300-\u23FF\u2B00-\u2BFF])(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u;
 const phOn = () => !(typeof S !== 'undefined' && S?.settings?.emojiIcons === false);
 // wyłączone w ustawieniach: przywracamy oryginalne emotki (np. w dolnym pasku, który się nie przerysowuje)

@@ -2115,3 +2115,8 @@ body.focus main#view:has(> .bf) > .studybar { flex: none; }
 .hint-chip .hc-ic { font-size: 18px; } .hint-chip.add { background: transparent !important; box-shadow: none; font-weight: 600; font-size: 14px; color: var(--muted) !important; border-style: dashed !important; }
 .hint-chip:active, .hb-edit:active { transform: scale(.96); }
 @media (prefers-reduced-motion: reduce) { .hintbox { animation: none; } }
+/* 💡 ✏️ małe okrągłe przyciski skojarzenia */
+.hint-row { gap: 12px; margin-top: 12px; }
+.hint-dot { width: 46px; height: 46px; min-height: 0 !important; padding: 0 !important; border-radius: 50%; display: grid; place-items: center; font-size: 20px; line-height: 1;
+  background: var(--hb-bg) !important; border: 1px solid var(--hb-line) !important; box-shadow: 0 3px 10px rgba(0,0,0,.14); }
+.hint-dot.add { opacity: .75; border-style: dashed !important; box-shadow: none; } .hint-dot:active { transform: scale(.92); }
