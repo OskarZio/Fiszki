@@ -2164,3 +2164,18 @@ button .hero-ic { flex: none; min-width: 28px; width: 28px; height: 28px; transf
 .bf .pot-bar button { flex: none; display: grid; place-items: center; position: relative; }
 .bf .pot-bar button > svg.potion, .bf .pot-bar button > img.potion { flex: none; min-width: 30px; width: 30px !important; height: 30px !important; }
 .bf .boss-me { padding-top: 14px !important; } .bf .boss-me .hero-fig.xs.s8 { margin-top: 4px; }
+/* 🌫️🪞🌀🌑 przeszkadzajki bossów z poziomem */
+.dis-tag { position: absolute; top: 8px; right: 10px; z-index: 3; font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 99px; background: rgba(0,0,0,.45); color: #fff; pointer-events: none; }
+.boss-q.dis-fog .bq-in { animation: fogClear 3.2s ease-out forwards; } @keyframes fogClear { from { filter: blur(10px); opacity: .5; } to { filter: none; opacity: 1; } }
+.boss-q.dis-fog { background-image: radial-gradient(ellipse at 30% 40%, rgba(255,255,255,.08), transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(255,255,255,.06), transparent 60%); }
+.boss-q.dis-mirror .bq-in { transform: scaleX(-1); } .boss-q.dis-mirror { box-shadow: inset 0 0 0 2px rgba(147,197,253,.5), var(--shadow); }
+.boss-q.dis-eclipse .bq-in { animation: eclipseHide .5s ease-in var(--eclipse, 2500ms) forwards; }
+.boss-q.dis-eclipse::after { content: '🌑 Zaćmienie – odpowiedz z pamięci'; font-size: 16px; position: absolute; inset: auto 12px 50% 12px; transform: translateY(50%); text-align: center; font-weight: 800; color: var(--muted); opacity: 0; animation: eclipseShow .5s ease-in var(--eclipse, 2500ms) forwards; pointer-events: none; }
+@keyframes eclipseHide { to { opacity: 0; filter: blur(6px); } } @keyframes eclipseShow { to { opacity: 1; } }
+.bf:has(.boss-q.dis-whirl) .abcd-grid .abcd { transition: transform .3s; animation: whirlWob 1.6s ease-in-out infinite; } @keyframes whirlWob { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-1.5deg) scale(.98); } }
+/* ⚡ QTE */
+.boss-q.qte { box-shadow: 0 0 0 3px #facc15, 0 0 24px rgba(250,204,21,.45), var(--shadow); animation: qtePulse .9s ease-in-out infinite; } @keyframes qtePulse { 50% { box-shadow: 0 0 0 3px #facc15, 0 0 38px rgba(250,204,21,.7), var(--shadow); } }
+.qte-tag { background: #facc15 !important; color: #422006 !important; font-weight: 900; letter-spacing: .3px; }
+.qte-bar { height: 6px; border-radius: 99px; background: rgba(0,0,0,.18); margin-top: 5px; overflow: hidden; } .qte-bar i { display: block; height: 100%; width: 100%; background: #b45309; border-radius: 99px; transition: width .25s linear; }
+.qte-banner { background: linear-gradient(135deg, #facc15, #f97316) !important; color: #422006 !important; }
+@media (prefers-reduced-motion: reduce) { .boss-q.qte, .bf:has(.boss-q.dis-whirl) .abcd-grid .abcd, .boss-q.dis-fog .bq-in { animation: none; } }

@@ -66,7 +66,12 @@ const BOSS_TALK = {
   runes: ['Zapamiętaj moje runy… jeśli potrafisz!', 'Sekwencja zagłady! Powtórz ją albo giń!'], curse: ['Pamiętasz, czego nie wiedziałeś? Ja pamiętam!', 'Klątwa zapomnienia – odpowiedz albo cierp!'], ice: ['Zamarznij! ❄️', 'Lodowa pustka w głowie!'], bugs: ['Moje robaczki zjedzą Ci odpowiedź!', 'Bzzz… 🐛'],
 };
 const BOSS_ABIL = { heal: ['💚', 'Regeneracja', 'leczy się'], shield: ['🛡️', 'Tarcza', 'osłabia Twój następny cios'], ice: ['❄️', 'Zamrożenie', 'skuwa kartę lodem – rozbij go stuknięciami'],
-  bugs: ['🐛', 'Robaczki', 'oblepia odpowiedzi robakami – zabij je, zanim odpowiesz'], poison: ['☠️', 'Trucizna', '−4 ❤️ przez 3 tury'], silence: ['🔇', 'Cisza', 'blokuje mikstury i supercios na 2 tury'], rage: ['😡', 'Szał', 'poniżej połowy ❤️ bije mocniej'] };
+  bugs: ['🐛', 'Robaczki', 'oblepia odpowiedzi robakami – zabij je, zanim odpowiesz'], poison: ['☠️', 'Trucizna', '−4 ❤️ przez 3 tury'], silence: ['🔇', 'Cisza', 'blokuje mikstury i supercios na 2 tury'], rage: ['😡', 'Szał', 'poniżej połowy ❤️ bije mocniej'],
+  fog: ['🌫️', 'Mgła', 'pytanie jest zamglone i powoli się przejaśnia – tracisz czas'], mirror: ['🪞', 'Krzywe zwierciadło', 'pytanie odbite lustrzanie'],
+  whirl: ['🌀', 'Wir', 'odpowiedzi ABCD wirują i zmieniają miejsca'], eclipse: ['🌑', 'Zaćmienie', 'pytanie znika po 2,5 s – odpowiadasz z pamięci'] };
+// przeszkadzajki odblokowują się z poziomem bossa (★): wyższy poziom = więcej i dziwniejszych
+const ABIL_TIER = { shield: 0, heal: 0, ice: 1, bugs: 1, fog: 1, poison: 2, mirror: 2, silence: 3, whirl: 3, eclipse: 3 };
+const DISRUPT = ['fog', 'mirror', 'whirl', 'eclipse'];
 const ABIL_ORDER = ['shield', 'ice', 'heal', 'bugs', 'poison', 'silence', 'rage'];
 const BOSS_MOVES = ['Cios zapomnienia', 'Fala prokrastynacji', 'Podchwytliwe pytanie', 'Pustka w głowie', 'Atak terminu', 'Wir notatek'];
 const THINK_S = [0, 25, 18, 14, 11];   // limit namysłu wg trudności (0 = bez limitu)
@@ -133,8 +138,10 @@ function bossFor(kind, id, i) {
 function bossParams(b, mode = BOSS_PICK.mode) {
   const hs = heroStats(), len = Math.min(b.len || 150, b.cards.length), diff = b.diff, big = b.kind !== 'ch';
   const scale = (.55 + .45 * hs.atk) * (1 + .15 * b.pr);
-  const abil = (b.img ? ABIL_ORDER : [...ABIL_ORDER].sort((x, y) => (hashStr(b.seed + x) % 7) - (hashStr(b.seed + y) % 7))).slice(0, Math.min(5, diff + (big ? 1 : 0)));
-  return { len, hp: Math.round(len * 10 * (.7 + .1 * diff) * (MODE_HP[mode] || 1) * scale * (b.kind === 'weekly' ? 4 : 1)), atk: Math.round((9 + 4 * diff + (big ? 4 : 0)) * (.75 + .25 * hs.hp / 100) * (1 + .12 * b.pr)),
+  // zdolności: tylko z odblokowanych poziomów, każdy boss inny zestaw (ziarno), zawsze coś z najwyższego dostępnego poziomu
+  const top = Math.min(3, diff), elig = Object.keys(ABIL_TIER).filter(a => ABIL_TIER[a] <= top).sort((x, y) => (hashStr(b.seed + x) % 97) - (hashStr(b.seed + y) % 97));
+  const n = Math.min(6, diff + (big ? 1 : 0)), fresh = elig.find(a => ABIL_TIER[a] === top), abil = n ? [...new Set([fresh, ...elig])].filter(Boolean).slice(0, n) : [];
+  return { len, hp: Math.round(len * 10 * (.7 + .17 * diff) * (MODE_HP[mode] || 1) * scale * (b.kind === 'weekly' ? 4 : 1)), atk: Math.round((9 + 6 * diff + (big ? 4 : 0)) * (.75 + .25 * hs.hp / 100) * (1 + .12 * b.pr)),
     every: diff >= 2 ? 2 : 3, think: THINK_S[Math.min(4, diff)], abil };
 }
 const bossArt = (b, cls = '') => b.img ? `<div class="boss-art world px ${cls}"><img src="${b.img.includes('/') ? b.img : `assets/fluent/${b.img}.webp`}" alt="${esc(b.name)}" draggable="false"></div>`
@@ -292,8 +299,37 @@ function runeTap(k) {
   if (R.input.length === R.seq.length) { R.phase = 'done'; return parryResult(true); }
   render();
 }
+// ⚡ QTE: 3 błyskawiczne pytania (prawda/fałsz albo ABCD) z fiszek z tej walki, na czas; komplet = potężny cios
+const QTE_N = 3, qteMs = B => Math.max(2600, (4300 - 350 * B.b.diff) * B.hs.time);
+function qteCard(B) {
+  for (const x of parryPool(B).slice(0, 12)) { const v = cardView(x.c), r = Math.random();
+    if (r < .5 && shortTxt(v.ans, 120)) { const truth = Math.random() < .5, wrong = !truth && (x.c.gk ? x.c.w[Math.random() * x.c.w.length | 0] : pickDistractors(distractorEntry(x.c), B.poolAll.filter(e => norm(e.a) !== norm(v.ans) && e.a.length <= 120), 1)[0]);
+      if (truth || wrong) return { id: x.id, cm: 'tf', claim: truth ? v.ans : wrong, truth, qte: true, weak: x.weak, hidden: [] }; }
+    const opts = abcdOpts(x.c); if (opts) return { id: x.id, cm: 'abcd', opts, qte: true, weak: x.weak, hidden: [] }; }
+  return null;
+}
+function qteNext(B) {
+  const cur = qteCard(B); if (!cur) { B.qte = null; return false; }
+  B.cur = cur; B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0; B.ice = null; B.bugs = []; return true;
+}
+function qteResult(ok, late) {
+  const B = BOSS, Q = B.qte, now = Date.now(); if (!Q || !B.cur?.qte) return;
+  Q.i++; if (ok) { Q.hits++; const n = dealBoss(Math.max(4, 6 * B.hs.atk * (1 + .15 * B.b.diff)), 'QTE'); B.fx = { k: 'boss', n, t: now }; B.combo++; B.best = Math.max(B.best, B.combo); }
+  else { B.combo = 0; B.missed.push(B.cur.id); hurtMe(Math.round(B.b.atk * .45), late ? 'QTE – za wolno' : 'QTE – pudło'); }
+  bossSfx(ok ? 'hit' : 'hurt');
+  if (!bossAlive(B)) { B.qte = null; return bossEnd(true); }
+  if (B.me <= 0 && !B.coop) { B.qte = null; return bossEnd(false, 'dead'); }
+  if (Q.i < QTE_N && qteNext(B)) return render();
+  // koniec serii
+  if (Q.hits === QTE_N) { const n = dealBoss(Math.max(10, 22 * B.hs.atk * (1 + .2 * B.b.diff)), 'QTE perfekcyjny'); B.ult = Math.min(B.hs.ultNeed, B.ult + 2); B.fx = { k: 'boss', n, crit: true, t: now }; B.qteFx = { t: now, perfect: true }; B.log.unshift(`⚡⚡⚡ PERFEKCYJNY QTE! −${n} i ⚡ +2 do superciosu`); S.stats.qtePerfect = (S.stats.qtePerfect || 0) + 1; }
+  else B.log.unshift(`⚡ QTE: ${Q.hits}/${QTE_N} trafień`);
+  B.qte = null; B.log = B.log.slice(0, 4); save();
+  if (!bossAlive(B)) return bossEnd(true);
+  presentCard(); if (!B.cur) return bossEnd(false, 'cards'); render();
+}
 function presentCard() {
   const B = BOSS; if (B.pendParry && presentParry()) return;
+  if (B.pendQte) { B.pendQte = false; B.qte = { i: 0, hits: 0 }; if (qteNext(B)) { B.qteFx = { t: Date.now() }; bossSfx('tick'); return; } }
   const vi = B.verQ.findIndex(v => v.at <= B.i || B.i >= B.ids.length);
   let id, ver = null;
   if (vi >= 0) { ver = B.verQ.splice(vi, 1)[0]; id = ver.id; } else if (B.i < B.ids.length) id = B.ids[B.i]; else { B.cur = null; return; }
@@ -307,6 +343,8 @@ function presentCard() {
   B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0;
   const free = B.timeFree > 0;
   B.ice = B.pendIce && !free ? { n: B.hs.ice ? 3 : 6, max: B.hs.ice ? 3 : 6 } : null; B.pendIce = false;
+  B.cur.dis = B.pendDis && !free && !ver ? B.pendDis : null; if (!ver) B.pendDis = null;
+  if (B.cur.dis === 'whirl' && cm !== 'abcd') B.cur.dis = 'fog';   // wir działa tylko na ABCD
   B.bugs = B.pendBugs && !free ? Array.from({ length: B.pendBugs }, (_, k) => ({ k, x: 8 + Math.random() * 78, y: 10 + Math.random() * 70, img: ['g_bug', 'g_ant', 'g_roach', 'g_ladybug', 'g_worm', 'g_mosq'][Math.random() * 6 | 0], d: (Math.random() * 2).toFixed(2) })) : []; B.pendBugs = 0;
   if (ver && !ver.retry) bossSay('verify');
 }
@@ -334,6 +372,7 @@ function bossAnswer(g, how) {
   const B = BOSS, c = bossCard(), cur = B?.cur; if (!B || !c || B.phase !== 'fight' || B.ice || B.bugs?.length) return;
   const now = Date.now(), ms = Math.min(60000, now - B.qAt);
   B.fx = null; B.fxMe = null; B.bossAct = null;
+  if (cur.qte) return qteResult(g >= 3);
   if (cur.parry) return parryResult(cur.curse || cur.mask ? g >= 2 : g >= 3);
   if (cur.ver) return verifyResult(c, g >= 3);
   // harmonogram: zaległe karty liczą się jako powtórka (sprawdziany już nie)
@@ -407,6 +446,7 @@ function afterTurn(g, isVer) {
     else if (mv.k === 'bugs') { B.pendBugs = 3 + Math.min(3, B.b.diff); B.log.unshift('🐛 Robaczki nadchodzą!'); bossSay('bugs'); }
     else if (mv.k === 'poison') { B.poison = 3; B.log.unshift('☠️ Trucizna: −4 ❤️ przez 3 tury'); }
     else if (mv.k === 'silence') { B.silence = 2; B.log.unshift('🔇 Cisza: bez mikstur i superciosu przez 2 tury'); }
+    else if (DISRUPT.includes(mv.k)) { B.pendDis = mv.k; B.log.unshift(`${BOSS_ABIL[mv.k][0]} ${BOSS_ABIL[mv.k][1]}: ${BOSS_ABIL[mv.k][2]}`); bossSay('attack'); }
     B.timer = B.b.every; B.move = pickMove(B.b);
   }
   if (!isVer) { B.i++; rollEvent(B); }
@@ -433,6 +473,8 @@ function checkPhase(B) {
 }
 // 🎲 wydarzenia: złota skrzynka do złapania, pytanie za 3×, wyzwanie „3 dobre z rzędu”
 function rollEvent(B) {
+  // ⚡ QTE: szybka seria pytań – częściej u mocniejszych bossów
+  if (!B.qte && !B.pendQte && B.i >= 3 && !B.down && !B.coop && Math.random() < .07 + .035 * B.b.diff) { B.pendQte = true; B.log.unshift('⚡ QTE nadchodzi – przygotuj się!'); return; }
   if (B.ev || B.triple || B.gaunt || B.i < 3 || B.down || Math.random() > .17) return;
   const k = ['chest', 'chest', 'triple', 'gaunt'][Math.random() * 4 | 0];
   if (k === 'chest') { B.ev = { k, t: Date.now() }; setTimeout(() => { if (BOSS === B && B.ev?.k === 'chest') { B.ev = null; B.log.unshift('📦 Skrzynka uciekła…'); if (B.phase === 'fight') render(); } }, 3600); }
@@ -616,15 +658,22 @@ function bossSfx(k) {
 const thinkMs = B => B.b.think * 1000 * B.hs.time * (B.cur?.cm === 'type' ? 1.6 : B.cur?.cm === 'abcd' ? .8 : 1);
 let THINK_HIDDEN = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) THINK_HIDDEN = Date.now(); else if (BOSS && THINK_HIDDEN) { BOSS.qAt += Date.now() - THINK_HIDDEN; THINK_HIDDEN = 0; } });
+setInterval(() => { const B = BOSS; if (B?.phase === 'fight' && B.cur?.dis === 'whirl' && B.cur.cm === 'abcd' && B.picked == null && !B.ice && !B.bugs?.length && parseRoute().parts[1] === 'fight' && Date.now() - (B.whirlAt || 0) > 1600) { B.whirlAt = Date.now(); B.cur.opts.push(B.cur.opts.shift()); render(); } }, 400);
 setInterval(() => {
   const P = BOSS;
+  if (P?.phase === 'fight' && P.cur?.qte && P.picked == null && !document.hidden && parseRoute().parts[1] === 'fight') {
+    const f = (Date.now() - P.qAt) / qteMs(P), el = document.querySelector('.qte-bar i');
+    if (el) el.style.width = Math.max(0, 100 - f * 100).toFixed(1) + '%';
+    if (f >= 1) qteResult(false, true);
+    return;
+  }
   if (P?.phase === 'fight' && P.cur?.parry && P.picked == null && !(P.cur.cm === 'type' && P.shown) && P.cur.runes?.phase !== 'show' && !document.hidden && parseRoute().parts[1] === 'fight') {
     const f = (Date.now() - P.qAt) / parryMs(P), el = document.querySelector('.parry-bar i');
     if (el) el.style.width = Math.max(0, 100 - f * 100).toFixed(1) + '%';
     if (f >= 1) parryResult(false, true);
     return;
   }
-  const B = BOSS; if (!B || B.phase !== 'fight' || !B.b.think || B.cur?.parry || B.shown || B.timeFree > 0 || B.down || document.hidden || parseRoute().parts[1] !== 'fight') return;
+  const B = BOSS; if (!B || B.phase !== 'fight' || !B.b.think || B.cur?.parry || B.cur?.qte || B.shown || B.timeFree > 0 || B.down || document.hidden || parseRoute().parts[1] !== 'fight') return;
   const T = thinkMs(B), f = (Date.now() - B.qAt) / T, el = document.querySelector('.think-bar i');
   if (el) { el.style.width = Math.max(0, 100 - f * 100).toFixed(1) + '%'; el.parentElement.classList.toggle('late', f > .7); }
   if (f >= 1) { B.qAt = Date.now(); hurtMe(Math.round(B.b.atk * .5), 'Za długo myślisz'); bossSay('slow'); B.fx = null; save(); if (B.me <= 0 && !B.coop) return bossEnd(false, 'dead'); render(); }
@@ -714,15 +763,17 @@ function fightView() {
         <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : BOSS_ABIL[mv.k][0]} <b>${esc(mv.name)}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
       ${B.coop ? '' : HP_BAR(B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''))}
       ${b.weak ? `<div class="weak-tag">🎯 Słabość: ${WEAK_NAME[b.weak]} ×${String(WEAK_M).replace('.', ',')}${B.phaseN ? ` · 🔥 faza ${B.phaseN + 1}` : ''}</div>` : ''}
-      ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
+      ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry && !cur?.qte ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
     </div>
     <div class="row nowrap boss-me${fm?.k === 'hit' ? ' hurt' : ''}">${heroSVG('xs')}${HP_BAR(B.me, B.meMax, 'me')}
       ${B.combo >= 2 ? `<span class="chip combo">🔥 ${B.combo}</span>` : ''}${B.power ? `<span class="chip">💪 ${B.power}</span>` : ''}${B.guard ? `<span class="chip">🛡️${B.guard > 1 ? B.guard : ''}</span>` : ''}${B.poison ? `<span class="chip bad">☠️ ${B.poison}</span>` : ''}${B.silence ? `<span class="chip bad">🔇 ${B.silence}</span>` : ''}${B.timeFree > 0 ? `<span class="chip">⏱️ ${B.timeFree}</span>` : ''}</div>
     ${fm?.k === 'hit' ? `<b class="dmg me">−${fm.n}</b><i class="claw"></i>` : fm?.k === 'dodge' ? '<b class="dmg me dodge">Unik!</b>' : fm?.k === 'block' ? '<b class="dmg me dodge">Blok!</b>' : ''}
     ${B.coop && typeof coopMatesHTML === 'function' ? coopMatesHTML() : ''}
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${evChest}
-    <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}">
+    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
+    <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
+      ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}
+      ${cur?.dis && !B.shown ? `<div class="dis-tag">${BOSS_ABIL[cur.dis][0]} ${BOSS_ABIL[cur.dis][1]}</div>` : ''}
       ${cur?.ver ? (cur.ver.retry ? '<div class="ver-tag retry-tag">🔁 Rewanż: ta fiszka przed chwilą Cię pokonała. Teraz pamiętasz?</div>' : '<div class="ver-tag">🔍 Sprawdzian bossa – udowodnij, że to wiesz!</div>') : ''}
       ${cur?.parry ? `<div class="ver-tag parry-tag">⚠️ ${esc(cur.parry.name)} (−${cur.parry.dmg} ❤️)! ${PARRY_TXT(cur)}${cur.weak && !cur.curse ? '<small class="weak-card">💔 boss bije fiszką, która Ci ostatnio nie szła</small>' : ''}${B.picked == null && cur.runes?.phase !== 'show' && !(cur.curse && B.shown) ? `<div class="parry-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / parryMs(B) * 100).toFixed(1)}%"></i></div>` : ''}</div>` : ''}
       ${B.triple && !cur?.parry && !cur?.ver ? '<div class="ver-tag ev-tag">💥 Pytanie za 3×!</div>' : ''}${B.gaunt && !cur?.parry ? `<div class="ver-tag ev-tag">🎯 Wyzwanie: ${B.gaunt.n}/3 dobrych z rzędu</div>` : ''}
@@ -777,7 +828,7 @@ function bossCheck() {
 }
 function bossPick(k) {
   const B = BOSS, c = bossCard(); if (!B?.cur?.opts || B.picked != null || B.ice || B.bugs?.length) return;
-  B.picked = k; B.shown = true; B.pendingG = norm(B.cur.opts[k]) === norm(B.cur.right ?? cardView(c).ans) ? 3 : 1; render();
+  B.picked = k; B.shown = true; B.pendingG = norm(B.cur.opts[k]) === norm(B.cur.right ?? cardView(c).ans) ? 3 : 1; render(); if (B.cur.qte) { const cur = B.cur; setTimeout(() => { if (BOSS === B && B.cur === cur) bossNext(); }, 450); }
 }
 const bossNext = () => { const B = BOSS; if (!B) return; bossAnswer(B.pendingG, B.cur.cm === 'abcd' ? 'abcd' : 'type'); };
 document.addEventListener('keydown', e => {
@@ -805,7 +856,7 @@ Object.assign(ACTIONS, {
   'boss-ult': () => useUlt(),
   'boss-rune': el => runeTap(+el.dataset.k),
   'boss-pair': el => pairTap(el.dataset.s, +el.dataset.i),
-  'boss-tf': el => { const B = BOSS; if (!B?.cur || B.cur.cm !== 'tf' || B.picked != null || B.ice || B.bugs?.length) return; B.picked = +el.dataset.v; B.shown = true; B.pendingG = !!B.picked === B.cur.truth ? 3 : 1; render(); },
+  'boss-tf': el => { const B = BOSS; if (!B?.cur || B.cur.cm !== 'tf' || B.picked != null || B.ice || B.bugs?.length) return; B.picked = +el.dataset.v; B.shown = true; B.pendingG = !!B.picked === B.cur.truth ? 3 : 1; render(); if (B.cur.qte) { const cur = B.cur; setTimeout(() => { if (BOSS === B && B.cur === cur) bossNext(); }, 450); } },
   'boss-evchest': () => grabEvChest(),
   'boss-pet': () => usePet(),
   'boss-pot': el => usePotion(el.dataset.k),
