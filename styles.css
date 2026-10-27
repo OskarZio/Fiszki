@@ -2068,3 +2068,15 @@ body.focus main#view:has(> .bf) > .studybar { flex: none; }
 .mentor-cta { background: linear-gradient(120deg, color-mix(in srgb, #22c55e 16%, var(--card)), var(--card) 60%); } .m-ic img { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; }
 @media (prefers-reduced-motion: reduce) { .m-art { animation: none; } }
 .mentor .m-card.flash { min-height: 0 !important; height: auto; padding: 16px 14px; display: block; } .mentor .m-card.quiz { padding: 22px 14px; }
+/* 👥 ucz się ze znajomymi – postęp grupy */
+.g-cta { width: 100%; gap: 12px; cursor: pointer; background: linear-gradient(120deg, color-mix(in srgb, #3b82f6 16%, var(--card)), var(--card) 60%); } .g-cta-ic { font-size: 28px; }
+.g-head b { font-size: 18px; } .g-h { margin: 18px 0 8px; font-size: 20px; }
+.g-table { padding: 4px 0; overflow: hidden; } .g-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--line); }
+.g-row.g-th { border-top: 0; padding: 6px 14px; font-size: 13px; font-weight: 700; color: var(--muted); } .g-row.g-th span:last-child { text-align: right; }
+.g-row.me { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.g-who { display: flex; gap: 10px; align-items: center; min-width: 0; } .g-who .grow { min-width: 0; } .g-who b { overflow-wrap: anywhere; }
+.g-av { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: var(--card2); }
+.g-dot { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; border: 2px solid var(--card); }
+.g-bar { display: flex; height: 8px; border-radius: 99px; background: var(--card2); overflow: hidden; margin: 5px 0 3px; } .g-bar .m { background: #22c55e; } .g-bar .l { background: #f59e0b; }
+.g-st { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 2px; } .g-pct { font-size: 18px; } .g-st small { font-size: 12px; max-width: 120px; } .g-now { color: #16a34a; font-size: 12px; }
+.g-invite { background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 12%, var(--card)), var(--card)); }
