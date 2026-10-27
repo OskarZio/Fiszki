@@ -2097,3 +2097,4 @@ body.focus main#view:has(> .bf) > .studybar { flex: none; }
 .gc-quick { display: flex; gap: 6px; overflow-x: auto; padding: 6px 0; scrollbar-width: none; } .gc-quick button { flex: none; min-height: 34px !important; padding: 4px 12px !important; border-radius: 99px; font-size: 15px; }
 .gc-form { display: flex; gap: 8px; } .gc-form input { flex: 1; min-width: 0; } .gc-form button { flex: none; width: 48px; padding: 0 !important; }
 @media (prefers-reduced-motion: reduce) { #gc-panel, #gc-fab.ping { animation: none; } }
+.dir-box { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 8px 0; } .dir-box .seg button { font-size: 13px; }
