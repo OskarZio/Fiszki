@@ -190,7 +190,7 @@ function cloudRankRoute() {
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Ranking</h1><button class="iconbtn" data-act="cloud-rank-refresh">🔄</button></div>
   <div class="seg rank-scope" style="display:flex"><button class="grow ${all ? '' : 'on'}" data-act="rank-scope" data-k="friends">👥 Znajomi</button><button class="grow ${all ? 'on' : ''}" data-act="rank-scope" data-k="all">🌍 Wszyscy</button></div>
-  <div class="seg" style="display:flex">${tabs.map(([k, l]) => `<button class="grow ${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
+  <div class="seg rank-tabs">${tabs.map(([k, l]) => `<button class="${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
   ${all ? `<p class="small muted center" style="margin:6px 0">${globalLoaded ? `Wszyscy aktywni w ostatnich 14 dniach · ${sorted.length} os. · Twoje miejsce: <b>#${myPos + 1}</b>` : 'Wczytywanie rankingu…'}${S.settings.showGlobal ? '' : ' · 🙈 inni Cię tu nie widzą'}</p>` : ''}
   <div class="card">${rows.map((r, i) => { const pos = posOf(r); return `${all && i === GLOBAL_TOP ? '<div class="rank-gap">⋯</div>' : ''}<div class="rankrow${r.me ? ' me' : ''}">
       <span class="medal">${['🥇', '🥈', '🥉'][pos] || pos + 1 + '.'}</span><span class="av">${avatarHTML(r, 34)}</span>

@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '130';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '132';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -726,8 +726,8 @@ function viewDeck(id, q) {
     ${(() => { const h = hiddenNew(id); return h ? `<div class="spacer"></div><button class="block all-new" data-go="#/study/${id}/flip?all=1">📚 Wszystkie nowe naraz (+${h})</button>` : ''; })()}
     <div class="spacer"></div>
     <div class="row">
-      <button class="grow" data-go="#/quiz/${id}?type=abcd" ${cards.length ? '' : 'disabled'}>📝 Test ABCD</button>
-      <button class="grow" data-go="#/quiz/${id}?type=type" ${cards.length ? '' : 'disabled'}>✍️ Test pisemny</button>
+      <button class="grow" data-go="#/quiz/${id}?type=abcd" ${cards.length ? '' : 'disabled'}>📝 ABCD</button>
+      <button class="grow" data-go="#/quiz/${id}?type=type" ${cards.length ? '' : 'disabled'}>✍️ Pisemny</button>
     </div>
     <div class="spacer"></div>
     <div class="cram-grid">
@@ -735,7 +735,7 @@ function viewDeck(id, q) {
       <button class="grow" data-act="cram-hard" data-id="${id}" ${hard.length ? '' : 'disabled'}>🧠 Trudne (${hard.length})</button>
       <button class="grow" data-act="cram-star" data-id="${id}" ${starredCards(id).length ? '' : 'disabled'}>⭐ Oznaczone (${starredCards(id).length})</button>
       <button class="grow" data-go="#/weak?deck=${id}">📉 Słabe punkty</button>
-      <button class="grow" data-act="cram-img" data-id="${id}" ${imageCards(id).length ? '' : 'disabled'}>🖼️ Tylko obrazy (${imageCards(id).length})</button>
+      <button class="grow" data-act="cram-img" data-id="${id}" ${imageCards(id).length ? '' : 'disabled'}>🖼️ Obrazy (${imageCards(id).length})</button>
     </div>
     <div class="spacer"></div>
     ${(() => { const sus = cards.filter(c => c.sus); if (!sus.length) return ''; const kn = sus.filter(c => c.sus === 'known').length;
@@ -925,7 +925,7 @@ function viewStudy(deckId, mode, q) {
       <div class="card flash face front">${v.q}${hasHint ? (s.hint ? hintBoxH : hintDots) : ''}<div class="flip-tip">↻ stuknij, aby obrócić<span class="kbd-tip"> · spacja</span></div></div>
       <div class="card flash face back">${sp ? ptsHTML + (v.b.match(/<img[^>]*>/g) || []).join('') + (note.extra ? `<div class="extra">${fmt(note.extra)}</div>` : '') : v.b}${s.editHint ? editHint : hintBoxH || `<div class="hint-row">${addHint}</div>`}<div class="flip-tip">↻ stuknij – pytanie<span class="kbd-tip"> · spacja – obróć · 1–4 – ocena</span></div></div>
     </div></div>`
-  : `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${sp && s.shown && !s.peek ? v.q + '<hr>' + ptsHTML + (v.b.match(/<img[^>]*>/g) || []).join('') + (note.extra ? `<div class="extra">${fmt(note.extra)}</div>` : '') : side}${s.peek ? '' : typed}${hints}
+  : `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}${mode === 'type' ? ' typing' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${sp && s.shown && !s.peek ? v.q + '<hr>' + ptsHTML + (v.b.match(/<img[^>]*>/g) || []).join('') + (note.extra ? `<div class="extra">${fmt(note.extra)}</div>` : '') : side}${s.peek ? '' : typed}${hints}
     ${tap ? `<div class="flip-tip">${s.shown ? (s.peek ? '↻ stuknij – odpowiedź' : '↻ stuknij – pytanie') : '↻ stuknij, aby obrócić'}</div>` : ''}</div>`;
   s.flipAnim = false;
 
@@ -933,8 +933,8 @@ function viewStudy(deckId, mode, q) {
   if (!s.shown) {
     if (mode === 'type' && v.ans.trim()) {
       onMount(() => { const i = $('#typein'); i.focus({ preventScroll: true }); i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); act('check'); } }); });
-      bar = `<input id="typein" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <button class="primary block" data-act="check">Sprawdź</button>`;
+      bar = `<div class="type-row"><input id="typein" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+        <button class="primary type-go" data-act="check" aria-label="Sprawdź">✓</button></div><button class="ghost type-skip" data-act="show">Nie wiem – pokaż odpowiedź</button>`;
     } else bar = `<button class="primary block" data-act="${S.settings.flipCard === false ? 'show' : 'flip-card'}" style="min-height:56px">Pokaż odpowiedź</button>`;
   } else {
     const suggest = { ok: 3, close: 2, wrong: 1 }[s.verdict] || (sp ? ptSuggest(s.pts.size, sp.pts.length) : 0);

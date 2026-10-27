@@ -394,7 +394,7 @@ ROUTES.rank = () => {
   const code = S.settings.sync.profileId;
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Ranking</h1>${hasToken ? '<button class="iconbtn" data-act="rank-refresh">🔄</button>' : ''}</div>
-  <div class="seg" style="display:flex">${tabs.map(([k, l]) => `<button class="grow ${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
+  <div class="seg rank-tabs">${tabs.map(([k, l]) => `<button class="${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
   <div class="card">${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}">
       <span class="medal">${medal(i)}</span><span class="av">${avatarHTML(r, 34)}</span>
       <div class="grow"><div class="row nowrap"><b class="grow nickrow"><span class="nm">${esc(r.nick)}</span>${r.me ? '<span>(Ty)</span>' : ''}${typeof showcaseHTML === 'function' ? `<span>${showcaseHTML(r.showcase)}</span>` : ''}</b><span>${val(r)}</span></div>
