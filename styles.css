@@ -2012,3 +2012,39 @@ img, svg, video, canvas, iframe, table, pre { max-width: 100%; }
   .cases { grid-template-columns: minmax(0, 1fr); } main { padding-left: 12px; padding-right: 12px; }
 }
 .effects { grid-template-columns: repeat(auto-fill, minmax(min(84px, 100%), 1fr)) !important; } .effects > * { min-width: 0; padding-left: 4px !important; padding-right: 4px !important; }
+/* v120: walka mieści się w wysokości ekranu (100dvh) – karta pytania się kurczy, reszta ciaśniej; większy kotek */
+body.focus main#view:has(> .bf) { height: 100dvh; display: flex; flex-direction: column; overflow-y: auto; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+body.focus main#view:has(> .bf) > .studybar { flex: none; }
+.bf { flex: 1 0 auto; min-height: 0 !important; gap: 8px !important; }
+.bf-top { position: relative; gap: 4px !important; } .bf-boss { margin-bottom: 0 !important; }
+.bf .boss-say { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 4; width: max-content; max-width: 94%; margin: 0 !important; animation: sayFade 3.2s ease forwards; pointer-events: none; }
+@keyframes sayFade { 0%, 75% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+.bf .boss-stage { width: clamp(64px, 15dvh, 150px); height: clamp(64px, 15dvh, 150px); }
+.bf .boss-me { padding: 0 !important; gap: 10px !important; } .bf .boss-me .hero-fig.xs { width: 56px; height: 64px; flex: none; }
+.bf .boss-me .hero-fig.xs img, .bf .boss-me .hero-fig.xs svg { width: 100%; height: 100%; object-fit: contain; }
+.bf .boss-q { flex: 1 1 0 !important; min-height: 72px !important; max-height: none; padding: 12px !important; overflow-y: auto; }
+.bf .abcd-grid { gap: 6px !important; } .bf .abcd { min-height: 44px !important; padding: 8px 10px !important; font-size: 13.5px; line-height: 1.25; }
+.bf .abcd.long { font-size: 12.5px; }
+.bf .boss-grades button { min-height: 54px; }
+.bf-bottom { padding-top: 0 !important; padding-bottom: 0 !important; gap: 8px !important; } .bf .pot-bar button { width: 42px; height: 42px; }
+.bf .boss-log { margin: 0 !important; }
+@media (prefers-reduced-motion: reduce) { .bf .boss-say { animation: none; } }
+.bf .boss-me .hero-fig.xs.s8 { width: 64px; height: 64px; transform-origin: calc((var(--x0) + var(--x1)) / 2 * 1%) calc(var(--y1) * 1%);
+  transform: scale(min(calc(96 / var(--bh)), calc(100 / (var(--x1) - var(--x0))), 2.6)); }
+.bf .boss-me { min-height: 68px; }
+/* v120: nowe ataki bossa – podstęp (prawda/fałsz), lustro, pożeracz liter, chaos (pary), rewanż; wieża wiedzy */
+.tf-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .tf-btns button { min-height: 56px; font-size: 17px; font-weight: 900; color: #fff !important; border: 0; }
+.tf-yes { background: #16a34a !important; } .tf-no { background: #dc2626 !important; }
+.tf-claim { margin-top: 10px; padding: 10px 12px; border-radius: 12px; border: 2px dashed #f59e0b; background: color-mix(in srgb, #f59e0b 10%, transparent); font-weight: 700; }
+.tf-claim::before { content: 'Odpowiedź: '; color: var(--muted); font-weight: 600; }
+.mask { margin-top: 10px; font: 800 20px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; color: var(--accent); overflow-wrap: anywhere; }
+.pairs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .pairs > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pairs button { min-height: 46px; padding: 8px !important; font-size: 13px; line-height: 1.2; overflow-wrap: anywhere; white-space: normal; }
+.pairs button.sel { outline: 3px solid var(--accent); } .pairs button.done { background: #16a34a !important; color: #fff; opacity: .55; } .pairs button.bad { background: #dc2626 !important; color: #fff; animation: meHurt .35s; }
+.weak-card { display: block; font-weight: 700; font-size: 11.5px; margin-top: 2px; }
+.retry-tag { background: #e0e7ff !important; color: #3730a3 !important; }
+.gk-cat { font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 6px; letter-spacing: .3px; }
+.gk-cta { background: linear-gradient(120deg, color-mix(in srgb, #8b5cf6 16%, var(--card)), var(--card) 60%); }
+.bf .boss-q { flex: 1 0 auto !important; min-height: 84px !important; }
+.bf .ver-tag { font-size: 12px; line-height: 1.25; padding: 5px 8px; margin-bottom: 6px; } .bf .ver-tag .weak-card { font-size: 11px; margin-top: 1px; }
+.bf .parry-bar { margin-top: 4px; }

@@ -17,11 +17,18 @@ const BLESS = {
   gamble: ['🎲', 'Rzut kością', '50/50: pełne ❤️ albo −30% ❤️', 1], pact: ['💀', 'Pakt krwi', '+30% obrażeń, ale −30% ❤️', 1], gold: ['💰', 'Chciwość', 'od teraz +50% XP i 💎 za piętro'],
 };
 const FLOOR_HEAL = .35;   // po każdym piętrze wraca 35% ❤️
-const tower = () => hero().tower || null;
-const towerBest = () => S.stats.towerBest || 0;
+// TW_GK: ta sama wieża, ale z pytaniami z wiedzy ogólnej (gk.js) – osobna wspinaczka i rekord
+let TW_GK = false;
+const twKey = () => TW_GK ? 'gtower' : 'tower', twBestKey = () => TW_GK ? 'gtowerBest' : 'towerBest';
+const tower = () => hero()[twKey()] || null;
+const towerBest = () => S.stats[twBestKey()] || 0;
 function towerBoss(T) {
   const f = T.floor, guard = f % TOWER_GUARD === 0, pool = guard ? FINAL_IDX : CHAPTER_IDX.concat(WORLD_IDX);
-  const bo = bossOf(pool[(f * 7 + (T.seed || 0)) % pool.length]), cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new'), { name, desc, img, persona } = bo;
+  const bo = bossOf(pool[(f * 7 + (T.seed || 0)) % pool.length]), { name, desc, img, persona } = bo;
+  if (TW_GK) { const len = Math.min(16, 5 + f), cs = gkPick(T, len);
+    return { kind: 'tower', id: 'gtower', i: f, gk: true, weak: null, name: guard ? `${name} – strażnik piętra` : name, desc, img, persona, seed: 777 + f * 131, diff: Math.min(4, Math.floor(f / 3)), stars: 0,
+      cards: cs, ok: true, repeat: false, pr: hero().pr || 0, len, title: `🧠 Wieża wiedzy · piętro ${f}${guard ? ' · strażnik' : ''}`, final: guard }; }
+  const cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new');
   return { kind: 'tower', id: 'tower', i: f, name: guard ? `${name} – strażnik piętra` : name, desc, img, persona, seed: 4242 + f * 131, diff: Math.min(4, Math.floor(f / 3)), stars: 0,
     cards: cs, ok: cs.length >= TOWER_REQ, repeat: false, pr: hero().pr || 0, len: Math.min(20, 6 + f), title: `🗼 Wieża · piętro ${f}${guard ? ' · strażnik' : ''}`, final: guard };
 }
@@ -31,32 +38,33 @@ function towerFloor() {
   const hs = heroStats(), u = T.buff; hs.atk *= 1 + (u.dmg || 0); hs.crit = Math.min(.7, hs.crit + (u.crit || 0)); hs.hp += u.hp || 0;
   hs.dodge = Math.min(.5, hs.dodge + (u.dodge || 0)); hs.time *= 1 + (u.time || 0); hs.vamp += u.vamp || 0; hs.thorns += u.thorns || 0;
   hs.combo *= 1 + (u.combo || 0); hs.ultNeed = Math.max(2, hs.ultNeed - (u.ult || 0)); if (u.phoenix && !T.phoenixUsed) hs.second = true;
-  const p = bossParams(b); p.hp = Math.round(p.hp * (1 + .06 * T.floor)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
+  const p = bossParams(b, TW_GK ? 'abcd' : BOSS_PICK.mode); p.hp = Math.round(p.hp * (1 + .06 * T.floor) * (TW_GK ? 1.7 : 1)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
   T.hp = Math.min(T.hp, hs.hp);
-  bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 : 0 }, p);
+  bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 : 0, ...(TW_GK ? { mode: 'abcd' } : {}) }, p);
   if (u.phoenix && !T.phoenixUsed) BOSS.second = true;
 }
 function towerStart() {
-  if (learnedAll() < TOWER_REQ) return toast(`🗼 Wieża otwiera się przy ${TOWER_REQ} nauczonych fiszkach (masz ${learnedAll()})`, 4000);
-  if (!confirm('🗼 Wieża – tryb hardcore.\n\nPiętro za piętrem, coraz trudniej. Po piętrze wraca tylko 35% ❤️. Za każde piętro podwójne XP i 💎.\n\nŚmierć albo ucieczka = GAME OVER – zaczynasz od parteru. Wchodzisz?')) return;
-  const h = hero(); h.tower = { floor: 1, hp: heroStats().hp, bank: { xp: 0, gems: 0 }, buff: {}, seed: Math.random() * 1000 | 0, t: Date.now() }; h.mod = Date.now(); save();
+  if (!TW_GK && learnedAll() < TOWER_REQ) return toast(`🗼 Wieża otwiera się przy ${TOWER_REQ} nauczonych fiszkach (masz ${learnedAll()})`, 4000);
+  if (!confirm(TW_GK ? '🧠 Wieża wiedzy – quiz z wiedzy ogólnej.\n\nPiętro za piętrem coraz trudniejsze pytania ABCD: geografia, historia, nauka, kultura, sport… Po piętrze wraca 35% ❤️.\n\nŚmierć albo ucieczka = GAME OVER. Wchodzisz?' : '🗼 Wieża – tryb hardcore.\n\nPiętro za piętrem, coraz trudniej. Po piętrze wraca tylko 35% ❤️. Za każde piętro podwójne XP i 💎.\n\nŚmierć albo ucieczka = GAME OVER – zaczynasz od parteru. Wchodzisz?')) return;
+  const h = hero(); h[twKey()] = { floor: 1, used: [], hp: heroStats().hp, bank: { xp: 0, gems: 0 }, buff: {}, seed: Math.random() * 1000 | 0, t: Date.now() }; h.mod = Date.now(); save();
   towerFloor();
 }
 function towerEnd(B, won) {
-  const h = hero(), T = h.tower; if (!T) return;
+  TW_GK = !!B.b.gk;
+  const h = hero(), T = h[twKey()]; if (!T) return;
   if (won) {
-    const f = T.floor, xp = Math.round((B.ok * 3 + 30 + 15 * f) * 2 * xpMul()), gems = Math.round((8 + 4 * f) * gemMul());
+    const f = T.floor, xp = Math.round((B.ok * 3 + 30 + 15 * f) * (TW_GK ? 1 : 2) * xpMul()), gems = Math.round((8 + 4 * f) * gemMul());
     const m = 1 + (T.buff.gold || 0), gx = Math.round(xp * m), gg = Math.round(gems * m);
     giveXP(gx, 'wieża'); S.wallet.push({ id: 'tower-' + uid(), n: gg, why: 'tower', t: Date.now() });
     T.bank.xp += gx; T.bank.gems += gg; B.towerGain = { xp: gx, gems: gg };
     if (T.buff.phoenix && !B.second) T.phoenixUsed = true;
     B.towerHeal = Math.round(B.meMax * FLOOR_HEAL); T.hp = Math.min(B.meMax, Math.round(B.me + B.towerHeal)); T.floor = f + 1;
-    S.stats.towerBest = Math.max(towerBest(), f); S.stats.bossWins = (S.stats.bossWins || 0) + 1;
+    S.stats[twBestKey()] = Math.max(towerBest(), f); S.stats.bossWins = (S.stats.bossWins || 0) + 1;
     // 3 do wyboru; rzadkie mają mniejszą szansę, jedno miejsce zawsze dla czegoś leczącego, gdy ❤️ < 50%
     const pool = shuffle(Object.keys(BLESS).filter(k => !(k === 'phoenix' && T.buff.phoenix) && (!BLESS[k][3] || Math.random() < .35)));
     T.pick = pool.slice(0, 3); if (T.hp < B.meMax / 2 && !T.pick.some(k => k === 'heal' || k === 'maxhp')) T.pick[2] = 'heal';
   } else {
-    B.towerLost = { floor: T.floor, ...T.bank }; S.stats.towerBest = Math.max(towerBest(), T.floor - 1); delete h.tower;
+    B.towerLost = { floor: T.floor, ...T.bank }; S.stats[twBestKey()] = Math.max(towerBest(), T.floor - 1); delete h[twKey()];
   }
   h.mod = Date.now();
 }
@@ -76,23 +84,24 @@ function towerBless(k) {
 const towerBuffsHTML = T => { const u = T.buff, L = [u.dmg && `⚔️ +${Math.round(u.dmg * 100)}%`, u.crit && `🎯 +${Math.round(u.crit * 100)}%`, u.dodge && `💨 ${Math.round(u.dodge * 100)}%`, u.vamp && `🧛 ${Math.round(u.vamp * 100)}%`,
   u.thorns && `🌵 ${Math.round(u.thorns * 100)}%`, u.combo && '🔥 rozpęd', u.guard && '🔰 2 bloki', u.ult && `⚡ −${u.ult}`, u.phoenix && (T.phoenixUsed ? '🕊️ zużyty' : '🕊️ feniks'), u.time && `⏳ +${Math.round(u.time * 100)}%`, u.hp && `🛡️ +${u.hp}`, u.gold && `💰 +${Math.round(u.gold * 100)}%`].filter(Boolean);
   return L.length ? `<div class="boss-tags" style="justify-content:center;margin:6px 0">${L.map(x => `<span>${x}</span>`).join('')}</div>` : ''; };
-const towerCardHTML = () => { const T = tower();
+const towerCardHTML = () => { TW_GK = false; const T = tower();
   return `<div class="card row nowrap tower-cta" data-go="#/tower"><span class="tower-ic">🗼</span><div class="grow"><b>Wieża – hardcore</b><div class="small muted">${T ? `W trakcie: piętro ${T.floor} · zdobyte +${T.bank.xp} XP, +${T.bank.gems} 💎` : `Ile pięter przetrwasz? Rekord: ${towerBest() || '—'} · podwójne XP, śmierć = game over`}</div></div><span>›</span></div>`; };
 function towerAfterView() {
-  const B = BOSS, T = tower();
+  TW_GK = !!BOSS.b.gk;
+  const B = BOSS, T = tower(), modes = () => TW_GK ? '' : towerModes();
   if (B.towerLost) { const L = B.towerLost;
     return { tab: 'arena', focus: true, html: `<div class="card center boss-end lost"><div class="boss-stage gloat">${bossArt(B.b)}</div>${B.say?.txt ? `<div class="boss-say end">${esc(B.say.txt)}</div>` : ''}
       <h2 class="game-over">GAME OVER</h2><p>Padłeś na piętrze <b>${L.floor}</b>. Wspinaczka i błogosławieństwa przepadają.</p><p class="small muted">Zdobyte w tej wspinaczce: +${L.xp} XP, +${L.gems} 💎 · rekord: piętro ${towerBest()}${L.floor - 1 >= towerBest() && L.floor > 1 ? ' 🏆 nowy rekord!' : ''}</p>
-      ${towerModes()}<div class="row" style="margin-top:10px"><button class="primary grow" data-act="tower-start">🗼 Od nowa</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
+      ${modes()}<div class="row" style="margin-top:10px"><button class="primary grow" data-act="tower-start">${TW_GK ? '🧠' : '🗼'} Od nowa</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
   }
   const g = B.towerGain || { xp: 0, gems: 0 };
   return { tab: 'arena', focus: true, html: `<div class="card center boss-end won"><div class="boss-stage dead">${bossArt(B.b)}<div class="boss-boom"></div></div>
-    <h2>🗼 Piętro ${T.floor - 1} zdobyte!</h2><p class="small">+${g.xp} XP, +${g.gems} 💎 · w tej wspinaczce razem <b>+${T.bank.xp} XP, +${T.bank.gems} 💎</b></p>
+    <h2>${TW_GK ? '🧠' : '🗼'} Piętro ${T.floor - 1} zdobyte!</h2><p class="small">+${g.xp} XP, +${g.gems} 💎 · w tej wspinaczce razem <b>+${T.bank.xp} XP, +${T.bank.gems} 💎</b></p>
     <div class="tower-hp">${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}</div><p class="small muted" style="margin:4px 0">❤️ +${B.towerHeal || 0} za ukończone piętro</p>${towerBuffsHTML(T)}
     ${T.pick ? `<h3>Wybierz błogosławieństwo</h3><div class="bless">${T.pick.map(k => `<button class="${BLESS[k][3] ? 'epic' : ''}" data-act="tower-bless" data-k="${k}">${BLESS[k][3] ? '<em>RZADKIE</em>' : ''}<span>${BLESS[k][0]}</span><b>${BLESS[k][1]}</b><small>${BLESS[k][2]}</small></button>`).join('')}</div>`
-      : `${towerModes()}<button class="primary block boss-go" data-act="tower-next" style="margin-top:10px">⚔️ Piętro ${T.floor}${T.floor % TOWER_GUARD === 0 ? ' – strażnik!' : ''}</button>`}</div>` };
+      : `${modes()}<button class="primary block boss-go" data-act="tower-next" style="margin-top:10px">⚔️ Piętro ${T.floor}${T.floor % TOWER_GUARD === 0 ? ' – strażnik!' : ''}</button>`}</div>` };
 }
-ROUTES.tower = () => { const T = tower();
+ROUTES.tower = () => { TW_GK = false; const T = tower();
   return { tab: 'arena', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🗼 Wieża – hardcore</h1>${coinsHTML()}</div>
   <div class="card center"><div style="font-size:64px">🗼</div><p style="margin:4px 0"><b>Ile pięter przetrwasz?</b> Każde piętro to trudniejszy boss, a ❤️ nie odnawia się między walkami.</p>
     <ul class="small" style="text-align:left"><li><b>×2 XP</b> i 💎 dostajesz od razu za każde piętro.</li><li>Po piętrze wraca 35% ❤️ i wybierasz 1 z 3 błogosławieństw.</li><li>Co ${TOWER_GUARD}. piętro – strażnik, mocniejszy boss.</li><li><b>Śmierć albo ucieczka = GAME OVER</b> – od nowa od parteru. Serca zostają.</li></ul>

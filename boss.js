@@ -172,17 +172,19 @@ function bossBegin(b, extra = {}, p0 = null) {
   BOSS = { b: { ...b, ...p }, mode, ids, i: 0, hp: p.hp, max: p.hp, me: hs.hp, meMax: hs.hp, hs, cap: Math.max(12, Math.round(p.hp * .15)), combo: hs.combo0, best: 0, ok: 0, bad: 0, verOk: 0, caught: 0, fast: 0,
     phase: 'fight', lostHp: 0, timer: p.every, move: null, shield: false, power: 0, guard: 0, potUsed: 0, second: hs.second, ult: 0, poison: 0, silence: 0, timeFree: 0,
     verQ: [], pendIce: false, pendBugs: 0, log: [], pool, poolAll, missed: [], dealt: {}, startedAt: now,
-    phaseN: 0, spd: 0, speedHits: 0, parryN: 0, parryOk: 0, ev: null, triple: false, gaunt: null, petUsed: false, dmgTotal: 0, ...extra };
+    weakIds: weakCards(b), lastParry: null, phaseN: 0, spd: 0, speedHits: 0, parryN: 0, parryOk: 0, ev: null, triple: false, gaunt: null, petUsed: false, dmgTotal: 0, ...extra };
   BOSS.move = pickMove(BOSS.b); BOSS_SEL = null;
   presentCard(); bossSay('start');
   go('#/boss/fight'); render();
 }
 const pickMove = b => { const opts = ['hit', 'hit', ...b.abil.filter(a => a !== 'rage')], k = opts[Math.random() * opts.length | 0], atk = b.atk;
   return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: 0 }; };
-const bossCard = () => BOSS?.cur && S.cards.find(c => c.id === BOSS.cur.id);
+const bossCardById = id => S.cards.find(c => c.id === id) || (typeof gkCard === 'function' ? gkCard(id) : null);
+const bossCard = () => BOSS?.cur && bossCardById(BOSS.cur.id);
 const ABCD_MAX = 400;
 const textOk = v => v.ans && v.ans.trim() && v.ans.length <= 120;
 function abcdOpts(c) {
+  if (c.gk) return shuffle([c.a, ...c.w]);
   const B = BOSS, e = distractorEntry(c); if (!e.a || !e.a.trim() || e.a.length > ABCD_MAX) return null;
   let wrong = pickDistractors(e, B.pool.filter(x => norm(x.a) !== norm(e.a)), 3);
   if (wrong.length < 3) wrong = [...wrong, ...pickDistractors(e, B.poolAll.filter(x => norm(x.a) !== norm(e.a) && !wrong.some(w => norm(w) === norm(x.a))), 3 - wrong.length)];
@@ -193,28 +195,83 @@ function abcdOpts(c) {
 // 🛡️ parowanie: zapowiedziany cios bossa = szybkie pytanie ABCD; dobrze → blok i kontra, źle / za późno → obrażenia
 const PARRY_MS = 9000;
 const RUNES = [['🔥', '#ef4444'], ['💧', '#3b82f6'], ['⚡', '#eab308'], ['🌿', '#22c55e']], RUNE_MS = 700;
+// 💔 fiszki, które ostatnio Ci nie szły: pomyłki z tej walki, potem częste zapominanie (lapses) i ostatnia ocena „Nie pamiętam”
+function weakCards(b) {
+  const ids = new Set(b.cards.map(c => c.id)), last = {};
+  for (let i = S.log.length - 1, n = 0; i >= 0 && n < 6000; i--, n++) { const e = S.log[i]; if (ids.has(e.c) && !(e.c in last)) last[e.c] = e.g; }
+  const sc = c => (c.srs.lapses || 0) + (last[c.id] === 1 ? 2 : 0);
+  return b.cards.filter(c => !c.gk && c.srs.state !== 'new' && sc(c) > 0).sort((x, y) => sc(y) - sc(x)).slice(0, 30).map(c => c.id);
+}
+// karty do ataku: najpierw pomyłki z tej walki, potem „słabe” z historii, na końcu reszta widzianych
+function parryPool(B) {
+  const seen = B.ids.slice(0, Math.max(1, B.i)), missed = shuffle([...new Set(B.missed)]), weak = shuffle((B.weakIds || []).filter(id => !missed.includes(id)));
+  const all = [...new Set([...missed, ...weak, ...shuffle(seen), ...shuffle([...B.ids])])];
+  return all.map(id => ({ id, weak: missed.includes(id) || weak.includes(id), c: bossCardById(id) })).filter(x => x.c);
+}
+const plain = h => stripHtml(h || '').trim();
+const shortTxt = (t, n = 60) => t && t.length <= n;
+// 🔡 pożeracz liter: zostawia pierwszą literę słów i co trzecią, resztę zamienia na _
+const maskAns = a => [...a].map((ch, i, arr) => /\p{L}|\d/u.test(ch) && i > 0 && /\p{L}|\d/u.test(arr[i - 1]) && i % 3 ? '_' : ch).join('');
+// ataki bossa (parowanie) – losowane z wagami, bez dwóch takich samych z rzędu
+const PARRY_KINDS = {
+  runes: { w: 2, min: 2, name: '🔮 Runy', make(B, pr) {
+    const len = 3 + Math.min(3, B.b.diff), seq = Array.from({ length: len }, () => Math.random() * 4 | 0);
+    B.cur = { id: null, cm: 'runes', parry: pr, runes: { seq, phase: 'show', input: [] }, hidden: [] }; bossSay('runes');
+    const cur = B.cur; setTimeout(() => { if (BOSS === B && B.cur === cur && B.phase === 'fight') { cur.runes.phase = 'input'; B.qAt = Date.now(); render(); } }, len * RUNE_MS + 600);
+    return true; } },
+  curse: { w: 3, min: 1, name: '💀 Klątwa zapomnienia', make(B, pr) {
+    for (const id of shuffle([...new Set(B.missed)])) { const c = bossCardById(id); if (!c || !textOk(cardView(c))) continue;
+      B.cur = { id, cm: 'type', parry: pr, curse: true, weak: true, hidden: [] }; bossSay('curse'); return true; }
+    return false; } },
+  abcd: { w: 2, min: 0, name: '⚔️ Cios', make(B, pr) {
+    for (const x of parryPool(B).slice(0, 10)) { const opts = abcdOpts(x.c); if (!opts) continue; B.cur = { id: x.id, cm: 'abcd', opts, parry: pr, weak: x.weak, hidden: [] }; return true; }
+    return false; } },
+  tf: { w: 3, min: 0, name: '🎭 Podstęp', make(B, pr) {
+    for (const x of parryPool(B).slice(0, 10)) { const v = cardView(x.c); if (!shortTxt(v.ans, 160)) continue;
+      const truth = Math.random() < .5, wrong = !truth && (x.c.gk ? x.c.w[Math.random() * x.c.w.length | 0] : pickDistractors(distractorEntry(x.c), B.poolAll.filter(e => norm(e.a) !== norm(v.ans) && e.a.length <= 160), 1)[0]);
+      if (!truth && !wrong) continue;
+      B.cur = { id: x.id, cm: 'tf', claim: truth ? v.ans : wrong, truth, parry: pr, weak: x.weak, hidden: [] }; return true; }
+    return false; } },
+  rev: { w: 2, min: 1, name: '🪞 Lustro', make(B, pr) {
+    const fr = c => plain(cardView(c).label || '');
+    for (const x of parryPool(B).slice(0, 10)) { const f = fr(x.c), v = cardView(x.c); if (!shortTxt(f, 90) || !shortTxt(v.ans, 200)) continue;
+      const others = shuffle(B.ids.filter(id => id !== x.id)).map(id => bossCardById(id)).filter(Boolean).map(fr).filter(t => shortTxt(t, 90) && norm(t) !== norm(f));
+      const wrong = [...new Set(others)].slice(0, 3); if (wrong.length < 3) continue;
+      B.cur = { id: x.id, cm: 'abcd', rev: true, right: f, opts: shuffle([f, ...wrong]), parry: pr, weak: x.weak, hidden: [] }; return true; }
+    return false; } },
+  gap: { w: 2, min: 1, name: '🔡 Pożeracz liter', make(B, pr) {
+    for (const x of parryPool(B).slice(0, 10)) { const v = cardView(x.c); if (!textOk(v) || v.ans.length < 4 || v.ans.length > 40) continue;
+      B.cur = { id: x.id, cm: 'type', mask: maskAns(v.ans), parry: pr, weak: x.weak, hidden: [] }; return true; }
+    return false; } },
+  pairs: { w: 2, min: 1, name: '🧩 Chaos', make(B, pr) {
+    const ok = parryPool(B).filter(x => { const v = cardView(x.c); return shortTxt(plain(v.label || ''), 50) && shortTxt(v.ans, 50); }).slice(0, 3);
+    if (ok.length < 3) return false;
+    const L = shuffle(ok.map(x => ({ id: x.id, t: plain(cardView(x.c).label) }))), R = ok.map(x => ({ id: x.id, t: cardView(x.c).ans }));
+    for (let t = 0; t < 30 && (t === 0 || R.some((x, i) => x.id === L[i].id)); t++) shuffle(R);   // żadna odpowiedź naprzeciw swojego pytania
+    B.cur = { id: null, cm: 'pairs', pairs: { L, R, sel: null, done: [], err: 0, bad: null }, parry: pr, weak: ok.some(x => x.weak), hidden: [] }; return true; } },
+};
 function presentParry() {
   const B = BOSS, pr = B.pendParry; B.pendParry = null; B.parryN++;
   const reset = () => { B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0; B.ice = null; B.bugs = []; };
-  const d = B.b.diff, r = Math.random();
-  // 🔮 runy: zapamiętaj sekwencję i odtwórz ją (od 2. stopnia trudności)
-  if (d >= 2 && r < .45) {
-    const len = 3 + Math.min(3, d), seq = Array.from({ length: len }, () => Math.random() * 4 | 0);
-    B.cur = { id: null, cm: 'runes', parry: pr, runes: { seq, phase: 'show', input: [] }, hidden: [] }; reset(); bossSay('runes');
-    const cur = B.cur; setTimeout(() => { if (BOSS === B && B.cur === cur && B.phase === 'fight') { cur.runes.phase = 'input'; B.qAt = Date.now(); render(); } }, len * RUNE_MS + 600);
-    return true;
+  const d = B.b.diff, kinds = Object.entries(PARRY_KINDS).filter(([k, x]) => d >= x.min && k !== B.lastParry && !(B.b.gk && ['curse', 'gap', 'rev', 'pairs'].includes(k)));
+  while (kinds.length) {   // losowanie z wagami; gdy atak nie ma z czego powstać – próbujemy następny
+    let r = Math.random() * kinds.reduce((a, [, x]) => a + x.w, 0), i = 0;
+    while (r >= kinds[i][1].w) { r -= kinds[i][1].w; i++; }
+    const [k, x] = kinds.splice(i, 1)[0];
+    if (x.make(B, pr)) { reset(); B.lastParry = k; B.cur.kind = k; return true; }
   }
-  // 💀 klątwa zapomnienia: wpisz odpowiedź do fiszki, której w tej walce nie umiałeś
-  if (d >= 1 && r < .8 && B.missed.length) {
-    for (const id of shuffle([...new Set(B.missed)])) { const c = S.cards.find(x => x.id === id); if (!c || !textOk(cardView(c))) continue;
-      B.cur = { id, cm: 'type', parry: pr, curse: true, hidden: [] }; reset(); bossSay('curse'); return true; }
-  }
-  const seen = B.ids.slice(0, Math.max(1, B.i)), pool = shuffle([...seen, ...shuffle([...B.ids])]);
-  for (const id of pool.slice(0, 8)) { const c = S.cards.find(x => x.id === id), opts = c && abcdOpts(c); if (!opts) continue;
-    B.cur = { id, cm: 'abcd', opts, parry: pr, hidden: [] }; B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0; B.ice = null; B.bugs = []; return true; }
   hurtMe(pr.dmg, pr.name); return false;   // nie ma czym parować – cios wchodzi
 }
-const parryMs = B => PARRY_MS * B.hs.time * (B.cur?.curse ? 1.8 : B.cur?.runes ? .25 * B.cur.runes.seq.length + .2 : 1);
+function pairTap(side, i) {
+  const B = BOSS, P = B?.cur?.pairs; if (!P || B.phase !== 'fight') return;
+  if (side === 'L') { if (!P.done.includes(P.L[i].id)) P.sel = i; P.bad = null; return render(); }
+  if (P.sel == null || P.done.includes(P.R[i].id)) return;
+  if (P.L[P.sel].id === P.R[i].id) { P.done.push(P.R[i].id); P.sel = null; bossSfx('tick'); }
+  else { P.err++; P.bad = i; B.missed.push(P.L[P.sel].id); bossSfx('hurt'); if (P.err >= 2) { B.log.unshift(`🧩 Pomylone pary (${P.done.length}/3)`); return parryResult(false, false, P.done.length / 3); } }
+  if (P.done.length === P.L.length) return parryResult(true);
+  render();
+}
+const parryMs = B => PARRY_MS * B.hs.time * (B.cur?.curse ? 1.8 : B.cur?.runes ? .25 * B.cur.runes.seq.length + .2 : B.cur?.pairs ? 2 : B.cur?.mask ? 1.6 : B.cur?.cm === 'tf' ? .7 : 1);
 function parryResult(ok, late, part = 0) {
   const B = BOSS, pr = B.cur.parry, now = Date.now();
   if (ok) B.parryOk++;
@@ -240,9 +297,9 @@ function presentCard() {
   const vi = B.verQ.findIndex(v => v.at <= B.i || B.i >= B.ids.length);
   let id, ver = null;
   if (vi >= 0) { ver = B.verQ.splice(vi, 1)[0]; id = ver.id; } else if (B.i < B.ids.length) id = B.ids[B.i]; else { B.cur = null; return; }
-  const c = S.cards.find(x => x.id === id); if (!c) { B.i++; return presentCard(); }
+  const c = bossCardById(id); if (!c) { if (!ver) B.i++; return presentCard(); }
   const v = cardView(c);
-  let cm = ver ? 'abcd' : B.mode === 'mix' ? ['abcd', 'flip', 'type'][Math.random() * 3 | 0] : B.mode, opts = null;
+  let cm = ver && !(ver.retry && B.mode === 'type') ? 'abcd' : B.mode === 'mix' ? ['abcd', 'flip', 'type'][Math.random() * 3 | 0] : B.mode, opts = null;
   if (cm === 'abcd') { opts = abcdOpts(c); if (!opts) cm = ver ? (textOk(v) ? 'type' : null) : textOk(v) ? 'type' : 'flip'; }
   if (cm === 'type' && !textOk(v)) cm = 'flip';
   if (ver && !cm) return presentCard();   // tej karty nie da się sprawdzić – pomijamy sprawdzian
@@ -251,7 +308,7 @@ function presentCard() {
   const free = B.timeFree > 0;
   B.ice = B.pendIce && !free ? { n: B.hs.ice ? 3 : 6, max: B.hs.ice ? 3 : 6 } : null; B.pendIce = false;
   B.bugs = B.pendBugs && !free ? Array.from({ length: B.pendBugs }, (_, k) => ({ k, x: 8 + Math.random() * 78, y: 10 + Math.random() * 70, img: ['g_bug', 'g_ant', 'g_roach', 'g_ladybug', 'g_worm', 'g_mosq'][Math.random() * 6 | 0], d: (Math.random() * 2).toFixed(2) })) : []; B.pendBugs = 0;
-  if (ver) bossSay('verify');
+  if (ver && !ver.retry) bossSay('verify');
 }
 const bossHpLow = B => B.hp < B.max * .25;
 function dealBoss(n, label) { const B = BOSS; n = Math.max(0, Math.round(n)); if (B.coop && typeof coopHit === 'function') { const r = coopHit(n, label); B.dmgTotal += r; return r; }
@@ -277,13 +334,13 @@ function bossAnswer(g, how) {
   const B = BOSS, c = bossCard(), cur = B?.cur; if (!B || !c || B.phase !== 'fight' || B.ice || B.bugs?.length) return;
   const now = Date.now(), ms = Math.min(60000, now - B.qAt);
   B.fx = null; B.fxMe = null; B.bossAct = null;
-  if (cur.parry) return parryResult(cur.curse ? g >= 2 : g >= 3);
+  if (cur.parry) return parryResult(cur.curse || cur.mask ? g >= 2 : g >= 3);
   if (cur.ver) return verifyResult(c, g >= 3);
   // harmonogram: zaległe karty liczą się jako powtórka (sprawdziany już nie)
   if (c.srs.due <= now && c.srs.state !== 'new' && !B.down) {
     const sg = Math.min(3, g), entry = { id: uid(), c: c.id, d: c.deckId, t: now, g: sg, n: 0, ms, m: how === 'flip' ? 'flip' : 'type', boss: 1, ...(how === 'type' ? { v: B.verdict } : {}) };
     c.srs = schedule(c.srs, sg); touch(c); S.log.push(entry); emit('review', c, sg, false);
-  } else (S.tlog = S.tlog || []).push({ id: uid(), t: now, d: c.deckId, ms });
+  } else if (!c.gk) (S.tlog = S.tlog || []).push({ id: uid(), t: now, d: c.deckId, ms });
   if (B.down) { if (g >= 3 && typeof coopSelfRevive === 'function') coopSelfRevive(); return afterTurn(g); }
   const hs = B.hs;
   if (g >= 2) {
@@ -315,18 +372,23 @@ function bossAnswer(g, how) {
     // sprawdzian: część kart ocenionych „Łatwo” wraca za chwilę jako ABCD (przy przeklikiwaniu – częściej)
     if (how === 'flip' && g >= 3 && Math.random() < (fast ? .7 : .3)) B.verQ.push({ id: c.id, at: B.i + 2 + (Math.random() * 3 | 0), dealt: dmg });
   } else {
-    B.combo = 0; B.bad++; B.spd = 0; B.missed.push(c.id); hurtMe(Math.round(B.b.atk * .8 * (B.triple ? 2 : 1)), B.triple ? 'Kontra za 3×' : 'Kontra bossa'); B.triple = false;
+    B.combo = 0; B.bad++; B.spd = 0; B.missed.push(c.id); if (!B.verQ.some(v => v.id === c.id)) B.verQ.push({ id: c.id, at: B.i + 3 + (Math.random() * 3 | 0), dealt: 0, retry: true }); hurtMe(Math.round(B.b.atk * .8 * (B.triple ? 2 : 1)), B.triple ? 'Kontra za 3×' : 'Kontra bossa'); B.triple = false;
     if (B.gaunt) { B.gaunt = null; B.log.unshift('🎯 Wyzwanie przerwane'); } bossSay(B.me < B.meMax * .35 ? 'meLow' : 'miss');
   }
   afterTurn(g);
 }
 function verifyResult(c, ok) {
   const B = BOSS, v = B.cur.ver, now = Date.now();
+  if (v.retry) {   // 🔁 rewanż: fiszka, którą przed chwilą pomyliłeś
+    if (ok) { const n = dealBoss(Math.max(8, 14 * B.hs.atk), 'odkupienie'); B.combo++; B.ult = Math.min(B.hs.ultNeed, B.ult + 1); B.fx = { k: 'boss', n, crit: true, t: now }; B.log.unshift(`💪 Odkupienie! Teraz pamiętasz: −${n}`); bossSay('proven'); }
+    else { B.combo = 0; B.missed.push(c.id); hurtMe(Math.round(B.b.atk * .7), 'Znowu zapomniane'); bossSay('miss'); }
+    return afterTurn(ok ? 3 : 1, true);
+  }
   if (ok) { const n = dealBoss(Math.max(6, v.dealt * .5 * B.hs.verify), 'sprawdzian'); B.verOk++; B.ult = Math.min(B.hs.ultNeed, B.ult + 1); B.fx = { k: 'boss', n, crit: true, t: now }; B.log.unshift(`🔍 Udowodnione! +${n} obrażeń`); bossSay('proven'); }
   else {
     if (!B.coop) B.hp = Math.min(B.max, B.hp + v.dealt);
     B.caught++; B.combo = 0; B.missed.push(c.id); B.log.unshift(`🕵️ Przyłapany! Boss odzyskuje ${v.dealt} ❤️`); hurtMe(Math.round(B.b.atk * 1.2), 'Kara za przeklikanie'); bossSay('caught');
-    if (c.srs.state !== 'new') { c.srs = schedule(c.srs, 1); touch(c); }   // jednak nie umiesz – karta wraca szybciej
+    if (c.srs.state !== 'new' && !c.gk) { c.srs = schedule(c.srs, 1); touch(c); }   // jednak nie umiesz – karta wraca szybciej
   }
   afterTurn(ok ? 3 : 1, true);
 }
@@ -624,16 +686,21 @@ function fightView() {
   const c = bossCard(), cur = B.cur, v = c ? cardView(c) : { q: '', a: '', ans: '' }, now = Date.now(), fresh = x => x && now - x.t < 900 ? x : null;
   const fx = fresh(B.fx), fm = fresh(B.fxMe), act = fresh(B.bossAct), ultFx = B.ultFx && now - B.ultFx.t < 1400 ? B.ultFx : null, mv = B.move, hs = B.hs;
   const blocked = B.ice || B.bugs?.length, cm = cur?.cm, dis = blocked ? 'disabled' : '';
-  const q = cm === 'flip' && B.shown ? v.a : v.q;
+  const q = cur?.rev ? `<div class="ctext">${esc(v.ans)}</div><small class="muted">Do czego pasuje ta odpowiedź?</small>` : cm === 'pairs' ? '<div class="ctext">Połącz pytania z odpowiedziami</div><small class="muted">stuknij pytanie, potem odpowiedź · 2 pomyłki = cios</small>'
+    : cm === 'tf' ? `${v.q}<div class="tf-claim">${esc(cur.claim)}</div>` : cm === 'flip' && B.shown ? v.a : v.q + (cur?.mask && !B.shown ? `<div class="mask">${esc(cur.mask)}</div>` : '');
   const evChest = B.ev?.k === 'chest' ? '<button class="ev-chest" data-act="boss-evchest" aria-label="Złap skrzynkę">📦<small>Złap!</small></button>' : '';
   let ctrl = B.down ? `<div class="down-box">💀 Leżysz! ${B.coop ? 'Kolega może Cię reanimować – albo' : ''} odpowiedz dobrze 5×, żeby wstać (${B.selfRev || 0}/5)</div>` : '';
-  if (cm === 'abcd') ctrl += `<div class="abcd-grid">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(v.ans);
+  if (cm === 'abcd') ctrl += `<div class="abcd-grid">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(cur.right ?? v.ans);
       return `<button class="abcd${o.length > 70 ? ' long' : ''}${pk ? right ? ' right' : B.picked === k ? ' wrong' : '' : ''}${hid ? ' hid' : ''}" data-act="boss-pick" data-k="${k}" ${pk || hid || blocked ? 'disabled' : ''}><i>${'ABCD'[k]}</i><span>${esc(o)}</span></button>`; }).join('')}</div>
       ${B.picked != null ? '<button class="primary block" data-act="boss-next">Dalej ›</button>' : ''}`;
   else if (cm === 'type' && !B.shown) ctrl += `<div class="row nowrap"><input id="boss-in" class="grow" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" ${dis}><button class="primary" data-act="boss-check" ${dis}>⚔️</button></div>
       <button class="ghost block small" data-act="boss-show" style="margin-top:4px" ${dis}>Nie wiem – pokaż</button>`;
   else if (cm === 'type') ctrl += `<p class="center small ${B.verdict === 'wrong' ? 'bad' : 'good'}" style="margin:4px 0">${B.verdict === 'wrong' ? `✗ Poprawnie: <b>${esc(v.ans)}</b>` : B.verdict === 'close' ? '≈ Prawie – liczę jako „Ledwo”' : '✓ Dobrze! Mocny cios ×' + hs.typeM.toFixed(2).replace('.', ',')}</p><button class="primary block" data-act="boss-next">Dalej ›</button>`;
   else if (cm === 'runes') ctrl += '';
+  else if (cm === 'tf') ctrl += B.picked == null ? `<div class="tf-btns"><button class="tf-yes" data-act="boss-tf" data-v="1" ${dis}>✓ Prawda</button><button class="tf-no" data-act="boss-tf" data-v="0" ${dis}>✗ Fałsz</button></div>`
+      : `<p class="center small ${B.pendingG >= 3 ? 'good' : 'bad'}" style="margin:4px 0">${B.pendingG >= 3 ? '✓ Przejrzałeś podstęp!' : '✗ Dałeś się nabrać.'} ${cur.truth ? '' : `Poprawnie: <b>${esc(v.ans)}</b>`}</p><button class="primary block" data-act="boss-next">Dalej ›</button>`;
+  else if (cm === 'pairs') { const P = cur.pairs; ctrl += `<div class="pairs"><div>${P.L.map((x, i) => `<button class="${P.done.includes(x.id) ? 'done' : P.sel === i ? 'sel' : ''}" data-act="boss-pair" data-s="L" data-i="${i}" ${P.done.includes(x.id) || blocked ? 'disabled' : ''}>${esc(x.t)}</button>`).join('')}</div>
+      <div>${P.R.map((x, i) => `<button class="${P.done.includes(x.id) ? 'done' : P.bad === i ? 'bad' : ''}" data-act="boss-pair" data-s="R" data-i="${i}" ${P.done.includes(x.id) || blocked ? 'disabled' : ''}>${esc(x.t)}</button>`).join('')}</div></div>`; }
   else if (!B.shown) ctrl += `<button class="primary block boss-go" data-act="boss-show" ${dis}>Pokaż odpowiedź</button>`;
   else ctrl += '<div class="boss-grades"><button class="g1" data-act="boss-g" data-g="1"><span>✗</span><small>Nie pamiętam</small></button><button class="g2" data-act="boss-g" data-g="2"><span>≈</span><small>Ledwo</small></button><button class="g3" data-act="boss-g" data-g="3"><span>⚡</span><small>Łatwo</small></button></div>';
   const ultReady = B.ult >= hs.ultNeed && !B.down, L = lineDef();
@@ -656,8 +723,8 @@ function fightView() {
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
     ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${evChest}
     <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}">
-      ${cur?.ver ? '<div class="ver-tag">🔍 Sprawdzian bossa – udowodnij, że to wiesz!</div>' : ''}
-      ${cur?.parry ? `<div class="ver-tag parry-tag">⚠️ ${esc(cur.parry.name)} (−${cur.parry.dmg} ❤️)! ${cur.runes ? (cur.runes.phase === 'show' ? '🔮 Zapamiętaj sekwencję run!' : '🔮 Powtórz sekwencję run!') : cur.curse ? '💀 Klątwa zapomnienia: wpisz odpowiedź, której nie umiałeś (źle = ×1,5)' : 'Odpowiedz dobrze, żeby sparować'}${B.picked == null && cur.runes?.phase !== 'show' && !(cur.curse && B.shown) ? `<div class="parry-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / parryMs(B) * 100).toFixed(1)}%"></i></div>` : ''}</div>` : ''}
+      ${cur?.ver ? (cur.ver.retry ? '<div class="ver-tag retry-tag">🔁 Rewanż: ta fiszka przed chwilą Cię pokonała. Teraz pamiętasz?</div>' : '<div class="ver-tag">🔍 Sprawdzian bossa – udowodnij, że to wiesz!</div>') : ''}
+      ${cur?.parry ? `<div class="ver-tag parry-tag">⚠️ ${esc(cur.parry.name)} (−${cur.parry.dmg} ❤️)! ${PARRY_TXT(cur)}${cur.weak && !cur.curse ? '<small class="weak-card">💔 boss bije fiszką, która Ci ostatnio nie szła</small>' : ''}${B.picked == null && cur.runes?.phase !== 'show' && !(cur.curse && B.shown) ? `<div class="parry-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / parryMs(B) * 100).toFixed(1)}%"></i></div>` : ''}</div>` : ''}
       ${B.triple && !cur?.parry && !cur?.ver ? '<div class="ver-tag ev-tag">💥 Pytanie za 3×!</div>' : ''}${B.gaunt && !cur?.parry ? `<div class="ver-tag ev-tag">🎯 Wyzwanie: ${B.gaunt.n}/3 dobrych z rzędu</div>` : ''}
       ${cur?.runes ? runesHTML(cur.runes) : ''}
       <div class="bq-in">${cur?.runes ? '' : q}${cur?.hint && !B.shown ? `<div class="hintbox">🔮 ${esc(cur.hint)}</div>` : ''}</div>
@@ -698,6 +765,8 @@ function endView() {
     ${livesHTML()}
   </div>` };
 }
+const PARRY_TXT = cur => cur.runes ? (cur.runes.phase === 'show' ? '🔮 Zapamiętaj sekwencję run!' : '🔮 Powtórz sekwencję run!') : cur.curse ? '💀 Klątwa zapomnienia: wpisz odpowiedź, której nie umiałeś (źle = ×1,5)'
+  : cur.cm === 'tf' ? '🎭 Podstęp: czy to dobra odpowiedź? Szybko!' : cur.rev ? '🪞 Lustro: odwrócona fiszka – wybierz pytanie' : cur.mask ? '🔡 Pożeracz liter: uzupełnij odpowiedź' : cur.pairs ? '🧩 Chaos: połącz pary' : 'Odpowiedz dobrze, żeby sparować';
 const runesHTML = R => `<div class="runes ${R.phase}">${R.phase === 'show' ? `<div class="rune-seq">${R.seq.map((k, i) => `<span class="rune flash" style="--c:${RUNES[k][1]};animation-delay:${i * RUNE_MS}ms">${RUNES[k][0]}</span>`).join('')}</div>`
   : `<div class="rune-dots">${R.seq.map((_, i) => `<i class="${i < R.input.length ? 'on' : ''}"></i>`).join('')}</div><div class="rune-pad">${RUNES.map(([e, c], k) => `<button class="rune" style="--c:${c}" data-act="boss-rune" data-k="${k}">${e}</button>`).join('')}</div>`}</div>`;
 // po wpisaniu: werdykt → ocena (ok 3, prawie 2, źle 1)
@@ -708,7 +777,7 @@ function bossCheck() {
 }
 function bossPick(k) {
   const B = BOSS, c = bossCard(); if (!B?.cur?.opts || B.picked != null || B.ice || B.bugs?.length) return;
-  B.picked = k; B.shown = true; B.pendingG = norm(B.cur.opts[k]) === norm(cardView(c).ans) ? 3 : 1; render();
+  B.picked = k; B.shown = true; B.pendingG = norm(B.cur.opts[k]) === norm(B.cur.right ?? cardView(c).ans) ? 3 : 1; render();
 }
 const bossNext = () => { const B = BOSS; if (!B) return; bossAnswer(B.pendingG, B.cur.cm === 'abcd' ? 'abcd' : 'type'); };
 document.addEventListener('keydown', e => {
@@ -735,6 +804,8 @@ Object.assign(ACTIONS, {
   'boss-next': () => bossNext(),
   'boss-ult': () => useUlt(),
   'boss-rune': el => runeTap(+el.dataset.k),
+  'boss-pair': el => pairTap(el.dataset.s, +el.dataset.i),
+  'boss-tf': el => { const B = BOSS; if (!B?.cur || B.cur.cm !== 'tf' || B.picked != null || B.ice || B.bugs?.length) return; B.picked = +el.dataset.v; B.shown = true; B.pendingG = !!B.picked === B.cur.truth ? 3 : 1; render(); },
   'boss-evchest': () => grabEvChest(),
   'boss-pet': () => usePet(),
   'boss-pot': el => usePotion(el.dataset.k),
