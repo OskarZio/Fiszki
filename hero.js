@@ -149,7 +149,11 @@ function lives() {
   const k = Math.floor((Date.now() - L.t) / LIFE_MS); if (k > 0) { L.n = Math.min(LIVES_MAX, L.n + k); L.t += k * LIFE_MS; }
   return L;
 }
-const livesHTML = () => { const L = lives(); return `<span class="lives" title="Serca: przegrana walka zabiera serce. Wracają co 2 h albo za ${LIFE_REV} powtórek.">${'❤️'.repeat(L.n)}${'🖤'.repeat(LIVES_MAX - L.n)}${L.n < LIVES_MAX ? `<small>+1 za ${fmtLeft(LIFE_MS - (Date.now() - L.t))}</small>` : ''}</span>`; };
+// 8-bitowe serce w stylu Minecrafta (siatka 9×9, ostre piksele)
+const HEART_PX = ['.XX...XX.', 'XRRX.XRRX', 'XRWRXRRRX', 'XRRRRRRRX', 'XRRRRRRDX', '.XRRRRDX.', '..XRRDX..', '...XDX...', '....X....'];
+const heartPX = (full = true, cls = '') => { const c = full ? { X: '#2b0606', R: '#e3262b', W: '#ffd1d1', D: '#9c1015' } : { X: '#1a1a1a', R: '#4a4a4a', W: '#6b6b6b', D: '#363636' };
+  return `<svg class="px-heart ${cls}" viewBox="0 0 9 9" shape-rendering="crispEdges" aria-hidden="true">${HEART_PX.map((r, y) => [...r].map((k, x) => c[k] ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${c[k]}"/>` : '').join('')).join('')}</svg>`; };
+const livesHTML = () => { const L = lives(); return `<span class="lives" title="Serca: przegrana walka zabiera serce. Wracają co 2 h albo za ${LIFE_REV} powtórek."><span class="px-hearts">${heartPX().repeat(L.n)}${heartPX(false).repeat(LIVES_MAX - L.n)}</span>${L.n < LIVES_MAX ? `<small>+1 za ${fmtLeft(LIFE_MS - (Date.now() - L.t))}</small>` : ''}</span>`; };
 const fmtLeft = ms => { const m = Math.max(1, Math.ceil(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`; };
 function loseLife() { const L = lives(); L.n = Math.max(0, L.n - 1); if (L.n === LIVES_MAX - 1) L.t = Date.now(); hero().mod = Date.now(); }
 
@@ -262,7 +266,7 @@ const heroBarHTML = () => { const L = heroLvAt(hero().xp), sp = skPoints();
 let HERO_TAB = 'char', HERO_PAGE = 0, HERO_UP = false;
 ROUTES.hero = () => {
   const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)], ld = lineDef();
-  const tabs = [['char', '🎭 Postać'], ['tree', `🌳 Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒 Ekwipunek'], ['shop', '🔨 Kowal']];
+  const tabs = [['char', '🎭', 'Postać'], ['tree', '🌳', `Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒', 'Ekwipunek'], ['shop', '🔨', 'Kowal']];
   const pane = {
     char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Kot Wojak jest za darmo. Pozostałe kupisz, wylosujesz w skrzyni bohaterów albo odblokujesz poziomem konta – rzadsze mają mocniejsze umiejętności. Każda postać ma własne drzewko i <b>własne punkty</b>.</p>
       <div class="card hero-case row nowrap"><span class="hc-ic">🎰</span><div class="grow"><b>Skrzynka bohaterów</b><div class="small muted">${Object.entries(HERO_CASE.odds).map(([t, p]) => `<span style="color:${HERO_TIER[t][1]}">${HERO_TIER[t][0]} ${p}%</span>`).join(' · ')}<br>Duplikat = +${HERO_CASE.dupPts} pkt drzewka tej postaci</div></div><button class="primary" data-act="hero-case">${HERO_CASE.price} 💎</button></div>
@@ -305,11 +309,11 @@ ROUTES.hero = () => {
     <div class="small"><b style="color:var(--accent)">${heroFormName()}</b> · ${PR_TITLES[Math.min(6, pr)]}${pr ? ` · prestiż ${'★'.repeat(Math.min(5, pr))}${pr > 5 ? '+' + (pr - 5) : ''}` : ''}</div>
     <div class="pbar" style="margin:8px 0 4px"><i style="width:${L.max ? 100 : (L.cur / L.need * 100).toFixed(1)}%"></i></div><small class="muted">${L.max ? 'Maksymalny poziom – czas na prestiż i ewolucję!' : `${Math.round(L.cur)} / ${Math.round(L.need)} XP do poziomu ${L.lv + 1} · XP zdobywasz głównie nauką`}</small>
     ${L.max ? '<button class="primary block prestige-btn" data-act="hero-prestige">🌟 Prestiż i ewolucja</button>' : ''}
-    <div class="hero-stats"><span>❤️ <b>${st.hp}</b></span><span>⚔️ <b>×${st.atk.toFixed(2)}</b></span><span>🎯 <b>${Math.round(st.crit * 100)}%</b></span><span>🛡️ <b>${Math.round(st.def * 100)}%</b></span>${st.dodge ? `<span>💨 <b>${Math.round(st.dodge * 100)}%</b></span>` : ''}</div>
+    <div class="hero-stats"><span>${heartPX()} <b>${st.hp}</b></span><span>⚔️ <b>×${st.atk.toFixed(2)}</b></span><span>🎯 <b>${Math.round(st.crit * 100)}%</b></span><span>🛡️ <b>${Math.round(st.def * 100)}%</b></span>${st.dodge ? `<span>💨 <b>${Math.round(st.dodge * 100)}%</b></span>` : ''}</div>
     <div class="hero-abil"><span><b>${ld.passive[0]}</b><small>${ld.passive[1]}</small></span><span><b>${ld.ult[0]}</b><small>supercios · ${st.ultNeed} dobre odpowiedzi</small></span></div>
-    <div class="row nowrap" style="justify-content:center;margin-top:6px">${livesHTML()}</div>
+    <div class="hero-lives">${livesHTML()}</div>
     <div class="evo-chain">${[0, 1, 2, 3].map(i => `<span class="${i <= heroForm() ? 'on' : ''}" title="${line.forms[i]}">${heroSVG('xs', i)}<small>${line.forms[i]}</small></span>`).join('<i>›</i>')}</div></div>
-  <div class="seg hero-tabs">${tabs.map(([k, l]) => `<button class="${HERO_TAB === k ? 'on' : ''}" data-act="hero-tab" data-k="${k}">${l}</button>`).join('')}</div>
+  <div class="seg hero-tabs">${tabs.map(([k, i, l]) => `<button class="${HERO_TAB === k ? 'on' : ''}" data-act="hero-tab" data-k="${k}"><i>${i}</i><span>${l}</span></button>`).join('')}</div>
   ${pane[HERO_TAB] || pane.char}` };
 };
 Object.assign(ACTIONS, {

@@ -1984,3 +1984,15 @@ img.gem8 { width: 1.15em; height: 1.15em; vertical-align: -.22em; object-fit: co
 .bestiary { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
 .bst { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); text-align: center; } .bst .boss-art { width: 72px; height: 72px; } .bst b { font-size: 12px; } .bst small { font-size: 10px; color: var(--muted); }
 .bst.unk .boss-art img { filter: brightness(0) opacity(.35); }
+/* v117: więcej przestrzeni na ekranie bohatera + 8-bitowe serca */
+.px-heart { width: 1.15em; height: 1.15em; vertical-align: -.2em; image-rendering: pixelated; flex: none; }
+.px-hearts { display: inline-flex; gap: 4px; } .px-hearts .px-heart { width: 26px; height: 26px; filter: drop-shadow(0 2px 0 rgba(0,0,0,.25)); }
+.lives { letter-spacing: 0; gap: 6px; } .lives small { font-size: 11px; }
+.hero-card { padding: 22px 18px 22px; } .hero-card > .hero-fig { margin-bottom: 14px; }
+.hero-card > b { display: block; margin-top: 4px; } .hero-card .pbar { margin: 14px 0 6px !important; }
+.hero-card .hero-stats { margin: 20px 0 6px; gap: 10px; } .hero-stats span { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; }
+.hero-card .hero-abil { margin-top: 16px; gap: 12px; } .hero-abil span { padding: 12px; gap: 4px; text-align: left; }
+.hero-lives { display: flex; justify-content: center; margin-top: 20px; }
+.hero-card .evo-chain { margin-top: 22px; }
+.hero-tabs { gap: 8px; margin: 16px 0 14px; } .seg.hero-tabs button { padding-left: 2px !important; padding-right: 2px !important; } .hero-tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 58px; padding: 8px 2px; font-size: 12px; min-width: 0; }
+.hero-tabs button i { font-style: normal; font-size: 18px; line-height: 1; } .hero-tabs button span { max-width: 100%; overflow-wrap: normal; word-break: keep-all; line-height: 1.15; }
