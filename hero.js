@@ -218,10 +218,15 @@ const BOSS_ME_BASE = 100;
 
 // ---------- 🖼️ postać z ekwipunkiem (hełm na głowie)
 function heroSVG(cls = '', pr, h = hero()) {
-  const { w, a, c } = h.eq, hd = h.eq.h, p = pr ?? (h.pr || 0), line = heroLine(h);
+  const p = pr ?? (h.pr || 0), line = heroLine(h);
   const body = line === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Bohater' }) : heroArt(line, heroForm(h, p), h.g === 'm' ? 'm' : 'w');
-  return `<div class="hero-fig ${cls} pr-${Math.min(6, p)} ln-${line}${typeof spriteVars === 'function' ? spriteVars(line, heroForm(h, p)) : ''}">${p ? '<i class="hero-aura"></i>' : ''}${body}
-    ${hd ? `<span class="hf-h">${gearImg(hd)}</span>` : ''}${w ? `<span class="hf-w">${gearImg(w)}</span>` : ''}${a ? `<span class="hf-a">${gearImg(a)}</span>` : ''}${c ? `<span class="hf-c">${gearImg(c)}</span>` : ''}</div>`;
+  return `<div class="hero-fig ${cls} pr-${Math.min(6, p)} ln-${line}${typeof spriteVars === 'function' ? spriteVars(line, heroForm(h, p)) : ''}">${p ? '<i class="hero-aura"></i>' : ''}${body}</div>`;
+}
+// 🎒 mini ekwipunek jak pasek w Minecrafcie: 4 sloty (broń, hełm, pancerz, talizman) zamiast przedmiotów latających wokół bohatera
+const SLOT_PH = { w: '⚔️', h: '⛑️', a: '🛡️', c: '💍' };
+function heroHotbar(h = hero(), cls = '') {
+  return `<div class="mc-bar ${cls}" data-go="#/hero" role="group" aria-label="Ekwipunek">${['w', 'h', 'a', 'c'].map(sl => { const id = h.eq?.[sl], g = id && GEAR[id], f = g ? (h.forge?.[id] || 0) : 0;
+    return `<span class="mc-slot${g ? ' r-' + g.r : ' empty'}" title="${SLOT_NAME[sl]}: ${g ? esc(g.name) + (f ? ' +' + f : '') : 'puste'}">${g ? gearImg(id) : `<b class="mc-ph">${SLOT_PH[sl]}</b>`}${f ? `<i>${f}</i>` : ''}</span>`; }).join('')}</div>`;
 }
 
 // ikonka bohatera (sama postać, bez ekwipunku) – zamiast ogólnego 🧙
@@ -304,7 +309,7 @@ ROUTES.hero = () => {
   };
   return { tab: 'arena', html: `${evolveHTML()}
   <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow row nowrap" style="margin:0;gap:8px">${heroIcon()} Bohater</h1>${coinsHTML()}</div>
-  <div class="card center hero-card pr-card-${Math.min(6, pr)}">${heroSVG('lg')}
+  <div class="card center hero-card pr-card-${Math.min(6, pr)}">${heroSVG('lg')}${heroHotbar(h)}
     <b style="font-size:20px">${esc(S.profile.nick || 'Bohater')} · poziom ${L.lv}${L.max ? ' (MAX)' : ''}</b>
     <div class="small"><b style="color:var(--accent)">${heroFormName()}</b> · ${PR_TITLES[Math.min(6, pr)]}${pr ? ` · prestiż ${'★'.repeat(Math.min(5, pr))}${pr > 5 ? '+' + (pr - 5) : ''}` : ''}</div>
     <div class="pbar" style="margin:8px 0 4px"><i style="width:${L.max ? 100 : (L.cur / L.need * 100).toFixed(1)}%"></i></div><small class="muted">${L.max ? 'Maksymalny poziom – czas na prestiż i ewolucję!' : `${Math.round(L.cur)} / ${Math.round(L.need)} XP do poziomu ${L.lv + 1} · XP zdobywasz głównie nauką`}</small>

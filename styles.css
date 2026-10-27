@@ -2179,3 +2179,21 @@ button .hero-ic { flex: none; min-width: 28px; width: 28px; height: 28px; transf
 .qte-bar { height: 6px; border-radius: 99px; background: rgba(0,0,0,.18); margin-top: 5px; overflow: hidden; } .qte-bar i { display: block; height: 100%; width: 100%; background: #b45309; border-radius: 99px; transition: width .25s linear; }
 .qte-banner { background: linear-gradient(135deg, #facc15, #f97316) !important; color: #422006 !important; }
 @media (prefers-reduced-motion: reduce) { .boss-q.qte, .bf:has(.boss-q.dis-whirl) .abcd-grid .abcd, .boss-q.dis-fog .bq-in { animation: none; } }
+/* 🎒 mini ekwipunek w stylu Minecrafta (zamiast przedmiotów latających wokół bohatera) */
+.mc-bar { display: inline-flex; gap: 0; padding: 3px; margin: 4px auto 14px; background: #2b2b2b; border: 3px solid; border-color: #555 #1a1a1a #1a1a1a #555; image-rendering: pixelated; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.mc-slot { position: relative; width: 46px; height: 46px; display: grid; place-items: center; background: #8b8b8b; border: 3px solid; border-color: #373737 #fff #fff #373737; margin: 2px; }
+.mc-slot img { width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(2px 2px 0 rgba(0,0,0,.35)); }
+.mc-slot .mc-ph { font-size: 20px; filter: grayscale(1) brightness(.55); opacity: .45; font-weight: 400; }
+.mc-slot i { position: absolute; right: 1px; bottom: -2px; font: 900 14px/1 ui-monospace, Menlo, monospace; font-style: normal; color: #fff; text-shadow: 2px 2px 0 #3f3f3f; }
+.mc-slot.r-rare { box-shadow: inset 0 0 0 2px rgba(59,130,246,.55); } .mc-slot.r-epic { box-shadow: inset 0 0 0 2px rgba(168,85,247,.6); }
+.mc-slot.r-legendary, .mc-slot.r-mythic { box-shadow: inset 0 0 0 2px rgba(245,158,11,.7); }
+.mc-slot.r-epic::after, .mc-slot.r-legendary::after, .mc-slot.r-mythic::after { content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: .55;
+  background: linear-gradient(115deg, transparent 30%, rgba(200,120,255,.55) 45%, transparent 60%) 0 0 / 250% 100%; animation: mcGlint 3s linear infinite; }
+.mc-slot.r-legendary::after, .mc-slot.r-mythic::after { background-image: linear-gradient(115deg, transparent 30%, rgba(255,210,90,.6) 45%, transparent 60%); }
+@keyframes mcGlint { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+.hero-card > .mc-bar { display: flex; width: max-content; }
+/* w walce: mały pasek pod ❤️ */
+.bf .boss-me .me-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.mc-bar.xs { margin: 0; padding: 1px; border-width: 2px; align-self: flex-start; box-shadow: none; } .mc-bar.xs .mc-slot { width: 26px; height: 26px; border-width: 2px; margin: 1px; } .mc-bar.xs .mc-slot img { width: 18px; height: 18px; }
+.mc-bar.xs .mc-ph { font-size: 11px; } .mc-bar.xs .mc-slot i { font-size: 10px; right: 0; bottom: -1px; }
+@media (prefers-reduced-motion: reduce) { .mc-slot::after { animation: none !important; } }
