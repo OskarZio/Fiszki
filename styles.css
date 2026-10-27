@@ -2048,3 +2048,23 @@ body.focus main#view:has(> .bf) > .studybar { flex: none; }
 .bf .boss-q { flex: 1 0 auto !important; min-height: 84px !important; }
 .bf .ver-tag { font-size: 12px; line-height: 1.25; padding: 5px 8px; margin-bottom: 6px; } .bf .ver-tag .weak-card { font-size: 11px; margin-top: 1px; }
 .bf .parry-bar { margin-top: 4px; }
+.tower-weapon { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 8px; margin: 10px 0 0; padding: 10px 12px; border-radius: 14px; background: var(--card2); border: 2px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+.tower-weapon small { width: 100%; text-align: center; color: var(--muted); }
+.bf .boss-me .hero-fig.xs.s8 { width: 74px; height: 74px; } .bf .boss-me { min-height: 78px; }
+/* 🦉 mentor – wspierający boss do nauki nowych fiszek */
+.mentor { display: flex; flex-direction: column; gap: 10px; }
+.m-head { display: flex; align-items: center; gap: 10px; } .m-art { width: clamp(64px, 13dvh, 110px); height: clamp(64px, 13dvh, 110px); flex: none; animation: bossIdle 2.6s ease-in-out infinite; }
+.m-say { position: relative; flex: 1; padding: 10px 12px; border-radius: 16px; background: color-mix(in srgb, #22c55e 14%, var(--card)); border: 2px solid color-mix(in srgb, #22c55e 45%, transparent); font-size: 14px; font-weight: 600; line-height: 1.3; }
+.m-say::before { content: ''; position: absolute; left: -9px; top: 50%; transform: translateY(-50%); border: 8px solid transparent; border-right-color: color-mix(in srgb, #22c55e 45%, transparent); border-left: 0; }
+.m-prog { position: relative; height: 22px; border-radius: 99px; background: var(--card2); overflow: hidden; } .m-prog i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #22c55e, #84cc16); transition: width .4s; }
+.m-prog span { position: relative; display: block; text-align: center; font-size: 12px; font-weight: 800; line-height: 22px; }
+.m-card { text-align: center; padding: 14px; } .m-card hr { margin: 10px 0; } .m-card.again { box-shadow: 0 0 0 3px #f59e0b, var(--shadow); } .m-card.quiz { box-shadow: 0 0 0 3px #22c55e, var(--shadow); }
+.m-lbl { font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 6px; }
+.m-tips { display: flex; flex-direction: column; gap: 6px; } .m-tip { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); font-size: 13.5px; }
+.m-tip b { font-size: 12.5px; } .m-tip span { overflow-wrap: anywhere; } .m-tip.mine { border: 2px solid var(--accent); } .m-tip.ai { border: 2px solid #a855f7; } .m-tip button { align-self: flex-start; margin-top: 4px; }
+.m-sum { display: flex; flex-direction: column; gap: 6px; text-align: left; margin-top: 8px; } .m-sum > div { display: grid; gap: 1px; padding: 8px 10px; border-radius: 12px; background: var(--card2); font-size: 13.5px; }
+.m-sum small { color: var(--muted); } .m-sum em { font-style: normal; font-size: 11.5px; color: #ea580c; font-weight: 700; }
+.m-intro { gap: 12px; } .m-intro .m-art { width: 72px; height: 72px; } .m-deck { width: 100%; cursor: pointer; }
+.mentor-cta { background: linear-gradient(120deg, color-mix(in srgb, #22c55e 16%, var(--card)), var(--card) 60%); } .m-ic img { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; }
+@media (prefers-reduced-motion: reduce) { .m-art { animation: none; } }
+.mentor .m-card.flash { min-height: 0 !important; height: auto; padding: 16px 14px; display: block; } .mentor .m-card.quiz { padding: 22px 14px; }

@@ -6,6 +6,8 @@
 
 // wybór trybu (ABCD ×0,5 · Fiszki · Wpisz ×1,5 · Mix) – ten sam co u bossów, zapamiętany
 const towerModes = () => `<div class="mode-pick tower-modes">${Object.entries(MODES).map(([k, m]) => `<button class="${BOSS_PICK.mode === k ? 'on' : ''}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>cios ${m.mul}</small></button>`).join('')}</div>`;
+// ⚔️ broń wspinaczki: tryb wybrany przy wejściu zostaje do końca (game over → wybierasz od nowa)
+const towerWeaponHTML = T => { const m = MODES[T.mode] || MODES.flip; return `<div class="tower-weapon">${m.icon} <b>Broń: ${m.name}</b><small>cios ${m.mul} · do końca wspinaczki</small></div>`; };
 const TOWER_REQ = 30, TOWER_GUARD = 5;
 // błogosławieństwa: [ikona, nazwa, opis, rzadkie?] – rzadkie (epickie) losują się rzadziej, ale są mocniejsze
 const BLESS = {
@@ -38,15 +40,16 @@ function towerFloor() {
   const hs = heroStats(), u = T.buff; hs.atk *= 1 + (u.dmg || 0); hs.crit = Math.min(.7, hs.crit + (u.crit || 0)); hs.hp += u.hp || 0;
   hs.dodge = Math.min(.5, hs.dodge + (u.dodge || 0)); hs.time *= 1 + (u.time || 0); hs.vamp += u.vamp || 0; hs.thorns += u.thorns || 0;
   hs.combo *= 1 + (u.combo || 0); hs.ultNeed = Math.max(2, hs.ultNeed - (u.ult || 0)); if (u.phoenix && !T.phoenixUsed) hs.second = true;
-  const p = bossParams(b, TW_GK ? 'abcd' : BOSS_PICK.mode); p.hp = Math.round(p.hp * (1 + .06 * T.floor) * (TW_GK ? 1.7 : 1)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
+  if (!T.mode) T.mode = TW_GK ? 'abcd' : BOSS_PICK.mode;
+  const p = bossParams(b, T.mode); p.hp = Math.round(p.hp * (1 + .06 * T.floor) * (TW_GK ? 1.7 : 1)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
   T.hp = Math.min(T.hp, hs.hp);
-  bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 : 0, ...(TW_GK ? { mode: 'abcd' } : {}) }, p);
+  bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 : 0, mode: T.mode }, p);
   if (u.phoenix && !T.phoenixUsed) BOSS.second = true;
 }
 function towerStart() {
   if (!TW_GK && learnedAll() < TOWER_REQ) return toast(`🗼 Wieża otwiera się przy ${TOWER_REQ} nauczonych fiszkach (masz ${learnedAll()})`, 4000);
   if (!confirm(TW_GK ? '🧠 Wieża wiedzy – quiz z wiedzy ogólnej.\n\nPiętro za piętrem coraz trudniejsze pytania ABCD: geografia, historia, nauka, kultura, sport… Po piętrze wraca 35% ❤️.\n\nŚmierć albo ucieczka = GAME OVER. Wchodzisz?' : '🗼 Wieża – tryb hardcore.\n\nPiętro za piętrem, coraz trudniej. Po piętrze wraca tylko 35% ❤️. Za każde piętro podwójne XP i 💎.\n\nŚmierć albo ucieczka = GAME OVER – zaczynasz od parteru. Wchodzisz?')) return;
-  const h = hero(); h[twKey()] = { floor: 1, used: [], hp: heroStats().hp, bank: { xp: 0, gems: 0 }, buff: {}, seed: Math.random() * 1000 | 0, t: Date.now() }; h.mod = Date.now(); save();
+  const h = hero(); h[twKey()] = { floor: 1, used: [], mode: TW_GK ? 'abcd' : BOSS_PICK.mode, hp: heroStats().hp, bank: { xp: 0, gems: 0 }, buff: {}, seed: Math.random() * 1000 | 0, t: Date.now() }; h.mod = Date.now(); save();
   towerFloor();
 }
 function towerEnd(B, won) {
@@ -99,7 +102,7 @@ function towerAfterView() {
     <h2>${TW_GK ? '🧠' : '🗼'} Piętro ${T.floor - 1} zdobyte!</h2><p class="small">+${g.xp} XP, +${g.gems} 💎 · w tej wspinaczce razem <b>+${T.bank.xp} XP, +${T.bank.gems} 💎</b></p>
     <div class="tower-hp">${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}</div><p class="small muted" style="margin:4px 0">❤️ +${B.towerHeal || 0} za ukończone piętro</p>${towerBuffsHTML(T)}
     ${T.pick ? `<h3>Wybierz błogosławieństwo</h3><div class="bless">${T.pick.map(k => `<button class="${BLESS[k][3] ? 'epic' : ''}" data-act="tower-bless" data-k="${k}">${BLESS[k][3] ? '<em>RZADKIE</em>' : ''}<span>${BLESS[k][0]}</span><b>${BLESS[k][1]}</b><small>${BLESS[k][2]}</small></button>`).join('')}</div>`
-      : `${modes()}<button class="primary block boss-go" data-act="tower-next" style="margin-top:10px">⚔️ Piętro ${T.floor}${T.floor % TOWER_GUARD === 0 ? ' – strażnik!' : ''}</button>`}</div>` };
+      : `${TW_GK ? '' : towerWeaponHTML(T)}<button class="primary block boss-go" data-act="tower-next" style="margin-top:10px">⚔️ Piętro ${T.floor}${T.floor % TOWER_GUARD === 0 ? ' – strażnik!' : ''}</button>`}</div>` };
 }
 ROUTES.tower = () => { TW_GK = false; const T = tower();
   return { tab: 'arena', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🗼 Wieża – hardcore</h1>${coinsHTML()}</div>
@@ -107,8 +110,8 @@ ROUTES.tower = () => { TW_GK = false; const T = tower();
     <ul class="small" style="text-align:left"><li><b>×2 XP</b> i 💎 dostajesz od razu za każde piętro.</li><li>Po piętrze wraca 35% ❤️ i wybierasz 1 z 3 błogosławieństw.</li><li>Co ${TOWER_GUARD}. piętro – strażnik, mocniejszy boss.</li><li><b>Śmierć albo ucieczka = GAME OVER</b> – od nowa od parteru. Serca zostają.</li></ul>
     <p class="small muted">Rekord: piętro ${towerBest() || '—'} · walczysz wszystkimi nauczonymi fiszkami (${learnedAll()}/${TOWER_REQ})</p></div>
   ${T ? `<div class="card"><b>W trakcie: piętro ${T.floor}</b><div class="small muted">Zdobyte w tej wspinaczce: +${T.bank.xp} XP, +${T.bank.gems} 💎</div>${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}${towerBuffsHTML(T)}
-    ${towerModes()}<button class="primary block" data-act="tower-next" style="margin-top:10px">⚔️ Walcz dalej</button></div>`
-    : `<div class="card"><h3 style="margin-top:0">Tryb walki</h3>${towerModes()}</div><button class="primary block boss-go" data-act="tower-start" ${learnedAll() >= TOWER_REQ ? '' : 'disabled'}>🗼 Wejdź do wieży</button>`}` }; };
+    ${towerWeaponHTML(T)}<button class="primary block" data-act="tower-next" style="margin-top:10px">⚔️ Walcz dalej</button></div>`
+    : `<div class="card"><h3 style="margin-top:0">⚔️ Wybierz broń na całą wspinaczkę</h3>${towerModes()}<p class="small muted" style="margin:8px 0 0">Trybu nie zmienisz aż do końca – jak broń w rogaliku.</p></div><button class="primary block boss-go" data-act="tower-start" ${learnedAll() >= TOWER_REQ ? '' : 'disabled'}>🗼 Wejdź do wieży</button>`}` }; };
 const twRoute0 = ROUTES.boss;
 ROUTES.boss = (...a) => BOSS?.b?.kind === 'tower' && BOSS.phase !== 'fight' && a[0]?.[1] === 'fight' ? towerAfterView() : twRoute0(...a);
 const twQuit0 = ACTIONS['boss-quit'];
