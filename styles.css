@@ -2197,3 +2197,4 @@ button .hero-ic { flex: none; min-width: 28px; width: 28px; height: 28px; transf
 .mc-bar.xs { margin: 0; padding: 1px; border-width: 2px; align-self: flex-start; box-shadow: none; } .mc-bar.xs .mc-slot { width: 26px; height: 26px; border-width: 2px; margin: 1px; } .mc-bar.xs .mc-slot img { width: 18px; height: 18px; }
 .mc-bar.xs .mc-ph { font-size: 11px; } .mc-bar.xs .mc-slot i { font-size: 10px; right: 0; bottom: -1px; }
 @media (prefers-reduced-motion: reduce) { .mc-slot::after { animation: none !important; } }
+.coop-mode { display: flex; width: 100%; } .coop-mode button { flex: 1; } .coop-set { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, #22c55e 12%, var(--card2)); } .coop-set small { color: var(--muted); }

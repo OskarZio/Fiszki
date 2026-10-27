@@ -186,7 +186,7 @@ function bossBegin(b, extra = {}, p0 = null) {
 }
 const pickMove = b => { const opts = ['hit', 'hit', ...b.abil.filter(a => a !== 'rage')], k = opts[Math.random() * opts.length | 0], atk = b.atk;
   return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: 0 }; };
-const bossCardById = id => S.cards.find(c => c.id === id) || (typeof gkCard === 'function' ? gkCard(id) : null);
+const bossCardById = id => S.cards.find(c => c.id === id) || (typeof gkCard === 'function' ? gkCard(id) : null) || (typeof coopVCard === 'function' ? coopVCard(id) : null);
 const bossCard = () => BOSS?.cur && bossCardById(BOSS.cur.id);
 const ABCD_MAX = 400;
 const textOk = v => v.ans && v.ans.trim() && v.ans.length <= 120;
