@@ -1,0 +1,105 @@
+// Angielski kolokwium – z Quizletu (Oskar_Ziolkowski), 100 pojęć z PDF; literówki poprawione – oryginał w skojarzeniu
+#fiszki
+#talia: Angielski kolokwium
+#przedmiot: lang
+#odwrotne: tak
+Spróbuj tego | Give it a try
+Dostosuj podnóżki | Adjust the footstraps | w Quizlecie: „Adjust a footstraps” (literówka)
+Chwyć za uchwyt | Grab the handle | w Quizlecie: „Grap the handle” (literówka)
+Pochyl się do przodu | Lean forward
+Pociągnij mocniej | Pull harder
+Nie przechylaj się do tyłu | Don't lean back
+Wyprostuj ręce | Extend your arms
+Ruszaj się do tyłu i do przodu | Move back and forth
+Mięśnie | Muscles
+Ścięgna | Tendons
+Stawy | Joints | w Quizlecie: „Joins” (literówka)
+Serce | Heart
+Rdzeń kręgowy | Spinal cord
+Neurony | Neurons
+Mózg | Brain
+Żyły | Veins
+Tętnice | Arteries
+Oskrzela | Bronchi
+Płuca | Lungs
+Nos | Nose
+Żołądek | Stomach
+Jelito cienkie | Small intestine
+Jelito grube | Large intestine
+Lekarstwo | Cure | cure = lekarstwo / wyleczenie; samo „lekarstwo” to też medicine
+Uleczyć | Heal
+Zranić | Injure
+Wyleczyć się | Recover
+Leczyć (kogoś, coś) | Treat
+Rana | Wound
+Szwy | Stitches
+Temblak | Sling
+Blizna | Scar
+Kule | Crutches
+Gips | Cast
+Bandaż | Bandage
+Zapalenie oskrzeli | Bronchitis
+Zapalenie ucha | Otitis
+Zapalenie spojówek | Pink eye/conjunctivitis
+Zapalenie wyrostka robaczkowego | Appendicitis
+Zapalenie płuc | Pneumonia
+Gruźlica | Tuberculosis
+Wstrząs mózgu | Concussion
+Ospa | Chickenpox | w Quizlecie: „Chichen pox” (literówka)
+Świnka | Mumps
+Osoby po amputacji | Amputees
+Proteza nogi | Prosthetic leg
+Wózki inwalidzkie | Wheelchairs
+Osoby z niepełnosprawnością ruchową | Physically disabled | w Quizlecie było „Menrally handicapped” – to znaczy co innego (niepełnosprawny umysłowo); ruchowa = physically disabled
+Osoby z niepełnosprawnością intelektualną | Intellectually disabled
+Uszkodzenie mózgu | Brain damage
+Osoby z wadami wzroku | Visually impaired
+Logopeda | Speech therapist
+Psychiatra | Psychiatrist
+Fizjoterapeuta | Physiotherapist
+Chirurg plastyczny | Plastic surgeon
+Położna | Midwife
+Lekarz rodzinny | GP
+Łucznictwo | Archery
+Skok w dal | Long jump
+Skok zwyż | High jump
+Sztafeta | Relay
+Wioślarstwo | Rowing | w Quizlecie: „rouing” (literówka)
+Rzut oszczepem | Javelin throw
+Skok o tyczce | Pole vault
+Hokej na lodzie | Ice hockey
+Bejsbol | Baseball
+Golf | Golf
+Bilard | Snooker
+Tennis | Tennis
+Badminton | Badminton
+Rakieta | Racket
+Lotka | Shuttlecock
+Kij hokejowy | Stick
+Kij bejsbolowy | Bat
+Kij golfowy | Club
+Kij bilardowy | Cue
+Alergiczny | Allergic
+Wyleczenie/ wyzdrowienie | Recovery | w Quizlecie było „Recoverment” – takiego słowa nie ma
+Odzyskać | Recover
+Uraz | Injury
+Zranić | Injure
+Atleta, sportowiec, lekkoatleta | Athlete
+Lekkoatletyka | Athletics
+Narciarz | Skier
+Narty | Ski
+Rowerzysta | Cyclist
+Kolarstwo | Cycling | w Quizlecie było „Cycle” (= jeździć na rowerze); kolarstwo jako sport = cycling
+Osiągnięcie | Achievement | w Quizlecie: „Achivemnet” (literówka)
+Zdobyć | Achieve
+Przesuń obie dłonie w stronę kostki | Slide both hands towards the ankle
+Połóż się na plecach | Lie on your back | w Quizlecie: „lin on your back” (literówka)
+Ugnij kolana | Bend your knees | w Quizlecie: „bent your knees” (literówka)
+Połóż się na plecach, uginając kolana | Lie on your back with knees bent
+Trzymaj kolana wyprostowane | Keep your knees straight
+Usiądź z wyprostowanymi kolanami | Sit with your knees straight
+Lekko zegnij kolana | Flex your knees a little
+Nie blokuj kolan | Do not lock your knees
+Trzymaj swoje kolana razem | Keep your knees together
+Stopy na ziemi | Feet on the floor
+Nogi rozstawione tak szeroko jak to możliwe | The legs as far apart as possible
