@@ -4,6 +4,8 @@
    Śmierć albo ucieczka = GAME OVER: wspinaczka, piętro i błogosławieństwa przepadają – zostaje tylko rekord.
    Serca nie giną. Walczysz wszystkimi nauczonymi fiszkami. Co 5. piętro – strażnik (mocniejszy boss). */
 
+// wybór trybu (ABCD ×0,5 · Fiszki · Wpisz ×1,5 · Mix) – ten sam co u bossów, zapamiętany
+const towerModes = () => `<div class="mode-pick tower-modes">${Object.entries(MODES).map(([k, m]) => `<button class="${BOSS_PICK.mode === k ? 'on' : ''}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>cios ${m.mul}</small></button>`).join('')}</div>`;
 const TOWER_REQ = 30, TOWER_GUARD = 5;
 // błogosławieństwa: [ikona, nazwa, opis, rzadkie?] – rzadkie (epickie) losują się rzadziej, ale są mocniejsze
 const BLESS = {
@@ -81,14 +83,14 @@ function towerAfterView() {
   if (B.towerLost) { const L = B.towerLost;
     return { tab: 'arena', focus: true, html: `<div class="card center boss-end lost"><div class="boss-stage gloat">${bossArt(B.b)}</div>${B.say?.txt ? `<div class="boss-say end">${esc(B.say.txt)}</div>` : ''}
       <h2 class="game-over">GAME OVER</h2><p>Padłeś na piętrze <b>${L.floor}</b>. Wspinaczka i błogosławieństwa przepadają.</p><p class="small muted">Zdobyte w tej wspinaczce: +${L.xp} XP, +${L.gems} 💎 · rekord: piętro ${towerBest()}${L.floor - 1 >= towerBest() && L.floor > 1 ? ' 🏆 nowy rekord!' : ''}</p>
-      <div class="row"><button class="primary grow" data-act="tower-start">🗼 Od nowa</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
+      ${towerModes()}<div class="row" style="margin-top:10px"><button class="primary grow" data-act="tower-start">🗼 Od nowa</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
   }
   const g = B.towerGain || { xp: 0, gems: 0 };
   return { tab: 'arena', focus: true, html: `<div class="card center boss-end won"><div class="boss-stage dead">${bossArt(B.b)}<div class="boss-boom"></div></div>
     <h2>🗼 Piętro ${T.floor - 1} zdobyte!</h2><p class="small">+${g.xp} XP, +${g.gems} 💎 · w tej wspinaczce razem <b>+${T.bank.xp} XP, +${T.bank.gems} 💎</b></p>
     <div class="tower-hp">${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}</div><p class="small muted" style="margin:4px 0">❤️ +${B.towerHeal || 0} za ukończone piętro</p>${towerBuffsHTML(T)}
     ${T.pick ? `<h3>Wybierz błogosławieństwo</h3><div class="bless">${T.pick.map(k => `<button class="${BLESS[k][3] ? 'epic' : ''}" data-act="tower-bless" data-k="${k}">${BLESS[k][3] ? '<em>RZADKIE</em>' : ''}<span>${BLESS[k][0]}</span><b>${BLESS[k][1]}</b><small>${BLESS[k][2]}</small></button>`).join('')}</div>`
-      : `<button class="primary block boss-go" data-act="tower-next" style="margin-top:10px">⚔️ Piętro ${T.floor}${T.floor % TOWER_GUARD === 0 ? ' – strażnik!' : ''}</button>`}</div>` };
+      : `${towerModes()}<button class="primary block boss-go" data-act="tower-next" style="margin-top:10px">⚔️ Piętro ${T.floor}${T.floor % TOWER_GUARD === 0 ? ' – strażnik!' : ''}</button>`}</div>` };
 }
 ROUTES.tower = () => { const T = tower();
   return { tab: 'arena', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🗼 Wieża – hardcore</h1>${coinsHTML()}</div>
@@ -96,8 +98,8 @@ ROUTES.tower = () => { const T = tower();
     <ul class="small" style="text-align:left"><li><b>×2 XP</b> i 💎 dostajesz od razu za każde piętro.</li><li>Po piętrze wraca 35% ❤️ i wybierasz 1 z 3 błogosławieństw.</li><li>Co ${TOWER_GUARD}. piętro – strażnik, mocniejszy boss.</li><li><b>Śmierć albo ucieczka = GAME OVER</b> – od nowa od parteru. Serca zostają.</li></ul>
     <p class="small muted">Rekord: piętro ${towerBest() || '—'} · walczysz wszystkimi nauczonymi fiszkami (${learnedAll()}/${TOWER_REQ})</p></div>
   ${T ? `<div class="card"><b>W trakcie: piętro ${T.floor}</b><div class="small muted">Zdobyte w tej wspinaczce: +${T.bank.xp} XP, +${T.bank.gems} 💎</div>${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}${towerBuffsHTML(T)}
-    <button class="primary block" data-act="tower-next" style="margin-top:10px">⚔️ Walcz dalej</button></div>`
-    : `<button class="primary block boss-go" data-act="tower-start" ${learnedAll() >= TOWER_REQ ? '' : 'disabled'}>🗼 Wejdź do wieży</button>`}` }; };
+    ${towerModes()}<button class="primary block" data-act="tower-next" style="margin-top:10px">⚔️ Walcz dalej</button></div>`
+    : `<div class="card"><h3 style="margin-top:0">Tryb walki</h3>${towerModes()}</div><button class="primary block boss-go" data-act="tower-start" ${learnedAll() >= TOWER_REQ ? '' : 'disabled'}>🗼 Wejdź do wieży</button>`}` }; };
 const twRoute0 = ROUTES.boss;
 ROUTES.boss = (...a) => BOSS?.b?.kind === 'tower' && BOSS.phase !== 'fight' && a[0]?.[1] === 'fight' ? towerAfterView() : twRoute0(...a);
 const twQuit0 = ACTIONS['boss-quit'];
