@@ -26,11 +26,12 @@ function grpPublishSoon() {
 function grpLive(d) {
   const sh = d?.share; if (!sh || !cloudOn()) return;
   if (GRP_CH_ID !== sh.id) { GRP_CH?.close(); GRP_CH_ID = sh.id; GRP_LIVE = {}; GRP_CH = channel('fiszki-grp-' + sh.id, m => grpMsg(d, m)); }
-  grpPing(d); clearInterval(GRP_BEAT); GRP_BEAT = setInterval(() => { const dd = deckByShare(GRP_CH_ID); if (dd && Date.now() - (GRP_LIVE._mine || 0) < 10 * MIN) grpPing(dd); else grpStop(); }, 20000);
+  grpPing(d); clearInterval(GRP_BEAT); GRP_BEAT = setInterval(() => { const dd = deckByShare(GRP_CH_ID); if (dd && (Date.now() - (GRP_LIVE._mine || 0) < 10 * MIN || gcDeck()?.share?.id === GRP_CH_ID)) grpPing(dd); else grpStop(); }, 20000);
 }
 function grpPing(d, studying) { GRP_CH?.send({ t: 'gp', uid: myId(), nick: (S.profile.nick || 'Gracz').slice(0, 24), av: String(S.profile.avatar || '🦊').slice(0, 8), p: grpProg(d), st: studying ? 1 : 0 }); if (studying) GRP_LIVE._mine = Date.now(); }
 function grpStop() { clearInterval(GRP_BEAT); GRP_CH?.close(); GRP_CH = null; GRP_CH_ID = ''; }
 function grpMsg(d, m) {
+  if (m?.t === 'gc') return gcRecv(d, m);
   if (m?.t !== 'gp') return; const uid = sStr(m.uid, 40), sh = d.share;
   if (!uid || uid === myId() || !(sh.members || []).includes(uid)) return;
   const p = sGrp(m.p); if (!p) return;
@@ -58,7 +59,7 @@ async function grpJoin(shid, code, name) {
   if (p.id === myId()) return toast('To Twoje własne zaproszenie 🙂');
   if (!(CLOUD_FRIENDS || []).some(f => f.id === p.id)) { const r = await addFriendByCode(code, p.id); if (r.error && !/duplicate|unique/i.test(r.error.message || '')) return toast('Błąd: ' + r.error.message, 4000); await loadCloudFriends(); }
   const r = await sendMsg(p.id, 'text', { sdj: shid, text: `👋 Dołączam do wspólnej nauki „${String(name || '').slice(0, 40)}”` });
-  if (r?.error) return toast('Nie udało się wysłać prośby: ' + r.error.message, 4000);
+  if (!r) return;   // sendMsg sam pokazał błąd
   S.stats.grpJoin = { id: shid, at: Date.now(), name: String(name || '').slice(0, 40), by: p.nick || '' }; save();
   toast(`👥 Wysłano prośbę do ${p.nick || 'znajomego'} – talia przyjdzie, gdy otworzy aplikację`, 5000); go('#/gjoin/' + shid);
 }
@@ -142,3 +143,73 @@ shareCardHTML = d => {
   const sh = d.share, n = sh?.members?.length || 0;
   return `<button class="card row nowrap g-cta" data-go="#/group/${d.id}"><span class="g-cta-ic">👥</span><div class="grow" style="text-align:left"><b>${sh ? `Postęp grupy · ${n} ${plural(n, 'osoba', 'osoby', 'osób')}` : 'Ucz się ze znajomymi'}</b><div class="small muted">${sh ? 'zobacz, jak wypadasz na tle znajomych' : 'zaproś linkiem i porównujcie postępy jak w Quizlecie'}</div></div><span>›</span></button>${cloudOn() && sh ? grpShareCard0(d) : ''}`;
 };
+
+// ---------- 💬 czat grupy podczas nauki: pływający przycisk + panel od dołu (nie przerywa sesji)
+// na żywo przez kanał grupy; dla osób offline kopia trafia też jako ukryta wiadomość (tylko do znajomych z grupy)
+const GC_MAX = 300, GC_KEEP = 150, GC_QUICK = ['👍', '🔥', '💪', '😅', '🤯', '☕ przerwa?'];
+let GC_OPEN = false, GC_LAST = 0;
+const gcDeck = () => { const r = parseRoute().parts; if (!['study', 'group'].includes(r[0])) return null; const d = deckById(r[1]); return d?.share && cloudOn() ? d : null; };
+const gcList = d => (d.share.chat = d.share.chat || []);
+const gcUnread = d => gcList(d).filter(x => x.u !== myId() && x.t > (d.share.chatSeen || 0)).length;
+function gcAdd(d, x) {
+  const L = gcList(d); if (!x.text || L.some(y => y.id === x.id)) return false;
+  L.push(x); L.sort((a, b) => a.t - b.t); if (L.length > GC_KEEP) L.splice(0, L.length - GC_KEEP);
+  touch(d); save(); return true;
+}
+function gcRecv(d, m) {
+  const uid = sStr(m.uid, 40); if (!uid || uid === myId() || !(d.share.members || []).includes(uid)) return;
+  const x = { id: sId(m.cid) || uid + Date.now(), u: uid, nick: sStr(m.nick, 24) || 'Znajomy', t: Math.min(Date.now(), sInt(m.at, 0, 9e15) || Date.now()), text: sStr(m.text, GC_MAX).trim() };
+  if (gcAdd(d, x)) { gcRefresh(true); if (!GC_OPEN && typeof bossSfx === 'function') bossSfx('tick'); }
+}
+// kopie z bazy (dla tych, którzy byli offline) – wiadomości z body.gc
+function gcScan() {
+  if (typeof MSGS === 'undefined' || !cloudOn()) return; let any = false;
+  for (const m of MSGS) { if (!m.body?.gc || m.to_id !== myId()) continue; const d = deckByShare(m.body.sd); if (!d || !(d.share.members || []).includes(m.from_id)) continue;
+    any = gcAdd(d, { id: m.body.cid || 'm' + m.id, u: m.from_id, nick: friendName(m.from_id), t: Date.parse(m.created_at) || Date.now(), text: sStr(m.body.text, GC_MAX).trim() }) || any; }
+  if (any) gcRefresh(true);
+}
+const gcHandle0 = handleMsgs;
+handleMsgs = (...a) => { const r = gcHandle0(...a); try { gcScan(); } catch (e) { console.warn(e); } return r; };
+async function gcSend(text) {
+  const d = gcDeck(); text = String(text || '').trim().slice(0, GC_MAX); if (!d || !text) return;
+  if (Date.now() - GC_LAST < 1200) return toast('Wolniej 🙂'); GC_LAST = Date.now();
+  const sh = d.share, x = { id: 'c' + uid(), u: myId(), nick: (S.profile.nick || 'Ty').slice(0, 24), t: Date.now(), text };
+  gcAdd(d, x); sh.chatSeen = Date.now(); gcRefresh();
+  if (GRP_CH_ID !== sh.id) grpLive(d);
+  GRP_CH?.send({ t: 'gc', uid: myId(), nick: x.nick, cid: x.id, at: x.t, text });
+  const fr = friendIds();
+  for (const u of (sh.members || []).filter(u => u !== myId() && fr.has(u))) sendMsg(u, 'text', { sd: sh.id, gc: 1, cid: x.id, text }).catch(() => {});
+}
+function gcHTML(d) {
+  const L = gcList(d), me = myId(), rows = grpRows(d), live = rows.filter(r => !r.me && r.live).map(r => r.nick);
+  return `<div class="gc-head"><b>💬 ${esc(d.name.replace(/^👥\s*/, '').slice(0, 30))}</b><small>${live.length ? `🟢 ${esc(live.join(', '))} ${live.length > 1 ? 'są' : 'jest'} teraz` : `${(d.share.members || []).length} os. w grupie`}</small><button class="iconbtn" data-act="gc-close" aria-label="Zamknij">✕</button></div>
+  <div class="gc-list">${L.length ? L.map(x => `<div class="gc-m${x.u === me ? ' me' : ''}">${x.u === me ? '' : `<small>${esc(x.nick)}</small>`}<span>${esc(x.text)}</span><i>${new Date(x.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}</i></div>`).join('')
+    : '<p class="small muted center" style="margin:18px 0">Napisz coś do grupy – np. „która fiszka was najbardziej wkurza?” 😄</p>'}</div>
+  <div class="gc-quick">${GC_QUICK.map(q => `<button data-act="gc-quick" data-q="${esc(q)}">${q}</button>`).join('')}</div>
+  <form class="gc-form" onsubmit="return false"><input id="gc-in" maxlength="${GC_MAX}" placeholder="Napisz do grupy…" autocomplete="off"><button class="primary" data-act="gc-send">➤</button></form>`;
+}
+function gcRefresh(incoming) {
+  const d = gcDeck(), fab = document.getElementById('gc-fab'), panel = document.getElementById('gc-panel');
+  if (!d) { fab?.remove(); panel?.remove(); GC_OPEN = false; return; }
+  if (GRP_CH_ID !== d.share.id) grpLive(d);
+  if (!fab) { const b = document.createElement('button'); b.id = 'gc-fab'; b.dataset.act = 'gc-toggle'; b.setAttribute('aria-label', 'Czat grupy'); document.body.appendChild(b); }
+  if (GC_OPEN) d.share.chatSeen = Date.now();
+  const n = gcUnread(d), f = document.getElementById('gc-fab'); f.innerHTML = `💬${n ? `<i>${n > 9 ? '9+' : n}</i>` : ''}`; f.classList.toggle('ping', !!(incoming && n));
+  if (!GC_OPEN) { panel?.remove(); return; }
+  let p = panel; if (!p) { p = document.createElement('div'); p.id = 'gc-panel'; document.body.appendChild(p); }
+  const inp = document.getElementById('gc-in'), draft = inp?.value || '', focused = document.activeElement === inp;
+  p.innerHTML = gcHTML(d);
+  const ni = document.getElementById('gc-in'); ni.value = draft; if (focused) ni.focus();
+  const list = p.querySelector('.gc-list'); list.scrollTop = list.scrollHeight;
+}
+document.addEventListener('keydown', e => { if (e.target.id === 'gc-in' && e.key === 'Enter') { e.preventDefault(); const v = e.target.value; e.target.value = ''; gcSend(v); } });
+window.addEventListener('hashchange', () => setTimeout(gcRefresh, 50));
+setInterval(() => { if (gcDeck() || document.getElementById('gc-fab')) gcRefresh(); }, 4000);
+const gcRender0 = render;
+render = (...a) => { const chat = document.activeElement?.id === 'gc-in'; const r = gcRender0(...a); try { gcRefresh(); if (chat) document.getElementById('gc-in')?.focus({ preventScroll: true }); } catch (e) { console.warn(e); } return r; };
+Object.assign(ACTIONS, {
+  'gc-toggle': () => { GC_OPEN = !GC_OPEN; gcRefresh(); if (GC_OPEN) setTimeout(() => document.getElementById('gc-in')?.focus({ preventScroll: true }), 50); },
+  'gc-close': () => { GC_OPEN = false; gcRefresh(); },
+  'gc-send': () => { const i = document.getElementById('gc-in'); if (!i) return; const v = i.value; i.value = ''; gcSend(v); },
+  'gc-quick': el => gcSend(el.dataset.q),
+});

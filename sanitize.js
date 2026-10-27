@@ -60,6 +60,8 @@ function sMsgBody(b) {
   if ('deck' in b) out.deck = sStr(b.deck, 80);
   for (const k of ['n', 'ref']) if (k in b) out[k] = sInt(b[k], 0, 1e6);
   if ('sd' in b) out.sd = sId(b.sd);
+  if ('sdj' in b) out.sdj = sId(b.sdj);   // prośba o dołączenie do grupy (link)
+  if ('gc' in b) { out.gc = 1; out.cid = sId(b.cid); }   // czat grupy we wspólnej talii
   if ('sdi' in b && b.sdi && typeof b.sdi === 'object') out.sdi = { id: sId(b.sdi.id), name: sStr(b.sdi.name, 60), owner: sId(b.sdi.owner, UUID_RE), members: sArr(b.sdi.members, 50, x => sId(x, UUID_RE)).filter(Boolean) };
   if ('members' in b) out.members = sArr(b.members, 50, x => sId(x, UUID_RE)).filter(Boolean);
   if ('del' in b) out.del = sArr(b.del, 200, x => sId(x)).filter(Boolean);
