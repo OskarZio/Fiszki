@@ -21,7 +21,9 @@
       const now = kb > 120 && isField(document.activeElement);
       document.documentElement.style.setProperty('--kb', (now ? kb : 0) + 'px');
       document.documentElement.style.setProperty('--vvh', Math.round(vv.height) + 'px');
-      if (now !== open) { open = now; document.body.classList.toggle('kb-open', now); }
+      if (now !== open) { open = now; document.body.classList.toggle('kb-open', now);
+        // klawiatura schowana: iOS zostawia stronę przewiniętą (pasek wchodzi pod godzinę) – na ekranach pełnoekranowych wracamy na górę
+        if (!now && (document.body.classList.contains('focus') || document.documentElement.scrollHeight <= window.innerHeight + 4)) setTimeout(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); if (document.body.classList.contains('focus')) document.querySelector('main#view')?.scrollTo?.({ top: 0, behavior: 'smooth' }); }, 80); }
       if (now) setTimeout(reveal, 60);
     });
   };
