@@ -11,7 +11,7 @@
    albo wklejenie tekstu. Duplikaty (ta sama strona przednia w tej talii) są pomijane. */
 
 function parsePack(text) {
-  const out = { deck: '', subject: '', reverse: false, items: [], bad: 0 };
+  const out = { deck: '', subject: '', reverse: false, items: [], bad: 0, loose: [] };
   for (let line of String(text || '').split(/\r?\n/)) {
     line = line.trim(); if (!line || line.startsWith('//')) continue;
     const h = line.match(/^#\s*(talia|deck|przedmiot|subject|odwrotne|reverse)\s*:\s*(.+)$/i);
@@ -19,10 +19,15 @@ function parsePack(text) {
     if (line.startsWith('#')) continue;
     line = line.replace(/^(\d+[.)]|[-•*])\s+/, '');
     if (/\{\{c\d+::/.test(line)) { out.items.push({ cloze: line.slice(0, 4000) }); continue; }
-    const parts = line.split(/\s+\|\s+|\t/);
-    if (parts.length < 2 || !parts[0].trim() || !parts[1].trim()) { out.bad++; continue; }
+    let parts = line.split(/\s+\|\s+|\t/);
+    if (parts.length < 2) { const m = line.match(/^(.+?)\s+[-–—]\s+(.+)$/); if (m) parts = [m[1], m[2]]; }   // eksport Quizletu z „ - ” jako separatorem
+    if (parts.length < 2 || !parts[0].trim() || !parts[1].trim()) { out.bad++; out.loose.push(line); continue; }
     out.items.push({ front: parts[0].trim().slice(0, 2000), back: parts[1].trim().replace(/\\n/g, '\n').slice(0, 2000), hint: (parts[2] || '').trim().slice(0, 1000) });
   }
+  // skopiowana lista ze strony Quizletu: pojęcie i definicja w kolejnych liniach, bez separatora
+  const QL_NOISE = /^(pojęcia w tym zestawie|terms in this set|\d+\s*\/\s*\d+|ucz się|fiszki|test|dopasowania|zagraj|udostępnij|zapisz|flashcards|learn|match|share|save)\b/i;
+  const loose = out.loose.filter(l => !QL_NOISE.test(l));
+  if (!out.items.length && loose.length >= 2) { for (let i = 0; i + 1 < loose.length; i += 2) out.items.push({ front: loose[i].slice(0, 2000), back: loose[i + 1].slice(0, 2000), hint: '' }); out.paired = true; out.bad = loose.length % 2; }
   return out;
 }
 function importPack(P) {
@@ -55,14 +60,15 @@ ROUTES.import = (parts, q) => {
   return { tab: 'add', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/add">‹</button><h1 class="grow" style="margin:0">📥 Pakiet fiszek</h1></div>
   <div class="card">
-    <p class="small muted" style="margin-top:0">Wklej pakiet przygotowany np. przez Claude ze zdjęć slajdów albo notatek. Jedna fiszka w linii: <code>pytanie | odpowiedź</code>, luki: <code>{{c1::…}}</code>, nazwa talii: <code>#talia: …</code>.</p>
+    <p class="small muted" style="margin-top:0">Wklej pakiet przygotowany np. przez Claude ze zdjęć slajdów albo notatek. Jedna fiszka w linii: <code>pytanie | odpowiedź</code> albo z tabulatorem (eksport z <b>Quizletu</b>), luki: <code>{{c1::…}}</code>, nazwa talii: <code>#talia: …</code>.</p>
     <textarea id="pack-in" rows="9" placeholder="#talia: Anatomia – kończyna dolna&#10;Najdłuższa kość człowieka | kość udowa (femur)&#10;Mięsień {{c1::czworogłowy}} prostuje staw kolanowy">${esc(IMPORT_TXT)}</textarea>
     <div class="row"><button class="grow" data-act="pack-paste">📋 Wklej ze schowka</button><button class="grow" data-act="pack-preview">👀 Podgląd</button></div>
   </div>
   ${P.items.length ? `<div class="card"><div class="row nowrap"><b class="grow">${esc(P.deck || 'Nowa talia')}</b><span class="small muted">${P.items.length} ${plural(P.items.length, 'fiszka', 'fiszki', 'fiszek')}${P.subject ? ' · ' + esc(P.subject) : ''}</span></div>
     <div class="pack-list">${P.items.slice(0, 40).map(x => x.cloze ? `<div class="pack-it"><span class="tag">luka</span>${fmt(x.cloze.replace(/\{\{c\d+::(.*?)(::.*?)?\}\}/g, '[$1]'))}</div>`
       : `<div class="pack-it"><b>${fmt(x.front)}</b><span>${fmt(x.back)}</span>${x.hint ? `<small>💡 ${fmt(x.hint)}</small>` : ''}</div>`).join('')}${P.items.length > 40 ? `<p class="small muted center">…i ${P.items.length - 40} więcej</p>` : ''}</div>
-    ${P.bad ? `<p class="small" style="color:#dc2626">Pominięto ${P.bad} ${plural(P.bad, 'linię', 'linie', 'linii')} bez separatora „ | ”.</p>` : ''}
+    ${P.paired ? '<p class="small" style="color:#ca8a04">Brak separatora – połączyłem kolejne linie w pary (pojęcie, definicja). Sprawdź podgląd!</p>' : ''}
+    ${P.bad && !P.paired ? `<p class="small" style="color:#dc2626">Pominięto ${P.bad} ${plural(P.bad, 'linię', 'linie', 'linii')} bez separatora „ | ”.</p>` : ''}
     <button class="primary block" data-act="pack-import" style="min-height:54px">📥 Dodaj do aplikacji</button></div>` : ''}` };
 };
 Object.assign(ACTIONS, {
