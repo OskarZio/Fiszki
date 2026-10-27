@@ -760,7 +760,7 @@ function endView() {
     <p class="small">${msg}</p>
     ${chest}
     ${B.lesson ? `<div class="lock-box" style="margin:8px 0"><b>📚 Lekcja z porażki</b><small>Rewanż odblokuje się, gdy powtórzysz ${B.lesson} ${plural(B.lesson, 'fiszkę', 'fiszki', 'fiszek')}, na których boss Cię pokonał.</small></div><button class="primary block" data-act="boss-lesson">📚 Powtórz teraz</button>` : ''}
-    ${B.missed.length && !B.lesson ? `<button class="block" data-act="boss-cram">🔁 Powtórz ${B.missed.length} ${plural(B.missed.length, 'fiszkę', 'fiszki', 'fiszek')}, których nie pamiętałeś</button>` : ''}
+    ${B.missed.length && !B.lesson ? `<button class="block" data-act="boss-cram">🔁 ${new Set(B.missed).size === 1 ? 'Powtórz fiszkę, której nie pamiętałeś' : `Powtórz ${new Set(B.missed).size} ${plural(new Set(B.missed).size, 'fiszkę', 'fiszki', 'fiszek')}, których nie pamiętałeś`}</button>` : ''}
     <div class="row" style="margin-top:10px">${B.coop ? '<button class="primary grow" data-go="#/coop">👥 Lobby</button>' : `<button class="primary grow" data-act="boss-again">${won ? 'Dalej ⚔️' : 'Spróbuj ponownie'}</button>`}<button class="grow" data-act="boss-map">🗺️ Mapa</button><button class="grow" data-go="#/hero">${heroIcon()} Bohater</button></div>
     ${livesHTML()}
   </div>` };

@@ -2145,3 +2145,18 @@ body.kb-open #gc-panel { height: auto; max-height: calc(var(--vvh, 60vh) - 10px)
 .rank-tabs button { flex: 1 0 auto; white-space: nowrap; padding: 6px 12px; overflow: visible; }
 .card .row button.grow { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cram-grid button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 10px !important; padding-right: 10px !important; font-size: 14.5px; }
+/* 🏆 koniec walki – więcej miejsca i równe odstępy */
+.boss-end { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 22px 18px 24px !important; }
+.boss-end > * { margin-top: 0 !important; margin-bottom: 0 !important; } .boss-end > h2, .boss-end > p { max-width: 100%; }
+.boss-end > .row, .boss-end > button.block, .boss-end > .lock-box, .boss-end > .loot, .boss-end > .chest-btn { width: 100%; }
+.boss-end > .row { gap: 10px; } .boss-end > .row button { min-height: 52px; }
+.boss-end > p.small.muted { line-height: 1.5; }
+.boss-end .boss-stage { width: 140px; height: 140px; }
+.boss-end .boss-stage.dead .boss-art { animation: bossDefeat 1.1s ease-in forwards; }
+@keyframes bossDefeat { 0% { transform: none; filter: none; } 30% { transform: scale(1.1) rotate(-8deg); filter: brightness(2); } 100% { transform: rotate(-10deg) translateY(8px) scale(.9); filter: grayscale(1) brightness(.6); opacity: .45; } }
+.boss-end .boss-say.end { margin-top: -6px !important; }
+.boss-end .badges { margin: 2px 0 !important; }
+.boss-end > .lives { margin-top: 6px !important; padding-top: 14px; border-top: 1px solid var(--line); width: 100%; }
+.boss-end button.block[data-act="boss-cram"] { font-size: 15px; padding: 12px 16px; }
+button .hero-ic { flex: none; min-width: 28px; width: 28px; height: 28px; transform: scale(1.3); transform-origin: 50% 65%; margin-right: 6px; }
+@media (prefers-reduced-motion: reduce) { .boss-end .boss-stage.dead .boss-art { animation: none; filter: grayscale(1) brightness(.6); opacity: .45; } }
