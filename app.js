@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '129';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '130';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -396,7 +396,9 @@ const keyWords = s => norm(s).split(' ').filter(w => w.length > 2 && !STOPW.has(
 const wordHit = (w, list) => list.some(x => x === w
   || (w.length >= 4 && x.length >= 4 && (x.startsWith(w.slice(0, Math.max(4, w.length - 3))) || w.startsWith(x.slice(0, Math.max(4, x.length - 3)))))
   || (w.length >= 5 && lev(w, x) <= (w.length > 8 ? 2 : 1)));
+const NEG = /\b(not|no|never|nie|nigdy|bez)\b/;   // przeczenie zmienia sens: „lean back” ≠ „don't lean back”
 function meaningMatch(input, correct) {
+  if (NEG.test(norm(input)) !== NEG.test(norm(correct))) return false;
   const want = [...new Set(keyWords(correct))], got = keyWords(input);
   if (!want.length || !got.length) return false;
   const hit = want.filter(w => wordHit(w, got)).length;
@@ -405,14 +407,19 @@ function meaningMatch(input, correct) {
   if (want.length >= 10) return got.length >= 3 && hit / want.length >= .3 && got.filter(g => wordHit(g, want)).length / got.length >= .5;
   return hit / want.length >= (want.length >= 6 ? .5 : .6);  // średnia: większość sensu
 }
+// 🇬🇧 skróty angielskie liczą się jak pełna forma: don't = do not, can't = cannot, it's = it is…
+const EN_CONTR = [[/\bcant\b/gi, 'cannot'], [/\bwont\b/gi, 'will not'], [/\b(do|does|did|is|are|was|were|has|have|had|could|would|should|must|need)nt\b/gi, '$1 not'], [/\bcan['’]t\b/gi, 'cannot'], [/\bcan not\b/gi, 'cannot'], [/\bwon['’]t\b/gi, 'will not'], [/\bshan['’]t\b/gi, 'shall not'], [/\b(\w+)n['’]t\b/gi, '$1 not'],
+  [/\b(i)['’]m\b/gi, '$1 am'], [/\b(\w+)['’]re\b/gi, '$1 are'], [/\b(\w+)['’]ve\b/gi, '$1 have'], [/\b(\w+)['’]ll\b/gi, '$1 will'], [/\b(it|he|she|that|there|what|who|where|here)['’]s\b/gi, '$1 is'], [/\blet['’]s\b/gi, 'let us']];
+const enExpand = t => EN_CONTR.reduce((a, [re, r]) => a.replace(re, r), String(t));
 function checkAnswer(input, correct, tol = S?.settings?.tolerance || 'normal') {
+  input = enExpand(input); correct = enExpand(correct);
   const x = norm(input); if (!x) return 'wrong';
   const paren = [...String(correct).matchAll(/\(([^)]+)\)/g)].map(m => m[1]);   // „Kość udowa (os femoris)” → też „kość udowa” i „os femoris”
   const alts = [correct, String(correct).replace(/\([^)]*\)/g, ' '), ...paren, ...String(correct).split(/[\/;|,]| lub | albo /)].map(norm).filter(Boolean);
   if (alts.includes(x)) return 'ok';
   if (tol === 'strict') return 'wrong';
   const f = tol === 'lenient' ? 0.34 : 0.2;
-  const close = alts.some(a => lev(x, a) <= Math.max(1, Math.floor(a.length * f)));
+  const close = alts.some(a => lev(x, a) <= Math.max(1, Math.floor(a.length * f)) && NEG.test(a) === NEG.test(x));
   return close || meaningMatch(input, correct) ? 'close' : 'wrong';
 }
 
