@@ -2098,3 +2098,4 @@ body.focus main#view:has(> .bf) > .studybar { flex: none; }
 .gc-form { display: flex; gap: 8px; } .gc-form input { flex: 1; min-width: 0; } .gc-form button { flex: none; width: 48px; padding: 0 !important; }
 @media (prefers-reduced-motion: reduce) { #gc-panel, #gc-fab.ping { animation: none; } }
 .dir-box { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 8px 0; } .dir-box .seg button { font-size: 13px; }
+.dir-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 8px 0; } .dir-btn small { color: var(--muted); font-size: 11.5px; }

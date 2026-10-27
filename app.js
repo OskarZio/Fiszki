@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '126';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '127';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -168,7 +168,7 @@ function noteOrds(n) {
     return [...s].sort((a, b) => a - b);
   }
   if (n.type === 'occl') return n.boxes.map(b => b.id);
-  return n.reverse ? ['f', 'r'] : ['f'];
+  return n.revOnly ? ['r'] : n.reverse ? ['f', 'r'] : ['f'];   // revOnly: tylko tył → przód (kierunek talii)
 }
 function syncCards(n) {
   const ords = noteOrds(n);
@@ -736,8 +736,9 @@ function viewDeck(id, q) {
     <button class="block sm${d.done ? ' primary' : ''}" data-act="deck-done" data-id="${id}" data-v="${d.done ? 0 : 1}">${d.done ? '↩️ Talia zdana – przywróć do nauki' : '🎓 Opanowane – zdałem, bez powtórek'}</button><div class="spacer"></div>
     ${examCardHTML(d)}
     ${typeof shareCardHTML === 'function' ? shareCardHTML(d) : ''}
-    ${(() => { const bn = notes.filter(n => n.type === 'basic'); if (!bn.length) return ''; const rev = bn.filter(n => n.reverse).length, ex = bn.find(n => n.front && n.back) || bn[0], sh = t => esc(String(t || '').replace(/\s+/g, ' ').slice(0, 18));
-      return `<div class="dir-box"><span class="small muted">↔️ Kierunek nauki</span><div class="seg"><button class="${rev ? '' : 'on'}" data-act="deck-dir" data-id="${id}" data-v="0">${sh(ex.front)} → ?</button><button class="${rev === bn.length ? 'on' : ''}" data-act="deck-dir" data-id="${id}" data-v="1">⇄ Obie strony</button></div></div>`; })()}
+    ${(() => { const bn = notes.filter(n => n.type === 'basic'); if (!bn.length) return ''; const m = deckDirMode(d), ex = bn.find(n => n.front && n.back) || bn[0], sh = t => esc(String(t || '').replace(/\s+/g, ' ').slice(0, 22));
+      const lbl = { f: `${sh(ex.front)} → ?`, r: `${sh(ex.back)} → ?`, both: '⇄ obie strony' }[m], nxt = { f: 'odwrotnie', r: 'obie strony', both: 'tylko przód → tył' }[m];
+      return `<button class="block sm dir-btn" data-act="deck-dir" data-id="${id}"><span>↔️ Kierunek: <b>${lbl}</b></span><small>${S.cards.filter(c => c.deckId === id).length} kart · stuknij → ${nxt}</small></button>`; })()}
     <button class="block sm${d.mix ? ' primary' : ''}" data-act="deck-mix" data-id="${id}">🔀 Przeplatanie: ${d.mix ? 'włączone – nowe karty w losowej kolejności' : 'wyłączone (stuknij, by mieszać terminy z obrazami)'}</button>
   </div>
   <div class="card">
@@ -2063,16 +2064,17 @@ async function init() {
 // start po wczytaniu wszystkich skryptów (anki.js, scan.js)
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
-// ↔️ kierunek całej talii: tylko przód → tył albo w obie strony (karty odwrotne usuwane / dodawane; postęp pozostałych zostaje)
-function deckDir(d, both) {
-  const ns = S.notes.filter(n => n.deckId === d.id && n.type === 'basic'), ch = ns.filter(n => !!n.reverse !== both);
-  if (!ch.length) return;
-  if (!both && !confirm(`Zostawić tylko kierunek przód → tył? Usunę ${ch.length} ${plural(ch.length, 'kartę odwrotną', 'karty odwrotne', 'kart odwrotnych')} (z ich postępem). Fiszki zostają.`)) return;
-  for (const n of ch) { n.reverse = both; touch(n); syncCards(n); }
-  save(); toast(both ? `⇄ Dodano ${ch.length} ${plural(ch.length, 'kartę odwrotną', 'karty odwrotne', 'kart odwrotnych')}` : `→ Teraz ${S.cards.filter(c => c.deckId === d.id).length} kart, tylko w jedną stronę`, 3500); render();
+// ↔️ kierunek całej talii jednym przyciskiem: przód → tył · tył → przód · obie strony (postęp kart, które zostają, się nie zmienia)
+const deckDirMode = d => { const ns = S.notes.filter(n => n.deckId === d.id && n.type === 'basic'); return ns.length && ns.every(n => n.revOnly) ? 'r' : ns.length && ns.every(n => n.reverse && !n.revOnly) ? 'both' : 'f'; };
+function deckDir(d) {
+  const cur = deckDirMode(d), next = { f: 'r', r: 'both', both: 'f' }[cur], ns = S.notes.filter(n => n.deckId === d.id && n.type === 'basic');
+  const lose = S.cards.filter(c => c.deckId === d.id && c.srs.state !== 'new' && (next === 'f' ? c.ord === 'r' : next === 'r' ? c.ord === 'f' : false)).length;
+  if (lose && !confirm(`Zmienić kierunek? ${lose} ${plural(lose, 'karta ma', 'karty mają', 'kart ma')} już postęp, który przepadnie (fiszki zostają).`)) return;
+  for (const n of ns) { n.reverse = next !== 'f'; n.revOnly = next === 'r'; if (!n.revOnly) delete n.revOnly; touch(n); syncCards(n); }
+  save(); toast(`↔️ ${{ f: 'Przód → tył', r: 'Tył → przód', both: 'Obie strony' }[next]} · ${S.cards.filter(c => c.deckId === d.id).length} kart`, 3000); render();
 }
 Object.assign(ACTIONS, {
-  'deck-dir': el => { const d = deckById(el.dataset.id); if (d) deckDir(d, el.dataset.v === '1'); },
+  'deck-dir': el => { const d = deckById(el.dataset.id); if (d) deckDir(d); },
   'note-del': el => { deleteNotes([el.dataset.id]); render(); },
   'note-selmode': () => { NOTE_SEL = NOTE_SEL ? null : new Set(); render(); },
   'note-sel': el => { const id = el.dataset.id; NOTE_SEL.has(id) ? NOTE_SEL.delete(id) : NOTE_SEL.add(id); render(); },
