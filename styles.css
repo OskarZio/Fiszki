@@ -2099,3 +2099,19 @@ body.focus main#view:has(> .bf) > .studybar { flex: none; }
 @media (prefers-reduced-motion: reduce) { #gc-panel, #gc-fab.ping { animation: none; } }
 .dir-box { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 8px 0; } .dir-box .seg button { font-size: 13px; }
 .dir-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 8px 0; } .dir-btn small { color: var(--muted); font-size: 11.5px; }
+/* 💡 skojarzenie – karta w stylu iOS */
+:root { --hb-bg: #fff8e6; --hb-line: #fde3a7; --hb-h: #b45309; --hb-t: #3b2a12; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --hb-bg: #2a2416; --hb-line: #4a3c1c; --hb-h: #fbbf24; --hb-t: #fdf2d6; } }
+:root[data-theme="dark"] { --hb-bg: #2a2416; --hb-line: #4a3c1c; --hb-h: #fbbf24; --hb-t: #fdf2d6; }
+.hintbox { position: relative; margin: 16px auto 0; max-width: 520px; padding: 12px 14px 14px; border-radius: 18px; background: var(--hb-bg); border: 1px solid var(--hb-line); color: var(--hb-t);
+  text-align: left; box-shadow: 0 6px 20px rgba(0,0,0,.12); animation: hbIn .25s ease-out; }
+@keyframes hbIn { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+.hb-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; } .hb-h span { font-size: 11.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--hb-h); }
+.hb-edit { min-height: 0 !important; width: 32px; height: 32px; padding: 0 !important; border-radius: 50%; display: grid; place-items: center; font-size: 15px; background: color-mix(in srgb, var(--hb-h) 14%, transparent) !important; border: 0; }
+.hb-t { font-size: 17px; line-height: 1.4; font-weight: 500; overflow-wrap: anywhere; }
+.hint-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.hint-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px !important; padding: 8px 18px !important; border-radius: 99px; font-size: 15px; font-weight: 700;
+  background: var(--hb-bg) !important; color: var(--hb-h) !important; border: 1px solid var(--hb-line) !important; box-shadow: 0 3px 10px rgba(0,0,0,.1); }
+.hint-chip .hc-ic { font-size: 18px; } .hint-chip.add { background: transparent !important; box-shadow: none; font-weight: 600; font-size: 14px; color: var(--muted) !important; border-style: dashed !important; }
+.hint-chip:active, .hb-edit:active { transform: scale(.96); }
+@media (prefers-reduced-motion: reduce) { .hintbox { animation: none; } }

@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '127';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '128';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -880,14 +880,15 @@ function viewStudy(deckId, mode, q) {
   // skojarzenie: tekst i/lub obrazek (wgrany albo narysowany)
   const himg = id => id && IMG[id] ? `<img class="hint-img" src="${IMG[id]}" alt="skojarzenie">` : '';
   const hasHint = v.hints.length > 0 || !!himg(note?.hintImg);
-  const hintInner = (v.hints.length ? '💡 ' + v.hints.map(fmt).join('<br>') : '💡') + himg(note?.hintImg);
+  const canEdit = !s.editHint && S.settings.hintEdit !== false;
+  const hintBox = () => `<div class="hintbox"><div class="hb-h"><span>💡 Skojarzenie</span>${canEdit ? '<button class="hb-edit" data-act="hint-edit" aria-label="Zmień skojarzenie">✏️</button>' : ''}</div>${v.hints.length ? `<div class="hb-t">${v.hints.map(fmt).join('<br>')}</div>` : ''}${himg(note?.hintImg)}</div>`;
   const editHint = s.editHint ? `<div class="hint-edit"><textarea id="hint-in" rows="2" maxlength="300" placeholder="np. „FEMORIS – FEMme na długich nogach”">${esc(s.hintDraft ?? note?.hint ?? '')}</textarea>
       ${hintImgToolsHTML(s.hintImgDraft, 'study')}
       <div class="row nowrap"><button class="primary sm grow" data-act="hint-save">💾 Zapisz skojarzenie</button><button class="sm ghost" data-act="hint-cancel">Anuluj</button></div></div>` : '';
-  const hintTools = s.editHint || S.settings.hintEdit === false ? '' : `<button class="ghost sm hint-add" data-act="hint-edit">${note?.hint || note?.hintImg ? '✏️ Zmień skojarzenie' : '💡 Dodaj skojarzenie'}</button>`;
+  const addHint = canEdit ? '<button class="hint-chip add" data-act="hint-edit">＋ Dodaj skojarzenie</button>' : '';
   const hints = s.editHint ? editHint : hasHint && !s.shown
-    ? (s.hint ? `<div class="hintbox">${hintInner}</div>${hintTools}` : `<div class="row nowrap hint-row"><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button>${hintTools}</div>`)
-    : (s.shown && hasHint ? `<div class="hintbox">${hintInner}</div>${hintTools}` : s.shown ? hintTools : '');
+    ? (s.hint ? hintBox() : '<div class="hint-row"><button class="hint-chip" data-act="hint"><span class="hc-ic">💡</span>Pokaż skojarzenie</button></div>')
+    : (s.shown && hasHint ? hintBox() : s.shown ? `<div class="hint-row">${addHint}</div>` : '');
   let typed = '';
   if (s.shown && s.typed !== null) {
     const cls = { ok: 'ok', close: 'close', wrong: 'bad' }[s.verdict];
@@ -902,7 +903,7 @@ function viewStudy(deckId, mode, q) {
   const side = s.shown && !s.peek ? v.a : v.q;
   // jak w Quizlecie: jedna karta z dwiema stronami, stuknięcie obraca ją o 180°
   const flip3d = mode === 'flip' && S.settings.flipCard !== false;
-  const hintBox = hasHint ? `<div class="hintbox">${hintInner}</div>` : '';
+  const hintBoxH = hasHint ? hintBox() : '';
   // odpowiedź w punktach (fiszki podstawowe z długą odpowiedzią)
   const sp = S.settings.points !== false && note?.type === 'basic' && c.ord !== 'r' ? splitPoints(note.back) : null;
   if (sp && !s.pts) s.pts = new Set();
@@ -913,8 +914,8 @@ function viewStudy(deckId, mode, q) {
       <div class="pts-sum small">Pamiętam <b>${s.pts.size}/${sp.pts.length}</b> → proponuję: <b>${['', 'Nie pamiętam', 'Trudne', 'Dobrze'][ptSuggest(s.pts.size, sp.pts.length)]}</b></div></div>` : '';
   const body = flip3d ? `<div class="fc3d${s.shown && !s.peek ? ' flipped' : ''}"${s.editHint ? '' : ' data-act="flip-card"'}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}
     <div class="fc-inner">
-      <div class="card flash face front">${v.q}${hasHint ? (s.hint ? hintBox : `<div><button class="ghost" data-act="hint">💡 Pokaż skojarzenie</button></div>`) : ''}<div class="flip-tip">↻ stuknij, aby obrócić<span class="kbd-tip"> · spacja</span></div></div>
-      <div class="card flash face back">${sp ? ptsHTML + (v.b.match(/<img[^>]*>/g) || []).join('') + (note.extra ? `<div class="extra">${fmt(note.extra)}</div>` : '') : v.b}${s.editHint ? editHint : hintBox + hintTools}<div class="flip-tip">↻ stuknij – pytanie<span class="kbd-tip"> · spacja – obróć · 1–4 – ocena</span></div></div>
+      <div class="card flash face front">${v.q}${hasHint ? (s.hint ? hintBoxH : '<div class="hint-row"><button class="hint-chip" data-act="hint"><span class="hc-ic">💡</span>Pokaż skojarzenie</button></div>') : ''}<div class="flip-tip">↻ stuknij, aby obrócić<span class="kbd-tip"> · spacja</span></div></div>
+      <div class="card flash face back">${sp ? ptsHTML + (v.b.match(/<img[^>]*>/g) || []).join('') + (note.extra ? `<div class="extra">${fmt(note.extra)}</div>` : '') : v.b}${s.editHint ? editHint : hintBoxH || `<div class="hint-row">${addHint}</div>`}<div class="flip-tip">↻ stuknij – pytanie<span class="kbd-tip"> · spacja – obróć · 1–4 – ocena</span></div></div>
     </div></div>`
   : `<div class="card flash${tap ? ' tappable' : ''}${s.flipAnim ? ' flip-in' : ''}"${tap}>${star}${tts ? `<button class="ghost sm speak" data-act="speak">🔊</button>` : ''}${sp && s.shown && !s.peek ? v.q + '<hr>' + ptsHTML + (v.b.match(/<img[^>]*>/g) || []).join('') + (note.extra ? `<div class="extra">${fmt(note.extra)}</div>` : '') : side}${s.peek ? '' : typed}${hints}
     ${tap ? `<div class="flip-tip">${s.shown ? (s.peek ? '↻ stuknij – odpowiedź' : '↻ stuknij – pytanie') : '↻ stuknij, aby obrócić'}</div>` : ''}</div>`;

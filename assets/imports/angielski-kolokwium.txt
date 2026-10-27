@@ -4,8 +4,8 @@
 #przedmiot: lang
 #odwrotne: tak
 Spróbuj tego | Give it a try
-Dostosuj podnóżki | Adjust the footstraps | w Quizlecie: „Adjust a footstraps” (literówka)
-Chwyć za uchwyt | Grab the handle | w Quizlecie: „Grap the handle” (literówka)
+Dostosuj podnóżki | Adjust the footstraps | Błąd w Quizlecie: „Adjust a footstraps”. Rodzajnik „a” (= jeden) nie stoi przed liczbą mnogą – footstraps to wiele pasków, więc „the footstraps”.
+Chwyć za uchwyt | Grab the handle | Błąd w Quizlecie: „Grap”. Takiego słowa nie ma – chwytać = grab. Skojarzenie: grab ≈ grabie, którymi chwytasz liście.
 Pochyl się do przodu | Lean forward
 Pociągnij mocniej | Pull harder
 Nie przechylaj się do tyłu | Don't lean back
@@ -13,7 +13,7 @@ Wyprostuj ręce | Extend your arms
 Ruszaj się do tyłu i do przodu | Move back and forth
 Mięśnie | Muscles
 Ścięgna | Tendons
-Stawy | Joints | w Quizlecie: „Joins” (literówka)
+Stawy | Joints | Błąd w Quizlecie: „Joins”. Join = łączyć, dołączać. Staw to joint – z „t” na końcu (stawy = joints).
 Serce | Heart
 Rdzeń kręgowy | Spinal cord
 Neurony | Neurons
@@ -45,12 +45,12 @@ Zapalenie wyrostka robaczkowego | Appendicitis
 Zapalenie płuc | Pneumonia
 Gruźlica | Tuberculosis
 Wstrząs mózgu | Concussion
-Ospa | Chickenpox | w Quizlecie: „Chichen pox” (literówka)
+Ospa | Chickenpox | Błąd w Quizlecie: „Chichen pox”. Kurczak = chicken, ospa wietrzna = chickenpox (pisane razem).
 Świnka | Mumps
 Osoby po amputacji | Amputees
 Proteza nogi | Prosthetic leg
 Wózki inwalidzkie | Wheelchairs
-Osoby z niepełnosprawnością ruchową | Physically disabled | w Quizlecie było „Menrally handicapped” – to znaczy co innego (niepełnosprawny umysłowo); ruchowa = physically disabled
+Osoby z niepełnosprawnością ruchową | Physically disabled | W Quizlecie było „Mentally handicapped” – to znaczy niepełnosprawny umysłowo. Niepełnosprawność ruchowa = physically disabled.
 Osoby z niepełnosprawnością intelektualną | Intellectually disabled
 Uszkodzenie mózgu | Brain damage
 Osoby z wadami wzroku | Visually impaired
@@ -64,7 +64,7 @@ Lekarz rodzinny | GP
 Skok w dal | Long jump
 Skok zwyż | High jump
 Sztafeta | Relay
-Wioślarstwo | Rowing | w Quizlecie: „rouing” (literówka)
+Wioślarstwo | Rowing | Błąd w Quizlecie: „rouing” – to zapis wymowy. Wiosłować = row [czyt. rou], wioślarstwo = rowing.
 Rzut oszczepem | Javelin throw
 Skok o tyczce | Pole vault
 Hokej na lodzie | Ice hockey
@@ -80,7 +80,7 @@ Kij bejsbolowy | Bat
 Kij golfowy | Club
 Kij bilardowy | Cue
 Alergiczny | Allergic
-Wyleczenie/ wyzdrowienie | Recovery | w Quizlecie było „Recoverment” – takiego słowa nie ma
+Wyleczenie/ wyzdrowienie | Recovery | Błąd w Quizlecie: „Recoverment” – takiego słowa nie ma. Recover = wyzdrowieć, recovery = wyzdrowienie.
 Odzyskać | Recover
 Uraz | Injury
 Zranić | Injure
@@ -89,12 +89,12 @@ Lekkoatletyka | Athletics
 Narciarz | Skier
 Narty | Ski
 Rowerzysta | Cyclist
-Kolarstwo | Cycling | w Quizlecie było „Cycle” (= jeździć na rowerze); kolarstwo jako sport = cycling
-Osiągnięcie | Achievement | w Quizlecie: „Achivemnet” (literówka)
+Kolarstwo | Cycling | W Quizlecie było „Cycle” – to czasownik (jeździć na rowerze). Kolarstwo jako sport = cycling.
+Osiągnięcie | Achievement | Błąd w Quizlecie: „Achivemnet” – przestawione litery. Achieve (osiągnąć) + -ment = achievement.
 Zdobyć | Achieve
 Przesuń obie dłonie w stronę kostki | Slide both hands towards the ankle
-Połóż się na plecach | Lie on your back | w Quizlecie: „lin on your back” (literówka)
-Ugnij kolana | Bend your knees | w Quizlecie: „bent your knees” (literówka)
+Połóż się na plecach | Lie on your back | Błąd w Quizlecie: „lin”. Lie = leżeć / połóż się. Nie myl z lay (= kłaść coś).
+Ugnij kolana | Bend your knees | Błąd w Quizlecie: „bent”. Polecenie to bend (zegnij); bent to forma przeszła – „knees bent” = ze zgiętymi kolanami.
 Połóż się na plecach, uginając kolana | Lie on your back with knees bent
 Trzymaj kolana wyprostowane | Keep your knees straight
 Usiądź z wyprostowanymi kolanami | Sit with your knees straight
