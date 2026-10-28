@@ -260,7 +260,7 @@ function crOpen(id) {
   ov.addEventListener('click', async e => {
     const b = e.target.closest('[data-x]'); if (e.target === ov || b?.dataset.x === 'close') return ov.remove();
     if (b?.dataset.x === 'rename') { const n = (prompt('Nowe imię stworka:', c.n) || '').trim().slice(0, 20); if (n) { c.n = n; save(); ov.remove(); render(); crOpen(id); } }
-    if (b?.dataset.x === 'avatar') { try { S.profile.avatarImg = await creaturePNG(c.s, c.r, 128); S.profile.mod = Date.now(); save(); toast(`👤 ${c.n} jest teraz Twoim awatarem`); if (typeof publishCloudProfile === 'function' && typeof cloudOn === 'function' && cloudOn()) publishCloudProfile().catch(() => {}); ov.remove(); render(); } catch { toast('Nie udało się ustawić awatara'); } }
+    if (b?.dataset.x === 'avatar') { try { S.profile.avatarImg = await creaturePNG(c.s, c.r, 128); S.profile.mod = S.profile.imgMod = Date.now(); save(); toast(`👤 ${c.n} jest teraz Twoim awatarem`); if (typeof publishCloudProfile === 'function' && typeof cloudOn === 'function' && cloudOn()) publishCloudProfile().catch(() => {}); ov.remove(); render(); } catch { toast('Nie udało się ustawić awatara'); } }
   });
   document.body.append(ov);
 }

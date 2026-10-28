@@ -188,10 +188,10 @@ Object.assign(ACTIONS, {
   'pp-open': () => showProfilePop(),
   'pp-close': () => ppClose(),
   'pp-goto': () => { ppClose(); go('#/me'); },
-  'pp-emoji': el => { S.profile.avatar = el.dataset.e; S.profile.avatarImg = null; ppTouch(); toast(`Awatar: ${el.dataset.e} ✓`); },
+  'pp-emoji': el => { S.profile.imgMod = Date.now(); S.profile.avatar = el.dataset.e; S.profile.avatarImg = null; ppTouch(); toast(`Awatar: ${el.dataset.e} ✓`); },
   'pp-photo': async () => {
     const f = await pickFile('image/*'); if (!f) return;
-    try { S.profile.avatarImg = await squareAvatar(f); ppTouch(); toast('Zdjęcie profilowe ustawione ✓'); } catch { toast('Nie udało się wczytać zdjęcia'); }
+    try { S.profile.avatarImg = await squareAvatar(f); S.profile.imgMod = Date.now(); ppTouch(); toast('Zdjęcie profilowe ustawione ✓'); } catch { toast('Nie udało się wczytać zdjęcia'); }
   },
-  'pp-photo-del': () => { S.profile.avatarImg = null; ppTouch(); },
+  'pp-photo-del': () => { S.profile.avatarImg = null; S.profile.imgMod = Date.now(); ppTouch(); },
 });

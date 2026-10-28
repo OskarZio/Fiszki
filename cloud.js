@@ -71,6 +71,11 @@ async function cloudSync(manual) {
     for (let i = 0; i < up.length; i += 4) {
       const u = await SB.from('user_images').upsert(up.slice(i, i + 4).map(id => ({ user_id: uid, id, data: IMG[id] }))); if (u.error) throw u.error;
     }
+    if (!S.profile.avatarImg && !S.profile.imgMod) {   // starsza kopia bez zdjęcia – bierzemy je z profilu na koncie, zamiast nadpisać pustym
+      const pr = await SB.from('profiles').select('avatar,avatar_img').eq('id', uid).maybeSingle();
+      const img = safeImg(pr.data?.avatar_img);
+      if (img) { S.profile.avatarImg = img; if (pr.data.avatar) S.profile.avatar = String(pr.data.avatar).slice(0, 16); S.profile.imgMod = 1; }
+    }
     r = await SB.from('user_data').upsert({ user_id: uid, data: exportData(), updated_at: new Date().toISOString() }); if (r.error) throw r.error;
     await publishCloudProfile();
     S.settings.lastSync = Date.now(); await DB.set('state', S); updateBadge();

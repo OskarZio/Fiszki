@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '144';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '145';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1728,7 +1728,14 @@ function mergeState(R) {
     else if (typeof a === 'string' && typeof b === 'string') S.stats[k] = a > b ? a : b;
   }
   if (R.major && (R.major.mod || 0) > (S.major.mod || 0)) S.major = R.major;
-  if (R.profile && (R.profile.mod || 0) > (S.profile.mod || 0)) S.profile = R.profile;
+  if (R.profile && typeof R.profile === 'object') {
+    // wygląd (zdjęcie/emoji) ma własny czas zmiany – np. wpisanie nicku przy ponownym logowaniu nie kasuje zdjęcia z konta
+    const look = p => ({ avatar: p.avatar, avatarImg: p.avatarImg || null, imgMod: p.imgMod || 0 });
+    const rl = look(R.profile), ll = look(S.profile);
+    const remoteLook = rl.imgMod > ll.imgMod || (!ll.imgMod && !ll.avatarImg && rl.avatarImg);
+    if ((R.profile.mod || 0) > (S.profile.mod || 0)) S.profile = { ...R.profile };
+    Object.assign(S.profile, remoteLook ? rl : ll);
+  }
   if (R.hero && typeof R.hero === 'object' && (R.hero.mod || 0) > (S.hero?.mod || 0)) S.hero = R.hero;   // bohater (RPG): nowszy wygrywa
   S.tomb = tomb;
 }

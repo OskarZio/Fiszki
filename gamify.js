@@ -449,7 +449,7 @@ function profileCardHTML() {
     <p class="small muted">Awatar widać na stronie głównej, w rankingu i w bitwach. Zdjęcie jest przycinane do kwadratu.</p></div>`;
 }
 function mountRank() {
-  const upd = () => { S.profile.nick = $('#pr-nick').value.trim(); S.profile.avatar = $('#pr-avatar').value.trim() || '🦊'; S.profile.mod = Date.now(); save(); publishAt = 0; };
+  const upd = () => { S.profile.nick = $('#pr-nick').value.trim(); const av = $('#pr-avatar').value.trim() || '🦊'; if (av !== S.profile.avatar) S.profile.imgMod = Date.now(); S.profile.avatar = av; S.profile.mod = Date.now(); save(); publishAt = 0; };
   $('#pr-nick')?.addEventListener('change', upd); $('#pr-avatar')?.addEventListener('change', upd);
 }
 const _rankRoute = ROUTES.rank;
@@ -459,10 +459,10 @@ Object.assign(ACTIONS, {
   'rank-tab': el => { RANK_TAB = el.dataset.k; render(); },
   'avatar-photo': async () => {
     const f = await pickFile('image/*'); if (!f) return;
-    try { S.profile.avatarImg = await squareAvatar(f); S.profile.mod = Date.now(); publishAt = 0; save(); render(); toast('Zdjęcie profilowe ustawione ✓'); }
+    try { S.profile.avatarImg = await squareAvatar(f); S.profile.mod = S.profile.imgMod = Date.now(); publishAt = 0; save(); render(); toast('Zdjęcie profilowe ustawione ✓'); }
     catch { toast('Nie udało się wczytać zdjęcia'); }
   },
-  'avatar-clear': () => { S.profile.avatarImg = null; S.profile.mod = Date.now(); publishAt = 0; save(); render(); },
+  'avatar-clear': () => { S.profile.avatarImg = null; S.profile.mod = S.profile.imgMod = Date.now(); publishAt = 0; save(); render(); },
   'rank-refresh': () => { rankLoaded = 0; toast('Odświeżam…'); render(); },
   'friend-add': () => addFriend(friendCode($('#friend-code').value)),
   'friend-del': el => {
