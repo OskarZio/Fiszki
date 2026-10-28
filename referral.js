@@ -79,7 +79,7 @@ function inviteCardHTML() {
   const n = refRewards();
   const body = !cloudOn()
     ? `<p class="small muted">Załóż konto (Profil → Ja), żeby dostać swój link polecający.</p><button class="block" data-go="#/me">Załóż konto / zaloguj</button>`
-    : `<div class="ref-btns"><button class="primary" data-act="ref-share">📤 Wyślij</button><button data-act="ref-qr">🔳 Kod QR</button><button data-act="ref-copy">📋 Kopiuj</button></div>
+    : `<div class="ref-btns"><button class="primary" data-act="ref-share">📤 Wyślij</button><button data-act="ref-qr">📷 Kod QR</button><button data-act="ref-copy">📋 Kopiuj</button></div>
        <p class="small muted" style="margin:8px 0 0">Nagrodzone polecenia: <b>${n}/${REF_MAX}</b>${S.stats.refJoined ? ' · Ty dołączyłeś/aś z polecenia ✓' : ''}</p>`;
   return `<div class="card invite-card"><div class="row nowrap"><span class="inv-gift">🎁</span><div class="grow"><b>Zaproś i poleć znajomego</b>
       <div class="small muted">Gdy założy konto z Twojego linku albo kodu QR: <b>on/ona dostaje +${REF_GEMS_NEW} 💎 na start</b>, a <b>Ty +${REF_GEMS} 💎</b> – i oboje darmową ${CASES[REF_CASE].icon} ${REF_CASE_ACC}. Od razu jesteście znajomymi.</div></div></div>
@@ -109,7 +109,7 @@ Object.assign(ACTIONS, {
     try { await refQrLib(); } catch { return toast('Nie udało się przygotować kodu QR – sprawdź internet'); }
     const q = qrcode(0, 'M'); q.addData(url); q.make();
     const ov = document.createElement('div'); ov.className = 'qr-overlay';
-    ov.innerHTML = `<div class="card qr-box"><h2 style="margin:0 0 4px">🔳 Zaproszenie</h2><p class="small muted" style="margin:0 0 10px">Niech kolega zeskanuje kod aparatem w telefonie i założy konto – dostanie <b>${REF_GEMS_NEW} 💎</b>, a Ty <b>${REF_GEMS} 💎</b>.</p>
+    ov.innerHTML = `<div class="card qr-box"><h2 style="margin:0 0 4px">📷 Zaproszenie</h2><p class="small muted" style="margin:0 0 10px">Niech kolega zeskanuje kod aparatem w telefonie i założy konto – dostanie <b>${REF_GEMS_NEW} 💎</b>, a Ty <b>${REF_GEMS} 💎</b>.</p>
       <div class="qr-img">${q.createSvgTag({ cellSize: 6, margin: 2, scalable: true })}</div>
       <p class="small center" style="margin:10px 0">Kod: <b>${esc(SB_PROFILE.code)}</b></p>
       <div class="row nowrap"><button class="grow" data-act="ref-copy">📋 Kopiuj link</button><button class="primary grow" data-act="qr-close">Gotowe</button></div></div>`;

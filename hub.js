@@ -30,6 +30,7 @@ ROUTES.me = () => {
   const tile = (go, icon, val, label) => `<button class="mtile" data-go="${go}"><span>${icon}</span><b>${val}</b><small>${label}</small></button>`;
   return { tab: 'profile', html: `
   <div class="row nowrap"><h1 class="grow">Profil</h1><button class="iconbtn" data-go="#/more" title="Ustawienia">⚙️</button></div>
+  ${typeof modeSwitchHTML === 'function' ? modeSwitchHTML() : ''}
   <div class="card me-head"><div class="row nowrap" style="gap:14px;margin-bottom:12px">
       <button class="pp-av sm-av" data-act="pp-open" title="Profil i awatar">${avatarHTML(S.profile, 60)}<i>✏️</i></button>
       <div class="grow" style="min-width:0"><b class="nm" style="display:block;font-size:22px">${esc(S.profile.nick || 'Ty')}</b>
@@ -165,6 +166,7 @@ function profilePopHTML() {
       <h2 class="nm" style="margin:8px 0 0">${typeof nickHTML === 'function' ? nickHTML(p.nick || 'Ty', p.cos) : esc(p.nick || 'Ty')}</h2>
       ${typeof showcaseHTML === 'function' && (p.showcase || []).length ? `<div class="pp-showcase"><small class="muted">Gablota</small><span class="showcase">${showcaseHTML(p.showcase)}</span></div>` : ''}
       ${typeof ROUTES.cos === 'function' ? '<button class="sm pp-cos" data-act="pp-cos">👑 Prestiż – ramki, tytuły, efekty</button>' : ''}</div>
+    ${typeof modeSwitchHTML === 'function' ? modeSwitchHTML() : ''}
     ${xpCardHTML(true)}
     <div class="pp-stats"><div><b>💎 ${typeof coins === 'function' ? coins() : 0}</b><small>kryształy</small></div><div><b>🔥 ${streak()}</b><small>seria</small></div>
       <div><b>⚔️ ${elo}</b><small>Elo</small></div><div><b>🏅 ${Object.keys(S.ach).length}</b><small>osiągnięcia</small></div></div>

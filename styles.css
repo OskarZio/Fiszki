@@ -2641,3 +2641,15 @@ body:not(.focus) #gc-fab { top: auto; bottom: calc(var(--tabs-h) + 16px + env(sa
 .cos-tile .cos-ic { width: 54px; height: 54px; font-size: 34px; }
 .hero-fig.au[style*="--aimg"]::before { content: ''; left: 0; right: 0; height: 30cqw; bottom: 8%;
   background: var(--aimg) 8% 60% / 22cqw no-repeat, var(--aimg) 50% 0 / 18cqw no-repeat, var(--aimg) 92% 70% / 20cqw no-repeat; image-rendering: pixelated; }
+/* zaproszenie: oddech między opisem a przyciskami */
+.invite-card .ref-btns { margin-top: 16px; }
+.invite-card > .row.nowrap:first-child { align-items: flex-start; }
+/* 🎯 tryby: w instrukcji i szybki przełącznik */
+.wl-modes { display: grid; gap: 10px; }
+.wl-mode { justify-content: flex-start !important; text-align: left; gap: 12px !important; padding: 12px 14px !important; border-radius: 14px; border: 2px solid transparent; background: var(--card2); }
+.wl-mode > span { font-size: 30px; flex: none; } .wl-mode b { display: block; font-size: 16px; } .wl-mode small { color: var(--muted); font-size: 13px; line-height: 1.3; }
+.wl-mode.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); background: color-mix(in srgb, var(--accent) 10%, var(--card2)); }
+.mode-sw { margin: 4px 0 14px; } .mode-sw > small { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin: 0 0 6px 2px; }
+.mode-sw .seg { display: flex; width: 100%; } .mode-sw .seg button { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 6px 4px; min-height: 52px; }
+.mode-sw .seg button i { font-style: normal; font-size: 18px; } .mode-sw .seg button span { font-size: 12px; white-space: normal; line-height: 1.15; }
+.pp-box .mode-sw { margin: 12px 0 4px; }
