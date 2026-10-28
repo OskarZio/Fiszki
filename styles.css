@@ -877,7 +877,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
   body:not(.compact) .card { padding: 18px; margin: 14px 0; }
   body:not(.compact) .card.tight { padding: 13px 16px; }
   body:not(.compact) button:not(.sm):not(.iconbtn):not(.calday):not(.pt-tile), body:not(.compact) .btn:not(.sm) { padding: 12px 18px; min-height: 46px; }
-  body:not(.compact) .row { gap: 10px; }
+  body:not(.compact) .row { gap: 12px; }
   body:not(.compact) .spacer { height: 14px; }
   body:not(.compact) h1 { margin-bottom: 16px; }
   body:not(.compact) h2 { margin-top: 24px; }
@@ -2363,3 +2363,23 @@ ul.wl-pts { list-style: none; padding-left: 0; }
 .tp-bar { position: fixed; left: 12px; right: 12px; bottom: calc(var(--tabs-h, 64px) + 12px + env(safe-area-inset-bottom)); z-index: 70; display: flex; align-items: center; gap: 8px;
   padding: 8px 10px 8px 14px; border-radius: 14px; background: var(--card); color: var(--text); box-shadow: 0 6px 24px rgba(0,0,0,.3); border: 1px solid var(--line); max-width: 520px; margin: 0 auto; font-size: 14px; }
 body.focus .tp-bar { bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+/* ↔️ Więcej oddechu w całej aplikacji: odstępy między przyciskami, padding kart i przycisków */
+.row { gap: 12px; }
+.card { padding: 18px; margin: 14px 0; }
+.card.tight { padding: 12px 16px; }
+button { padding: 12px 18px; min-height: 46px; }
+button.sm { min-height: 38px; padding: 8px 14px; }
+button.ghost { padding: 10px 12px; }
+.spacer { height: 16px; }
+.card > button.block:not(:first-child), .card > .btn.block:not(:first-child), button.block + button.block { margin-top: 12px; }
+.card > .row + .row, .card > .row + button.block, .card > button.block + .row { margin-top: 12px; }
+/* banery: przy długim tekście przycisk schodzi pod spód zamiast ściskać tekst */
+.banner { padding: 14px 16px; margin: 12px 0; }
+.banner.row.nowrap { flex-wrap: wrap; row-gap: 10px; }
+.banner.row.nowrap > .grow { flex: 1 1 210px; min-width: 0; }
+/* siatki przycisków: równe, większe odstępy */
+.cram-grid, .modes, .tf-btns, .abcd, .sh-src, .cases, .mtiles, .pt-modes, .sh-cats, .discs, .ref-btns { gap: 12px; }
+.abcd-grid, .beta-row:not(.st), .dmoves, .pairs, .sidebyside { gap: 10px; }
+.qcount { gap: 10px; }
+.quest .row.nowrap { gap: 8px; }
