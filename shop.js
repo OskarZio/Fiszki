@@ -19,7 +19,10 @@ const stStyle = () => S?.settings?.stStyle || 'svg';
 const stE = s => s?.img ? `<img class="st-img" src="${s.img}" alt="${s.e}" draggable="false">`
   : !s ? '' : stStyle() === 'svg' && typeof stickerArt === 'function' && stickerArt(s) ? stickerArt(s)
   : stStyle() !== 'emoji' && FLUENT_ST.has(s.id) ? `<img class="st-img fl" src="assets/fluent/${s.id}.webp" alt="${s.e}" draggable="false">` : (s.e || '');
-const caseIco = k => ['basic', 'epic', 'daily', 'gif'].includes(k) ? `<img class="case-img" src="assets/fluent/case_${k}.webp" alt="${CASES[k]?.icon || ''}" draggable="false">` : (CASES[k]?.icon || '');
+// 📦 skrzynki 8-bit (assets/crates): każdy rodzaj ma własną; boss, łup PvP i skrzynka do złapania w walce też
+const CRATE_OF = { basic: 'basic', epic: 'epic', daily: 'daily', cats: 'cats', animals: 'animals', food: 'food', magic: 'magic', gif: 'gif', hero: 'hero', boss: 'boss', pvp: 'ice', grab: 'gem' };
+const crateImg = (k, cls = '') => `<img class="crate-img ${cls}" src="assets/crates/${CRATE_OF[k] || 'basic'}.webp" alt="" draggable="false">`;
+const caseIco = k => crateImg(k, 'case-img');
 const STICKERS = [
   ST('thumb', '👍', "Uśmiech", 'epic', 'assets/stickers/px/157.webp', 'magic'), ST('cool', '😎', "Kot szef", 'rare', 'assets/stickers/px/057.webp', 'cats'), ST('nerd', '🤓', "Panda w okularach", 'common', 'assets/stickers/px/033.webp', 'animals'), ST('books', '📚', "Książka", 'rare', 'assets/stickers/px/210.webp', 'magic'),
   ST('coffee', '☕', "Kawa", 'common', 'assets/stickers/px/002.webp', 'food'), ST('monkey', '🙈', "Małpka", 'rare', 'assets/stickers/px/201.webp', 'animals'), ST('sleepy', '😴', "Śpioch", 'common', 'assets/stickers/px/072.webp', 'cats'), ST('pizza', '🍕', "Pizza", 'rare', 'assets/stickers/px/028.webp', 'food'),
@@ -208,7 +211,7 @@ ROUTES.shop = () => {
   <div class="row nowrap"><button class="iconbtn" data-go="#/battles">‹</button><h1 class="grow">Sklep</h1>${coinsHTML()}</div>
   <details class="small muted shop-info"><summary>Skąd brać kryształy 💎?</summary>
     <p>Bitwy, osiągnięcia (od 30 💎 za łatwe do 600 💎 za legendarne, platyna 2000 💎), dni z celem dziennym (20 💎), zadania dnia, testy, gry pamięciowe – i skrzynki. 🌞 <b>Codzienna skrzynka</b> (lepsze szanse!) za ukończony zestaw fiszek albo cel dzienny.</p></details>
-  ${freeN ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${freeN}</b> darmowe ${plural(freeN, 'skrzynkę', 'skrzynki', 'skrzynek')}: ${freeKinds.map(k => `${CASES[k].icon} ${CASES[k].name} ×${itemCount('case', k)}`).join(', ')}</span>
+  ${freeN ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${freeN}</b> darmowe ${plural(freeN, 'skrzynkę', 'skrzynki', 'skrzynek')}: ${freeKinds.map(k => `${crateImg(k, 'inline')} ${CASES[k].name} ×${itemCount('case', k)}`).join(', ')}</span>
     <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}
   <div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2><div class="cases">${Object.entries(CASES).filter(([, c]) => !c.freeOnly && (!c.gif || gifCaseReady())).map(([k, c]) => `
     <div class="case ${k}"><div class="ci" data-act="case-drops" data-k="${k}" role="button" title="Zawartość i szanse">${caseIco(k)}</div><b data-act="case-drops" data-k="${k}">${c.name}</b>
@@ -384,7 +387,7 @@ ROUTES.inv = () => {
       <div class="inv-st">${st.map(s => `<span class="${fxCls(shinyLv(s.id)).trim()}" style="--rc:${RARITY[s.r].color}" data-act="st-preview" data-id="${s.id}" title="${esc(s.name)}">${stE(s)}${itemCount('sticker', s.id) > 1 ? `<i>×${itemCount('sticker', s.id)}</i>` : ''}</span>`).join('')}</div>
       <button class="block" data-go="#/shop">📖 Album i skrzynki w sklepie</button></div>
     <div class="card"><h2 style="margin-top:0">🎁 Skrzynki do otwarcia</h2>
-      ${cases.length ? cases.map(k => `<div class="row nowrap inv-case"><span style="font-size:30px">${CASES[k].icon}</span><b class="grow">${CASES[k].name} ×${itemCount('case', k)}</b><button class="primary sm" data-go="#/case/${k}?free=1">Otwórz</button></div>`).join('')
+      ${cases.length ? cases.map(k => `<div class="row nowrap inv-case"><span class="inv-crate">${crateImg(k)}</span><b class="grow">${CASES[k].name} ×${itemCount('case', k)}</b><button class="primary sm" data-go="#/case/${k}?free=1">Otwórz</button></div>`).join('')
         : '<p class="small muted" style="margin:0">Brak – darmowe skrzynki dostajesz za wygrane bitwy, zestawy fiszek i nagrody dnia.</p>'}</div>` };
 };
 Object.assign(ACTIONS, {

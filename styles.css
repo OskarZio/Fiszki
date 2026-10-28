@@ -2254,3 +2254,13 @@ button .hero-ic { flex: none; min-width: 28px; width: 28px; height: 28px; transf
 .cls-chat { display: flex; flex-direction: column; height: min(62dvh, 560px); padding: 10px !important; } .cls-chat .gc-list { flex: 1; }
 .cls-mem { gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); } .cls-mem:first-of-type { border-top: 0; }
 .cls-prev { border: 2px solid var(--accent); }
+/* 📦 skrzynki 8-bit */
+.crate-img { object-fit: contain; image-rendering: pixelated; }
+.crate-img.inline { width: 1.5em; height: 1.5em; vertical-align: -.4em; animation: none; filter: none; }
+.case-img.crate-img { width: 72px; height: 72px; }
+.inv-crate { flex: none; width: 46px; height: 46px; display: grid; place-items: center; } .inv-crate img { width: 46px; height: 46px; }
+.hc-ic { flex: none; } .hc-ic img { width: 60px; height: 60px; filter: drop-shadow(0 4px 8px rgba(0,0,0,.3)); }
+.chest.crate { display: grid; place-items: center; } .chest.crate img { width: 130px; height: 130px; filter: drop-shadow(0 8px 14px rgba(0,0,0,.35)); }
+.ev-chest .crate-img { width: 46px; height: 46px; display: block; }
+.dloot-crate { width: 44px; height: 44px; flex: none; }
+.dr-tile span .crate-img, .dr-got span .crate-img { width: 38px; height: 38px; vertical-align: middle; }

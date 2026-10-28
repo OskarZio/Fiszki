@@ -24,7 +24,7 @@ function loginState() {
 }
 function rewardInfo(r) {
   if (r.t === 'gems') return { icon: '💎', label: `+${r.n}`, name: `${r.n} kryształów` };
-  if (r.t === 'case') return { icon: CASES[r.k]?.icon || '🎁', label: r.k === 'epic' ? 'Mistrza' : r.k === 'basic' ? 'Nauki' : 'Skrzynka', name: CASES[r.k]?.name || 'Skrzynka' };
+  if (r.t === 'case') return { icon: typeof crateImg === 'function' ? crateImg(r.k, 'inline') : CASES[r.k]?.icon || '🎁', label: r.k === 'epic' ? 'Mistrza' : r.k === 'basic' ? 'Nauki' : 'Skrzynka', name: CASES[r.k]?.name || 'Skrzynka' };
   return { icon: '🃏', label: RARITY[r.r].name, name: `Naklejka: ${RARITY[r.r].name.toLowerCase()}`, color: RARITY[r.r].color };
 }
 function claimLogin() {

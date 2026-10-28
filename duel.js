@@ -202,7 +202,7 @@ function duelFightView() {
   const d = D, now = Date.now(), fx = d.fx && now - d.fx.t < 900 ? d.fx : null, q = d.q, a = d.ask;
   let panel;
   if (d.phase === 'fight' && d.mode === 'speed') panel = duelSpeedPanel(d);
-  else if (d.phase === 'end') panel = `<div class="dtext"><b>${d.won ? `🏆 ${esc(d.opp.nick)} pokonany! Wygrywasz!` : `💀 ${esc(d.me.nick)} pada… Wygrywa ${esc(d.opp.nick)}.`}</b><small>+${d.xp} XP${d.gems ? ` · +${d.gems} 💎` : ''} · ${d.stats.ok} dobrych, ${d.stats.bad} błędów</small>${d.loot?.length ? `<div class="dloot">${d.loot.map(k => `<span title="${esc(PVP[k][2])}"><b>${PVP[k][0]}</b>${PVP[k][1]}</span>`).join('')}</div><small>🎒 Nowe przedmioty PvP!</small>` : ''}</div>
+  else if (d.phase === 'end') panel = `<div class="dtext"><b>${d.won ? `🏆 ${esc(d.opp.nick)} pokonany! Wygrywasz!` : `💀 ${esc(d.me.nick)} pada… Wygrywa ${esc(d.opp.nick)}.`}</b><small>+${d.xp} XP${d.gems ? ` · +${d.gems} 💎` : ''} · ${d.stats.ok} dobrych, ${d.stats.bad} błędów</small>${d.loot?.length ? `<div class="dloot">${crateImg('pvp', 'dloot-crate')}${d.loot.map(k => `<span title="${esc(PVP[k][2])}"><b>${PVP[k][0]}</b>${PVP[k][1]}</span>`).join('')}</div><small>🎒 Nowe przedmioty PvP!</small>` : ''}</div>
     <div class="row" style="margin-top:8px">${d.bot ? '<button class="primary grow" data-act="duel-bot">🔁 Jeszcze raz</button>' : `<button class="primary grow" data-act="duel-rematch" ${d.myRematch ? 'disabled' : ''}>${d.myRematch ? '⏳ Czekam…' : d.oppRematch ? '✅ Rewanż!' : '🔁 Rewanż'}</button>`}<button class="grow" data-act="duel-leave">Wyjdź</button></div>`;
   else if (q) {
     const v = q.card, done = q.done;

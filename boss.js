@@ -737,7 +737,7 @@ function fightView() {
   const blocked = B.ice || B.bugs?.length, cm = cur?.cm, dis = blocked ? 'disabled' : '';
   const q = cur?.rev ? `<div class="ctext">${esc(v.ans)}</div><small class="muted">Do czego pasuje ta odpowiedź?</small>` : cm === 'pairs' ? '<div class="ctext">Połącz pytania z odpowiedziami</div><small class="muted">stuknij pytanie, potem odpowiedź · 2 pomyłki = cios</small>'
     : cm === 'tf' ? `${v.q}<div class="tf-claim">${esc(cur.claim)}</div>` : cm === 'flip' && B.shown ? v.a : v.q + (cur?.mask && !B.shown ? `<div class="mask">${esc(cur.mask)}</div>` : '');
-  const evChest = B.ev?.k === 'chest' ? '<button class="ev-chest" data-act="boss-evchest" aria-label="Złap skrzynkę">📦<small>Złap!</small></button>' : '';
+  const evChest = B.ev?.k === 'chest' ? `<button class="ev-chest" data-act="boss-evchest" aria-label="Złap skrzynkę">${crateImg('grab')}<small>Złap!</small></button>` : '';
   let ctrl = B.down ? `<div class="down-box">💀 Leżysz! ${B.coop ? 'Kolega może Cię reanimować – albo' : ''} odpowiedz dobrze 5×, żeby wstać (${B.selfRev || 0}/5)</div>` : '';
   if (cm === 'abcd') ctrl += `<div class="abcd-grid">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(cur.right ?? v.ans);
       return `<button class="abcd${o.length > 70 ? ' long' : ''}${pk ? right ? ' right' : B.picked === k ? ' wrong' : '' : ''}${hid ? ' hid' : ''}" data-act="boss-pick" data-k="${k}" ${pk || hid || blocked ? 'disabled' : ''}><i>${'ABCD'[k]}</i><span>${esc(o)}</span></button>`; }).join('')}</div>
@@ -798,7 +798,7 @@ function endView() {
     <p class="small">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best} · +${B.xp} XP</p>${badgesHTML(B)}
     <div class="row" style="margin-top:10px"><button class="primary grow" data-act="weekly-start">⚔️ Jeszcze raz</button><button class="grow" data-go="#/rank">🏆 Ranking</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
   const chest = won && B.chest?.n ? (B.chest.open ? `<div class="loot">${B.loot.map((it, i) => `<div class="loot-it roll" style="--d:${i * .35}s;--rc:${RARITY[it.r || 'rare'].color}"><div class="roll-strip" style="--d:${i * .35}s">${Array.from({ length: 14 }, () => `<span>${lootIcon(rollLoot(B.chest.tier))}</span>`).join('')}<span>${lootIcon(it)}</span></div><div class="roll-res" style="--d:${1.6 + i * .35}s">${lootHTML(it)}</div></div>`).join('')}</div>`
-      : `<button class="chest-btn" data-act="boss-chest"><div class="chest closed">${chestSVG()}</div><b>🎁 Skrzynia ×${B.chest.n} – stuknij, by otworzyć!</b></button>`) + oddsHTML(B.chest.tier) : '';
+      : `<button class="chest-btn" data-act="boss-chest"><div class="chest closed crate">${crateImg('boss')}</div><b>🎁 Skrzynia ×${B.chest.n} – stuknij, by otworzyć!</b></button>`) + oddsHTML(B.chest.tier) : '';
   const msg = won ? `+${B.gems} 💎 · +${B.xp} XP${b.repeat ? ' · boss opanowany – mniejsza nagroda' : ''}${B.caught ? ` · 🕵️ przyłapany ${B.caught}×${B.caught >= 2 ? ' (mniejsza skrzynia)' : ''}` : ''}`
     : B.why === 'cards' ? `Skończyły się fiszki – boss przetrwał. Serce zostaje. +${B.xp} XP` : `${B.lifeLost ? '🖤 Tracisz serce. ' : ''}+${B.xp} XP. Ulepsz bohatera, kup mikstury i spróbuj znowu.`;
   return { tab: 'arena', focus: true, html: `
