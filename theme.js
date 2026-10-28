@@ -46,6 +46,7 @@ const ACCENT_SWATCHES = ['#4f46e5', '#2563eb', '#0284c7', '#0891b2', '#0d9488', 
 const themeOwned = t => !t.price || (typeof hasItem === 'function' && hasItem('theme', t.id));
 function currentTheme() { return S.settings.theme || { id: 'auto' }; }
 function applyTheme() {
+  try { applyAppIcon(); } catch { /* jeszcze brak stanu */ }
   const th = currentTheme(), root = document.documentElement.style;
   document.body?.classList.toggle('px-theme', th.id === 'pixel' || !!th.pixel);
   const vars = ['--bg', '--bg-image', '--card', '--card2', '--text', '--muted', '--line', '--accent', '--accent2', '--accent-soft', '--shadow'];
@@ -137,6 +138,7 @@ ROUTES.theme = () => {
   return { tab: 'more', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/more">‹</button><h1 class="grow">Wygląd</h1></div>
   ${personalHTML()}
+  ${appIconHTML()}
   <div class="card"><h3 style="margin-top:0">Motywy</h3><div class="themes">${THEMES.map(t => {
     const owned = themeOwned(t), on = th.id === t.id;
     const bg = t.bg ? `background:${t.bg};background-image:${t.image || 'none'}` : 'background:linear-gradient(135deg,#f5f6fb 50%,#0f1117 50%)';
@@ -154,7 +156,31 @@ ROUTES.theme = () => {
   <button class="block" data-act="theme-pick" data-id="auto">↺ Przywróć systemowy (jasny/ciemny automatycznie)</button>` };
 };
 
+// ============================================================ Ikona aplikacji (ekran początkowy iPhone'a)
+// Domyślna jest czerwona (icons/apple-touch-icon.png). Inny kolor podmienia <link rel="apple-touch-icon"> i favicon –
+// Safari bierze ikonę w chwili „Do ekranu początkowego”, więc po zmianie trzeba aplikację usunąć z ekranu i dodać ponownie.
+const APP_ICONS = [['red', 'Czerwona'], ['blue', 'Niebieska'], ['purple', 'Fioletowa'], ['green', 'Zielona'], ['orange', 'Pomarańczowa'],
+  ['cyan', 'Turkusowa'], ['pink', 'Różowa'], ['ice', 'Lodowa'], ['violet', 'Indygo']];
+const appIconOf = () => APP_ICONS.some(([c]) => c === S?.settings?.appIcon) ? S.settings.appIcon : 'red';
+function applyAppIcon() {
+  const c = appIconOf(), touch = c === 'red' ? 'icons/apple-touch-icon.png' : `icons/alt/${c}-180.png`;
+  document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(l => { if (l.getAttribute('href') !== touch) l.setAttribute('href', touch); });
+  const fav = c === 'red' ? 'icons/favicon-64.png' : `icons/alt/${c}-180.png`;
+  document.querySelectorAll('link[rel="icon"]').forEach(l => { if (l.getAttribute('href') !== fav) l.setAttribute('href', fav); });
+}
+function appIconHTML() {
+  const cur = appIconOf();
+  return `<div class="card"><h3 style="margin-top:0">Ikona aplikacji</h3>
+    <div class="appicons">${APP_ICONS.map(([c, n]) => `<button class="appicon${c === cur ? ' on' : ''}" data-act="app-icon" data-c="${c}" aria-label="${n}" title="${n}"><img src="icons/alt/${c}-180.png" alt="" width="56" height="56" loading="lazy"></button>`).join('')}</div>
+    <p class="muted small" style="margin:10px 0 0">📱 iPhone: po zmianie usuń Fiszki z ekranu początkowego i dodaj ponownie (Safari → Udostępnij → „Do ekranu początkowego”). Dane zostają.</p></div>`;
+}
+
 Object.assign(ACTIONS, {
+  'app-icon': el => {
+    const c = el.dataset.c; if (!APP_ICONS.some(([x]) => x === c)) return;
+    S.settings.appIcon = c; applyAppIcon(); save(); render();
+    toast('Ikona ustawiona – na iPhonie dodaj aplikację ponownie do ekranu początkowego');
+  },
   'theme-pick': el => {
     const t = THEMES.find(x => x.id === el.dataset.id); if (!t) return;
     if (!themeOwned(t)) { if (confirm(`Motyw „${t.name}” kosztuje ${t.price} 💎. Przejść do sklepu?`)) go('#/shop'); return; }
