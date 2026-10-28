@@ -2714,3 +2714,8 @@ input::placeholder { text-overflow: ellipsis; }
 .quest { padding: 12px 0; gap: 12px; }
 .hubnav { margin-bottom: 14px; }
 button:has(> .gemw) { flex-wrap: wrap; column-gap: 5px; row-gap: 0; text-wrap: balance; }
+/* ranking: nick i wynik nie zachodzą na siebie – wynik schodzi pod nick, gdy brak miejsca */
+.rankrow .grow > .row.nowrap { flex-wrap: wrap; column-gap: 12px; row-gap: 2px; }
+.rankrow .nickrow { flex: 1 1 auto; min-width: 0; gap: 6px; }
+.rankrow .nickrow .nm { max-width: 100% !important; }
+.rankrow .grow > .row.nowrap > span:last-child { flex: none; white-space: nowrap; }
