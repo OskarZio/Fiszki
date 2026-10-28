@@ -298,6 +298,20 @@ end $$;
 drop trigger if exists class_msg_guard on public.class_msgs;
 create trigger class_msg_guard before insert on public.class_msgs for each row execute function public.class_msg_guard();
 
+-- profile (nick + zdjęcie) widzą też osoby z tej samej klasy
+create or replace function public.shares_class(other uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.class_members a join public.class_members b on b.class_id = a.class_id
+    where a.user_id = auth.uid() and b.user_id = other);
+$$;
+revoke all on function public.shares_class(uuid) from public, anon;
+grant execute on function public.shares_class(uuid) to authenticated;
+drop policy if exists "profile_read" on public.profiles;
+create policy "profile_read" on public.profiles for select to authenticated using (
+  id = auth.uid()
+  or (stats ->> 'showGlobal') = '1'
+  or exists (select 1 from public.friends f where (f.user_id = auth.uid() and f.friend_id = profiles.id) or (f.friend_id = auth.uid() and f.user_id = profiles.id))
+  or public.shares_class(id));
+
 -- Wersja skryptu – aplikacja sprawdza ją w Panelu hosta („Aktualizacja bazy”)
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-28'::text $$;
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-28b'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

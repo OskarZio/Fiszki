@@ -166,7 +166,7 @@ viewMore = function () { return prMore0() + `<div class="card small center legal
 if (/(access_token|refresh_token)=/.test(location.hash)) history.replaceState(null, '', location.pathname);
 
 // ---------- 🛠️ Panel hosta: aktualizacja bazy jednym przyciskiem + dane administratora (RODO)
-const DB_VERSION = '2026-10-28';   // podbijaj razem z public.db_version() w supabase.sql
+const DB_VERSION = '2026-10-28b';   // podbijaj razem z public.db_version() w supabase.sql
 let DB_STATE = null, DB_SQL = '';  // null = nie sprawdzono, 'ok', 'old', 'err'; skrypt pobrany z góry (schowek na iPhonie wymaga kliknięcia bez czekania)
 async function dbCheck(quiet) {
   if (!SB) { DB_STATE = 'err'; return; }
