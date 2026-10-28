@@ -50,7 +50,7 @@ function gem8Decorate(root = document.body) {
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.includes('💎') && !n.parentElement?.closest('textarea, input, select, option, script, style, [contenteditable], svg') ? 1 : 3 });
   const hits = []; while (w.nextNode()) hits.push(w.currentNode);
   for (const t of hits) {
-    const span = document.createElement('span'); span.innerHTML = t.nodeValue.split('💎').map(s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])).join(GEM8_IMG);
+    const span = document.createElement('span'); span.innerHTML = t.nodeValue.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]).replace(/((?:[·•–-]\s)?\S*\s?)💎/g, (m, w) => `<span class="gemw">${w}${GEM8_IMG}</span>`);   // klejnot nie spada sam do nowej linii
     t.replaceWith(...span.childNodes);
   }
 }

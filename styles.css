@@ -1973,7 +1973,7 @@ img.gem8 { width: 1.15em; height: 1.15em; vertical-align: -.22em; object-fit: co
 .rune-pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; } .rune-pad .rune { width: 66px; height: 66px; font-size: 32px; } .rune-pad .rune:active { transform: scale(.92); box-shadow: 0 0 16px var(--c); }
 .rune-dots { display: flex; gap: 6px; } .rune-dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--card2); } .rune-dots i.on { background: var(--accent); }
 .pet-btn { position: relative; width: 50px; height: 50px; min-height: 0; padding: 2px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); flex: none; } .pet-btn svg { width: 100%; height: 100%; } .pet-btn small { position: absolute; right: -4px; bottom: -4px; font-size: 14px; }
-.badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0; }
+.badges:has(.badge-st) { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0; }
 .badge-st { display: flex; flex-direction: column; align-items: center; padding: 8px 12px; border-radius: 14px; background: linear-gradient(135deg, #fef3c7, #fde68a); color: #78350f; font-size: 12px; font-weight: 700; animation: pop .4s backwards; } .badge-st b { font-size: 22px; } .badge-st small { font-size: 10px; }
 .pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
 .pet { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; min-height: 0; border-radius: 14px; background: var(--card2); border: 2px solid transparent; font: inherit; color: inherit; text-align: center; } .pet.on { border-color: var(--accent); }
@@ -2698,3 +2698,19 @@ body.focus main:has(.bf) { padding-left: 12px !important; padding-right: 12px !i
 .char-buy { display: inline-flex !important; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; font-size: 14px !important; padding: 9px 6px !important; border-radius: 12px !important; }
 .char-buy img, .char-buy .gem8 { width: 16px !important; height: 16px !important; margin: 0 !important; vertical-align: middle; flex: none; }
 .char-acc { font-size: 12.5px !important; line-height: 1.35; }
+/* ===== przegląd odstępów (całość) ===== */
+.gemw { white-space: nowrap; }
+.badges:not(:has(.badge-st)) { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.badge { padding: 14px 10px; gap: 6px; }
+/* pola z placeholderem w wierszu – tekst podpowiedzi nie ucina się brzydko */
+.row.nowrap > input.grow::placeholder { letter-spacing: 0 !important; font-size: 15px; }
+input::placeholder { text-overflow: ellipsis; }
+/* nagłówki sekcji: równy rytm */
+#view > h2, #view > h3, .card > h2:first-child, .card > h3:first-child { margin-top: 0; }
+#view > h2 { margin: 22px 0 10px; }
+/* listy w kartach: oddech między punktami */
+.card ul:not(.wl-pts) li + li { margin-top: 4px; }
+/* kafelki zadań dnia, nagród, przedmiotów: równe odstępy */
+.quest { padding: 12px 0; gap: 12px; }
+.hubnav { margin-bottom: 14px; }
+button:has(> .gemw) { flex-wrap: wrap; column-gap: 5px; row-gap: 0; text-wrap: balance; }
