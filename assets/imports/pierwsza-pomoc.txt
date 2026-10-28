@@ -1,0 +1,290 @@
+// Pierwsza pomoc – zaliczenie AWF 2025/2026. Tylko fragmenty zaznaczone na czerwono w materiałach.
+#fiszki
+#talia: Pierwsza pomoc – zaliczenie
+#przedmiot: med
+// ---------- Ocena i schematy
+Ocena miejsca zdarzenia – co obejmuje? (5) | Bezpieczeństwo własne, innych ratowników, świadków i poszkodowanych\nCharakter zdarzenia (np. mechanizm urazu)\nLiczba poszkodowanych – selekcja/triage\nRyzyko zakażenia krwią (HBV, HCV, HIV…)\nPotrzeba dodatkowej pomocy lub sprzętu | Kolejność: ja → co się stało → ilu → krew → czego brakuje
+Ocena stanu poszkodowanego – schemat ABCDE | A (airway) – niedrożność dróg oddechowych\nB (breathing) – niewydolność oddechowa (brak oddechu lub oddech agonalny)\nC (circulation) – krwotok, wstrząs, niewydolność serca\nD (disability) – obniżenie progu świadomości\nE (exposure) – uwidocznienie okolicy
+ABCDE – co oznacza A (airway)? | Niedrożność dróg oddechowych
+ABCDE – co oznacza B (breathing)? | Niewydolność oddechowa (brak oddechu lub oddech agonalny)
+ABCDE – co oznacza C (circulation)? | Krwotok, wstrząs, niewydolność serca
+ABCDE – co oznacza D (disability)? | Obniżenie progu przytomności/świadomości (ocena skalą AVPU)
+ABCDE – co oznacza E (exposure)? | Uwidocznienie okolicy (odsłonięcie, obejrzenie ciała)
+Skala AVPU – rozwiń skrót | A (alert) – świadomy\nV (verbal) – reaguje na głos\nP (pain) – reaguje na ból\nU (unresponsive) – całkowity brak reakcji | Od najlepszego do najgorszego: przytomny → głos → ból → nic
+AVPU: poszkodowany reaguje tylko na ból – która litera? | P (pain)
+AVPU: całkowity brak reakcji – która litera? | U (unresponsive)
+Szybka ocena pourazowa – jak się ją wykonuje i czego szukamy? | „Od głowy do stóp” – szukamy: rany, bólu, deformacji
+Wywiad wg schematu SAMPLE – rozwiń skrót | S – objawy (signs/symptoms)\nA – alergie\nM – leki (medicines)\nP – poprzednie zachorowania (past)\nL – ostatni posiłek (last meal)\nE – zdarzenia przed wypadkiem, co go spowodowało (events)
+SAMPLE – co oznacza litera L? | Last meal – ostatni posiłek
+SAMPLE – co oznacza litera E? | Events – zdarzenia przed wypadkiem (co go spowodowało)
+SAMPLE – co oznacza litera M? | Medicines – leki
+Numer alarmowy do wezwania ZRM | 112
+Co przekazać, wzywając pomoc (112)? | Rodzaj zdarzenia (wypadek, wypadek masowy, nagłe zachorowanie…)\nLiczbę ofiar (nawet przybliżoną) i ich stan\nMiejsce zdarzenia (ew. optymalną drogę dojazdu)\nSzczególne cechy poszkodowanego (dziecko, ciężarna, niepełnosprawny)\nInne niebezpieczeństwa (potrzeba innych służb)\n(Kto wzywa, nr telefonu – jeśli trzeba)
+Najważniejsza zasada na koniec rozmowy z dyspozytorem 112 | NIE ROZŁĄCZAJ SIĘ!
+Co oznacza skrót ZRM? | Zespół ratownictwa medycznego
+Najważniejsze czynności ratownicze (7) | Udrożnienie dróg oddechowych\nWspomaganie oddechu lub RKO/CPR\nTamowanie krwawienia\nUłożenie poszkodowanego (pozycja bezpieczna lub zastana)\nOchrona przed temperaturą – komfort termiczny\nUnieruchomienie kończyn i/lub kręgosłupa przy podejrzeniu uszkodzenia\nWezwanie pomocy i pozostanie przy poszkodowanym – wsparcie psychiczne
+Skrót WTOPA – rozwiń | W – wsparcie psychiczne\nT – tlen (jeśli jest)\nO – okrycie/komfort termiczny\nP – pozycja\nA – kontrola ABC
+WTOPA – co oznacza O? | Okrycie / komfort termiczny
+WTOPA – co oznacza A? | Kontrola ABC
+„Złota godzina” – na czym polega? | Ok. 85% szans na przeżycie po ciężkim urazie mają pacjenci, którzy trafią na salę operacyjną w ciągu godziny (dr R. Adams Cowley, Shock-Trauma Unit, Baltimore)
+„Złota godzina” – ile wynoszą szanse na przeżycie przy operacji w ciągu godziny od ciężkiego urazu? | Ok. 85%
+„Platynowe 10 minut” – skutki niedotlenienia mózgu w czasie | 0–4 min – brak konsekwencji\n4–6 min – uszkodzenie mózgu prawdopodobne\n6–10 min – uszkodzenie mózgu wysoce prawdopodobne
+Niedotlenienie mózgu przez 4–6 minut – jakie skutki? | Uszkodzenie mózgu prawdopodobne
+Niedotlenienie mózgu przez 0–4 minuty – jakie skutki? | Brak konsekwencji
+// ---------- Triaż
+TRIAGE (triaż) – co to jest? | Segregacja: przydzielenie odpowiednich kolorów osobom poszkodowanym
+Co oznacza skrót systemu START? | Simple Triage And Rapid Treatment
+START – ile jest kategorii (kolorów) poszkodowanych? | Cztery (opaski lub plakietki)
+Triaż START – znaczenie kolorów | Czarny – brak oddechu i tętna\nCzerwony – transport w pierwszej kolejności\nŻółty – transport w drugiej kolejności\nZielony – transport jako ostatni
+Triaż: kolor czarny oznacza… | Brak oddechu i tętna
+Triaż: kolor czerwony oznacza… | Transport w pierwszej kolejności
+Triaż: kolor żółty oznacza… | Transport w drugiej kolejności
+Triaż: kolor zielony oznacza… | Transport jako ostatni
+// ---------- Obrażenia, rany
+Ogólny schemat postępowania przy większości obrażeń (zwłaszcza układu ruchu) – PRICE | P – protection (zabezpieczenie poszkodowanego i okolicy)\nR – rest (unieruchomienie miejscowe lub ogólne)\nI – ice (schładzanie lodem/żelem, 10’+10’… ok. 60–90’)\nC – compression (ucisk)\nE – elevation (uniesienie, jeśli obrażenie dotyczy kończyn)
+PRICE – co oznacza I i jak długo? | Ice – schładzanie lodem/żelem (10’+10’… łącznie ok. 60–90 min)
+PRICE – co oznacza E? | Elevation – uniesienie (jeśli obrażenie dotyczy kończyn)
+Podział ran (11 rodzajów) | Cięta, darta/szarpana, drążąca, kąsana, kłuta, miażdżona/tłuczona, oparzeniowa, otwarta, postrzałowa, rąbana, z podmuchu
+Rana cięta – czym spowodowana? | Ostrymi przedmiotami
+Rana kłuta – charakterystyka | Uraz przenikający, spowodowany przedmiotami ostrymi
+Rana rąbana – czym spowodowana? | Narzędziami ostrymi i ciężkimi
+Rana kąsana – czym spowodowana? | Ugryzieniem przez ludzi lub zwierzęta
+Rana postrzałowa – czym spowodowana? | Bronią palną o różnym kalibrze
+Krwotok zewnętrzny – postępowanie | Ocena stanu poszkodowanego (przytomność, oddech)\nWezwanie pomocy (jeśli trzeba)\nTamowanie – opatrunek uciskowy (bezpośredni ucisk jałowym opatrunkiem i umocowanie; ew. więcej warstw, ew. staza)\nPRICE\nEwentualnie ucisk bezpośredni na tętnicę
+Mała rana bez intensywnego krwawienia – postępowanie | Ocena rany (uwidocznienie – E)\nWybór strategii\nDebridement: przemyć/spłukać bieżącą wodą\nLawaseptyk (oczyszczenie, nawilżenie)\nAntyseptyk (jeśli stan zapalny)\nWiększe, zanieczyszczone rany – środek odkażający\n„Ubranie rany”: jałowe gaziki/kompresy\nZabandażować (opaska, chusta)
+Co to jest debridement małej rany? | Przemycie/spłukanie rany bieżącą wodą
+Lawaseptyk – do czego służy? | Do oczyszczenia i nawilżenia rany
+Kiedy przy małej ranie stosujemy antyseptyk? | Gdy jest stan zapalny
+Duża rana / intensywne krwawienie / krwotok – postępowanie | Zatamować krwotok (!): ucisk kompresem i/lub zwiniętym bandażem + zabandażować\nSpecjalistyczny opatrunek (jeśli masz)\nOstatecznie improwizowany opatrunek (niejałowy) + ucisk\nRozważ opaskę/stazę\nUnieruchomić (opaska, chusta)\nTransport lub wezwanie pomocy (112/999)
+Jakie środki stosujemy w przypadku rany? (4 grupy) | Dichlorowodorek oktenidyny (OCT)\nPoliheksametylen biguanidu (PHMB)\nPochodne kwasu podchlorawego (HOCL)\nPochodne związków jodu, np. jodopowidon (PVP-I)
+Skrót OCT (środek do ran) | Dichlorowodorek oktenidyny
+Skrót PHMB (środek do ran) | Poliheksametylen biguanidu
+Skrót HOCL (środek do ran) | Pochodne kwasu podchlorawego
+Octenisept – czego nie wolno? | Nie stosować ze srebrem, do ran głębokich i przetok
+Sutrisept – właściwości i zastosowanie | Późny efekt przeciwdrobnoustrojowy/bakteriobójczy; rany zakażone, krytycznie skolonizowane, oparzeniowe; usuwa martwicę
+Microdacyn – działanie | Przeciwwirusowe, przeciwbakteryjne, przeciwgrzybicze, przeciw zarodnikom
+Betadine – działanie | Jak Microdacyn (wirusy, bakterie, grzyby, zarodniki) + pierwotniaki
+Czego NIE stosujemy w przypadku rany? | Antybiotykoterapii miejscowej\nChlorheksydyny\nEtanolu\nRivanolu (mleczan etakrydyny)\n3% nadtlenku wodoru (woda utleniona)\nZwiązków rtęci\nNitrofuralu (Nitrofurazol)\nChloraminy\nWaty i wacików kosmetycznych | Bo działają cytotoksycznie, mutagennie, neurotoksycznie, są nieskuteczne lub opóźniają gojenie
+Dlaczego przy ranie nie stosujemy antybiotyku miejscowo? | Jest nieskuteczny i powoduje selekcję szczepów opornych
+Czy wodę utlenioną (3% nadtlenek wodoru) stosujemy na rany? | Nie – działa cytotoksycznie i opóźnia gojenie
+Opatrunek przesiąka krwią – co robisz? | Nie usuwasz kompresów – dokładasz kolejne warstwy
+Czy sprawdzamy, czy rana krwawi, odsłaniając opatrunek? | Nie – tylko obserwacja
+Ostry przedmiot wbity w ranę – usuwać? | Nie – ryzyko krwotoku
+Opaska uciskowa / staza taktyczna – kiedy się ją stosuje? | Wyjątkowo (!) – głównie przy amputacjach, ranach kłutych i postrzałowych
+Powikłania opaski uciskowej (stazy) | Uszkodzenia naczyń, nerwów, mięśni oraz martwica tkanek leżących obwodowo (niedokrwienie)
+Zasady zakładania opaski uciskowej (stazy) | Możliwie szeroki bandaż\nNie poluźniać raz założonej\nNie przykrywać\nOznaczyć napisem „opaska uciskowa” i podać godzinę założenia
+// ---------- Zakażenia ran
+Posocznica (sepsa) – czym jest i jakie są wczesne objawy? | Bakteriemia – „zakażenie krwi”, groźne powikłanie mogące doprowadzić do śmierci. Wczesne objawy: pulsujący ból, zaczerwienienie, obrzęk, gorączka, czerwone smugi (zapalenie naczyń chłonnych)
+Czerwone smugi wokół rany – o czym świadczą? | Zapalenie naczyń chłonnych – wczesny objaw posocznicy (sepsy)
+Tężec – przyczyna | Bakterie zarodnikowe, beztlenowe – Clostridium tetani
+Tężec – jakie rany są szczególnie podatne? | Rozległe rany miażdżone
+Tężec – jaki jest pierwszy objaw skurczu mięśni? | Skurcz żwaczy – szczękościsk (trismus), „uśmiech sardoniczny” (risus sardonicus)
+Tężec – co powodują toksyny bakteryjne (egzotoksyny)? | Skurcze mięśni (najpierw żwaczy), potem odruchowy i toniczny skurcz wszystkich grup mięśni: dysfagia, opistotonus, zgięcie ramion, zaciśnięte pięści, wyprost kończyn dolnych
+Tężec – czy pacjent jest przytomny w czasie skurczu? | Tak – chyba że dojdzie do skurczu mięśni krtani i oddechowych (→ niewydolność oddechowa)
+Tężec – czas rozwoju objawów od urazu | 1–60 dni (zwykle 7–21 dni)
+Tężec – postacie kliniczne | Miejscowy, uogólniony, z zajęciem głowy, noworodkowy
+Która postać tężca ma szczególnie złe rokowanie? | Tężec głowy (po ranach głowy i szyi)
+Tężec – na czym opiera się rozpoznanie? | Na objawach klinicznych (brak badań laboratoryjnych i mikrobiologicznych)
+Tężec – schemat pełnego szczepienia czynnego | Po I dawce: druga po miesiącu, trzecia po roku; dawka przypominająca po 3 latach
+Tężec – szczepienie bierne | Anatoksyna – akceptowane podanie do kilku dni od urazu
+Tężec – co dzieje się w 2. tygodniu choroby (układ autonomiczny)? | Przewaga układu sympatycznego: tachykardia, labilne ciśnienie, nasilone pocenie, bardzo wysoka gorączka
+Wścieklizna – przyczyna i droga zakażenia | Wirus w ślinie zwierzęcia (ukąszenie, zadrapanie, polizanie)
+Wścieklizna – kiedy występują pierwsze objawy? | Od 15. dnia do 4. miesiąca (zwykle 35–64 dni; wyjątkowo nawet 700 dni)
+Wścieklizna – objawy | Trudności w połykaniu, bóle głowy, wodowstręt, ból i parestezje w miejscu pokąsania; bardzo wysoka gorączka, rozszerzone źrenice, łzawienie i ślinotok; terminalnie: śpiączka, drgawki, bezdech
+Wodowstręt – na czym polega? | Niechęć do picia – reakcja na widok, dźwięk, połykanie wody, a nawet wzmiankę o niej (wścieklizna)
+Wścieklizna – objawy terminalne | Śpiączka, drgawki i bezdech
+Wścieklizna – które zwierzęta chorują? | Skunksy, szopy, jenoty, borsuki, nietoperze, krowy, psy, lisy, koty
+Wścieklizna – ukąszenia których zwierząt NIE stanowią ryzyka? | Gryzonie (wiewiórki, szczury, myszy), króliki, zające, susły – nigdy nie stwierdzono nosicielstwa
+Czy wścieklizna jest uleczalna po wystąpieniu objawów? | Nie – choroba jest śmiertelna dla ludzi i zwierząt
+Zgorzel gazowa – przyczyna | Bakterie beztlenowe Clostridium produkujące gaz
+Zgorzel gazowa – jakie rany są szczególnie podatne? | Głębokie, rozległe rany tkanek miękkich
+Zgorzel gazowa – co słychać przy nacisku obrzęku? | Trzeszczenia
+Zgorzel gazowa – kiedy pojawiają się pierwsze objawy? | 24–72 godziny od zakażenia
+Zgorzel gazowa – pierwotny obraz kliniczny | Gorączka, obrzęk, rumień oraz ból nieproporcjonalny do zmian miejscowych
+Zgorzel gazowa – co dzieje się po 2–5 dniach? | Pęcherze skórne i martwica, zanika ból (martwica nerwów powierzchniowych)
+Zgorzel gazowa – w jakim czasie martwica mięśnia może zakończyć się zgonem? | W ciągu 12 godzin
+Zgorzel gazowa – leczenie i śmiertelność | Konieczna rozległa toaleta chirurgiczna rany; przy szybkim usunięciu tkanek martwiczych śmiertelność < 20%
+// ---------- Amputacja
+Amputacja – co jest priorytetem? | Zatrzymanie krwawienia przez bezpośredni ucisk kikuta opatrunkiem
+Amputacja – jak zabezpieczyć amputowaną część? (metoda preferowana) | Zanurzyć w 0,9% NaCl lub płynie Ringera i umieścić w torbie z lodem – mniejsze ryzyko przemarznięcia; nigdy lód bezpośrednio!
+Amputacja – druga metoda zabezpieczenia części | Zawinąć w gazę nasączoną 0,9% NaCl lub płynem Ringera, włożyć do plastikowej torby zanurzonej w lodzie
+Czy amputowaną część można włożyć bezpośrednio do lodu? | Nie – ryzyko przemarznięcia
+Jak długo można przechować schłodzony amputowany palec? | 24–30 godzin (zimne niedokrwienie)
+Jak długo można przechować schłodzoną proksymalnie amputowaną część kończyny? | Do 12 godzin (zimne niedokrwienie)
+Czas przechowania amputowanej części bez oziębienia (palec / kończyna) | 12 godzin / 6 godzin (ciepłe niedokrwienie)
+Na czym polega zabieg przy amputacji częściowej? | Na rewaskularyzacji
+// ---------- Urazy twarzy, nosa, zębów
+Urazy twarzy – czego NIE robić? | Nie podawać niczego doustnie\nNie nastawiać złamań\nNie wyjmować ciał obcych z ran\nNie wyrzucać wybitych zębów\nNie zostawiać ratowanego samego
+Urazy twarzy – kiedy wezwać pogotowie? | Gdy urazowi towarzyszą nudności, wymioty, zaburzenia mowy, świadomości, widzenia lub niepamięć wsteczna; obserwuj, czy nie doszło do zadławienia (wymioty, skrzepy, zęby)
+Krwawienie z nosa (jedyny objaw) – co polecić poszkodowanemu? | Pochylić się do przodu i oddychać przez usta
+Ciało obce w nosie – postępowanie | Nie usuwać (ryzyko wepchnięcia); ewentualnie zachęcić do wydmuchnięcia
+Urazy nosa – czego NIE robić? | Nie nastawiać złamań\nNie wyrzucać amputowanych części\nNie wyjmować ciał obcych
+Wybity ząb – gdzie go zabezpieczyć? | W jamie ustnej – przy policzku
+Urazy zębów – czego NIE robić? | Nie wyrzucać wybitych zębów\nNie podawać płynów\nNie zostawiać poszkodowanego samego (ryzyko zakrztuszenia)
+Urazy zębów – dokąd transport? | Na oddział chirurgii twarzowo-szczękowej
+// ---------- Oparzenia
+Oparzenie – definicja i przyczyny (z odsetkami) | Obrażenie tkanek pod wpływem wysokiej temperatury (gaz, ciecz, ciało stałe) – 90%, płynów żrących (kwasy i ługi) – 5%, prądu elektrycznego/pioruna – 5%
+Sparzenie – definicja | Skaleczenie (oparzenie) skóry gorącym płynem
+Oparzenie słoneczne – przyczyna | Promieniowanie ultrafioletowe (UV)
+Przy jakim odsetku oparzonej powierzchni może dojść do wstrząsu? | Ok. 15% (utrata płynów, białka i soli + ból)
+Od czego zależą objawy i rokowanie przy oparzeniu? | Rozległość (powierzchnia i głębokość)\nLokalizacja\nDodatkowe powikłania\nWiek ofiary
+Reguła „9” (Wallace’a) – wartości | Głowa – 9% (dzieci do 5 r.ż. – 18%, powyżej 5 r.ż. – 13%)\nPrzód i tył tułowia – po 18%\nKażda kończyna górna – 9%\nKażda kończyna dolna – 18%\nKrocze (dorośli) – 1%
+Reguła 9: ile procent to głowa dorosłego? | 9%
+Reguła 9: ile procent to głowa dziecka do 5 r.ż.? | 18%
+Reguła 9: ile procent to głowa dziecka powyżej 5 r.ż.? | 13%
+Reguła 9: ile procent to każda kończyna dolna? | 18%
+Reguła 9: ile procent to każda kończyna górna? | 9%
+Reguła 9: ile procent to krocze u dorosłych? | 1%
+Oparzenie I stopnia – co jest uszkodzone i jakie objawy? | Naskórek – martwica warstwy rogowej (rumień i obrzęk)
+Oparzenie II stopnia – co jest uszkodzone i jakie objawy? | Powierzchowne warstwy skóry właściwej (rumień, pęcherze, czucie zachowane)
+Oparzenie III stopnia – co jest uszkodzone i jakie objawy? | Skóra właściwa z przydatkami i tkanka podskórna (skóra sucha, biała lub szara, możliwy strup, brak czucia bólu)
+Które oparzenia wymagają przeszczepów skóry? | Oparzenia III stopnia
+Dlaczego w oparzeniu III stopnia nie ma bólu? | Uszkodzone są zakończenia nerwowe
+Kogo dotyczy największe ryzyko oparzeń? | Dzieci pięcioletnich – druga przyczyna wypadków śmiertelnych (!)
+Oparzenie – jak długo chłodzić ranę? | Kilkanaście minut – min. 10 (chłodna, bieżąca woda) [3×10]
+Oparzenie chemiczne – jak długo płukać? | Bieżącą wodą min. 20 minut
+Oparzenie wapnem niegaszonym – co najpierw? | Najpierw usunąć pozostałości wapna, dopiero potem płukać
+Oparzenie elektryczne – na co szczególnie uważać? | Sprawdzać funkcje życiowe – ryzyko zatrzymania lub zaburzeń oddechu i czynności serca
+Oparzenia ust i gardła – postępowanie | Płukanie zimną wodą lub ssanie lodu
+Palący się / przyklejony materiał na ciele – co robić? | Usunąć palący się materiał, ale przylegającego do skóry nie zrywać
+Oparzenie – czym osłonić ranę? | Czystym prześcieradłem, ręcznikiem lub optymalnie jałowym, suchym opatrunkiem
+Oparzenie – co zdjąć ze względu na obrzęk? | Biżuterię i ciasną garderobę (pierścionki, obrączka, krawat)
+Oparzenie oka – postępowanie | Obficie i natychmiast płukać
+Pierwsza pomoc przy oparzeniach – kolejne kroki | Usunąć z zagrożonego obszaru\nOdizolować czynnik parzący\nUsunąć palący się materiał (przyklejonego nie zrywać)\nDrożność dróg oddechowych\nChłodzić min. 10 min\nUnieść kończynę\nOsłonić ranę jałowym opatrunkiem\nZdjąć biżuterię\nChronić przed wyziębieniem\nPrzy wstrząsie – pozycja przeciwwstrząsowa\nPrzygotować do transportu
+Oparzenia – kiedy potrzebna pomoc medyczna? | Niemowlęta i dzieci (zawsze)\nCiężkie oparzenia dorosłych\nTwarz, ręce, stopy, okolice genitalne\nCałe kończyny\nII stopień ≥ 9% (powierzchnia dłoni)\nI stopień – 5 dłoni poszkodowanego\nMieszana lub trudna do ustalenia głębokość
+Oparzenia – czego NIE robimy? | Nie zrywać odzieży przyklejonej do skóry\nNie polewać rozległych oparzeń (tylko wilgotne tkaniny)\nNie stosować maści, kremów, okładów na świeże oparzenia\nNie neutralizować kwasów zasadami i odwrotnie – tylko woda
+Czy oparzenie kwasem neutralizujemy zasadą? | Nie – stosujemy jedynie wodę
+Rozległe oparzenie – polewać wodą? | Nie – schładzać jedynie wilgotnymi tkaninami
+Oparzenie słoneczne – postępowanie | Przenieść w cień\nOsłonić lekkim materiałem/ręcznikiem\nUsunąć odzież\nSchładzać mokrym ręcznikiem lub gąbką\nPodać wodę do picia (jeśli trzeba)\nPrzy łagodnym – żel, krem, pianka (kalamina)
+// ---------- Wstrząs
+Przyczyny wstrząsu | Krwotok, uraz OUN, oparzenia, odmrożenia, złamania, uduszenie dymem, porażenie prądem, porażenie cieplne/udar, odwodnienie, ukąszenia gadów i owadów, zatrucia (insulina, barbiturany, narkotyki, leki uspokajające), reakcje uczuleniowe na leki
+Objawy wstrząsu | Osłabienie, splątanie i lęk, pragnienie, bladość, spocona zimna skóra, tachykardia, tachypnoe, hipotensja (RR skurczowe < 90 mmHg), zmniejszona diureza, nitkowate tętno, nawrót kapilarny > 2 s, zaburzenia świadomości, zatrzymanie krążenia
+Wstrząs – jaka wartość ciśnienia skurczowego oznacza hipotensję? | RR skurczowe < 90 mmHg
+Wstrząs – czas nawrotu kapilarnego | Opóźniony – powyżej 2 sekund
+Wstrząs – skąd blada, spocona, zimna skóra? | Działanie katecholamin (skurcz naczyń) i utrata krwi
+Wstrząs – postępowanie | Pozycja przeciwwstrząsowa\nZapewnienie prawidłowej wentylacji\n(Tlenoterapia – jeśli dostępna)\nKomfort termiczny
+Kiedy NIE układamy w pozycji przeciwwstrząsowej? | Urazy czaszkowo-mózgowe (rany głowy), udar, zawał serca oraz problemy płucne
+Dlaczego trzeba znać przyczyny i objawy wstrząsu? | Bo wstrząs poprzedza sytuację wymagającą RKO
+// ---------- Zatrucia
+Trucizna – definicja | Substancja, która po przedostaniu się do organizmu zaburza jego funkcje, powodując zatrucie (przypadkowe lub samobójcze)
+Najczęstsze zatrucia | Zatrucia lekami
+Najgroźniejsze zatrucia | Środkami uszkadzającymi OUN, układ bodźcoprzewodzący serca, mięśnie, układ krwionośny i narządy miąższowe (wątroba)
+Drogi przedostawania się trucizny do organizmu | Przewód pokarmowy\nDrogi oddechowe\nSkóra i błony śluzowe\nWkłucia (donaczyniowe, domięśniowe, podskórne)
+Objawy zatrucia ze strony układu pokarmowego | Nudności, wymioty, bóle brzucha, biegunka
+Objawy zatrucia ze strony układu oddechowego | Trudności w oddychaniu, depresja układu oddechowego
+Objawy zatrucia ze strony skóry i błon śluzowych | Oparzenie, zaczerwienienie, pęcherze
+Ocena miejsca zdarzenia przy zatruciach – na co zwrócić uwagę? | Pracujący silnik w garażu (CO)\nPomieszczenia ogrzewane piecem/kominkiem (CO)\nPrace rolnicze (herbicydy, pestycydy)\nOpakowania po lekach, chemikaliach\nWymiociny
+Postępowanie w przypadku zatruć | Bezpieczeństwo własne (!)\nUsunięcie z niebezpiecznego otoczenia (np. CO)\nOcena i zabezpieczenie ABC\nWezwanie karetki\nPrzy substancjach żrących/benzynie – unikać wdychania powietrza wydechowego poszkodowanego\nJak najszybsze usunięcie trucizny\nZabezpieczenie opakowań i wymiocin do szpitala
+Jak prowokować wymioty w zatruciu przez przewód pokarmowy? | U przytomnych: letnia woda (ok. 1–1,5 l) i/lub podrażnienie tylnej ściany gardła – do uzyskania czystych wymiocin
+Kiedy NIE wolno prowokować wymiotów? | U nieprzytomnych\nPrzy niesprawnych odruchach gardła i krtani\nW zatruciu substancjami żrącymi (perforacja) i drażniącymi drogi oddechowe (benzyna, nafta)\nW zatruciu substancjami oleistymi (zachłyśnięcie)
+Zatrucie przez drogi oddechowe – postępowanie | Wynieść na świeże powietrze\nZakaz urządzeń elektrycznych i palenia (wybuch)\nPrzy braku świadomości – jak z nieprzytomnym
+Zatrucie przez skórę – postępowanie | Rękawice ochronne\nZdjąć odzież\nPłukać letnią wodą kilkanaście minut\nNie używać szczotek (przekrwienie → szybsze wchłanianie)\nNie stosować środków zobojętniających (reakcja egzotermiczna)\nPo przepłukaniu – jałowe opatrunki
+Zatrucie przez skórę – dlaczego nie szorujemy szczotką? | Przekrwienie zwiększa tempo wchłaniania trucizny
+Ukąszenie węża / użądlenie – opóźnienie wchłaniania trucizny | Unieruchomienie poszkodowanego i kończyny. NIE: opaska uciskowa proksymalnie, NIE: zimne okłady
+Gazy duszące – przykłady (fizycznie / chemicznie) | Fizycznie: azot, metan, wodór, argon, hel, neon\nChemicznie: CO₂, CO, cyjanowodór, siarkowodór
+Gazy drażniące – działanie i przykłady | Utleniają lub denaturują białka; np. amoniak, aldehyd mrówkowy, chlor, dwutlenek siarki, tlenek azotu, fosgen
+Co mogą powodować gazy drażniące? | Zależnie od czasu i stężenia: podrażnienie spojówek, górnych dróg oddechowych lub obrzęk płuc
+Zatrucie gazami – postępowanie | Bezpieczeństwo własne\nEwakuacja poszkodowanego\nKontrola parametrów życiowych, w razie potrzeby RKO\nZawsze karetka – konieczna hospitalizacja
+Objawy zatrucia – ogólnie | Tylko niektóre trucizny dają objawy charakterystyczne; większość niespecyficzne: mdłości, wymioty, biegunka, ból brzucha, bóle głowy, zaburzenia świadomości, zaburzenia oddechu, wstrząs, zmiany tętna, zmiany psychiczne
+Kiedy należy podejrzewać zatrucie? | Przy każdym niewyjaśnionym objawie chorobowym – zwłaszcza u dzieci < 5 r.ż.
+// ---------- Zadławienie
+Zadławienie przytomnego dorosłego – standard europejski (ERC) | 5 uderzeń w okolicę międzyłopatkową + 5 rękoczynów Heimlicha, naprzemiennie
+Dorosły zadławiony, nieprzytomny – postępowanie | 112 (call first); przy braku oddechu – RKO
+Kto po usunięciu ciała obcego uciśnięciami nadbrzusza/klatki wymaga oceny medycznej? | Każda taka osoba – mogły rozwinąć się powikłania lub uraz
+Zadławienie osoby otyłej lub ciężarnej – co zamiast rękoczynu Heimlicha? | Uciskanie środkowej części mostka (u przytomnych i nieprzytomnych)
+Kiedy podejrzewać zadławienie u dziecka/niemowlęcia? | Gdy nie może mówić (dzieci) lub głośno płakać (niemowlęta) – zwłaszcza podczas jedzenia, karmienia lub zabawy bez nadzoru
+Zadławienie niemowlęcia – jak wykonać uderzenia w plecy? | Twarzą w dół na przedramieniu opartym o nogę, głowa podtrzymana dłonią poniżej klatki piersiowej; do 5 energicznych uderzeń między łopatkami
+Zadławienie niemowlęcia – uciśnięcia klatki piersiowej | Na plecach na kolanach ratownika; technika dwóch kciuków z dłońmi obejmującymi klatkę (jak przy RKO, ale mocniej); do 5 razy
+Zadławienie dziecka/nastolatka – uciśnięcia nadbrzusza | Stań z tyłu, obejmij górną część brzucha, pochyl dziecko do przodu, pięść między pępkiem a wyrostkiem mieczykowatym, druga ręka na pięści – gwałtownie do siebie i do góry; do 5 razy
+Zadławienie dziecka – kolejność działań | Zachęcaj do kaszlu → do 5 uderzeń między łopatki → do 5 uciśnięć klatki (niemowlę) / nadbrzusza (dziecko) → naprzemiennie, dopóki przytomne
+Kiedy natychmiast przerwać uderzenia/uciśnięcia przy zadławieniu dziecka? | Gdy pojawią się oznaki usunięcia przeszkody: kaszel, głośny oddech lub płacz
+Czy usuwać ciało obce z ust dziecka „na ślepo”? | Nie – jedna próba tylko wtedy, gdy przeszkoda jest wyraźnie widoczna
+Zadławione dziecko traci przytomność – co robisz? | Natychmiast RKO, zaczynając od 5 oddechów ratowniczych
+// ---------- Stany nieurazowe
+Zaburzenia krążeniowo-oddechowe w stanach nieurazowych (5) | Atak serca, udar mózgu, drgawki, cukrzyca, omdlenie
+Atak serca – charakter bólu w klatce piersiowej | Silny: rozlany, promieniujący, ściskający, piekący, kłujący – ale nie w jednym punkcie
+Atak serca – objawy poza bólem | Duszność, blada skóra zlana zimnym lepkim potem, lęk przed śmiercią („czuję, jakbym miał umrzeć”), możliwa utrata przytomności
+Atak serca – w jakiej pozycji ułożyć poszkodowanego? | Półsiedzącej
+Atak serca – postępowanie | Wezwać pomoc\nKontrola ABC\nWywiad SAMPLE\nPozycja półsiedząca\nTlenoterapia 100%\nTermoizolacja\nWsparcie psychiczne\nCiągła kontrola stanu\nZakaz zbędnych ruchów\nStała gotowość do resuscytacji!
+Udar mózgu – objawy | Silny ból głowy, zaburzenia świadomości, widzenia i mowy (afazja), niedowład/porażenie zwykle połowy ciała, utrata przytomności, drgawki, zaburzenia oddechu i krążenia
+Udar mózgu – pozycja poszkodowanego | Półsiedząca lub leżąca – nie wolno obniżać głowy niżej niż nogi!
+Udar mózgu – postępowanie | ABC\nPozycja półsiedząca lub leżąca (głowa nie niżej niż nogi)\nTlenoterapia 100%\nTermoizolacja\nWsparcie psychiczne\nKontrola stanu
+Afazja – co to jest? | Zaburzenie mowy – bełkot lub niemożność mówienia (objaw udaru)
+Drgawki – przyczyny | Padaczka, urazy głowy, zatrucia, wzrost temperatury ciała (u dzieci), alkohol, narkotyki
+Drgawki – objawy | Utrata świadomości, drgawki i skurcze wszystkich mięśni, okresowe bezdechy, szczękościsk, czasem bezwiedne oddanie moczu i kału
+Stan po napadzie drgawek – objawy | Utrata przytomności lub obniżona świadomość, utrudniony kontakt, dezorientacja co do czasu i miejsca, niepamięć zdarzenia
+Postępowanie W CZASIE napadu drgawek | Chronić przed urazami wtórnymi\nNie wkładać nic do ust\nNie krępować\nTlenoterapia 100%
+Postępowanie PO napadzie drgawek | ABC\nKontynuacja tlenoterapii 100%\nTermoizolacja\nWsparcie psychiczne
+Napad padaczkowy – definicja | Okresowe zaburzenia układu nerwowego wywołane nieprawidłowymi wyładowaniami elektrycznymi neuronów w mózgu
+Napady uogólnione vs częściowe – różnica | Uogólnione: pobudzenie prawie całej kory jednocześnie, z utratą przytomności. Częściowe: wyładowania w określonym obszarze kory – świadomość może być zachowana
+Stan padaczkowy – definicja | Co najmniej dwa napady bez odzyskania przytomności między nimi lub napad drgawkowy trwający co najmniej 30 min
+Śmiertelność w napadzie padaczkowym | 1–10%
+Ciągłe napady drgawkowe – po ilu minutach trzeba ustalić rozpoznanie i zacząć leczenie? | Po ponad 10 minutach
+Napad grand mal – przebieg | Nagła sztywność z wyprostem (faza toniczna), utrata przytomności, upadek, często bezdech i sinica; potem rytmiczne drgawki (faza kloniczna) 60–90 s; stopniowy powrót przytomności, splątanie do kilkunastu godzin
+Napad grand mal – jak długo trwają drgawki kloniczne? | Zwykle 60–90 sekund
+Napad wyłączenia (absencja, petit mal) – cechy | U dzieci; utrata przytomności z zachowaniem postawy, „zapatrzenie” i mruganie; kilka sekund, brak reakcji, potem powrót do czynności bez splątania
+Proste napady częściowe – cechy | Świadomość zachowana; może im towarzyszyć aura (błyski, zniekształcenia obrazu, halucynacje węchowe lub smakowe)
+Złożone napady częściowe – cechy | Utrata świadomości, ból brzucha, automatyzmy ruchowe, zaburzenia pamięci, uwagi i afektu – mylnie kojarzone z chorobą psychiczną
+Ilu chorych na padaczkę jest w Polsce? | Ok. 400 000
+Pierwsza pomoc w napadzie kloniczno-tonicznym | Zachować spokój\nBezpieczne miejsce\nPozycja na boku (prewencja zachłyśnięcia)\nDrożność dróg oddechowych\nNie przytrzymywać na siłę\nRozluźnić ubranie, zdjąć okulary/naszyjnik\nNic do ust\nNic doustnie do pełnej świadomości\nPrzed odejściem sprawdzić pełną świadomość
+Napad padaczkowy – dlaczego nie przytrzymujemy chorego na siłę? | Ryzyko urazu chorego i ratującego; użycie siły może po napadzie wywołać agresję
+Jak sprawdzić, czy chory po napadzie odzyskał pełną świadomość? | Zadając pytania bardziej złożone niż wymagające odpowiedzi „tak” lub „nie”
+Napad drgawkowy – kiedy potrzebna pomoc lekarska? | Pierwszy napad w życiu\nNapad dłuższy niż 10 min\nGorączka > 4 godz. po napadzie lub pojawiająca się 6–12 godz. po napadzie
+Cukrzyca – przyczyna | Choroba trzustki, która nie produkuje insuliny (potrzebnej, by komórki pobrały glukozę z krwi)
+Hiperglikemia – objawy | Pragnienie, częste oddawanie moczu, ból brzucha, suchość w ustach, zapach acetonu/słodkich owoców z ust, utrata przytomności w miarę pogłębiania
+Hipoglikemia – objawy | Głód, drżenie mięśni, zimny pot, przyspieszone tętno, pobudzenie, niepokój, agresja, utrata przytomności
+Zapach acetonu z ust – hipo- czy hiperglikemia? | Hiperglikemia (wysoki cukier)
+Głód, drżenie, zimny pot, agresja – hipo- czy hiperglikemia? | Hipoglikemia (niski cukier)
+Cukrzyca – postępowanie | ABC\nTlenoterapia 100%\nKomfort cieplny\nWsparcie psychiczne\nU przytomnych – często pomaga słodki płyn do picia
+Omdlenie – definicja | Krótkotrwała, przemijająca utrata przytomności z obniżeniem napięcia mięśniowego, spowodowana nagłym rozszerzeniem naczyń krwionośnych
+Omdlenie – objawy zapowiadające | Osłabienie, mroczki przed oczami, szum w uszach, blada spocona skóra
+Omdlenie – postępowanie | ABC\nPozycja przeciwwstrząsowa (uwaga na urazy głowy) – można unieść nogi\nTlenoterapia/świeże powietrze\nKomfort cieplny\nWsparcie psychiczne\nKontrola stanu
+Ile zgłoszeń na SOR stanowią omdlenia? | Ok. 3%
+Dlaczego uniesienie nóg pomaga przy omdleniu? | Zwiększa powrót krwi żylnej do serca
+Czy podajemy płyny osobie, która zemdlała? | Nie – nie wolno wlewać płynów żadnej osobie nieprzytomnej
+Zagrożenia wynikające z omdlenia | Wymioty (zachłyśnięcie, regurgitacja)\nOziębienie ciała\nDodatkowe urazy kończyn, głowy, tułowia
+Stany chorobowe z utratą przytomności | Napad padaczkowy, hipoglikemia, krwiak mózgu, samoistne krwawienie mózgowe, zatrucie samobójcze, przedawkowanie narkotyków, zatrucie CO, napad histeryczny
+// ---------- Prąd
+Od czego zależą następstwa porażenia prądem? | Rodzaj/typ prądu i natężenie\nOpór skóry w miejscu kontaktu\nDroga przepływu\nCzas trwania przepływu
+Od czego zależy oporność ciała przy porażeniu prądem? | Napięcie dotyku, natężenie i częstotliwość prądu, czas przepływu, temperatura i wilgotność skóry, powierzchnia kontaktu
+Od jakiego napięcia następuje „przebicie” skóry? | Powyżej 100 V – wtedy liczy się tylko oporność wewnętrzna ciała
+Uderzenie pioruna – cechy | Małe szanse na przeżycie, zapalenie odzieży (oparzenia), rzadko rany wlotowe/wylotowe i uszkodzenia mięśni, utrata przytomności/śpiączka, powikłania neurologiczne, śmierć przez zatrzymanie krążenia i oddychania
+Uderzenie pioruna – dlaczego nie podajemy płynów? | Ryzyko obrzęku mózgu
+Potencjalne skutki porażenia prądem | Utrata przytomności, zatrzymanie krążenia i oddechu, skurcz mięśni (złamania, zwichnięcia), oparzenia Joule’a i zwęglenia, urazy po upadku, natychmiastowa śmierć
+Prąd wysokiego napięcia – jaka bezpieczna odległość? | Min. 18 m (ryzyko przeskoku – łuk elektryczny)
+Porażenie prądem – postępowanie | Przerwać obwód\nBezpieczeństwo własne (!)\nOcena ABC (możliwy skurcz mięśni klatki)\nStabilizacja kręgosłupa\nWezwanie pogotowia\nZaopatrzenie innych obrażeń\nPrzytomny – i tak transport do szpitala
+Porażenie prądem, poszkodowany przytomny – dlaczego do szpitala? | Ryzyko późnych następstw: odwodnienie, zaburzenia elektrolitowe, zaburzenia rytmu serca, uszkodzenie nerek (zaczopowanie mioglobiną)
+Porażony prądem: nieprzytomny, oddycha, krąży, bez wstrząsu i urazu kręgosłupa – pozycja? | Boczna ustalona
+// ---------- Hipertermia i hipotermia
+Rodzaje hipertermii (7) | Udar cieplny, wyczerpanie cieplne, omdlenie cieplne, kurcze cieplne, wysypka cieplna, obrzęk cieplny, porażenie słoneczne
+Udar cieplny – objawy | Zaburzenia świadomości, temp. > 45°C, zaburzenia neurologiczne (ataksja, splątanie, drgawki, śpiączka), bóle i zawroty głowy, nudności, wymioty, mrowienie kończyn, tachypnoe, tachykardia
+Udar cieplny – czy brak potu jest stałym objawem? | Nie – brak pocenia nie jest stały, a obecność potu nie wyklucza udaru
+Udar cieplny – najskuteczniejszy sposób chłodzenia | Przez parowanie – zwilżanie skóry wodą o temperaturze pokojowej + nawiew powietrza
+Udar cieplny – czego nie stosować przy chłodzeniu? | Lodu ani zimnej wody (dreszcze)
+Udar cieplny – kiedy przerwać chłodzenie? | Przy temperaturze wewnętrznej < 40°C (ryzyko jatrogennej hipotermii)
+Udar cieplny – postępowanie | Przerwać ekspozycję na ciepło\nRozebrać\nMonitorować ABC\nTlenoterapia\nNieprzytomny – pozycja bezpieczna\nPłyny (gdy przytomny)\nChłodzenie przez parowanie i nawiew (bez lodu)\nPrzerwać przy < 40°C
+Wyczerpanie cieplne – cechy i leczenie | Ból głowy, osłabienie, zawroty, nudności, wymioty, bóle mięśni, pocenie, tachypnoe, tachykardia; temp. może być prawidłowa; brak objawów neurologicznych. Leczenie: odpoczynek, chłodzenie przez parowanie, nawadnianie
+Czym różni się wyczerpanie cieplne od udaru cieplnego? | Przy wyczerpaniu brak objawów neurologicznych, a temperatura może być prawidłowa
+Omdlenie cieplne – przyczyna i kogo dotyczy | Zmniejszenie objętości krwi krążącej i rozszerzenie naczyń; głównie ludzie starsi, źle zaaklimatyzowani. Postępowanie: odpoczynek, nawadnianie
+Kurcze cieplne – cechy | Bolesne skurcze (podudzia, uda, obręcz barkowa), częste u sportowców; przyczyna – hiponatremia z rozcieńczenia (woda bez elektrolitów). Leczenie: odpoczynek, nawadnianie + elektrolity
+Kurcze cieplne – prawdopodobna przyczyna | Hiponatremia z rozcieńczenia – picie wody bez elektrolitów
+Wysypka cieplna (potówka) – cechy i leczenie | Plamisto-grudkowa, zwykle na okrytych częściach ciała (zapalenie i niedrożność przewodów potowych). Leczenie: leki przeciwhistaminowe i chlorheksydyna w kremie/lotionie
+Obrzęk cieplny – cechy i leczenie | Obrzęk rąk i stóp (rozszerzenie naczyń skóry); ustępuje samoistnie. Leczenie: unoszenie kończyn, ew. pończochy uciskowe
+Porażenie słoneczne – przyczyna | Podrażnienie opon mózgowych i mózgu promieniami UV (możliwy obrzęk mózgu)
+Porażenie słoneczne – objawy | Zaburzenia świadomości, bóle głowy, sztywność karku, pąsowa twarz, skóra ciała prawidłowa (blada, zimna), temperatura prawidłowa, mdłości, wymioty, czasem utrata przytomności
+Porażenie słoneczne – postępowanie | Cień, rozebranie, głowa wyżej, ew. pozycja boczna, chłodzenie głowy i karku, ruch powietrza
+Odwodnienie – progi zagrożenia | > 10% – prawdopodobne trwałe uszkodzenie narządów\n> 15% – prawdopodobna śmierć
+Bez wody (bezruch, cień) – ile można przeżyć przy 21°C / 32°C / 50°C? | Ok. 10 dni / tydzień / 2 dni
+Hipotermia – definicja | Uszkodzenia wywołane niskimi temperaturami: zmiany anatomiczne i czynnościowe drobnych naczyń, komórek, nerwów i skóry; obniżenie temperatury całego ciała
+Ile razy szybciej tracimy ciepło w wodzie niż w powietrzu (przewodzenie)? | 25 razy
+Ile osób nie przeżywa 50 minut w wodzie o temp. 10°C (50°F)? | 50%
+Hipotermia/odmrożenia – postępowanie | Przerwać ekspozycję na zimno\nZdjąć mokrą odzież\nOgrzać odmrożone części (rękami, między udami, pod pachami)\nNie rozcierać\nJałowy opatrunek przy uszkodzeniu skóry\nOkryć folią/kocem\nPodać ciepłe płyny
+Odmrożenie – dlaczego nie rozcieramy? | Ryzyko pogłębienia uszkodzeń
+// ---------- RKO
+RKO dorosłego – stosunek uciśnięć do oddechów | 30:2 (ew. tylko uciśnięcia)
+RKO juniora/nastolatka – stosunek uciśnięć do oddechów | 15:2 lub 30:2 (ew. tylko uciśnięcia)
+RKO niemowlęcia – schemat | 5 oddechów ratowniczych, potem 15:2
+RKO – tempo uciśnięć klatki piersiowej | 100–120 na minutę
+RKO dorosłego i nastolatka – czym uciskamy? | Nasadą dłoni (kłąb + kłębik)
+RKO niemowlęcia – czym uciskamy? | Dwoma kciukami
+RKO – kolejność kroków (BLS) | Ocena bezpieczeństwa → ocena przytomności → ocena oddechu → 112 → uciśnięcia i oddechy
