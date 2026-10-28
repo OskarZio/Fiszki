@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '162';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '163';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -297,7 +297,18 @@ function streak() {
   while (days.has(dayKey(t))) { n++; t = addDays(t, -1); }
   return n;
 }
-const difficultCards = () => S.cards.filter(c => c.srs.lapses >= 2 || (c.srs.state === 'relearn'));
+// 🧠 trudne: zapomniana min. 2 razy, w trakcie ponownej nauki albo w ostatnich 3 ocenach choć raz „Nie pamiętam” / „Trudne”
+// (zostaje na liście, dopóki kilka razy z rzędu nie pójdzie dobrze – samo jedno zaliczenie jej nie usuwa)
+let HARD_CACHE = { n: -1, set: null };
+function recentHardSet() {
+  if (HARD_CACHE.n === S.log.length && HARD_CACHE.set) return HARD_CACHE.set;
+  const last = new Map();
+  for (let i = S.log.length - 1; i >= 0; i--) { const l = S.log[i]; if (!l.c) continue; const a = last.get(l.c) || []; if (a.length < 3) { a.push(l.g); last.set(l.c, a); } }
+  const set = new Set(); for (const [id, gs] of last) if (gs.some(g => g <= 2)) set.add(id);
+  HARD_CACHE = { n: S.log.length, set }; return set;
+}
+const isHardCard = c => c.srs.lapses >= 2 || c.srs.state === 'relearn' || recentHardSet().has(c.id);
+const difficultCards = () => S.cards.filter(isHardCard);
 
 // ============================================================ Wygląd karty
 function clozeHTML(text, ord, reveal) {
@@ -746,7 +757,7 @@ function viewDeck(id, q) {
   const cards = S.cards.filter(c => c.deckId === id);
   const notes = S.notes.filter(n => n.deckId === id).sort((a, b) => b.created - a.created);
   const mature = cards.filter(c => c.srs.ivl >= 21).length;
-  const hard = cards.filter(c => c.srs.lapses >= 2 || c.srs.state === 'relearn');
+  const hard = cards.filter(isHardCard);
   onMount(() => {
     const inp = $('#note-search');
     inp.addEventListener('input', () => { $('#notes').innerHTML = notesList(notes, inp.value); });
@@ -921,6 +932,7 @@ function viewStudy(deckId, mode, q) {
       <p class="small muted">Dziś uczysz się już ${fmtDur(studyMsBetween(dayStart()))}.</p>
       <p class="muted small">${nextDueText()}</p></div>
       ${deckId !== 'all' && !s.cram && starredCards(deckId).length ? `<button class="block" data-act="cram-star" data-id="${deckId}">⭐ Powtórz oznaczone z tej talii (${starredCards(deckId).length})</button><div class="spacer"></div>` : ''}
+      ${!s.cram && difficultCards().filter(c => deckId === 'all' || c.deckId === deckId).length ? `<button class="block" data-act="cram-hard" data-id="${deckId}">🧠 Powtórz trudne (${difficultCards().filter(c => deckId === 'all' || c.deckId === deckId).length})</button><div class="spacer"></div>` : ''}
       ${!s.all && !s.cram && hiddenNew(deckId) ? `<button class="primary block" data-go="#/study/${deckId}/${mode}?all=1">📚 Ucz się dalej – wszystkie nowe (${hiddenNew(deckId)})</button><div class="spacer"></div>` : ''}
       <button class="${!s.all && !s.cram && hiddenNew(deckId) ? '' : 'primary '}block" data-act="end-study" data-href="${backHash}">Gotowe</button>`;
   }
