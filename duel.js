@@ -14,6 +14,11 @@ const duelStreakMul = n => 1 + Math.min(.3, n * .06);
 const PVP = { freeze: ['❄️', 'Lodowa bomba', 'rywal: następne pytanie ma o połowę mniej czasu („kto szybciej”: 3 s zamrożenia)'], elixir: ['🧪', 'Eliksir życia', '+20% ❤️ od razu'],
   regen: ['🌿', 'Regeneracja', '+4% ❤️ przez 4 kolejne tury'], mirror: ['🪞', 'Lustrzana tarcza', 'następny cios −50%, a 30% wraca do rywala'],
   lupa: ['🔍', 'Lupa', 'następne pytanie łatwiejsze: ABCD – znikają 2 złe odpowiedzi, wpisywanie – podpowiedź początku'], adren: ['⚡', 'Adrenalina', 'następne trafienie ×1,5'] };
+// 👾 grafiki 8-bit przedmiotów PvP
+const PVP_IMG = { freeze: 'e_diamond', elixir: 'b_potion', regen: 'e_heartbeat', mirror: 'b_shield', lupa: 'b_orb', adren: 'b_bolt' };
+const MV_IMG = { atk: 'b_swords', power: 'e_nova', guard: 'b_shield', heal: 'b_potion' };
+const mvIc = k => MV_IMG[k] ? `<img class="px8 mv-ic" src="assets/px8/${MV_IMG[k]}.webp" alt="">` : DMOVES[k]?.ic || '';
+const pvpIc = k => `<img class="px8 pvp-ic" src="assets/px8/${PVP_IMG[k]}.webp" alt="">`;
 const PVP_MAX = 2, PVP_W = { freeze: 3, elixir: 3, regen: 2, mirror: 2, lupa: 3, adren: 2 };
 const pvpCount = () => Object.keys(PVP).reduce((a, k) => a + itemCount('pvp', k), 0);
 const DMOVES = {
@@ -139,7 +144,7 @@ function duelItem(who, k) {
   if (k === 'mirror') d.mirror[who] = true;
   if (k === 'lupa' && who === 'me') d.lupa = true;
   if (k === 'adren') d.adren[who] = true;
-  duelLog(`🎒 ${p.nick} używa: ${PVP[k][0]} ${PVP[k][1]}!`);
+  duelLog(`🎒 ${p.nick} używa: ${PVP[k][1]}!`);
 }
 function duelUseItem(k) {
   const d = D; if (!d || d.phase !== 'fight' || !PVP[k] || itemCount('pvp', k) < 1) return;
@@ -214,13 +219,13 @@ const duelFx = (d, w) => [d.streak?.[w] >= 2 ? `🔥${d.streak[w]}` : '', d.fz?.
 function duelBagHTML(d, inline) {
   const own = Object.keys(PVP).filter(k => itemCount('pvp', k) > 0), left = PVP_MAX - (d.used || 0);
   if (!own.length) return inline ? '' : '<p class="small muted center" style="margin:8px 0 0">🎒 Plecak pusty – przedmioty PvP zdobywasz za pojedynki.</p>';
-  return `<div class="dbag${inline ? ' inline' : ''}"><small>🎒 Przedmioty (${left > 0 ? `jeszcze ${left}` : 'limit wykorzystany'})${d.mode === 'turn' ? ' · użycie zabiera turę' : ''}</small><div class="dbag-row">${own.map(k => `<button data-act="duel-item" data-k="${k}" ${left > 0 ? '' : 'disabled'} title="${esc(PVP[k][1] + ': ' + PVP[k][2])}"><span>${PVP[k][0]}</span><b>${PVP[k][1]}</b><i>×${itemCount('pvp', k)}</i></button>`).join('')}</div></div>`;
+  return `<div class="dbag${inline ? ' inline' : ''}"><small>🎒 Przedmioty (${left > 0 ? `jeszcze ${left}` : 'limit wykorzystany'})${d.mode === 'turn' ? ' · użycie zabiera turę' : ''}</small><div class="dbag-row">${own.map(k => `<button data-act="duel-item" data-k="${k}" ${left > 0 ? '' : 'disabled'} title="${esc(PVP[k][1] + ': ' + PVP[k][2])}"><span>${pvpIc(k)}</span><b>${PVP[k][1]}</b><i>×${itemCount('pvp', k)}</i></button>`).join('')}</div></div>`;
 }
 function duelFightView() {
   const d = D, now = Date.now(), fx = d.fx && now - d.fx.t < 900 ? d.fx : null, q = d.q, a = d.ask;
   let panel;
   if (d.phase === 'fight' && d.mode === 'speed') panel = duelSpeedPanel(d);
-  else if (d.phase === 'end') panel = `<div class="dtext"><b>${d.won ? `🏆 ${esc(d.opp.nick)} pokonany! Wygrywasz!` : `💀 ${esc(d.me.nick)} pada… Wygrywa ${esc(d.opp.nick)}.`}</b><small>+${d.xp} XP${d.gems ? ` · +${d.gems} 💎` : ''} · ${d.stats.ok} dobrych, ${d.stats.bad} błędów</small>${d.loot?.length ? `<div class="dloot">${crateImg('pvp', 'dloot-crate')}${d.loot.map(k => `<span title="${esc(PVP[k][2])}"><b>${PVP[k][0]}</b>${PVP[k][1]}</span>`).join('')}</div><small>🎒 Nowe przedmioty PvP!</small>` : ''}</div>
+  else if (d.phase === 'end') panel = `<div class="dtext"><b>${d.won ? `🏆 ${esc(d.opp.nick)} pokonany! Wygrywasz!` : `💀 ${esc(d.me.nick)} pada… Wygrywa ${esc(d.opp.nick)}.`}</b><small>+${d.xp} XP${d.gems ? ` · +${d.gems} 💎` : ''} · ${d.stats.ok} dobrych, ${d.stats.bad} błędów</small>${d.loot?.length ? `<div class="dloot">${crateImg('pvp', 'dloot-crate')}${d.loot.map(k => `<span title="${esc(PVP[k][2])}"><b>${pvpIc(k)}</b>${PVP[k][1]}</span>`).join('')}</div><small>🎒 Nowe przedmioty PvP!</small>` : ''}</div>
     <div class="row" style="margin-top:8px">${d.bot ? '<button class="primary grow" data-act="duel-bot">🔁 Jeszcze raz</button>' : `<button class="primary grow" data-act="duel-rematch" ${d.myRematch ? 'disabled' : ''}>${d.myRematch ? '⏳ Czekam…' : d.oppRematch ? '✅ Rewanż!' : '🔁 Rewanż'}</button>`}<button class="grow" data-act="duel-leave">Wyjdź</button></div>`;
   else if (q) {
     const v = q.card, done = q.done;
@@ -230,7 +235,7 @@ function duelFightView() {
     else ctrl = done ? '' : `${q.hint ? `<p class="small muted center" style="margin:4px 0">🔍 Zaczyna się od: <b>${esc(q.hint)}</b></p>` : ''}<div class="type-row"><input id="duel-in" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"><button class="primary type-go" data-act="duel-check">✓</button></div>`;
     panel = `<div class="dtext"><small>${DMOVES[q.k].ic} ${DMOVES[q.k].n} – odpowiedz, żeby trafić!</small><b>${esc(v.q)}</b>${done ? `<small class="${q.ok ? 'good' : 'bad'}">${q.ok ? `✓ Trafienie!${q.acc != null && q.acc < 100 ? ` 🎯 Celność ${q.acc}% · poprawnie: ${esc(v.a)}` : ''}` : `✗ Pudło! Poprawnie: ${esc(v.a)}`}</small>` : '<div class="dq-bar"><i></i></div>'}</div>${ctrl}`;
   } else if (d.turn === 'me') panel = `<div class="dtext"><b>Co zrobi ${esc(d.me.nick)}?</b>${d.log[0] ? `<small>${esc(d.log[0])}</small>` : ''}</div>
-    <div class="dmoves">${Object.entries(DMOVES).map(([k, m]) => `<button data-act="duel-move" data-k="${k}" ${d.pp[k] > 0 ? '' : 'disabled'}><b>${m.ic} ${m.n}</b><small>${duelMoveDesc(d, k)}</small><i>PP ${m.pp > 50 ? '∞' : `${d.pp[k]}/${m.pp}`}</i></button>`).join('')}</div>
+    <div class="dmoves">${Object.entries(DMOVES).map(([k, m]) => `<button data-act="duel-move" data-k="${k}" ${d.pp[k] > 0 ? '' : 'disabled'}><b>${mvIc(k)} ${m.n}</b><small>${duelMoveDesc(d, k)}</small><i>PP ${m.pp > 50 ? '∞' : `${d.pp[k]}/${m.pp}`}</i></button>`).join('')}</div>
     <div class="row nowrap dult-row"><button class="dult${d.ult >= DUEL_ULT ? ' ready' : ''}" data-act="duel-move" data-k="ult" ${d.ult >= DUEL_ULT ? '' : 'disabled'}><b>⚡ ${esc(d.me.ult)}</b><small>${d.ult >= DUEL_ULT ? 'GOTOWY – mocny cios bez pytania!' : `ładowanie ${d.ult}/${DUEL_ULT} trafień`}</small></button><button class="dbag-btn${d.bag ? ' on' : ''}" data-act="duel-bag">🎒<small>${pvpCount()}</small></button></div>${d.bag ? duelBagHTML(d) : ''}`;
   else panel = `<div class="dtext">${a ? `<small>${esc(d.opp.nick)} używa ${DMOVES[a.k]?.ic || '⚡'} ${DMOVES[a.k]?.n || ''} i odpowiada na:</small><b>${esc(a.q)}</b><div class="dq-bar opp"><i></i></div><small class="muted">Też spróbuj odpowiedzieć w myślach 🧠</small>` : `<b>⏳ ${esc(d.opp.nick)} wybiera ruch…</b>`}${d.log[0] ? `<small>${esc(d.log[0])}</small>` : ''}</div>`;
   return { tab: 'arena', focus: true, html: `<div class="studybar"><button class="iconbtn" data-act="duel-ff">✕</button><div class="title">🥊 Pojedynek${d.bot ? ' z botem' : ''}</div><span class="small muted">${d.phase === 'end' ? 'koniec' : d.mode === 'speed' ? (d.qf === 'type' ? '✍️ kto bliżej' : '⚡ kto szybciej') : d.turn === 'me' ? 'Twoja tura' : 'tura rywala'}</span></div>
@@ -255,7 +260,7 @@ function duelLobbyView() {
     <p style="margin:8px 0 4px"><b>Turowa walka 1 na 1</b> – Twój bohater kontra bohater kolegi.</p>
     <p class="small" style="margin:0 0 4px">Pytania: <b>${DUEL_QF[duelQf()]}</b> <span class="muted">(wybierasz niżej)</span></p>
     <ul class="small" style="text-align:left;margin:0"><li>W swojej turze wybierasz ruch: ⚔️ atak, 💥 mocny cios, 🛡️ garda, 💚 mikstura (mają PP).</li><li>Żeby ruch się udał – odpowiadasz na fiszkę. ${duelQf() === 'abcd' ? '' : 'Przy wpisywaniu siła ciosu = <b>celność</b> (literówka = słabszy cios). '}Szybko = mocniej, źle = <b>pudło</b>.</li><li>3 trafienia ładują supercios Twojej postaci.</li><li><b>⚡ Kto szybciej:</b> ta sama fiszka u obu naraz – ${duelQf() === 'type' ? 'obaj wpisujecie, <b>bliższa odpowiedź</b> atakuje (remis – szybsza)' : 'pierwsza dobra odpowiedź atakuje, zła = blokada do końca rundy'}.</li></ul></div>
-  <div class="card dpvp"><h3 style="margin-top:0">🎒 Przedmioty PvP <small class="muted">(${pvpCount()})</small></h3>${Object.keys(PVP).map(k => `<div class="row nowrap dpvp-it"><span>${PVP[k][0]}</span><div class="grow"><b>${PVP[k][1]}</b> <small class="muted">×${itemCount('pvp', k)}</small><div class="small muted">${PVP[k][2]}</div></div></div>`).join('')}
+  <div class="card dpvp"><h3 style="margin-top:0">🎒 Przedmioty PvP <small class="muted">(${pvpCount()})</small></h3>${Object.keys(PVP).map(k => `<div class="row nowrap dpvp-it"><span>${pvpIc(k)}</span><div class="grow"><b>${PVP[k][1]}</b> <small class="muted">×${itemCount('pvp', k)}</small><div class="small muted">${PVP[k][2]}</div></div></div>`).join('')}
     <p class="small muted" style="margin:8px 0 0">Zdobywasz je za pojedynki (wygrana z kolegą = zawsze). Max ${PVP_MAX} na walkę. ⚖️ Wiedza wygrywa: seria dobrych odpowiedzi daje do +30%, poziom postaci do +20% ❤️ i +15% obrażeń, a ekwipunek z bossów się nie liczy.</p></div>
   <div class="card"><h3 style="margin-top:0">Tryb</h3>${duelModeHTML()}<h3>Pytania</h3>${duelQfHTML()}<h3>Talia</h3><div class="row nowrap">${pick || '<p class="muted">Dodaj fiszki, żeby walczyć.</p>'}</div></div>
   <button class="primary block boss-go" data-act="duel-host" ${decks.length ? '' : 'disabled'}>➕ Stwórz pojedynek</button>
