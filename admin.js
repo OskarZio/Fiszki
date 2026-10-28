@@ -79,7 +79,7 @@ function adminHTML() {
     <div class="row" style="margin-top:8px"><button class="sm" data-act="feat-simple">✨ Tryb prosty: tylko nauka</button><button class="sm ghost" data-act="feat-all">Włącz wszystko</button></div>
     <h3>🎨 Podgląd motywów premium</h3>
     <p class="small muted" style="margin-top:0">Za darmo, bez kupowania – podgląd trwa do „Zakończ” albo do ponownego otwarcia aplikacji.</p>
-    <div class="themes">${THEMES.filter(t => t.price).map(t => `<button class="theme${THEME_PREVIEW?.id === t.id ? ' on' : ''}" style="background:${t.bg};background-image:${t.image || 'none'}" data-act="theme-preview" data-id="${t.id}"><span class="dot" style="background:${t.accent}"></span><b style="color:${lum(t.bg) < .18 ? '#fff' : '#1b1d29'}">${t.name}</b><small class="lock">${themeOwned(t) ? '✓ masz' : '👀 podgląd'}</small></button>`).join('')}</div>
+    <div class="themes">${THEMES.filter(t => t.price).map(t => `<button class="theme${THEME_PREVIEW?.id === t.id ? ' on' : ''}${t.fx ? ' th-fx' : ''}" style="background:${t.bg};background-image:${t.image || 'none'}${themeFxVars(t)}" data-act="theme-preview" data-id="${t.id}"><span class="dot" style="background:${t.accent}"></span><b style="color:${lum(t.bg) < .18 ? '#fff' : '#1b1d29'}">${t.name}</b><small class="lock">${themeOwned(t) ? '✓ masz' : '👀 podgląd'}</small></button>`).join('')}</div>
     <h3>🥊 Pojedynek 1 na 1 – pytania</h3>
     <label class="field"><span class="small muted">Gospodarz pojedynku ustala rodzaj pytań dla obu graczy (też trening z botem).</span>
       <select data-duelq="1">${Object.entries(DUEL_QF).map(([k, n]) => `<option value="${k}" ${duelQf() === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>

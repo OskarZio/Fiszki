@@ -2383,3 +2383,44 @@ button.ghost { padding: 10px 12px; }
 .abcd-grid, .beta-row:not(.st), .dmoves, .pairs, .sidebyside { gap: 10px; }
 .qcount { gap: 10px; }
 .quest .row.nowrap { gap: 8px; }
+
+/* ✨ MOTYWY PREMIUM (body.prem-fx, kolory --fx1..3): płynące tło, świecące krawędzie, tęczowe przyciski i nagłówki.
+   Darmowe motywy zostają bez zmian. Bez animacji przy „ogranicz ruch” i wyłączonych animacjach. */
+body.prem-fx::before { content: ''; position: fixed; inset: -25%; z-index: -1; pointer-events: none; opacity: .55;
+  background: radial-gradient(40% 35% at 20% 25%, color-mix(in srgb, var(--fx1) 70%, transparent), transparent 70%),
+    radial-gradient(38% 32% at 80% 30%, color-mix(in srgb, var(--fx2) 65%, transparent), transparent 70%),
+    radial-gradient(45% 40% at 50% 85%, color-mix(in srgb, var(--fx3) 60%, transparent), transparent 70%);
+  filter: blur(30px) saturate(1.2); animation: premDrift 22s ease-in-out infinite alternate; }
+@keyframes premDrift { 0% { transform: translate(0, 0) rotate(0deg) scale(1); } 50% { transform: translate(4%, -3%) rotate(8deg) scale(1.08); } 100% { transform: translate(-4%, 3%) rotate(-6deg) scale(1.02); } }
+body.prem-fx .card { box-shadow: 0 0 0 1px color-mix(in srgb, var(--fx1) 38%, transparent), 0 10px 32px -14px color-mix(in srgb, var(--fx2) 70%, transparent); }
+body.prem-fx button.primary, body.prem-fx .btn.primary { background: linear-gradient(110deg, var(--fx1), var(--fx2), var(--fx3), var(--fx1)); background-size: 300% 100%;
+  animation: premSheen 6s linear infinite; box-shadow: 0 6px 22px -8px color-mix(in srgb, var(--fx2) 85%, transparent); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+@keyframes premSheen { to { background-position: 300% 0; } }
+body.prem-fx h1 { background: linear-gradient(90deg, var(--fx1), var(--fx2) 55%, var(--fx3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+body.prem-fx .progress > div { background: linear-gradient(90deg, var(--fx1), var(--fx2), var(--fx3)); box-shadow: 0 0 10px color-mix(in srgb, var(--fx2) 60%, transparent); }
+body.prem-fx #tabs a.active { color: var(--fx2); text-shadow: 0 0 12px color-mix(in srgb, var(--fx2) 60%, transparent); }
+body.prem-fx .seg button.on { box-shadow: 0 0 0 1px color-mix(in srgb, var(--fx1) 45%, transparent), var(--shadow); }
+@media (prefers-reduced-motion: reduce) { body.prem-fx::before, body.prem-fx button.primary { animation: none; } }
+body.noanim.prem-fx::before, body.noanim.prem-fx button.primary { animation: none; }
+/* kafelek motywu premium: obracająca się tęczowa ramka */
+.theme.th-fx { position: relative; isolation: isolate; }
+.theme.th-fx::after { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--fxa, 0deg), var(--fx1), var(--fx2), var(--fx3), var(--fx1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: fxSpin 4s linear infinite; }
+@property --fxa { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes fxSpin { to { --fxa: 360deg; } }
+/* 🎨 wybór wyglądu w instrukcji */
+.wl-looks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.wl-look { flex-direction: column; gap: 6px; padding: 10px !important; border-radius: 16px; border: 2px solid transparent; background: var(--card2); }
+.wl-look.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.wl-look small { color: var(--muted); font-size: 12px; }
+.wl-mock { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 10px; border-radius: 12px; font-style: normal; }
+.wl-mock i { font-style: normal; display: block; }
+.wl-look.classic .wl-mock { background: linear-gradient(135deg, #f5f6fb 50%, #0f1117 50%); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.wl-look.classic .m-h { font-weight: 800; color: #1b1d29; text-align: left; font-size: 14px; }
+.wl-look.classic .m-card { background: #fff; color: #1b1d29; border-radius: 10px; padding: 8px 4px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.wl-look.classic .m-btn { background: linear-gradient(135deg, #4f46e5, #9333ea); color: #fff; border-radius: 9px; padding: 6px; font-size: 12px; font-weight: 700; }
+.wl-look.pixel .wl-mock { background: repeating-conic-gradient(#1a1c2c 0 25%, #1d2033 0 50%) 0 0 / 8px 8px; font-family: 'Pixelify Sans', ui-monospace, monospace; border-radius: 0; box-shadow: 0 0 0 3px #0d0e17; }
+.wl-look.pixel .m-h { color: #f4f4f4; text-align: left; font-size: 14px; letter-spacing: .5px; }
+.wl-look.pixel .m-card { background: #262b44; color: #f4f4f4; padding: 8px 4px; font-size: 12px; box-shadow: 3px 3px 0 #0d0e17, inset 0 0 0 2px #566c86; }
+.wl-look.pixel .m-btn { background: #41a6f6; color: #1a1c2c; padding: 6px; font-size: 12px; box-shadow: 3px 3px 0 #0d0e17; }

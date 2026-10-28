@@ -11,6 +11,13 @@ const WL_PAGES = [
       <li>🎮 Za naukę rozwijasz bohatera, walczysz z bossami i zbierasz 💎.</li></ul>`,
     more: `<p><b>Jak to działa?</b> Po każdej fiszce oceniasz, czy pamiętasz. „Nie pamiętam” wraca za chwilę, „Dobrze” – za kilka dni, a potem coraz rzadziej (powtórki rozłożone w czasie, algorytm FSRS). Dzięki temu pamiętasz na długo, zamiast wkuwać wszystko naraz.</p>
       <p>Na ekranie <b>Start</b> widzisz, ile kart czeka na dziś. Gdy licznik dojdzie do zera – na dziś koniec.</p>` },
+  { ic: '🎨', t: 'Wybierz wygląd', body: () => { const cur = currentTheme().id === 'pixel' ? 'pixel' : 'classic';
+    return `<p class="center small muted" style="margin:0 0 10px">Stuknij – od razu zobaczysz podgląd. Zmienisz to kiedy chcesz (Ustawienia → Wygląd).</p>
+    <div class="wl-looks">
+      <button class="wl-look classic${cur === 'classic' ? ' on' : ''}" data-act="wl-look" data-l="classic"><span class="wl-mock"><i class="m-h">Fiszki</i><i class="m-card">kość udowa</i><i class="m-btn">Ucz się</i></span><b>✨ Klasyczny</b><small>gładki, nowoczesny</small></button>
+      <button class="wl-look pixel${cur === 'pixel' ? ' on' : ''}" data-act="wl-look" data-l="pixel"><span class="wl-mock"><i class="m-h">Fiszki</i><i class="m-card">kość udowa</i><i class="m-btn">Ucz się</i></span><b>👾 8-bit</b><small>jak w starych grach</small></button>
+    </div><p class="center small muted" style="margin:10px 0 0">Oba za darmo. W sklepie są też motywy premium z animowanymi gradientami ✨</p>`; },
+    more: `<p>Klasyczny dopasowuje się do trybu jasnego / ciemnego telefonu. 8-bit zmienia całą aplikację: pikselową czcionkę, kanciaste przyciski i paletę jak z konsoli. Motywy premium (Zorza, Galaktyka, Neon, Lawa, Złoto, Hologram…) mają płynące tło, świecące karty i tęczowe przyciski – kupisz je za kryształy w Sklepie.</p>` },
   { ic: '📚', t: 'Jak się uczyć', body: () => `
     <ol class="wl-pts"><li><b>Dodaj talię:</b> ➕ i wpisz fiszki albo wklej je z Quizleta / Anki.</li>
       <li><b>Ucz się:</b> „Fiszki” – odkrywasz odpowiedź i oceniasz, albo <b>„Wpisz”</b> – piszesz odpowiedź (lepiej zapamiętujesz i dostajesz więcej 💎).</li>
@@ -76,6 +83,12 @@ Object.assign(ACTIONS, {
   'wl-prev': () => showWelcome(Math.max(0, WL.i - 1)),
   'wl-skip': () => closeWelcome(),
   'wl-done': () => closeWelcome(),
+  'wl-look': el => {
+    const t = el.dataset.l === 'pixel' ? THEMES.find(x => x.id === 'pixel') : null;
+    if (typeof THEME_PREVIEW !== 'undefined') THEME_PREVIEW = null;
+    S.settings.theme = t ? { id: t.id, bg: t.bg, accent: t.accent, image: t.image, pixel: true } : { id: 'auto' };
+    applyTheme(); save(); render(); showWelcome(WL.i);
+  },
   'wl-acc': () => { WL.acc = !WL.acc; showWelcome(WL.i); },
   'wl-open': () => showWelcome(0),
   // linki do dokumentów w instrukcji: rozwijamy pełny tekst zamiast wychodzić z okna

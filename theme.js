@@ -31,24 +31,33 @@ const THEMES = [
   { id: 'night', name: 'Noc', bg: '#0f1117', accent: '#818cf8' },
   { id: 'graphite', name: 'Grafit', bg: '#18181b', accent: '#22d3ee' },
   { id: 'forest', name: 'Las', bg: '#0b1f17', accent: '#34d399' },
-  { id: 'aurora', name: 'Zorza', bg: '#0b1026', accent: '#5eead4', image: 'radial-gradient(1200px 600px at 10% -10%, #1e3a8a55, transparent), radial-gradient(900px 500px at 110% 10%, #10b98155, transparent), radial-gradient(900px 700px at 50% 120%, #a855f744, transparent)', price: 250 },
-  { id: 'sunset', name: 'Zachód słońca', bg: '#fff4ed', accent: '#e11d48', image: 'linear-gradient(160deg, #fff7ed 0%, #ffe4e6 45%, #ede9fe 100%)', price: 250 },
-  { id: 'galaxy', name: 'Galaktyka', bg: '#0a0614', accent: '#f0abfc', image: 'radial-gradient(800px 500px at 80% 0%, #7c3aed55, transparent), radial-gradient(700px 500px at 0% 100%, #db277744, transparent)', price: 400 },
-  { id: 'gold', name: 'Złoto', bg: '#17130a', accent: '#fbbf24', image: 'linear-gradient(160deg, #1c1608, #0f0c05 60%, #2a1f06)', price: 600 },
-  // 👾 8-bit: cała aplikacja w pikselach – paleta Sweetie-16, pikselowa czcionka, kanciaste ramki z fazką, przyciski jak w starych grach
-  { id: 'pixel', name: '👾 8-bit', bg: '#1a1c2c', accent: '#41a6f6', image: 'repeating-conic-gradient(#1a1c2c 0 25%, #1d2033 0 50%) 0 0 / 8px 8px', price: 900, pixel: true },
+  // 👾 8-bit (za darmo): cała aplikacja w pikselach – paleta Sweetie-16, pikselowa czcionka, kanciaste ramki z fazką, przyciski jak w starych grach
+  { id: 'pixel', name: '👾 8-bit', bg: '#1a1c2c', accent: '#41a6f6', image: 'repeating-conic-gradient(#1a1c2c 0 25%, #1d2033 0 50%) 0 0 / 8px 8px', pixel: true },
+  // ✨ premium (sklep): fx = 3 kolory efektów – płynące, animowane tło, świecące krawędzie kart, tęczowe przyciski i nagłówki
+  { id: 'aurora', name: 'Zorza', bg: '#0b1026', accent: '#5eead4', image: 'radial-gradient(1200px 600px at 10% -10%, #1e3a8a55, transparent), radial-gradient(900px 500px at 110% 10%, #10b98155, transparent), radial-gradient(900px 700px at 50% 120%, #a855f744, transparent)', price: 250, fx: ['#22d3ee', '#10b981', '#a855f7'] },
+  { id: 'sunset', name: 'Zachód słońca', bg: '#fff4ed', accent: '#e11d48', image: 'linear-gradient(160deg, #fff7ed 0%, #ffe4e6 45%, #ede9fe 100%)', price: 250, fx: ['#fb923c', '#f43f5e', '#8b5cf6'] },
+  { id: 'galaxy', name: 'Galaktyka', bg: '#0a0614', accent: '#f0abfc', image: 'radial-gradient(800px 500px at 80% 0%, #7c3aed55, transparent), radial-gradient(700px 500px at 0% 100%, #db277744, transparent)', price: 400, fx: ['#7c3aed', '#db2777', '#38bdf8'] },
+  { id: 'neon', name: 'Neon', bg: '#07060f', accent: '#22d3ee', image: 'radial-gradient(900px 500px at 0% 0%, #f0abfc33, transparent), radial-gradient(900px 600px at 100% 100%, #22d3ee33, transparent)', price: 500, fx: ['#f0abfc', '#22d3ee', '#a3e635'] },
+  { id: 'lava', name: 'Lawa', bg: '#160806', accent: '#fb923c', image: 'radial-gradient(900px 500px at 50% 110%, #ef444455, transparent), radial-gradient(700px 400px at 100% 0%, #f9731633, transparent)', price: 500, fx: ['#ef4444', '#f97316', '#facc15'] },
+  { id: 'gold', name: 'Złoto', bg: '#17130a', accent: '#fbbf24', image: 'linear-gradient(160deg, #1c1608, #0f0c05 60%, #2a1f06)', price: 600, fx: ['#fde68a', '#f59e0b', '#b45309'] },
+  { id: 'holo', name: 'Hologram', bg: '#f5f3ff', accent: '#7c3aed', image: 'linear-gradient(135deg, #fdf2f8 0%, #eff6ff 50%, #ecfdf5 100%)', price: 700, fx: ['#f472b6', '#60a5fa', '#34d399'] },
 ];
 const BG_SWATCHES = ['#f5f6fb', '#ffffff', '#f8fafc', '#e0f2fe', '#e6fbf2', '#ecfccb', '#fefce8', '#fff1e6', '#ffe4e6', '#fdf2f8', '#f3e8ff', '#ede9fe',
   '#0f1117', '#18181b', '#111827', '#0b1f17', '#0c1a2b', '#1e1b4b', '#2a0f1f', '#1c1917', '#000000', '#3f3f46', '#134e4a', '#4c1d95'];
 const ACCENT_SWATCHES = ['#4f46e5', '#2563eb', '#0284c7', '#0891b2', '#0d9488', '#059669', '#16a34a', '#65a30d', '#ca8a04', '#ea580c', '#dc2626', '#e11d48',
   '#db2777', '#c026d3', '#9333ea', '#7c3aed', '#818cf8', '#22d3ee', '#34d399', '#fbbf24', '#f472b6', '#a3e635', '#fb7185', '#f97316'];
 
+const themeFxVars = t => t.fx ? `;--fx1:${t.fx[0]};--fx2:${t.fx[1]};--fx3:${t.fx[2]}` : '';
 const themeOwned = t => !t.price || (typeof hasItem === 'function' && hasItem('theme', t.id));
 function currentTheme() { return S.settings.theme || { id: 'auto' }; }
 function applyTheme() {
   try { applyAppIcon(); } catch { /* jeszcze brak stanu */ }
   const th = currentTheme(), root = document.documentElement.style;
   document.body?.classList.toggle('px-theme', th.id === 'pixel' || !!th.pixel);
+  // ✨ efekty motywów premium (kolory z definicji motywu – zapisany motyw ich nie trzyma)
+  const fx = THEMES.find(x => x.id === th.id)?.fx;
+  document.body?.classList.toggle('prem-fx', !!fx);
+  ['--fx1', '--fx2', '--fx3'].forEach((v, i) => fx ? root.setProperty(v, fx[i]) : root.removeProperty(v));
   const vars = ['--bg', '--bg-image', '--card', '--card2', '--text', '--muted', '--line', '--accent', '--accent2', '--accent-soft', '--shadow'];
   if (!th.bg) {
     vars.forEach(v => root.removeProperty(v));
@@ -142,7 +151,7 @@ ROUTES.theme = () => {
   <div class="card"><h3 style="margin-top:0">Motywy</h3><div class="themes">${THEMES.map(t => {
     const owned = themeOwned(t), on = th.id === t.id;
     const bg = t.bg ? `background:${t.bg};background-image:${t.image || 'none'}` : 'background:linear-gradient(135deg,#f5f6fb 50%,#0f1117 50%)';
-    return `<button class="theme${on ? ' on' : ''}" style="${bg}" data-act="theme-pick" data-id="${t.id}">
+    return `<button class="theme${on ? ' on' : ''}${t.fx ? ' th-fx' : ''}" style="${bg}${themeFxVars(t)}" data-act="theme-pick" data-id="${t.id}">
       <span class="dot" style="background:${t.accent}"></span><b style="color:${t.bg && lum(t.bg) < .18 ? '#fff' : '#1b1d29'}">${t.name}</b>
       ${owned ? '' : `<small class="lock">🔒 ${t.price} 💎</small>`}</button>`;
   }).join('')}</div></div>
