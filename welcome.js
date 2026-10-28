@@ -115,3 +115,22 @@ const wlMore0 = viewMore;
 viewMore = function (...a) { return wlMore0(...a) + '<div class="card"><button class="block" data-act="wl-open">📘 Instrukcja, konto i zgody</button></div>'; };
 // zmiana trybu gdziekolwiek = tryb wybrany świadomie; okienko profilu odświeża się od razu
 { const sm0 = ACTIONS['set-mode']; ACTIONS['set-mode'] = (el, ...a) => { S.stats.modeChosen = Date.now(); sm0(el, ...a); if (el.dataset.m !== 'full' && parseRoute().parts[0] === 'me') go('#/more'); if (document.querySelector('.pp-overlay') && typeof showProfilePop === 'function') showProfilePop(); }; }
+// 🎯 mini kółko na stronie głównej: stuknij → rozwijają się 3 tryby → stuknij tryb i gotowe
+let MODE_FAB_OPEN = false;
+function modeFab() {
+  let el = document.getElementById('mode-fab');
+  const show = S && (parseRoute().parts[0] || '') === '' && !welcomeOpen();
+  if (!show) { el?.remove(); MODE_FAB_OPEN = false; return; }
+  if (!el) { el = document.createElement('div'); el.id = 'mode-fab'; document.body.append(el); }
+  const cur = WL_MODES.find(([m]) => m === appMode()) || WL_MODES[0];
+  el.className = MODE_FAB_OPEN ? 'open' : '';
+  el.innerHTML = `${MODE_FAB_OPEN ? WL_MODES.filter(([m]) => m !== cur[0]).map(([m, ic, n]) => `<button class="mf-opt" data-act="mode-fab-set" data-m="${m}"><span>${ic}</span><b>${n}</b></button>`).join('') : ''}
+    <button class="mf-main" data-act="mode-fab" title="Tryb: ${cur[2]}" aria-label="Zmień tryb (teraz: ${cur[2]})">${MODE_FAB_OPEN ? '✕' : cur[1]}</button>`;
+}
+{ const r0 = render; render = (...a) => { const v = r0(...a); try { modeFab(); } catch { /* */ } return v; }; }
+window.addEventListener('hashchange', () => setTimeout(modeFab, 0));
+document.addEventListener('click', e => { if (MODE_FAB_OPEN && e.target.isConnected && !e.target.closest('#mode-fab')) { MODE_FAB_OPEN = false; modeFab(); } });
+Object.assign(ACTIONS, {
+  'mode-fab': () => { MODE_FAB_OPEN = !MODE_FAB_OPEN; modeFab(); },
+  'mode-fab-set': el => { MODE_FAB_OPEN = false; ACTIONS['set-mode'](el); modeFab(); },
+});
