@@ -116,7 +116,8 @@ const hasItem = (kind, key) => itemCount(kind, key) > 0;
 const addItem = (kind, key, q = 1, id = uid()) => { if (S.items.some(i => i.id === id)) return; S.items.push({ id, kind, key, q, t: Date.now() }); save(); };
 const ownedStickers = () => [...new Set([...FREE_STICKERS, ...STICKERS.filter(s => hasItem('sticker', s.id) || hasItem('shiny', s.id)).map(s => s.id)])];
 const stickerTile = (id, extra = '') => { const s = stickerById(id); if (!s) return ''; return `<span class="mini-st${fxCls(shinyLv(id))}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}"${extra}>${stE(s)}</span>`; };
-const showcaseHTML = ids => (ids || []).filter(id => stickerById(id)).slice(0, 3).map(id => stickerTile(id)).join('');
+const showcaseHTML = ids => (ids || []).filter(id => stickerById(id) || (typeof cosById === 'function' && cosById(id))).slice(0, 3).map(id => stickerById(id) ? stickerTile(id) : cosShowTile(id)).join('');
+const cosShowTile = id => { const c = cosById(id); return `<span class="cos-sc r-${c.r}" style="--rc:${COS_R[c.r].c}" title="${esc(c.n)} · ${COS_R[c.r].n}">${cosIconHTML(c)}</span>`; };
 const coinsHTML = () => `<span class="coins">💎 ${coins()}</span>`;
 
 function rollRarity(odds) {

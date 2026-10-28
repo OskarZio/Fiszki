@@ -28,12 +28,14 @@ const CLS_AV = {};
 async function clsAvatars(onlyNew) {
   const ids = [...new Set([...CLS.members.map(m => m.id), ...CLS.msgs.map(m => m.from)])].filter(x => x && x !== myId() && !(onlyNew && CLS_AV[x]));
   if (!ids.length) return;
-  const r = await SB.from('profiles').select('id,nick,avatar,avatar_img').in('id', ids.slice(0, 200));
+  const r = await SB.from('profiles').select('id,nick,avatar,avatar_img,stats').in('id', ids.slice(0, 200));
   if (r.error) return;
-  for (const p of r.data || []) CLS_AV[sStr(p.id, 40)] = { avatar: sStr(p.avatar, 16) || '🦊', avatarImg: safeImg(p.avatar_img), nick: sStr(p.nick, 24) };
+  for (const p of r.data || []) CLS_AV[sStr(p.id, 40)] = { avatar: sStr(p.avatar, 16) || '🦊', avatarImg: safeImg(p.avatar_img), nick: sStr(p.nick, 24), cos: typeof sCos === 'function' ? sCos(p.stats?.cos) : null };
   if (parseRoute().parts[0] === 'class') CLS.tab === 'chat' ? clsChatRefresh() : render();
 }
-const clsAv = (id, size) => avatarHTML(id === myId() ? { avatar: S.profile.avatar, avatarImg: S.profile.avatarImg } : CLS_AV[id] || { avatar: '🙂' }, size);
+const clsAv = (id, size) => avatarHTML(id === myId() ? S.profile : CLS_AV[id] || { avatar: '🙂' }, size);
+const clsCos = id => id === myId() ? S.profile.cos : CLS_AV[id]?.cos;
+const clsBb = id => { const b = typeof sCos === 'function' && (id === myId() ? (typeof myCos === 'function' && myCos()) : sCos(clsCos(id)))?.bubble; return b ? ' bb-' + b : ''; };
 async function clsMsgs() {
   const id = CLS.cur; if (!id) return;
   const r = await SB.from('class_msgs').select('id,from_id,nick,body,created_at').eq('class_id', id).order('id', { ascending: false }).limit(100);
@@ -105,7 +107,7 @@ async function clsSend(text) {
 }
 // ---------- widoki
 const clsHead = (t, back) => `<div class="row nowrap"><button class="iconbtn" data-go="${back}">‹</button><h1 class="grow" style="margin:0">${t}</h1></div>`;
-const clsMsgsHTML = () => CLS.msgs.length ? CLS.msgs.map(x => `<div class="gc-m${x.from === myId() ? ' me' : ''}">${x.from === myId() ? '' : `<small class="cls-who"><span class="cls-av">${clsAv(x.from, 18)}</span>${esc(x.nick)}</small>`}<span>${esc(x.body)}</span><i>${new Date(x.t).toLocaleString('pl-PL', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</i></div>`).join('')
+const clsMsgsHTML = () => CLS.msgs.length ? CLS.msgs.map(x => `<div class="gc-m${x.from === myId() ? ' me' : ''}${clsBb(x.from)}">${x.from === myId() ? '' : `<small class="cls-who"><span class="cls-av">${clsAv(x.from, 18)}</span>${typeof nickHTML === 'function' ? nickHTML(x.nick, clsCos(x.from), false) : esc(x.nick)}</small>`}<span>${esc(x.body)}</span><i>${new Date(x.t).toLocaleString('pl-PL', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</i></div>`).join('')
   : '<p class="small muted center" style="margin:18px 0">Napisz pierwszą wiadomość do klasy 👋</p>';
 function clsListView() {
   if (!cloudOn()) return { tab: 'friends', html: `${clsHead('🏫 Klasa', '#/rank')}<div class="card center"><div style="font-size:54px">🏫</div><p>Klasy działają po zalogowaniu – wtedy koledzy widzą Twoje zestawy, a Ty ich, i macie wspólny czat.</p><button class="primary block" data-go="#/more">🔑 Zaloguj się</button></div>` };
@@ -138,7 +140,7 @@ function clsView(id) {
     setTimeout(() => { const b = document.querySelector('.cls-chat .gc-list'); if (b) b.scrollTop = b.scrollHeight; }, 0);
   } else {
     body = `<div class="card center"><div class="small muted">Kod klasy</div><div class="coop-code">${esc(c.code)}</div><button class="sm" data-act="cls-invite" data-link="${esc(link)}" data-code="${esc(c.code)}">📤 Zaproś do klasy</button></div>
-      <div class="card"><h3 style="margin-top:0">Członkowie (${CLS.members.length})</h3>${CLS.members.map(m => `<div class="row nowrap cls-mem"><span class="g-av cls-av">${clsAv(m.id, 34)}</span><b class="grow">${esc(m.nick)}${m.id === myId() ? ' <small>(Ty)</small>' : ''}${m.id === c.owner ? ' 👑' : ''}</b>${owner && m.id !== myId() ? `<button class="sm ghost" data-act="cls-kick" data-id="${esc(m.id)}">Usuń</button>` : ''}</div>`).join('')}</div>
+      <div class="card"><h3 style="margin-top:0">Członkowie (${CLS.members.length})</h3>${CLS.members.map(m => `<div class="row nowrap cls-mem"><span class="g-av cls-av">${clsAv(m.id, 34)}</span><b class="grow">${typeof nickHTML === 'function' ? nickHTML(m.nick, clsCos(m.id)) : esc(m.nick)}${m.id === myId() ? ' <small>(Ty)</small>' : ''}${m.id === c.owner ? ' 👑' : ''}</b>${owner && m.id !== myId() ? `<button class="sm ghost" data-act="cls-kick" data-id="${esc(m.id)}">Usuń</button>` : ''}</div>`).join('')}</div>
       <button class="ghost block" data-act="cls-leave">${owner ? '🗑️ Usuń klasę' : '🚪 Opuść klasę'}</button>`;
   }
   return { tab: 'friends', html: `${clsHead('🏫 ' + esc(c.name), '#/class')}${CLS.err ? `<p class="bad small">${esc(CLS.err)}</p>` : ''}${tabs}${body}` };

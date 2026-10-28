@@ -56,6 +56,7 @@ function sMsgBody(b) {
   if ('st' in b) out.st = sId(b.st, /^[a-z0-9_-]{1,24}$/);
   if ('shiny' in b) out.shiny = sInt(b.shiny === true ? 1 : b.shiny, 0, 2);
   if ('gif' in b) out.gif = sId(b.gif);
+  if ('rx' in b) out.rx = sId(b.rx, /^[a-z0-9_]{1,24}$/);   // 💥 reakcja premium (id z katalogu prestiżu)
   if ('code' in b) out.code = sId(b.code, /^[A-Z0-9]{4,10}$/);
   if ('deck' in b) out.deck = sStr(b.deck, 80);
   for (const k of ['n', 'ref']) if (k in b) out[k] = sInt(b[k], 0, 1e6);

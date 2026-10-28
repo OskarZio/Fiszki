@@ -162,7 +162,9 @@ function profilePopHTML() {
   return `<div class="pp-box card">
     <button class="iconbtn pp-x" data-act="pp-close">✕</button>
     <div class="center"><button class="pp-av" data-act="pp-photo" title="Zmień zdjęcie">${avatarHTML(p, 84)}<i>📷</i></button>
-      <h2 class="nm" style="margin:8px 0 0">${esc(p.nick || 'Ty')}</h2></div>
+      <h2 class="nm" style="margin:8px 0 0">${typeof nickHTML === 'function' ? nickHTML(p.nick || 'Ty', p.cos) : esc(p.nick || 'Ty')}</h2>
+      ${typeof showcaseHTML === 'function' && (p.showcase || []).length ? `<div class="pp-showcase"><small class="muted">Gablota</small><span class="showcase">${showcaseHTML(p.showcase)}</span></div>` : ''}
+      ${typeof ROUTES.cos === 'function' ? '<button class="sm pp-cos" data-act="pp-cos">👑 Prestiż – ramki, tytuły, efekty</button>' : ''}</div>
     ${xpCardHTML(true)}
     <div class="pp-stats"><div><b>💎 ${typeof coins === 'function' ? coins() : 0}</b><small>kryształy</small></div><div><b>🔥 ${streak()}</b><small>seria</small></div>
       <div><b>⚔️ ${elo}</b><small>Elo</small></div><div><b>🏅 ${Object.keys(S.ach).length}</b><small>osiągnięcia</small></div></div>

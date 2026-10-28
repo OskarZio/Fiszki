@@ -278,7 +278,7 @@ function homeExtrasHTML() {
   const mine = rankRows().find(r => r.me), pos = mine ? rankRows().sort((x, y) => y.today - x.today).indexOf(mine) + 1 : 0;
   return `<div class="card tight">
     <div class="row nowrap" style="gap:14px"><span class="lvl">${lvl}</span>
-      <div class="grow"><div class="row small nowrap" style="margin-bottom:10px"><b class="grow nickrow" data-go="#/more" style="cursor:pointer">${avatarHTML(S.profile, 26)}<span class="nm nk">${esc(S.profile.nick || 'Ty')}</span><span class="nm lt">· ${levelTitle(lvl)}</span></b><span class="muted">${xp - a}/${b - a} XP</span></div>
+      <div class="grow"><div class="row small nowrap" style="margin-bottom:10px"><b class="grow nickrow" data-go="#/more" style="cursor:pointer">${avatarHTML(S.profile, 26)}<span class="nm nk">${typeof nickHTML === 'function' ? nickHTML(S.profile.nick || 'Ty', S.profile.cos, false) : esc(S.profile.nick || 'Ty')}</span><span class="nm lt">· ${levelTitle(lvl)}</span></b><span class="muted">${xp - a}/${b - a} XP</span></div>
       ${progress((xp - a) / (b - a), true)}</div></div>
     <div class="spacer"></div>
     <div class="row"><button class="sm grow primary" data-go="#/battles">⚔️ Bitwa</button><button class="sm grow" data-go="#/shop">💎 ${typeof coins === 'function' ? coins() : 0}</button></div>
@@ -319,7 +319,7 @@ function myProfile() {
   const best = {}; for (const g of S.games) if (g.correct > (best[g.d] || 0)) best[g.d] = g.correct;
   return { app: 'fiszki-profil', v: 1, nick: S.profile.nick || 'Anonim', avatar: S.profile.avatar || '🦊', avatarImg: safeImg(S.profile.avatarImg), level: levelOf(xp), xp, elo: typeof myElo === 'function' ? myElo() : 1000,
     streak: streak(), day: dayKey(Date.now()), today: reviewsToday(), week, perDay, perMin, total: S.log.length, cards: S.cards.length,
-    mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now(), ...(S.stats.wboss ? { wboss: S.stats.wboss } : {}), ...(S.settings.showGlobal ? { showGlobal: 1 } : {}) };
+    mature: S.cards.filter(c => c.srs.ivl >= 21).length, ach: Object.keys(S.ach).length, best, showcase: S.profile.showcase || [], updated: Date.now(), ...(S.stats.wboss ? { wboss: S.stats.wboss } : {}), ...(S.settings.showGlobal ? { showGlobal: 1 } : {}), ...(typeof myCos === 'function' && myCos() ? { cos: myCos() } : {}) };
 }
 async function publishProfile(force) {
   const cfg = S.settings.sync;
@@ -372,7 +372,7 @@ function rankRows() {
     const n = (v, max = 1e7) => { const x = Math.floor(+v); return Number.isFinite(x) ? Math.max(0, Math.min(max, x)) : 0; };
     return { weekMin: n(weekMin, 1e5), nick: String(p.nick || 'Gracz').slice(0, 24), avatar: String(p.avatar || '🦊').slice(0, 16), avatarImg: safeImg(p.avatarImg), elo: n(p.elo, 5000) || 1000,
       today: n(p.day === today ? p.today : per[today]), week: n(week), streak: streakAlive ? n(p.streak, 1e5) : 0, level: n(p.level, 1e4) || 1, xp: n(p.xp, 1e9), total: n(p.total, 1e9),
-      updated: n(p.updated, 1e13) || 0, ach: n(p.ach, 1e4), wboss: p.wboss && typeof weekId === 'function' && p.wboss.w === weekId() ? n(p.wboss.dmg, 1e8) : 0, showcase: (Array.isArray(p.showcase) ? p.showcase : []).filter(id => typeof id === 'string' && /^[a-z0-9_-]{1,24}$/.test(id)).slice(0, 3) };
+      updated: n(p.updated, 1e13) || 0, ach: n(p.ach, 1e4), wboss: p.wboss && typeof weekId === 'function' && p.wboss.w === weekId() ? n(p.wboss.dmg, 1e8) : 0, showcase: (Array.isArray(p.showcase) ? p.showcase : []).filter(id => typeof id === 'string' && /^[a-z0-9_-]{1,24}$/.test(id)).slice(0, 3), cos: typeof sCos === 'function' ? sCos(p.cos) : null };
   };
   const me = { ...norm(myProfile()), me: true };
   const rows = S.friends.map(f => FRIEND_DATA[f.code]?.app ? { ...norm(FRIEND_DATA[f.code]), id: f.id, err: FRIEND_DATA[f.code].err } : { nick: f.name || 'Znajomy', avatar: '❔', id: f.id, today: 0, week: 0, streak: 0, level: 0, xp: 0, err: FRIEND_DATA[f.code]?.err || 'brak danych' });
@@ -397,9 +397,9 @@ ROUTES.rank = () => {
   <div class="seg rank-tabs">${tabs.map(([k, l]) => `<button class="${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
   <div class="card">${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}">
       <span class="medal">${medal(i)}</span><span class="av">${avatarHTML(r, 34)}</span>
-      <div class="grow"><div class="row nowrap"><b class="grow nickrow"><span class="nm">${esc(r.nick)}</span>${r.me ? '<span>(Ty)</span>' : ''}${typeof showcaseHTML === 'function' ? `<span>${showcaseHTML(r.showcase)}</span>` : ''}</b><span>${val(r)}</span></div>
+      <div class="grow"><div class="row nowrap"><b class="grow nickrow"><span class="nm">${typeof nickHTML === 'function' ? nickHTML(r.nick, r.cos, false) : esc(r.nick)}</span>${r.me ? '<span>(Ty)</span>' : ''}${typeof showcaseHTML === 'function' ? `<span>${showcaseHTML(r.showcase)}</span>` : ''}</b><span>${val(r)}</span></div>
         ${RANK_TAB === 'today' ? progress(r.today / maxToday, true) : ''}
-        <div class="small muted">${r.err ? '⚠️ ' + esc(r.err) : r.me ? `poziom ${r.level} · 🔥 ${r.streak} · ${r.total} powtórek łącznie` : `poziom ${r.level} · 🔥 ${r.streak} · aktualizacja ${ago(r.updated)}`}</div></div>
+        <div class="small muted">${typeof cosTitleHTML === 'function' ? cosTitleHTML(sCos(r.cos)).replace('class="ttl', 'class="ttl ttl-l') : ''}${r.err ? '⚠️ ' + esc(r.err) : r.me ? `poziom ${r.level} · 🔥 ${r.streak} · ${r.total} powtórek łącznie` : `poziom ${r.level} · 🔥 ${r.streak} · aktualizacja ${ago(r.updated)}`}</div></div>
       ${r.me ? '' : `<button class="ghost sm" data-act="friend-del" data-id="${r.id}">✕</button>`}</div>`).join('')}
     ${S.friends.length ? '' : '<p class="muted small center">Dodaj znajomych, żeby się porównywać 💪</p>'}</div>
   <div class="card">

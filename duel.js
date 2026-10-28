@@ -38,8 +38,8 @@ function duelAcc(input, correct) {
   const sim = Math.max(0, ...alts.map(a => 1 - lev(x, a) / Math.max(a.length, x.length, 1)));
   return Math.round(60 + 35 * Math.max(0, Math.min(1, sim)));
 }
-const duelMe = () => { const h = hero(), st = heroStats(); return { nick: (S.profile.nick || 'Gracz').slice(0, 24), line: heroLine(h), form: heroForm(h), g: h.g === 'm' ? 'm' : 'w', lv: heroLv(), crit: Math.min(.1, +st.crit.toFixed(3)), ult: lineDef().ult[0] }; };
-const sDuelP = p => p && typeof p === 'object' ? { nick: sStr(p.nick, 24) || 'Gracz', line: CHAR_LINES[p.line] ? p.line : 'cat', form: sInt(p.form, 0, 3), g: p.g === 'm' ? 'm' : 'w', lv: sInt(p.lv, 1, 99, 1), crit: sNum(p.crit, 0, .1, 0), ult: sStr(p.ult, 40) || '⚡ Supercios' } : null;
+const duelMe = () => { const h = hero(), st = heroStats(); return { nick: (S.profile.nick || 'Gracz').slice(0, 24), line: heroLine(h), form: heroForm(h), g: h.g === 'm' ? 'm' : 'w', lv: heroLv(), crit: Math.min(.1, +st.crit.toFixed(3)), ult: lineDef().ult[0], cos: typeof myCos === 'function' ? myCos() : null }; };
+const sDuelP = p => p && typeof p === 'object' ? { nick: sStr(p.nick, 24) || 'Gracz', line: CHAR_LINES[p.line] ? p.line : 'cat', form: sInt(p.form, 0, 3), g: p.g === 'm' ? 'm' : 'w', lv: sInt(p.lv, 1, 99, 1), crit: sNum(p.crit, 0, .1, 0), ult: sStr(p.ult, 40) || '⚡ Supercios', cos: typeof sCos === 'function' ? sCos(p.cos) : null } : null;
 function sDuel(m) {
   if (!m || typeof m !== 'object' || typeof m.t !== 'string') return null;
   const o = { t: sStr(m.t, 10), from: sStr(m.from, 40) };
@@ -72,9 +72,9 @@ function duelBegin(set, first, mode, qf) {
   d.max = { me: duelMaxHp(d.me), opp: duelMaxHp(d.opp) }; d.hp = { ...d.max }; d.streak = { me: 0, opp: 0 }; d.fz = { me: false, opp: false }; d.regen = { me: 0, opp: 0 }; d.mirror = { me: false, opp: false }; d.adren = { me: false, opp: false }; d.lupa = false; d.used = 0; d.bag = false; d.loot = null; d.pp = Object.fromEntries(Object.entries(DMOVES).map(([k, m]) => [k, m.pp])); d.ult = 0; d.guard = { me: false, opp: false };
   d.turn = first ? 'me' : 'opp'; d.log = []; d.q = null; d.ask = null; d.deck = shuffle(set.cards.map((_, i) => i)); d.di = 0; d.stats = { ok: 0, bad: 0 }; d.seen = Date.now();
   duelLog(`⚔️ ${d.me.nick} kontra ${d.opp.nick}! Talia: „${set.name}” · ${DUEL_QF[d.qf]}`);
-  if (d.mode === 'speed') { d.turn = null; duelLog(d.qf === 'type' ? '✍️ Kto bliżej! Ta sama fiszka u obu – wpisz odpowiedź, celniejsza atakuje (remis – szybsza).' : '⚡ Kto szybciej! Ta sama fiszka u obu – pierwsza dobra odpowiedź atakuje.'); go('#/duel/fight'); render(); if (d.host) setTimeout(() => { if (D === d) duelRound(); }, 1500); return; }
+  if (d.mode === 'speed') { d.turn = null; duelLog(d.qf === 'type' ? '✍️ Kto bliżej! Ta sama fiszka u obu – wpisz odpowiedź, celniejsza atakuje (remis – szybsza).' : '⚡ Kto szybciej! Ta sama fiszka u obu – pierwsza dobra odpowiedź atakuje.'); go('#/duel/fight'); render(); if (typeof cosDuelIntro === 'function') cosDuelIntro(d); if (d.host) setTimeout(() => { if (D === d) duelRound(); }, 1500); return; }
   duelLog(d.turn === 'me' ? '👉 Zaczynasz – wybierz ruch!' : `⏳ Zaczyna ${d.opp.nick}…`);
-  go('#/duel/fight'); render(); if (d.bot && d.turn === 'opp') duelBotTurn();
+  go('#/duel/fight'); render(); if (typeof cosDuelIntro === 'function') cosDuelIntro(d); if (d.bot && d.turn === 'opp') duelBotTurn();
 }
 const duelLog = t => { if (D) { D.log.unshift(t); D.log = D.log.slice(0, 3); D.msgAt = Date.now(); } };
 const duelCard = d => { const x = d.set.cards[d.deck[d.di++ % d.deck.length]]; if (d.di % d.deck.length === 0) d.deck = shuffle(d.deck); return x; };
@@ -155,7 +155,7 @@ function duelEnd(won) {
   d.loot = Array.from({ length: n }, () => { let r = Math.random() * keys.reduce((a, k) => a + PVP_W[k], 0); for (const k of keys) { if ((r -= PVP_W[k]) < 0) return k; } return keys[0]; });
   d.loot.forEach(k => addItem('pvp', k, 1));
   S.stats.duels = (S.stats.duels || 0) + 1; if (won) S.stats.duelWins = (S.stats.duelWins || 0) + 1; save();
-  if (typeof bossSfx === 'function') bossSfx(won ? 'win' : 'lose'); if (won && typeof confetti === 'function') confetti(120); render();
+  if (typeof bossSfx === 'function') bossSfx(won ? 'win' : 'lose'); if (won && typeof confetti === 'function') confetti(120); render(); if (typeof cosDuelWin === 'function') cosDuelWin(d);
 }
 function duelMsg(m0) {
   const m = sDuel(m0), d = D; if (!m || !d) return; d.seen = Date.now();
@@ -204,8 +204,8 @@ setInterval(() => {
   else if (a && el) el.style.width = Math.max(0, 100 - (Date.now() - a.at) / (a.lim || DQ_MS[a.kind]) * 100) + '%';
 }, 200);
 // ---------- widoki
-const duelFig = (p, cls) => `<div class="hero-fig duel-fig ${cls} ln-${p.line}${typeof spriteVars === 'function' ? spriteVars(p.line, p.form) : ''}">${heroArt(p.line, p.form, p.g)}</div>`;
-const duelBox = (p, hp, mine, guard, max = DUEL_HP, fx = '') => `<div class="dbox ${mine ? 'me' : 'op'}"><div class="dbox-h"><b>${esc(p.nick)}</b><small>Poz. ${p.lv}</small></div>
+const duelFig = (p, cls) => `<div${typeof cosFigAttr === 'function' ? cosFigAttr(p.cos) : ''} class="hero-fig duel-fig ${cls}${typeof cosFigCls === 'function' ? cosFigCls(p.cos) : ''} ln-${p.line}${typeof spriteVars === 'function' ? spriteVars(p.line, p.form) : ''}">${heroArt(p.line, p.form, p.g)}</div>`;
+const duelBox = (p, hp, mine, guard, max = DUEL_HP, fx = '') => `<div class="dbox ${mine ? 'me' : 'op'}"><div class="dbox-h"><b>${typeof nickHTML === 'function' ? nickHTML(p.nick, p.cos, false) : esc(p.nick)}</b><small>Poz. ${p.lv}</small></div>
   <div class="dhp"><span>HP</span><div class="dhp-bar"><i class="${hp / max < .25 ? 'red' : hp / max < .5 ? 'yel' : ''}" style="width:${(hp / max * 100).toFixed(1)}%"></i></div></div>${mine ? `<div class="dhp-n">${hp} / ${max}</div>` : ''}${guard || fx ? `<em>${guard ? '🛡️ garda ' : ''}${fx}</em>` : ''}</div>`;
 // stany na ramce: seria, zamrożenie, tarcza, regeneracja, adrenalina
 const duelFx = (d, w) => [d.streak?.[w] >= 2 ? `🔥${d.streak[w]}` : '', d.fz?.[w] ? '❄️' : '', d.mirror?.[w] ? '🪞' : '', d.regen?.[w] ? '🌿' : '', d.adren?.[w] ? '⚡' : ''].filter(Boolean).join(' ');

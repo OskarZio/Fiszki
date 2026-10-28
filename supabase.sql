@@ -312,6 +312,53 @@ create policy "profile_read" on public.profiles for select to authenticated usin
   or exists (select 1 from public.friends f where (f.user_id = auth.uid() and f.friend_id = profiles.id) or (f.friend_id = auth.uid() and f.user_id = profiles.id))
   or public.shares_class(id));
 
+-- 👑 Prestiż: ogłoszenia rzadkich dropów (legendarne/mityczne) widoczne dla wszystkich zalogowanych
+-- oraz „Odkrywca” – kto pierwszy w całej aplikacji zdobył dany przedmiot (klucz główny = przedmiot, wygrywa pierwszy zapis)
+create table if not exists public.cos_drops (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users on delete cascade,
+  nick text not null default 'Gracz',
+  item text not null,
+  rarity text not null,
+  first boolean not null default false,
+  created_at timestamptz not null default now());
+create index if not exists cos_drops_time on public.cos_drops (created_at desc);
+create table if not exists public.cos_firsts (
+  item text primary key,
+  user_id uuid not null references auth.users on delete cascade,
+  nick text not null default 'Gracz',
+  created_at timestamptz not null default now());
+alter table public.cos_drops enable row level security;
+alter table public.cos_firsts enable row level security;
+alter table public.cos_drops drop constraint if exists cosd_chk;
+alter table public.cos_drops add constraint cosd_chk check (char_length(nick) <= 24 and item ~ '^[a-z0-9_]{1,24}$' and rarity in ('legendary', 'mythic')) not valid;
+alter table public.cos_firsts drop constraint if exists cosf_chk;
+alter table public.cos_firsts add constraint cosf_chk check (char_length(nick) <= 24 and item ~ '^[a-z0-9_]{1,24}$') not valid;
+drop policy if exists "cosd_read" on public.cos_drops;
+drop policy if exists "cosd_insert" on public.cos_drops;
+drop policy if exists "cosd_delete" on public.cos_drops;
+create policy "cosd_read" on public.cos_drops for select to authenticated using (true);
+create policy "cosd_insert" on public.cos_drops for insert to authenticated with check (user_id = auth.uid());
+create policy "cosd_delete" on public.cos_drops for delete to authenticated using (user_id = auth.uid());
+drop policy if exists "cosf_read" on public.cos_firsts;
+drop policy if exists "cosf_insert" on public.cos_firsts;
+create policy "cosf_read" on public.cos_firsts for select to authenticated using (true);
+create policy "cosf_insert" on public.cos_firsts for insert to authenticated with check (user_id = auth.uid());
+drop policy if exists "cosf_delete" on public.cos_firsts;
+create policy "cosf_delete" on public.cos_firsts for delete to authenticated using (user_id = auth.uid());
+revoke update on public.cos_drops from authenticated;
+revoke update on public.cos_firsts from authenticated;
+-- czas ustawia serwer, max 20 ogłoszeń na osobę dziennie
+create or replace function public.cos_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if tg_table_name = 'cos_drops' and (select count(*) from public.cos_drops where user_id = new.user_id and created_at > now() - interval '1 day') >= 20 then raise exception 'rate limit'; end if;
+  new.created_at := now(); return new;
+end $$;
+drop trigger if exists cos_drops_guard on public.cos_drops;
+create trigger cos_drops_guard before insert on public.cos_drops for each row execute function public.cos_guard();
+drop trigger if exists cos_firsts_guard on public.cos_firsts;
+create trigger cos_firsts_guard before insert on public.cos_firsts for each row execute function public.cos_guard();
+
 -- Wersja skryptu – aplikacja sprawdza ją w Panelu hosta („Aktualizacja bazy”)
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-28b'::text $$;
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-28c'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

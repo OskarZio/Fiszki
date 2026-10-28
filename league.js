@@ -8,9 +8,9 @@ const weekStart = (t = Date.now()) => { const d = new Date(dayStart(t)), dow = (
 const weekKeyOf = t => dayKey(weekStart(t));
 const weekDays = ws => Array.from({ length: 7 }, (_, i) => dayKey(addDays(ws, i)));
 function leaguePeople() {
-  const me = { me: true, nick: S.profile.nick || 'Ty', avatar: S.profile.avatar || '🦊', avatarImg: S.profile.avatarImg, perDay: myProfile().perDay };
+  const me = { me: true, nick: S.profile.nick || 'Ty', avatar: S.profile.avatar || '🦊', avatarImg: S.profile.avatarImg, cos: S.profile.cos, perDay: myProfile().perDay };
   let fr = [];
-  if (typeof cloudOn === 'function' && cloudOn()) fr = (CLOUD_FRIENDS || []).map(p => ({ id: p.id, nick: p.nick || 'Znajomy', avatar: p.avatar, avatarImg: p.avatar_img, perDay: p.stats?.perDay || {} }));
+  if (typeof cloudOn === 'function' && cloudOn()) fr = (CLOUD_FRIENDS || []).map(p => ({ id: p.id, nick: p.nick || 'Znajomy', avatar: p.avatar, avatarImg: p.avatar_img, cos: p.stats?.cos, perDay: p.stats?.perDay || {} }));
   else fr = (S.friends || []).map(f => FRIEND_DATA[f.code]).filter(x => x?.app).map(p => ({ nick: p.nick, avatar: p.avatar, avatarImg: p.avatarImg, perDay: p.perDay || {} }));
   return [me, ...fr];
 }
@@ -46,7 +46,7 @@ function leagueCardHTML() {
   return `<div class="card league"><div class="row nowrap"><h2 class="grow" style="margin:0">🏆 Liga tygodnia</h2><span class="small muted">koniec za ${dd ? dd + ' d ' : ''}${hh} h</span></div>
     <p class="small muted" style="margin:4px 0 8px">Punkty = powtórki od poniedziałku. W niedzielę o północy podium dostaje ${LEAGUE_PRIZE.join(' / ')} 💎${S.stats.leagueStreak > 1 ? ` · Twoja seria podium: <b>${S.stats.leagueStreak} tyg.</b>` : ''}</p>
     ${solo ? '<p class="small">Dodaj znajomych (kod albo zaproszenie), żeby rywalizować w lidze.</p>' : tab.map((r, i) => `<div class="lg-row${r.me ? ' me' : ''}"><span class="lg-pl">${i < 3 && r.pts ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>
-      <span class="av">${avatarHTML({ avatar: r.avatar, avatarImg: r.avatarImg }, 30)}</span><b class="grow nm">${esc(r.nick)}${r.me ? ' (Ty)' : ''}</b><span class="lg-pts">${r.pts}</span></div>`).join('')}
+      <span class="av">${avatarHTML({ avatar: r.avatar, avatarImg: r.avatarImg, cos: r.cos }, 30)}</span><b class="grow nm">${esc(r.nick)}${r.me ? ' (Ty)' : ''}</b><span class="lg-pts">${r.pts}</span></div>`).join('')}
     ${prev.length >= 2 ? `<p class="small muted" style="margin:8px 0 0">Zeszły tydzień: ${prev.map((r, i) => `${['🥇', '🥈', '🥉'][i]} ${esc(r.nick)} (${r.pts})`).join(' · ')}</p>` : ''}</div>`;
 }
 const lgRank0 = ROUTES.rank;

@@ -152,6 +152,7 @@ function msgBodyHTML(m, mine) {
     return `<div class="sd-inv">👥 <b>Wspólna talia: ${esc(b.sdi.name || '')}</b><small>${mine ? 'Wysłano zaproszenie' : have ? 'Już jesteś w tej talii ✓' : 'Dodawajcie fiszki razem – każdy uczy się po swojemu'}</small>
       ${!mine && !have ? `<button class="sm primary" data-act="share-accept" data-id="${m.id}">Dołącz</button>` : have ? `<button class="sm" data-go="#/deck/${have.id}">Otwórz talię</button>` : ''}</div>`;
   }
+  if (b.rx && typeof cosReactHTML === 'function') return cosReactHTML(b);
   if (b.st) {   // naklejka (bez oddawania – tylko pokazanie)
     const s = stickerById(b.st); if (!s) return '🃏';
     return `<div class="chat-st${fxCls(+b.shiny || 0)}" style="--rc:${RARITY[s.r].color}"><span data-act="st-preview" data-id="${s.id}">${stE(s)}</span><small>${esc(s.name)}</small></div>`;
@@ -166,7 +167,7 @@ function msgBodyHTML(m, mine) {
 // emotki: wiadomość z samych emotek (do 6) jest duża i bez dymka; w tekście są lekko powiększone
 const EMO_RE = /\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic}|\p{Emoji_Modifier})*/gu;
 const emojiOnly = t => { const s = String(t).replace(/\s/g, ''); if (!s || s.replace(EMO_RE, '').replace(/[\uFE0F\u200D]/g, '')) return false; return (s.match(EMO_RE) || []).length <= 6; };
-const msgKind = m => m.kind !== 'text' ? m.kind : m.body?.st ? 'sticker' : m.body?.gif ? 'gif' : emojiOnly(m.body?.text || '') ? 'emoji' : 'text';
+const msgKind = m => m.kind !== 'text' ? m.kind : m.body?.rx ? 'rx' : m.body?.st ? 'sticker' : m.body?.gif ? 'gif' : emojiOnly(m.body?.text || '') ? 'emoji' : 'text';
 const QUICK_EMO = ['❤️', '😂', '🔥', '👍', '🎉', '😮', '😢', '🙏', '💯', '🤯', '😎', '🐐'];
 const hhmm = t => { const d = new Date(t); return (dayKey(+d) === dayKey(Date.now()) ? '' : d.toLocaleDateString('pl', { day: 'numeric', month: 'short' }) + ' ') + d.toLocaleTimeString('pl', { hour: '2-digit', minute: '2-digit' }); };
 
@@ -188,7 +189,7 @@ ROUTES.chat = parts => {
   });
   const gifts = giftable();
   return { tab: 'home', html: `
-  <div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img }, 36)}</span><h1 class="grow nm" style="font-size:24px">${esc(f.nick || 'Znajomy')}</h1></div>
+  <div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 36)}</span><h1 class="grow nm" style="font-size:24px">${esc(f.nick || 'Znajomy')}</h1></div>
   <div class="chat-tools">
     <button class="${CHAT.pick === 'media' ? 'primary' : ''}" data-act="chat-media-pick">😀 GIF</button>
     <button class="${CHAT.pick === 'gift' ? 'primary' : ''}" data-act="chat-pick">🎁 Podaruj</button>
@@ -219,7 +220,7 @@ ROUTES.inbox = () => {
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Wiadomości</h1><button class="iconbtn" data-act="inbox-refresh">🔄</button></div>
   <div class="card">${rows.length ? rows.map(r => `<div class="rankrow" data-go="#/chat/${r.f.id}" style="cursor:pointer">
-      <span class="av">${avatarHTML({ avatar: r.f.avatar, avatarImg: r.f.avatar_img }, 36)}</span>
+      <span class="av">${avatarHTML({ avatar: r.f.avatar, avatarImg: r.f.avatar_img, cos: r.f.stats?.cos }, 36)}</span>
       <div class="grow" style="min-width:0"><b class="nm" style="display:block">${esc(r.f.nick || 'Znajomy')}</b><div class="small muted nm">${esc(preview(r.last))}</div></div>
       ${r.unread ? `<span class="unread">${r.unread}</span>` : ''}</div>`).join('')
     : '<p class="muted small center">Dodaj znajomych w <a href="#/rank">rankingu</a>, żeby z nimi pisać.</p>'}</div>
@@ -340,7 +341,7 @@ ROUTES.battles = (...a) => {
   const open = MSGS.filter(m => m.to_id === myId() && challengeOpen(m));
   const card = `<div class="card"><div class="row nowrap"><h3 class="grow" style="margin:0">👥 Znajomi</h3><button class="sm ghost" data-go="#/inbox">💬 Wiadomości${unreadMsgs().length ? ` <span class="unread">${unreadMsgs().length}</span>` : ''}</button></div>
     ${open.map(m => `<div class="banner row nowrap"><span class="grow">⚔️ <b>${esc(friendName(m.from_id))}</b> wyzywa Cię${m.body?.deck ? ` · ${esc(m.body.deck)}` : ''}</span><button class="sm primary" data-act="chat-accept" data-id="${m.id}">Przyjmij</button></div>`).join('')}
-    ${CLOUD_FRIENDS.length ? CLOUD_FRIENDS.map(f => `<div class="rankrow"><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img }, 32)}</span>
+    ${CLOUD_FRIENDS.length ? CLOUD_FRIENDS.map(f => `<div class="rankrow"><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 32)}</span>
         <b class="grow nm">${esc(f.nick || 'Znajomy')}</b><button class="sm" data-go="#/chat/${f.id}">💬</button><button class="sm primary" data-act="bt-challenge-friend" data-fid="${f.id}">⚔️ Wyzwij</button></div>`).join('')
       : '<p class="small muted">Dodaj znajomych w <a href="#/rank">rankingu</a> – potem wyzwiesz ich tutaj jednym kliknięciem.</p>'}
     <p class="small muted" style="margin-bottom:0">Wyzwanie używa zasad z „⚙️ Zasady bitwy” poniżej – znajomy dostanie powiadomienie.</p></div>`;

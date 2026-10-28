@@ -6,7 +6,7 @@
 // Dane administratora wpisuje host w Panelu hosta (zapisują się w assets/config.json); tu tylko wartości zastępcze.
 const POLICY_OWNER_DEF = { name: '[imię i nazwisko administratora]', email: '[adres e-mail do spraw danych]' };
 const policyOwner = () => ({ ...POLICY_OWNER_DEF, ...(typeof SB_CFG !== 'undefined' && SB_CFG?.owner ? SB_CFG.owner : {}) });
-const POLICY_VERSION = '2026-10-20';
+const POLICY_VERSION = '2026-10-28';
 const consentOk = () => S.stats.consentVer === POLICY_VERSION;
 
 const POLICY_HTML = () => `
@@ -22,6 +22,7 @@ const POLICY_HTML = () => `
   <li><b>Fiszki, zdjęcia, postępy, ustawienia</b> – kopia do synchronizacji między Twoimi urządzeniami. Dostęp masz tylko Ty (zabezpieczenia na poziomie bazy danych – Row Level Security).</li>
   <li><b>Profil publiczny dla znajomych</b>: nick, awatar, kod znajomego i statystyki nauki (liczba powtórek, seria, poziom, czas nauki, Elo, naklejki w gablocie). Widzą go osoby, które dodasz do znajomych (albo które dodały Ciebie kodem).</li>
   <li><b>Ranking wszystkich</b> – tylko jeśli sam/a go włączysz (domyślnie wyłączony). Wtedy nick, awatar i statystyki widzą wszyscy zalogowani użytkownicy.</li>
+  <li><b>Ogłoszenia rzadkich przedmiotów prestiżu</b> – tylko jeśli je ogłosisz (albo masz włączony ranking wszystkich): nick i nazwa legendarnego/mitycznego przedmiotu są widoczne dla wszystkich zalogowanych (lista ostatnich dropów – 3 dni; tytuł „pierwszy w aplikacji” – do usunięcia konta).</li>
   <li><b>Wiadomości</b> do znajomych (tekst, naklejki, GIF-y, zaproszenia, wspólne talie) – widzą je tylko nadawca i odbiorca.</li>
   <li><b>Bitwy i teleturniej na żywo</b> – nick, awatar i odpowiedzi przesyłane w czasie gry; nie są zapisywane na serwerze (wynik zostaje tylko u graczy).</li>
 </ul>
@@ -138,6 +139,7 @@ async function gdprDelete() {
   else {   // baza bez funkcji – usuwamy przynajmniej wszystkie dane (konto logowania usunie administrator)
     for (const [t, q] of [['messages', `from_id.eq.${me},to_id.eq.${me}`], ['friends', `user_id.eq.${me},friend_id.eq.${me}`]]) await SB.from(t).delete().or(q);
     await SB.from('user_images').delete().eq('user_id', me);
+    for (const t of ['cos_drops', 'cos_firsts']) { try { await SB.from(t).delete().eq('user_id', me); } catch { /* stara baza */ } }
     await SB.from('user_data').delete().eq('user_id', me);
     await SB.from('profiles').delete().eq('id', me);
   }
@@ -166,7 +168,7 @@ viewMore = function () { return prMore0() + `<div class="card small center legal
 if (/(access_token|refresh_token)=/.test(location.hash)) history.replaceState(null, '', location.pathname);
 
 // ---------- 🛠️ Panel hosta: aktualizacja bazy jednym przyciskiem + dane administratora (RODO)
-const DB_VERSION = '2026-10-28b';   // podbijaj razem z public.db_version() w supabase.sql
+const DB_VERSION = '2026-10-28c';   // podbijaj razem z public.db_version() w supabase.sql
 let DB_STATE = null, DB_SQL = '';  // null = nie sprawdzono, 'ok', 'old', 'err'; skrypt pobrany z góry (schowek na iPhonie wymaga kliknięcia bez czekania)
 async function dbCheck(quiet) {
   if (!SB) { DB_STATE = 'err'; return; }
