@@ -1,5 +1,5 @@
 // Offline: aplikacja działa bez internetu. Zmień numer wersji przy każdej aktualizacji plików.
-const CACHE = 'fiszki-v148';
+const CACHE = 'fiszki-v149';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'assets/reakcja-kot.webp', 'assets/stickers/kot-zolnierz.webp', 'assets/stickers/kot-zolnierz-cut.webp'];
 
@@ -17,6 +17,15 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  // grafiki, czcionki, dźwięki: najpierw kopia z pamięci (nie znikają przy słabym zasięgu, np. postacie w walce),
+  // nowa wersja aplikacji (inny CACHE) i tak pobiera je od nowa
+  if (/\/(assets|icons)\//.test(url.pathname) && !/\.(txt|json)$/.test(url.pathname)) {
+    e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(hit => hit || fetch(e.request).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(url.origin + url.pathname, copy)); }
+      return res;
+    })));
+    return;
+  }
   e.respondWith(
     // „no-cache” = zawsze pytaj serwer o świeżą wersję (omija pamięć podręczną przeglądarki)
     fetch(e.request, { cache: 'no-cache' })
@@ -24,7 +33,7 @@ self.addEventListener('fetch', e => {
         if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(url.search ? url.origin + url.pathname : e.request, copy)); }   // bez ?t=… – jedna kopia na plik
         return res;
       })
-      .catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('index.html')))
+      .catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || (e.request.mode === 'navigate' ? caches.match('index.html') : Response.error())))
   );
 });
 

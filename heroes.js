@@ -112,3 +112,9 @@ function heroArt(line, f = 0, g = 'w') {
   if (SPRITE8[line]) return `<img class="charpx s8" src="assets/pixel/${line}8-${f}.webp" alt="" draggable="false">`;
   return `<img class="charpx" src="assets/pixel/${line}-${f}-${g}-${PX_SIZES[f]}.png" alt="" draggable="false">`;
 }
+// obrazek postaci nie wczytał się (słaby zasięg) – jeszcze jedna próba po chwili zamiast „?”
+document.addEventListener('error', e => {
+  const im = e.target; if (im?.tagName !== 'IMG' || !im.classList.contains('charpx') || im.dataset.retry) return;
+  im.dataset.retry = '1'; const src = im.getAttribute('src').split('?')[0];
+  setTimeout(() => { if (im.isConnected) im.src = src + '?r=' + Date.now(); }, 900);
+}, true);
