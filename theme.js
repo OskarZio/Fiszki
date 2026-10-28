@@ -163,9 +163,9 @@ const APP_ICONS = [['red', 'Czerwona'], ['blue', 'Niebieska'], ['purple', 'Fiole
   ['cyan', 'Turkusowa'], ['pink', 'Różowa'], ['ice', 'Lodowa'], ['violet', 'Indygo']];
 const appIconOf = () => APP_ICONS.some(([c]) => c === S?.settings?.appIcon) ? S.settings.appIcon : 'red';
 function applyAppIcon() {
-  const c = appIconOf(), touch = c === 'red' ? 'icons/apple-touch-icon.png' : `icons/alt/${c}-180.png`;
+  const c = appIconOf(), touch = (c === 'red' ? 'icons/apple-touch-icon.png' : `icons/alt/${c}-180.png`) + '?v=2';   // ?v – iOS nie bierze starej ikony z pamięci
   document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(l => { if (l.getAttribute('href') !== touch) l.setAttribute('href', touch); });
-  const fav = c === 'red' ? 'icons/favicon-64.png' : `icons/alt/${c}-180.png`;
+  const fav = (c === 'red' ? 'icons/favicon-64.png' : `icons/alt/${c}-180.png`) + '?v=2';
   document.querySelectorAll('link[rel="icon"]').forEach(l => { if (l.getAttribute('href') !== fav) l.setAttribute('href', fav); });
 }
 function appIconHTML() {
