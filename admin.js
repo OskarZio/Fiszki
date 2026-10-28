@@ -77,6 +77,9 @@ function adminHTML() {
     <p class="small muted">Wyłącz, czego nie potrzebujesz – aplikacja zrobi się prostsza. Dane zostają, w każdej chwili włączysz z powrotem.</p>
     <div class="feat-list">${Object.entries(FEATURES).map(([k, [name, , desc]]) => `<label class="feat"><input type="checkbox" data-feat="${k}" ${off[k] ? '' : 'checked'}><span><b>${name}</b><small>${desc}</small></span></label>`).join('')}</div>
     <div class="row" style="margin-top:8px"><button class="sm" data-act="feat-simple">✨ Tryb prosty: tylko nauka</button><button class="sm ghost" data-act="feat-all">Włącz wszystko</button></div>
+    <h3>🎨 Podgląd motywów premium</h3>
+    <p class="small muted" style="margin-top:0">Za darmo, bez kupowania – podgląd trwa do „Zakończ” albo do ponownego otwarcia aplikacji.</p>
+    <div class="themes">${THEMES.filter(t => t.price).map(t => `<button class="theme${THEME_PREVIEW?.id === t.id ? ' on' : ''}" style="background:${t.bg};background-image:${t.image || 'none'}" data-act="theme-preview" data-id="${t.id}"><span class="dot" style="background:${t.accent}"></span><b style="color:${lum(t.bg) < .18 ? '#fff' : '#1b1d29'}">${t.name}</b><small class="lock">${themeOwned(t) ? '✓ masz' : '👀 podgląd'}</small></button>`).join('')}</div>
     <h3>🥊 Pojedynek 1 na 1 – pytania</h3>
     <label class="field"><span class="small muted">Gospodarz pojedynku ustala rodzaj pytań dla obu graczy (też trening z botem).</span>
       <select data-duelq="1">${Object.entries(DUEL_QF).map(([k, n]) => `<option value="${k}" ${duelQf() === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
@@ -93,7 +96,22 @@ document.addEventListener('change', e => {
   S.settings.off = S.settings.off || {}; if (e.target.checked) delete S.settings.off[k]; else S.settings.off[k] = 1; save(); updateTabBadges();
   toast(`${FEATURES[k][0]}: ${e.target.checked ? 'włączone' : 'wyłączone'}`, 1600);
 });
+// 👀 podgląd motywu premium: tylko w pamięci (nie zapisuje się, nie synchronizuje), pasek u dołu kończy podgląd
+let THEME_PREVIEW = null;
+const admTheme0 = currentTheme;
+currentTheme = () => THEME_PREVIEW || admTheme0();
+function themePreviewBar() {
+  let el = document.querySelector('.tp-bar');
+  if (!THEME_PREVIEW) return el?.remove();
+  if (!el) { el = document.createElement('div'); el.className = 'tp-bar'; document.body.append(el); }
+  const t = THEMES.find(x => x.id === THEME_PREVIEW.id);
+  el.innerHTML = `<span class="grow">👀 Podgląd: <b>${esc(t?.name || '')}</b></span>${t && !themeOwned(t) ? `<button class="sm primary" data-act="theme-preview-buy">Kup ${t.price} 💎</button>` : ''}<button class="sm" data-act="theme-preview-end">Zakończ</button>`;
+}
 Object.assign(ACTIONS, {
+  'theme-preview': el => { const t = THEMES.find(x => x.id === el.dataset.id); if (!t) return;
+    THEME_PREVIEW = { id: t.id, bg: t.bg, accent: t.accent, image: t.image || null, ...(t.pixel ? { pixel: true } : {}) }; applyTheme(); themePreviewBar(); render(); toast(`👀 Podgląd: ${t.name}`, 1500); },
+  'theme-preview-end': () => { THEME_PREVIEW = null; applyTheme(); themePreviewBar(); render(); },
+  'theme-preview-buy': () => { THEME_PREVIEW = null; applyTheme(); themePreviewBar(); go('#/shop'); },
   'feat-on': el => { if (S.settings.off) delete S.settings.off[el.dataset.k]; save(); render(); },
   'feat-all': () => { S.settings.off = {}; save(); render(); toast('Wszystkie funkcje włączone'); },
   'feat-simple': () => { S.settings.off = Object.fromEntries(Object.keys(FEATURES).filter(k => !['methods', 'calendar', 'topics'].includes(k)).map(k => [k, 1])); save(); render(); toast('✨ Tryb prosty: nauka, metody, terminarz i kategorie'); },
@@ -104,3 +122,5 @@ Object.assign(ACTIONS, {
     save(); toast('🔄 Zresetowano – zaczynasz od nowa'); render();
   },
 });
+// wybór motywu w Wyglądzie kończy podgląd
+for (const k of ['theme-pick', 'theme-color', 'buy-theme']) { const f0 = ACTIONS[k]; if (f0) ACTIONS[k] = (...a) => { if (THEME_PREVIEW) { THEME_PREVIEW = null; themePreviewBar(); } return f0(...a); }; }

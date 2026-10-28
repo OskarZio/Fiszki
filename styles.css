@@ -2359,3 +2359,7 @@ ul.wl-pts { list-style: none; padding-left: 0; }
 .qr-img svg { display: block; width: 100%; height: auto; }
 /* przyciski w wierszu nigdy nie wychodzą poza krawędź (ikona + tekst) */
 .row > button.grow { min-width: 0; }
+/* 👀 pasek podglądu motywu (Panel admina) */
+.tp-bar { position: fixed; left: 12px; right: 12px; bottom: calc(var(--tabs-h, 64px) + 12px + env(safe-area-inset-bottom)); z-index: 70; display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px 8px 14px; border-radius: 14px; background: var(--card); color: var(--text); box-shadow: 0 6px 24px rgba(0,0,0,.3); border: 1px solid var(--line); max-width: 520px; margin: 0 auto; font-size: 14px; }
+body.focus .tp-bar { bottom: calc(12px + env(safe-area-inset-bottom)); }
