@@ -81,6 +81,8 @@ const MODE_HP = { abcd: .65, flip: 1, type: 1.1, mix: .95 }, MODE_REWARD = { abc
 
 // ---------- 📚 materiał: rozdziały talii (stałe – nowe fiszki dochodzą na koniec)
 const fightable = c => c.sus !== 'skip' && noteById(c.noteId);
+// bossowie z wielu talii (tygodnia, świata, kategorii, wieża, hydra „wszystkie”): bez talii oznaczonych jako zdane
+const mixFightable = c => fightable(c) && !deckById(c.deckId)?.done;
 function deckChapters(d) {
   const cs = S.cards.filter(c => c.deckId === d.id && fightable(c)).sort((a, b) => a.pos - b.pos), out = [];
   for (let i = 0; i < cs.length; i += CH_SIZE) out.push(cs.slice(i, i + CH_SIZE));
@@ -89,7 +91,7 @@ function deckChapters(d) {
 }
 const learnedN = cs => cs.filter(c => c.srs.state !== 'new').length;
 const deckLearned = d => learnedN(S.cards.filter(c => c.deckId === d.id && fightable(c)));
-const learnedAll = () => learnedN(S.cards.filter(fightable));
+const learnedAll = () => learnedN(S.cards.filter(mixFightable));
 function deckRec(d) {
   const r = d.boss = d.boss || {};
   if (!r.ch) { r.ch = {}; for (let i = 0; i < (r.stage || 0); i++) r.ch[i] = 1; }   // stary zapis „etap N” → pierwsze rozdziały pokonane
@@ -120,16 +122,16 @@ function bossFor(kind, id, i) {
   }
   if (kind === 'cat') {
     const t = typeof topicById === 'function' && topicById(id); if (!t) return null;
-    const ds = topicDecks(t, true), cs = S.cards.filter(c => ds.some(d => d.id === c.deckId) && fightable(c)), stars = S.stats['cb_' + t.id] || 0, bo = bossOf(CAT_IDX[hashStr(t.id) % CAT_IDX.length]);
+    const ds = topicDecks(t, true), cs = S.cards.filter(c => ds.some(d => d.id === c.deckId) && mixFightable(c)), stars = S.stats['cb_' + t.id] || 0, bo = bossOf(CAT_IDX[hashStr(t.id) % CAT_IDX.length]);
     return { kind, id, cards: cs.filter(c => c.srs.state !== 'new'), stars, diff: Math.min(4, 1 + stars), ...bo, title: `${t.emoji || '📁'} Kategoria „${t.name}” – ${ds.length} talie`,
       ok: learnedN(cs) >= 30 && ds.length >= 2, learned: learnedN(cs), need: 30, lockMsg: 'Kategoria z min. 2 taliami i 30 nauczonymi fiszkami', repeat: false, len: 40, pr };
   }
   if (kind === 'weekly') {
-    const bo = bossOf(weeklyIdx()), cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new');
+    const bo = bossOf(weeklyIdx()), cs = S.cards.filter(c => mixFightable(c) && c.srs.state !== 'new');
     return { kind, id: 'weekly', cards: cs, stars: 0, diff: 2, ...bo, title: '🏆 Boss tygodnia – liczą się zadane obrażenia', ok: cs.length >= 20, learned: cs.length, need: 20, lockMsg: 'Naucz się 20 fiszek', repeat: false, len: 25, pr };
   }
   if (kind === 'world') {
-    const st = S.stats.worldStage || 0, bo = bossOf(WORLD_IDX[st % WORLD_IDX.length]), cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new');
+    const st = S.stats.worldStage || 0, bo = bossOf(WORLD_IDX[st % WORLD_IDX.length]), cs = S.cards.filter(c => mixFightable(c) && c.srs.state !== 'new');
     return { kind, id: 'world', cards: cs, stars: st, diff: Math.min(4, 1 + Math.floor(st / 2)), ...bo, title: `🌍 Boss świata · etap ${st + 1} – wszystkie talie`,
       ok: cs.length >= WORLD_REQ, learned: cs.length, need: WORLD_REQ, lockMsg: `Naucz się ${WORLD_REQ} fiszek z dowolnych talii`, repeat: false, len: 50, pr };
   }
@@ -174,8 +176,8 @@ function bossBegin(b, extra = {}, p0 = null) {
   const ids = [...due, ...rest].slice(0, p.len).map(c => c.id);
   // ABCD: złe odpowiedzi najpierw z tych samych talii, a gdy brakuje – ze wszystkich
   const decks = new Set(b.cards.map(c => c.deckId)), ent = c => distractorEntry(c), okA = x => x.a && x.a.trim() && x.a.length <= ABCD_MAX;
-  const pool = S.cards.filter(c => (kind === 'world' || decks.has(c.deckId)) && fightable(c)).map(ent).filter(okA);
-  const poolAll = pool.length >= 12 ? pool : S.cards.filter(fightable).map(ent).filter(okA);
+  const pool = S.cards.filter(c => (kind === 'world' ? mixFightable(c) : decks.has(c.deckId) && fightable(c))).map(ent).filter(okA);
+  const poolAll = pool.length >= 12 ? pool : S.cards.filter(mixFightable).map(ent).filter(okA);
   BOSS = { b: { ...b, ...p }, mode, ids, i: 0, hp: p.hp, max: p.hp, me: hs.hp, meMax: hs.hp, hs, cap: Math.max(12, Math.round(p.hp * .15)), combo: hs.combo0, best: 0, ok: 0, bad: 0, verOk: 0, caught: 0, fast: 0,
     phase: 'fight', lostHp: 0, timer: p.every, move: null, shield: false, power: 0, guard: 0, potUsed: 0, second: hs.second, ult: 0, poison: 0, silence: 0, timeFree: 0,
     verQ: [], pendIce: false, pendBugs: 0, log: [], pool, poolAll, missed: [], dealt: {}, startedAt: now,

@@ -30,7 +30,7 @@ function towerBoss(T) {
   if (TW_GK) { const len = Math.min(16, 5 + f), cs = gkPick(T, len);
     return { kind: 'tower', id: 'gtower', i: f, gk: true, weak: null, name: guard ? `${name} – strażnik piętra` : name, desc, img, persona, seed: 777 + f * 131, diff: Math.min(4, Math.floor(f / 3)), stars: 0,
       cards: cs, ok: true, repeat: false, pr: hero().pr || 0, len, title: `🧠 Wieża wiedzy · piętro ${f}${guard ? ' · strażnik' : ''}`, final: guard }; }
-  const cs = S.cards.filter(c => fightable(c) && c.srs.state !== 'new');
+  const cs = S.cards.filter(c => mixFightable(c) && c.srs.state !== 'new');
   return { kind: 'tower', id: 'tower', i: f, name: guard ? `${name} – strażnik piętra` : name, desc, img, persona, seed: 4242 + f * 131, diff: Math.min(4, Math.floor(f / 3)), stars: 0,
     cards: cs, ok: cs.length >= TOWER_REQ, repeat: false, pr: hero().pr || 0, len: Math.min(20, 6 + f), title: `🗼 Wieża · piętro ${f}${guard ? ' · strażnik' : ''}`, final: guard };
 }
