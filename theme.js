@@ -35,6 +35,8 @@ const THEMES = [
   { id: 'sunset', name: 'Zachód słońca', bg: '#fff4ed', accent: '#e11d48', image: 'linear-gradient(160deg, #fff7ed 0%, #ffe4e6 45%, #ede9fe 100%)', price: 250 },
   { id: 'galaxy', name: 'Galaktyka', bg: '#0a0614', accent: '#f0abfc', image: 'radial-gradient(800px 500px at 80% 0%, #7c3aed55, transparent), radial-gradient(700px 500px at 0% 100%, #db277744, transparent)', price: 400 },
   { id: 'gold', name: 'Złoto', bg: '#17130a', accent: '#fbbf24', image: 'linear-gradient(160deg, #1c1608, #0f0c05 60%, #2a1f06)', price: 600 },
+  // 👾 8-bit: cała aplikacja w pikselach – paleta Sweetie-16, pikselowa czcionka, kanciaste ramki z fazką, przyciski jak w starych grach
+  { id: 'pixel', name: '👾 8-bit', bg: '#1a1c2c', accent: '#41a6f6', image: 'repeating-conic-gradient(#1a1c2c 0 25%, #1d2033 0 50%) 0 0 / 8px 8px', price: 900, pixel: true },
 ];
 const BG_SWATCHES = ['#f5f6fb', '#ffffff', '#f8fafc', '#e0f2fe', '#e6fbf2', '#ecfccb', '#fefce8', '#fff1e6', '#ffe4e6', '#fdf2f8', '#f3e8ff', '#ede9fe',
   '#0f1117', '#18181b', '#111827', '#0b1f17', '#0c1a2b', '#1e1b4b', '#2a0f1f', '#1c1917', '#000000', '#3f3f46', '#134e4a', '#4c1d95'];
@@ -45,6 +47,7 @@ const themeOwned = t => !t.price || (typeof hasItem === 'function' && hasItem('t
 function currentTheme() { return S.settings.theme || { id: 'auto' }; }
 function applyTheme() {
   const th = currentTheme(), root = document.documentElement.style;
+  document.body?.classList.toggle('px-theme', th.id === 'pixel' || !!th.pixel);
   const vars = ['--bg', '--bg-image', '--card', '--card2', '--text', '--muted', '--line', '--accent', '--accent2', '--accent-soft', '--shadow'];
   if (!th.bg) {
     vars.forEach(v => root.removeProperty(v));
@@ -64,6 +67,7 @@ function applyTheme() {
     '--accent': accent, '--accent2': hueShift(accent, 40), '--accent-soft': mix(accent, bg, dark ? .78 : .84),
     '--shadow': dark ? '0 1px 3px rgba(0,0,0,.5)' : '0 1px 3px rgba(20,20,50,.08), 0 4px 16px rgba(20,20,50,.05)',
   };
+  if (th.id === 'pixel' || th.pixel) Object.assign(set, { '--card': '#262b44', '--card2': '#333c57', '--text': '#f4f4f4', '--muted': '#94b0c2', '--line': '#566c86', '--accent': '#41a6f6', '--accent2': '#3b5dc9', '--accent-soft': '#29366f', '--shadow': '4px 4px 0 #0d0e17' });
   for (const [k, v] of Object.entries(set)) root.setProperty(k, v);
   document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', bg);
@@ -154,7 +158,7 @@ Object.assign(ACTIONS, {
   'theme-pick': el => {
     const t = THEMES.find(x => x.id === el.dataset.id); if (!t) return;
     if (!themeOwned(t)) { if (confirm(`Motyw „${t.name}” kosztuje ${t.price} 💎. Przejść do sklepu?`)) go('#/shop'); return; }
-    S.settings.theme = { id: t.id, bg: t.bg, accent: t.accent, image: t.image || null }; applyTheme(); save(); render();
+    S.settings.theme = { id: t.id, bg: t.bg, accent: t.accent, image: t.image || null, ...(t.pixel ? { pixel: true } : {}) }; applyTheme(); save(); render();
   },
   'theme-color': el => {
     const th = currentTheme(), k = el.dataset.k;

@@ -1,0 +1,3 @@
+Pixelify Sans – Copyright 2021 The Pixelify Sans Project Authors (https://github.com/eifetx/Pixelify-Sans)
+Licencja: SIL Open Font License 1.1 – https://openfontlicense.org
+Używana w motywie „8-bit” aplikacji Fiszki (pliki woff2: znaki łacińskie i polskie).
