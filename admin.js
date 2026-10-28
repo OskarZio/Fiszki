@@ -77,6 +77,10 @@ function adminHTML() {
     <p class="small muted">Wyłącz, czego nie potrzebujesz – aplikacja zrobi się prostsza. Dane zostają, w każdej chwili włączysz z powrotem.</p>
     <div class="feat-list">${Object.entries(FEATURES).map(([k, [name, , desc]]) => `<label class="feat"><input type="checkbox" data-feat="${k}" ${off[k] ? '' : 'checked'}><span><b>${name}</b><small>${desc}</small></span></label>`).join('')}</div>
     <div class="row" style="margin-top:8px"><button class="sm" data-act="feat-simple">✨ Tryb prosty: tylko nauka</button><button class="sm ghost" data-act="feat-all">Włącz wszystko</button></div>
+    <h3>🥊 Pojedynek 1 na 1 – pytania</h3>
+    <label class="field"><span class="small muted">Gospodarz pojedynku ustala rodzaj pytań dla obu graczy (też trening z botem).</span>
+      <select data-duelq="1">${Object.entries(DUEL_QF).map(([k, n]) => `<option value="${k}" ${duelQf() === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+    <p class="small muted" style="margin:4px 0 0">✍️ Wpisywanie: siła ciosu zależy od celności (dokładnie = 100%, literówka = słabszy cios). W „kto szybciej” obaj wpisują – bliższa odpowiedź atakuje.</p>
     <h3>🔄 Zacznij od nowa (gra)</h3><p class="small muted" style="margin-top:0">Fiszki, talie i historia nauki zostają nietknięte.</p>
     <div class="reset-list">${Object.entries(RESETS).map(([k, [name, desc]]) => `<div class="row nowrap"><span class="grow"><b>${name}</b><br><small class="muted">${desc}</small></span><button class="sm danger" data-act="adm-reset" data-k="${k}">Resetuj</button></div>`).join('')}
       <button class="danger block" data-act="adm-reset" data-k="all">🧨 Resetuj całą grę (wszystko powyżej)</button></div></details>`;
@@ -84,6 +88,7 @@ function adminHTML() {
 const admMore0 = viewMore;
 viewMore = function (...a) { return admMore0(...a) + adminHTML(); };
 document.addEventListener('change', e => {
+  if (e.target.dataset?.duelq) { S.settings.duelQ = e.target.value; save(); return toast(`🥊 Pytania w pojedynku: ${DUEL_QF[e.target.value]}`, 2000); }
   const k = e.target.dataset?.feat; if (!k) return;
   S.settings.off = S.settings.off || {}; if (e.target.checked) delete S.settings.off[k]; else S.settings.off[k] = 1; save(); updateTabBadges();
   toast(`${FEATURES[k][0]}: ${e.target.checked ? 'włączone' : 'wyłączone'}`, 1600);
