@@ -83,10 +83,10 @@ handleMsgs = (...a) => { const r = grpHandle1(...a); try { grpAccept(); } catch 
 function grpRows(d) {
   const sh = d.share, fr = CLOUD_FRIENDS || [], now = Date.now();
   return (sh.members || []).map(u => {
-    if (u === myId()) return { me: true, nick: S.profile.nick || 'Ty', av: S.profile.avatar || '🦊', p: grpProg(d), live: true, st: now - (GRP_LIVE._mine || 0) < 2 * MIN };
+    if (u === myId()) return { me: true, nick: S.profile.nick || 'Ty', av: S.profile.avatar || '🦊', pf: S.profile, cos: S.profile.cos, p: grpProg(d), live: true, st: now - (GRP_LIVE._mine || 0) < 2 * MIN };
     const f = fr.find(x => x.id === u), L = GRP_LIVE[u], prof = sGrp(f?.stats?.grp?.[sh.id]), cache = sh.prog?.[u];
     const p = [L?.p, prof, sGrp(cache)].filter(Boolean).sort((a, b) => b.t - a.t)[0] || null;
-    return { nick: f?.nick || L?.nick || cache?.nick || 'Znajomy', av: f?.avatar || L?.av || '🙂', p, live: L && now - L.seen < 70e3, st: L && now - L.st < 2 * MIN };
+    return { nick: f?.nick || L?.nick || cache?.nick || 'Znajomy', av: f?.avatar || L?.av || '🙂', pf: f ? { avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos } : { avatar: L?.av || '🙂' }, cos: f?.stats?.cos, p, live: L && now - L.seen < 70e3, st: L && now - L.st < 2 * MIN };
   }).sort((a, b) => grpPct(b.p) - grpPct(a.p) || (b.p?.today || 0) - (a.p?.today || 0));
 }
 const agoTxt = t => { const s = (Date.now() - t) / 1000; return s < 90 ? 'przed chwilą' : s < 3600 ? `${Math.round(s / 60)} min temu` : s < 86400 ? `${Math.round(s / 3600)} h temu` : `${Math.round(s / 86400)} d temu`; };
@@ -102,12 +102,13 @@ function groupView(d) {
   <div class="card g-head"><b>${esc(d.name.replace(/^👥\s*/, ''))}</b><div class="small muted">${n} ${plural(n, 'pojęcie', 'pojęcia', 'pojęć')} · ${rows.length} ${plural(rows.length, 'osoba', 'osoby', 'osób')} w grupie</div>
     <div class="row" style="margin-top:10px"><button class="primary grow" data-go="#/study/${d.id}/flip">📚 Ucz się</button><button class="grow" data-act="g-boss" data-id="${d.id}">⚔️ Boss talii</button></div></div>
   <h2 class="g-h">Postęp grupy</h2>
-  <div class="card g-table"><div class="g-row g-th"><span>Imię</span><span>Status</span></div>
-    ${rows.map((r, i) => { const p = r.p, pc = grpPct(p);
-      return `<div class="g-row${r.me ? ' me' : ''}"><div class="g-who"><span class="g-av">${esc(r.av)}${r.live ? '<i class="g-dot"></i>' : ''}</span><div class="grow"><b>${esc(r.nick)}${r.me ? ' <small>(Ty)</small>' : ''}</b>
+  <div class="g-members">${rows.map((r, i) => { const p = r.p, pc = grpPct(p), nw = p ? Math.max(0, p.n - p.m - p.l) : 0;
+      return `<div class="card g-mem${r.me ? ' me' : ''}"><div class="g-top">
+        <div class="g-ring" style="--pc:${pc}"><span class="g-avp">${typeof avatarHTML === 'function' ? avatarHTML(r.pf, 50) : esc(r.av)}</span>${r.live ? '<i class="g-dot"></i>' : ''}</div>
+        <div class="g-mid"><b class="g-nick">${typeof nickHTML === 'function' ? nickHTML(r.nick, r.cos) : esc(r.nick)}${r.me ? ' <small class="muted">(Ty)</small>' : ''}</b><small>${grpStatus(r)}</small></div>
+        <div class="g-score"><b>${p ? pc + '%' : '–'}</b><small>${p && i < 3 && pc > 0 && rows.length > 1 ? medal[i] + ' ' : ''}opanowane</small></div></div>
         <div class="g-bar" title="opanowane · w nauce · nowe">${p?.n ? `<i class="m" style="width:${(p.m / p.n * 100).toFixed(1)}%"></i><i class="l" style="width:${(p.l / p.n * 100).toFixed(1)}%"></i>` : ''}</div>
-        <small class="muted">${p ? `${p.m} opanowane · ${p.l} w nauce · ${Math.max(0, p.n - p.m - p.l)} nowe` : '—'}</small></div></div>
-        <div class="g-st"><b class="g-pct">${p ? pc + '%' : ''}${p && i < 3 && pc > 0 && rows.length > 1 ? ' ' + medal[i] : ''}</b><small>${grpStatus(r)}</small></div></div>`; }).join('')}</div>
+        <div class="g-chips">${p ? `<span class="c-m">✅ ${p.m} opanowane</span><span class="c-l">📖 ${p.l} w nauce</span><span class="c-n">🆕 ${nw} nowe</span>` : '<span class="c-n">jeszcze bez nauki</span>'}</div></div>`; }).join('')}</div>
   <p class="small muted center" style="margin:6px 0 14px">Opanowane = w powtórkach co ${GRP_MASTER}+ dni. Postęp odświeża się na żywo, a u osób offline – z ich ostatniej synchronizacji.</p>
   <div class="card center g-invite"><p style="margin:0 0 10px"><b>Udostępnij link</b> do wspólnej nauki i zobacz, jak wypadasz na tle grupy</p>
     <button class="primary block" data-act="g-share" data-id="${d.id}">📤 Zaproś znajomych</button>
