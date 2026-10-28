@@ -642,7 +642,7 @@ ROUTES.battles = (parts, q) => {
   <button class="primary block big-btn" data-act="bt-quick">⚡ Szybki mecz</button>
   <p class="small muted center" style="margin:4px 0 12px">losowy przeciwnik · pojedynek pamięci</p>
   <div class="card">
-    <div class="row"><button class="primary grow" data-act="bt-host">👥 Wyzwij znajomego</button><button class="grow" data-act="bt-bot">🤖 Z botem</button></div>
+    <div class="row"><button class="primary grow" data-act="bt-host">👥 Ze znajomym</button><button class="grow" data-act="bt-bot">🤖 Z botem</button></div>
     <div class="row nowrap" style="margin-top:10px"><input id="bt-code" class="grow" placeholder="Kod od znajomego" maxlength="6" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"><button data-act="bt-join">Dołącz</button></div>
   </div>
   <details class="card rules"${ms.rulesOpen ? ' open' : ''}><summary><b>⚙️ Zasady bitwy</b><div class="small muted">${summary}</div></summary>

@@ -2350,3 +2350,12 @@ ul.wl-pts { list-style: none; padding-left: 0; }
 .wl-docs .legal { font-size: 13px; max-height: 50vh; overflow: auto; padding: 6px 8px; border-radius: 10px; background: var(--card2); }
 .wl-ok { text-align: center; color: #16a34a; font-weight: 700; }
 .wl-nav { margin-top: 10px; gap: 8px; }
+/* 🎁 zaproszenia: 3 przyciski, które zawsze się mieszczą + kod QR */
+.ref-btns { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; }
+.ref-btns > button { min-width: 0; padding-left: 8px !important; padding-right: 8px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qr-overlay { position: fixed; inset: 0; z-index: 90; background: rgba(15,23,42,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; }
+.qr-box { width: 100%; max-width: 360px; margin: 0; text-align: center; }
+.qr-img { background: #fff; border-radius: 14px; padding: 10px; width: min(260px, 70vw); margin: 0 auto; }
+.qr-img svg { display: block; width: 100%; height: auto; }
+/* przyciski w wierszu nigdy nie wychodzą poza krawędź (ikona + tekst) */
+.row > button.grow { min-width: 0; }
