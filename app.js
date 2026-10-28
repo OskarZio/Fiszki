@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '172';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '173';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1604,7 +1604,7 @@ function viewMore() {
   const last30 = S.log.filter(l => l.t > Date.now() - 30 * DAY), acc = last30.length ? Math.round(last30.filter(l => l.g > 1).length / last30.length * 100) : 0;
   const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const modeCard = `<div class="card"><h2 style="margin-top:0">Tryb aplikacji</h2>
-    <div class="modes three">${[['full', '🎮', 'Pełny', 'bitwy, osiągnięcia, skrzynki, ranking, gry'], ['minimal', '🧘', 'Skupienie', 'fiszki, materiały i pałace pamięci – bez grywalizacji'],
+    <div class="modes three">${[['full', '🎮', 'Pełny', 'bitwy, osiągnięcia, skrzynki, ranking, gry'], ['minimal', '🧘', 'Skupienie', 'fiszki, materiały i metody – bez grywalizacji'],
       ['zen', '🎯', 'Pełne skupienie', 'tylko nauka: zero liczników, statystyk i dodatków']].map(([m, i, n, d]) =>
       `<button class="mode${appMode() === m ? ' on' : ''}" data-act="set-mode" data-m="${m}"><span>${i}</span><b>${n}</b><small>${d}</small></button>`).join('')}</div></div>`;
   // w pełnym trybie konto i profil są w zakładce „Profil”, tu zostają ustawienia

@@ -266,6 +266,7 @@ function crOpen(id) {
 }
 // karta na Starcie
 function eggHomeHTML() {
+  if (typeof appMode === 'function' && appMode() !== 'full') return '';   // tryb skupienia: bez jajek
   const E = eggRun();
   if (E) return `<div class="card row nowrap egg-home" data-go="#/egg"><span class="egg-home-ic">${eggSVG(E.min, E.prog / (E.min * 60000))}</span><div class="grow"><b>Jajko się wysiaduje · ${eggClock(eggLeft(E))}</b><div class="small muted">${eggStatus(E)}</div></div><span>›</span></div>`;
   return `<div class="card row nowrap egg-home" data-go="#/egg"><span class="egg-home-ic">${eggSVG(EGG_PICK.min)}</span><div class="grow"><b>🥚 Inkubator naklejek</b><div class="small muted">Skup się ${EGG_PICK.min} min i wykluj unikatowego stworka. Wyjście z aplikacji rozbija jajko!</div></div><span>›</span></div>`;

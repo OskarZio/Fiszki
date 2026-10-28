@@ -25,7 +25,7 @@ const WL_PAGES = [
     <div class="wl-modes">${WL_MODES.map(([m, ic, n, d]) => `<button class="wl-mode${S.stats.modeChosen && appMode() === m ? ' on' : ''}" data-act="wl-mode" data-m="${m}"><span>${ic}</span><div><b>${n}</b><small>${d}</small></div></button>`).join('')}</div>
     ${S.stats.modeChosen ? '' : '<p class="center small muted" style="margin:8px 0 0">👆 Stuknij jeden tryb, żeby przejść dalej</p>'}`,
     more: `<p><b>🎮 Pełny</b> – wszystko: bohater, bossowie, pojedynki, skrzynki, ranking, prestiż. Nauka jest grą.</p>
-      <p><b>🧘 Skupienie</b> – fiszki, materiały, metody nauki i pałace pamięci, bez grywalizacji (bez skrzynek, bitew, liczników nagród). Dobre na sesję przed kolokwium.</p>
+      <p><b>🧘 Skupienie</b> – fiszki, materiały i metody nauki, bez grywalizacji (bez skrzynek, bitew, liczników nagród). Dobre na sesję przed kolokwium.</p>
       <p><b>🎯 Pełne skupienie</b> – tylko nauka: zero liczników, statystyk i dodatków. Otwierasz i od razu powtarzasz.</p>
       <p>Dane i postęp są te same w każdym trybie – zmiana niczego nie kasuje.</p>` },
   { ic: '📚', t: 'Jak się uczyć', body: () => `
