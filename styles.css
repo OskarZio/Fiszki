@@ -2237,3 +2237,20 @@ button .hero-ic { flex: none; min-width: 28px; width: 28px; height: 28px; transf
 .duel-fig.ko.s8 { filter: grayscale(1) brightness(.6); opacity: .6; }
 .duel-mode { display: flex; width: 100%; } .duel-mode button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 4px !important; min-height: 52px; } .duel-mode small { font-size: 11px; color: var(--muted); font-weight: 500; }
 .dmoves.q button.right, .dmoves.q button.wrong { opacity: 1 !important; color: #fff !important; }
+/* 🎒 przedmioty PvP w pojedynku */
+.dult-row { gap: 8px; margin-top: 8px; align-items: stretch; } .dult-row .dult { margin: 0; flex: 1; }
+.dbag-btn { flex: none; width: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 22px; padding: 4px !important; border-radius: 14px; } .dbag-btn small { font-size: 11px; color: var(--muted); } .dbag-btn.on { outline: 2px solid var(--accent); }
+.dbag { margin-top: 10px; } .dbag > small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+.dbag-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; } .dbag-row button { flex: none; display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 78px; padding: 6px 8px !important; border-radius: 12px; position: relative; }
+.dbag-row button span { font-size: 22px; } .dbag-row button b { font-size: 11px; white-space: nowrap; } .dbag-row button i { position: absolute; top: 3px; right: 6px; font: 800 10px/1 ui-monospace, Menlo, monospace; font-style: normal; color: var(--muted); }
+.dbag.inline { border-top: 1px dashed var(--line); padding-top: 8px; }
+.dmoves.q button.hid { visibility: hidden; }
+.dloot { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; } .dloot span { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 12px; background: linear-gradient(135deg, color-mix(in srgb, #a855f7 25%, var(--card2)), var(--card2)); font-weight: 700; font-size: 13px; } .dloot b { font-size: 18px; }
+.dpvp-it { gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); } .dpvp-it:first-of-type { border-top: 0; } .dpvp-it > span { font-size: 24px; flex: none; width: 32px; text-align: center; }
+/* 🏫 klasy */
+.cls-item { width: 100%; gap: 12px; cursor: pointer; } .cls-ic { font-size: 28px; }
+.cls-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; margin: 10px 0; } .cls-tabs button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px !important; min-height: 54px; } .cls-tabs i { font-style: normal; font-size: 18px; } .cls-tabs span { font-size: 12.5px; }
+.cls-deck { display: flex; flex-direction: column; gap: 8px; } .cls-deck .row { gap: 6px; justify-content: flex-end; }
+.cls-chat { display: flex; flex-direction: column; height: min(62dvh, 560px); padding: 10px !important; } .cls-chat .gc-list { flex: 1; }
+.cls-mem { gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); } .cls-mem:first-of-type { border-top: 0; }
+.cls-prev { border: 2px solid var(--accent); }

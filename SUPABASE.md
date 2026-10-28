@@ -10,7 +10,7 @@ Supabase to darmowa baza danych z logowaniem. Po podłączeniu:
 1. Wejdź na **https://supabase.com/dashboard** i załóż konto (najprościej „Continue with GitHub”).
 2. **New project** → nazwa np. `fiszki`, wymyśl i zapisz hasło do bazy, region **Central EU (Frankfurt)** → **Create new project**. Poczekaj ok. 2 minuty.
 3. Po lewej **SQL Editor** → **New query** → wklej całą zawartość pliku [`supabase.sql`](supabase.sql) → **Run**. Ma się pojawić „Success. No rows returned”.
-   *Aktualizacja:* jeśli baza była założona wcześniej, uruchom `supabase.sql` jeszcze raz (nic nie usuwa). Dodaje obustronnych znajomych oraz tabelę `messages` – czat, prezenty z naklejek, przypomnienia i wyzwania z powiadomieniami.
+   *Aktualizacja:* jeśli baza była założona wcześniej, uruchom `supabase.sql` jeszcze raz (nic nie usuwa). Dodaje obustronnych znajomych oraz tabelę `messages` – czat, prezenty z naklejek, przypomnienia i wyzwania z powiadomieniami. Wersja z 28.10.2026 dodaje **klasy** (tabele `classes`, `class_members`, `class_decks`, `class_msgs` – wspólne zestawy i czat klasy; widzą je tylko członkowie).
 4. Po lewej **Authentication → Sign In / Providers → Email** – zostaw włączone.
    Dla prostszego startu wyłącz **Confirm email** (konto działa od razu). Jeśli zostawisz włączone, po rejestracji trzeba kliknąć link w mailu.
 5. **Project Settings → API** (albo **API Keys**): skopiuj

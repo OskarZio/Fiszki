@@ -180,6 +180,124 @@ end $$;
 revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
 
+-- 🏫 Klasy: wspólne zestawy fiszek i czat grupowy. Klasę widzą tylko jej członkowie (dołączenie kodem przez join_class).
+create table if not exists public.classes (
+  id uuid primary key default gen_random_uuid(),
+  code text unique not null,
+  name text not null,
+  owner uuid not null references auth.users on delete cascade,
+  created_at timestamptz not null default now());
+create table if not exists public.class_members (
+  class_id uuid not null references public.classes on delete cascade,
+  user_id uuid not null references auth.users on delete cascade,
+  nick text not null default 'Gracz',
+  joined_at timestamptz not null default now(),
+  primary key (class_id, user_id));
+create table if not exists public.class_decks (
+  id text primary key,
+  class_id uuid not null references public.classes on delete cascade,
+  owner uuid not null references auth.users on delete cascade,
+  nick text not null default 'Gracz',
+  name text not null,
+  notes jsonb not null default '[]'::jsonb,
+  n int not null default 0,
+  updated_at timestamptz not null default now());
+create table if not exists public.class_msgs (
+  id bigint generated always as identity primary key,
+  class_id uuid not null references public.classes on delete cascade,
+  from_id uuid not null references auth.users on delete cascade,
+  nick text not null default 'Gracz',
+  body text not null,
+  created_at timestamptz not null default now());
+create index if not exists class_msgs_cls on public.class_msgs (class_id, id desc);
+create index if not exists class_decks_cls on public.class_decks (class_id);
+alter table public.classes enable row level security;
+alter table public.class_members enable row level security;
+alter table public.class_decks enable row level security;
+alter table public.class_msgs enable row level security;
+alter table public.classes drop constraint if exists cls_chk;
+alter table public.classes add constraint cls_chk check (code ~ '^[A-Z0-9]{6}$' and char_length(name) between 1 and 60) not valid;
+alter table public.class_members drop constraint if exists clm_chk;
+alter table public.class_members add constraint clm_chk check (char_length(nick) <= 24) not valid;
+alter table public.class_decks drop constraint if exists cld_chk;
+alter table public.class_decks add constraint cld_chk check (char_length(name) between 1 and 80 and char_length(id) <= 120 and pg_column_size(notes) < 3000000) not valid;
+alter table public.class_msgs drop constraint if exists clmsg_chk;
+alter table public.class_msgs add constraint clmsg_chk check (char_length(body) between 1 and 1000 and char_length(nick) <= 24) not valid;
+
+create or replace function public.is_class_member(p uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.class_members m where m.class_id = p and m.user_id = auth.uid());
+$$;
+revoke all on function public.is_class_member(uuid) from public, anon;
+grant execute on function public.is_class_member(uuid) to authenticated;
+create or replace function public.is_class_owner(p uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.classes c where c.id = p and c.owner = auth.uid());
+$$;
+revoke all on function public.is_class_owner(uuid) from public, anon;
+grant execute on function public.is_class_owner(uuid) to authenticated;
+
+drop policy if exists "cls_read" on public.classes;
+drop policy if exists "cls_insert" on public.classes;
+drop policy if exists "cls_update" on public.classes;
+drop policy if exists "cls_delete" on public.classes;
+create policy "cls_read" on public.classes for select to authenticated using (owner = auth.uid() or public.is_class_member(id));
+create policy "cls_insert" on public.classes for insert to authenticated with check (owner = auth.uid());
+create policy "cls_update" on public.classes for update to authenticated using (owner = auth.uid()) with check (owner = auth.uid());
+create policy "cls_delete" on public.classes for delete to authenticated using (owner = auth.uid());
+drop policy if exists "clm_read" on public.class_members;
+drop policy if exists "clm_insert" on public.class_members;
+drop policy if exists "clm_update" on public.class_members;
+drop policy if exists "clm_delete" on public.class_members;
+create policy "clm_read" on public.class_members for select to authenticated using (public.is_class_member(class_id) or public.is_class_owner(class_id));
+-- sam wpisuje się tylko właściciel (przy zakładaniu); reszta dołącza funkcją join_class (kodem)
+create policy "clm_insert" on public.class_members for insert to authenticated with check (user_id = auth.uid() and public.is_class_owner(class_id));
+create policy "clm_update" on public.class_members for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "clm_delete" on public.class_members for delete to authenticated using (user_id = auth.uid() or public.is_class_owner(class_id));
+drop policy if exists "cld_read" on public.class_decks;
+drop policy if exists "cld_insert" on public.class_decks;
+drop policy if exists "cld_update" on public.class_decks;
+drop policy if exists "cld_delete" on public.class_decks;
+create policy "cld_read" on public.class_decks for select to authenticated using (public.is_class_member(class_id));
+create policy "cld_insert" on public.class_decks for insert to authenticated with check (owner = auth.uid() and public.is_class_member(class_id));
+create policy "cld_update" on public.class_decks for update to authenticated using (owner = auth.uid()) with check (owner = auth.uid() and public.is_class_member(class_id));
+create policy "cld_delete" on public.class_decks for delete to authenticated using (owner = auth.uid() or public.is_class_owner(class_id));
+drop policy if exists "clmsg_read" on public.class_msgs;
+drop policy if exists "clmsg_insert" on public.class_msgs;
+drop policy if exists "clmsg_delete" on public.class_msgs;
+create policy "clmsg_read" on public.class_msgs for select to authenticated using (public.is_class_member(class_id));
+create policy "clmsg_insert" on public.class_msgs for insert to authenticated with check (from_id = auth.uid() and public.is_class_member(class_id));
+create policy "clmsg_delete" on public.class_msgs for delete to authenticated using (from_id = auth.uid() or public.is_class_owner(class_id));
+revoke update on public.class_msgs from authenticated;
+
+-- dołączenie do klasy kodem (max 200 osób w klasie)
+create or replace function public.join_class(p_code text, p_nick text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare c uuid;
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  select id into c from public.classes where code = upper(trim(p_code));
+  if c is null then return null; end if;
+  if (select count(*) from public.class_members where class_id = c) >= 200 then raise exception 'class full'; end if;
+  insert into public.class_members (class_id, user_id, nick) values (c, auth.uid(), left(coalesce(nullif(trim(p_nick), ''), 'Gracz'), 24))
+    on conflict (class_id, user_id) do update set nick = excluded.nick;
+  return c;
+end $$;
+revoke all on function public.join_class(text, text) from public, anon;
+grant execute on function public.join_class(text, text) to authenticated;
+-- limity: 20 klas na osobę, 30 wiadomości na minutę, czas wiadomości ustawia serwer
+create or replace function public.class_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.classes where owner = new.owner) >= 20 then raise exception 'too many classes'; end if;
+  new.created_at := now(); return new;
+end $$;
+drop trigger if exists class_guard on public.classes;
+create trigger class_guard before insert on public.classes for each row execute function public.class_guard();
+create or replace function public.class_msg_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.class_msgs where from_id = new.from_id and created_at > now() - interval '1 minute') >= 30 then raise exception 'rate limit'; end if;
+  new.created_at := now(); return new;
+end $$;
+drop trigger if exists class_msg_guard on public.class_msgs;
+create trigger class_msg_guard before insert on public.class_msgs for each row execute function public.class_msg_guard();
+
 -- Wersja skryptu – aplikacja sprawdza ją w Panelu hosta („Aktualizacja bazy”)
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-20'::text $$;
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-28'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
