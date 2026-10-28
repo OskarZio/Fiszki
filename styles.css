@@ -2627,3 +2627,17 @@ body.cos-still .hero-fig.au::before { opacity: .9; transform: none; }
 .g-members > .g-mem { margin: 0 !important; }
 /* czat grupy: poza nauką przycisk na dole (nie zasłania przycisków w karcie grupy) */
 body:not(.focus) #gc-fab { top: auto; bottom: calc(var(--tabs-h) + 16px + env(safe-area-inset-bottom)); right: 14px; }
+/* 👾 grafiki 8-bit w prestiżu */
+.px8 { image-rendering: pixelated; display: block; width: 100%; height: 100%; object-fit: contain; }
+.cos-ic .px8 { width: 100%; height: 100%; }
+.ttl .ttl-ic { display: inline-block; width: 15px; height: 15px; vertical-align: -3px; margin: 0 4px 0 -3px; }
+.cos-badge { width: 40px !important; height: 40px !important; margin: 0 auto 4px; }
+.rx > span { display: grid; place-items: center; }
+.rx > span .px8 { width: 84px; height: 84px; }
+.cos-fxprev .px8 { width: 56px; height: 56px; }
+.rx-row button .px8 { width: 34px; height: 34px; }
+.cos-burst i .px8 { width: 34px; height: 34px; }
+.cos-burst.big i .px8 { width: 46px; height: 46px; }
+.cos-tile .cos-ic { width: 54px; height: 54px; font-size: 34px; }
+.hero-fig.au[style*="--aimg"]::before { content: ''; left: 0; right: 0; height: 30cqw; bottom: 8%;
+  background: var(--aimg) 8% 60% / 22cqw no-repeat, var(--aimg) 50% 0 / 18cqw no-repeat, var(--aimg) 92% 70% / 20cqw no-repeat; image-rendering: pixelated; }

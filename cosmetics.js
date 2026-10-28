@@ -64,6 +64,26 @@ const COS = [
   { id: 'r_clap', t: 'react', n: 'Brawa', r: 'rare', e: '👏' }, { id: 'r_100', t: 'react', n: 'Wybuch 💯', r: 'epic', e: '💯' },
   { id: 'r_crown', t: 'react', n: 'Koronacja', r: 'legendary', e: '👑' }, { id: 'r_unicorn', t: 'react', n: 'Tęczowy jednorożec', r: 'mythic', e: '🦄' },
 ];
+// nowe tytuły (odznaki 8-bit) i reakcje
+COS.push(
+  { id: 't_prymus', t: 'title', n: 'Prymus', r: 'common' }, { id: 't_magnes', t: 'title', n: 'Magnes na wiedzę', r: 'common' },
+  { id: 't_gwiazda', t: 'title', n: 'Gwiazda klasy', r: 'rare' }, { id: 't_sprinter', t: 'title', n: 'Sprinter', r: 'rare' },
+  { id: 't_alchemik', t: 'title', n: 'Alchemik', r: 'rare' }, { id: 't_ratownik', t: 'title', n: 'Ratownik', r: 'rare' },
+  { id: 't_snajper', t: 'title', n: 'Snajper', r: 'epic' }, { id: 't_magister', t: 'title', n: 'Magister', r: 'epic' },
+  { id: 't_smok', t: 'title', n: 'Pogromca Smoków', r: 'legendary' }, { id: 't_diament', t: 'title', n: 'Diamentowy umysł', r: 'legendary' },
+  { id: 'r_potion', t: 'react', n: 'Eliksir', r: 'epic', e: '🧪' }, { id: 'r_diamond', t: 'react', n: 'Diament', r: 'legendary', e: '💎' });
+// 👾 grafiki 8-bit zamiast zwykłych emotek (assets/px8: b_* – odznaki tytułów, e_* – reakcje, efekty, aury)
+const COS_IMG = {
+  t_mol: 'b_feather', t_kawa: 'b_potion', t_sowa: 'b_wing', t_blysk: 'b_bolt', t_mozg: 'b_brain', t_geniusz: 'b_atom', t_legenda: 'b_crown', t_niesm: 'b_heartcrown',
+  t_pogromca: 'b_swords', t_gladiator: 'b_shield', t_nieomylny: 'b_target', t_pamiec: 'b_dna', t_niezlomny: 'b_fire', t_odkrywca: 'b_comet',
+  t_prymus: 'b_scroll', t_magnes: 'b_magnet', t_gwiazda: 'b_sparkle', t_sprinter: 'b_stopwatch', t_alchemik: 'b_flasks', t_ratownik: 'b_medkit',
+  t_snajper: 'b_bow', t_magister: 'b_gradcap', t_smok: 'b_dragon', t_diament: 'b_ring',
+  x_hearts: 'e_heartdark', x_stars: 'e_shootstar', x_confetti: 'e_popper', x_thunder: 'e_bolt', x_rainbow: 'e_rainbow', x_nova: 'e_nova',
+  r_heart: 'e_heartbeat', r_fire: 'e_fire', r_clap: 'e_clap', r_100: 'e_hundred', r_crown: 'e_crown', r_unicorn: 'e_unicorn', r_potion: 'e_potion', r_diamond: 'e_diamond',
+  a_hearts: 'e_heartbeat', a_sparkle: 'e_star', a_fire: 'e_fire', a_cosmic: 'e_atom',
+};
+for (const c of COS) if (COS_IMG[c.id]) c.img = `assets/px8/${COS_IMG[c.id]}.webp`;
+const cosPic = (c, cls = '') => c.img ? `<img class="px8 ${cls}" src="${c.img}" alt="" draggable="false">` : `<span class="${cls}">${c.e || COS_T[c.t][0]}</span>`;
 const COS_BY = Object.fromEntries(COS.map(c => [c.id, c]));
 const cosById = id => COS_BY[id] || null;
 const COS_CASE_PRICE = 350;
@@ -89,14 +109,14 @@ avatarHTML = function (p, size = 28) {
   const inner = cosAv0(p, size), f = cosOf(p)?.frame; if (!f) return inner;
   return `<span class="avf fr-${f} r-${COS_BY[f].r}" style="--avs:${size}px">${inner}</span>`;
 };
-function cosTitleHTML(c) { const t = c?.title && COS_BY[c.title]; return t ? `<small class="ttl r-${t.r}" style="--rc:${COS_R[t.r].c}">${esc(t.n)}</small>` : ''; }
+function cosTitleHTML(c) { const t = c?.title && COS_BY[c.title]; return t ? `<small class="ttl r-${t.r}" style="--rc:${COS_R[t.r].c}">${t.img ? `<img class="px8 ttl-ic" src="${t.img}" alt="">` : ''}${esc(t.n)}</small>` : ''; }
 function nickHTML(name, c, title = true) {
   c = c === S.profile.cos ? myCos() : sCos(c);
   const n = c?.nick ? `<span class="nkx nk-${c.nick}">${esc(name)}</span>` : esc(name);
   return n + (title ? cosTitleHTML(c) : '');
 }
 const cosFigCls = c => { c = sCos(c); return c ? `${c.skin ? ' sk sk-' + c.skin : ''}${c.aura ? ' au au-' + c.aura : ''}` : ''; };
-const cosFigAttr = c => { c = sCos(c); const s = c?.skin && COS_BY[c.skin], a = c?.aura && COS_BY[c.aura]; return `${s ? ` data-acc="${s.e}"` : ''}${a ? ` data-aura="${a.e}"` : ''}`; };
+const cosFigAttr = c => { c = sCos(c); const s = c?.skin && COS_BY[c.skin], a = c?.aura && COS_BY[c.aura]; return `${s ? ` data-acc="${s.e}"` : ''}${a ? (a.img ? ` data-aura="" style="--aimg:url(${a.img})"` : ` data-aura="${a.e}"`) : ''}`; };
 // bohater: własne dodatki i aura na każdej figurze własnego bohatera (pojedynek ma swoje)
 const cosHero0 = heroSVG;
 heroSVG = function (cls = '', pr, h) {
@@ -192,6 +212,7 @@ if (typeof proofGems === 'function') { const pg0 = proofGems; proofGems = (s, ..
 // ---------- ikonki i podglądy przedmiotów
 function cosIconHTML(c) {
   if (c.t === 'frame') return `<span class="cos-ic"><span class="avf fr-${c.id} r-${c.r}" style="--avs:30px"><span class="avemoji" style="font-size:26px">🦊</span></span></span>`;
+  if (c.img) return `<span class="cos-ic">${cosPic(c)}</span>`;
   if (c.t === 'title') return `<span class="cos-ic">🏷️</span>`;
   if (c.t === 'nick') return `<span class="cos-ic"><b class="nkx nk-${c.id}">Aa</b></span>`;
   if (c.t === 'bubble') return `<span class="cos-ic"><i class="bbl bb-${c.id}">Hej</i></span>`;
@@ -200,11 +221,11 @@ function cosIconHTML(c) {
 function cosPreviewHTML(c, size = 64) {
   const nick = S.profile.nick || 'Ty';
   if (c.t === 'frame') return `<span class="avf fr-${c.id} r-${c.r}" style="--avs:${size}px">${cosAv0(S.profile, size)}</span>`;
-  if (c.t === 'title') return `<div><b>${esc(nick)}</b><br><small class="ttl r-${c.r}" style="--rc:${COS_R[c.r].c}">${esc(c.n)}</small></div>`;
+  if (c.t === 'title') return `<div>${c.img ? `<img class="px8 cos-badge" src="${c.img}" alt="">` : ''}<b>${esc(nick)}</b><br>${cosTitleHTML({ title: c.id })}</div>`;
   if (c.t === 'nick') return `<b class="nkx nk-${c.id}" style="font-size:${Math.round(size / 2.6)}px">${esc(nick)}</b>`;
   if (c.t === 'bubble') return `<div class="msg me bb-${c.id} cos-bprev"><div class="msg-t">Widzimy się na nauce? 📚</div></div>`;
-  if (c.t === 'react') return `<div class="rx rx-${c.id}"><span>${c.e}</span></div>`;
-  if (c.t === 'fx') return `<div class="cos-fxprev" data-fx="${c.id}">${c.e}</div>`;
+  if (c.t === 'react') return `<div class="rx rx-${c.id}"><span>${cosPic(c)}</span></div>`;
+  if (c.t === 'fx') return `<div class="cos-fxprev" data-fx="${c.id}">${cosPic(c)}</div>`;
   const cc = c.t === 'skin' ? { skin: c.id } : { aura: c.id };
   return `<div${cosFigAttr(cc)} class="hero-fig cos-fig${cosFigCls(cc)}">${heroArt(heroLine(), heroForm(), hero().g === 'm' ? 'm' : 'w')}</div>`;
 }
@@ -213,27 +234,27 @@ function cosPreviewHTML(c, size = 64) {
 function cosBurst(host, emoji, n = 18, big = false) {
   if (!host || !cosAnimOn()) return;
   const box = document.createElement('div'); box.className = 'cos-burst' + (big ? ' big' : '');
-  for (let i = 0; i < n; i++) { const s = document.createElement('i'); s.textContent = emoji; s.style.cssText = `--x:${(Math.random() * 100).toFixed(1)}%;--d:${(Math.random() * .7).toFixed(2)}s;--s:${(.7 + Math.random() * .8).toFixed(2)};--r:${(Math.random() * 120 - 60) | 0}deg`; box.append(s); }
+  for (let i = 0; i < n; i++) { const s = document.createElement('i'); if (/^assets\//.test(emoji)) { const im = document.createElement('img'); im.src = emoji; im.className = 'px8'; s.append(im); } else s.textContent = emoji; s.style.cssText = `--x:${(Math.random() * 100).toFixed(1)}%;--d:${(Math.random() * .7).toFixed(2)}s;--s:${(.7 + Math.random() * .8).toFixed(2)};--r:${(Math.random() * 120 - 60) | 0}deg`; box.append(s); }
   host.append(box); setTimeout(() => box.remove(), 2600);
 }
 function cosDuelIntro(d) {
   setTimeout(() => {
     const ar = document.querySelector('.darena'); if (!ar || !cosAnimOn()) return;
     const me = myCos()?.fx, op = sCos(d.opp?.cos)?.fx;
-    if (me) { cosBurst(ar.querySelector('.dplat.me'), COS_BY[me].e, 16); ar.querySelector('.duel-fig.me')?.classList.add('cos-enter'); }
-    if (op) setTimeout(() => { cosBurst(ar.querySelector('.dplat.op'), COS_BY[op].e, 16); ar.querySelector('.duel-fig.op')?.classList.add('cos-enter'); }, me ? 700 : 0);
+    if (me) { cosBurst(ar.querySelector('.dplat.me'), COS_BY[me].img || COS_BY[me].e, 16); ar.querySelector('.duel-fig.me')?.classList.add('cos-enter'); }
+    if (op) setTimeout(() => { cosBurst(ar.querySelector('.dplat.op'), COS_BY[op].img || COS_BY[op].e, 16); ar.querySelector('.duel-fig.op')?.classList.add('cos-enter'); }, me ? 700 : 0);
   }, 200);
 }
 function cosDuelWin(d) {
   setTimeout(() => {
     const ar = document.querySelector('.darena'); if (!ar || !cosAnimOn()) return;
     const fx = d.won ? myCos()?.fx : sCos(d.opp?.cos)?.fx; if (!fx) return;
-    cosBurst(ar, COS_BY[fx].e, fx === 'x_nova' ? 40 : 28, true); ar.classList.add('cos-win-' + fx);
+    cosBurst(ar, COS_BY[fx].img || COS_BY[fx].e, fx === 'x_nova' ? 40 : 28, true); ar.classList.add('cos-win-' + fx);
   }, 300);
 }
 
 // ---------- 💥 reakcje premium na czacie
-function cosReactHTML(b) { const c = cosById(b.rx); return c?.t === 'react' ? `<div class="rx rx-${c.id} r-${c.r}" style="--rc:${COS_R[c.r].c}"><span>${c.e}</span><small>${esc(c.n)}</small></div>` : '💥'; }
+function cosReactHTML(b) { const c = cosById(b.rx); return c?.t === 'react' ? `<div class="rx rx-${c.id} r-${c.r}" style="--rc:${COS_R[c.r].c}"><span>${cosPic(c)}</span><small>${esc(c.n)}</small></div>` : '💥'; }
 
 // ---------- 👑 Garderoba prestiżu
 let COS_TAB = 'frame';
@@ -312,7 +333,7 @@ ROUTES.chat = (...a) => {
   if (theirs) h = h.replaceAll('<div class="msg them ', `<div class="msg them bb-${theirs} `);
   if (f) h = h.replace(`${esc(f.nick || 'Znajomy')}</h1>`, `${nickHTML(f.nick || 'Znajomy', f.stats?.cos)}</h1>`);
   const rx = COS.filter(c => c.t === 'react' && cosOwned(c.id));
-  if (h.includes('class="emo-row"')) h = h.replace('<b class="small">🃏 Naklejki</b>', `<b class="small">✨ Reakcje premium</b>${rx.length ? `<div class="rx-row">${rx.map(c => `<button data-act="cos-rx" data-id="${c.id}" class="r-${c.r}" style="--rc:${COS_R[c.r].c}" title="${esc(c.n)}">${c.e}</button>`).join('')}</div>` : '<p class="small muted" style="margin:4px 0">Animowane reakcje zdobywasz w Skrzynce prestiżu (<a href="#/cos">👑 Prestiż</a>).</p>'}<b class="small">🃏 Naklejki</b>`);
+  if (h.includes('class="emo-row"')) h = h.replace('<b class="small">🃏 Naklejki</b>', `<b class="small">✨ Reakcje premium</b>${rx.length ? `<div class="rx-row">${rx.map(c => `<button data-act="cos-rx" data-id="${c.id}" class="r-${c.r}" style="--rc:${COS_R[c.r].c}" title="${esc(c.n)}">${cosPic(c)}</button>`).join('')}</div>` : '<p class="small muted" style="margin:4px 0">Animowane reakcje zdobywasz w Skrzynce prestiżu (<a href="#/cos">👑 Prestiż</a>).</p>'}<b class="small">🃏 Naklejki</b>`);
   return { ...v, html: h };
 };
 // start: najnowsze rzadkie dropy
