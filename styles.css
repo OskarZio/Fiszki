@@ -2326,3 +2326,6 @@ body.px-theme::after { content: ''; position: fixed; inset: 0; pointer-events: n
 .cls-who { display: inline-flex; align-items: center; gap: 5px; }
 .cls-who .cls-av { padding: 0; background: none; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; line-height: 1; }
 .cls-who .avemoji { font-size: 14px !important; }
+/* 💎 nagroda za ukończony zestaw */
+.set-reward { margin: 10px auto; padding: 10px 14px; border-radius: 14px; background: var(--accent-soft, rgba(79,70,229,.12)); max-width: 320px; }
+.set-reward > b { font-size: 20px; }

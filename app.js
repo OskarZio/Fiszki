@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '146';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '147';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -495,6 +495,9 @@ function nextCard() {
 function answer(g) {
   const s = SESSION, c = s.card; if (!c) return;
   const spent = Math.min(60000, Date.now() - (s.shownAt || Date.now())); s.timeMs = (s.timeMs || 0) + spent;
+  // do nagrody za ukończony zestaw: wpisane karty liczą się zawsze, przewijane – tylko gdy nie były „przeklikane”
+  const viaType = s.mode === 'type' && s.verdict;
+  if (viaType || spent >= FLIP_MIN_MS) ((s.got = s.got || { flip: {}, type: {} })[viaType ? 'type' : 'flip'])[c.id] = 1;
   if (s.cram) {
     (S.tlog = S.tlog || []).push({ id: uid(), t: Date.now(), d: c.deckId, ms: spent }); save();
     s.undo = null; s.cram.shift();
@@ -517,9 +520,27 @@ function answer(g) {
     if (sp && s.shown) { const m = sp.pts.map((_, i) => i).filter(i => !s.pts.has(i)); if (String(m) !== String(n.ptMiss || [])) { if (m.length) n.ptMiss = m; else delete n.ptMiss; touch(n); save(); } } }
   s.pts = null;
   s.lastNote = c.noteId;
-  nextCard(); render();
+  nextCard();
+  if (!s.card) setDoneReward(s);
+  render();
   if (!s.card) emit('sessionEnd', s);
 }
+// 💎 Ukończony zestaw: im więcej fiszek, tym więcej kryształów; za wpisywanie ×2. Raz dziennie na talię i tryb (żeby nie farmić).
+const SET_GEM = 0.4, SET_TYPE_MUL = 2, SET_MIN = 5, SET_CAP = 250;
+function setDoneReward(s) {
+  if (!s?.got || s.deckId === 'all' || s.reward) return;
+  const day = dayKey(Date.now()); let n = 0; const parts = [];
+  for (const m of ['flip', 'type']) {
+    const k = Object.keys(s.got[m]).length, id = `setdone-${s.deckId}-${day}-${m}`;
+    if (k < SET_MIN || S.wallet.some(w => w.id === id)) continue;
+    const g = Math.min(SET_CAP, Math.max(3, Math.round(k * SET_GEM * (m === 'type' ? SET_TYPE_MUL : 1))));
+    S.wallet.push({ id, n: g, why: 'set-done', t: Date.now() }); n += g; parts.push({ m, k, g });
+  }
+  if (!n) return;
+  s.reward = { n, parts }; save();
+}
+const setRewardHTML = r => r ? `<div class="set-reward"><b>+${r.n} 💎</b> za ukończony zestaw<div class="small muted">${r.parts.map(p => `${p.m === 'type' ? '✍️ wpisane' : '🃏 fiszki'}: ${p.k} ${plural(p.k, 'karta', 'karty', 'kart')}${p.m === 'type' ? ` · mnożnik ×${SET_TYPE_MUL}` : ''} → ${p.g} 💎`).join('<br>')}</div></div>`
+  : '';
 function undo() {
   const s = SESSION, u = s && s.undo; if (!u) return;
   const c = S.cards.find(x => x.id === u.cardId); if (!c) return;
@@ -876,6 +897,7 @@ function viewStudy(deckId, mode, q) {
   if (!c) {
     return head + `<div class="card flash"><div style="font-size:54px">🎉</div><h2>Gratulacje!</h2>
       <p class="muted">${s.done ? `Powtórzono ${s.done} ${plural(s.done, 'kartę', 'karty', 'kart')} w ⏱ <b>${fmtDur(s.timeMs || 0)}</b>.` : 'Na teraz nie ma nic do powtórki.'}</p>
+      ${setRewardHTML(s.reward)}
       <p class="small muted">Dziś uczysz się już ${fmtDur(studyMsBetween(dayStart()))}.</p>
       <p class="muted small">${nextDueText()}</p></div>
       ${deckId !== 'all' && !s.cram && starredCards(deckId).length ? `<button class="block" data-act="cram-star" data-id="${deckId}">⭐ Powtórz oznaczone z tej talii (${starredCards(deckId).length})</button><div class="spacer"></div>` : ''}
