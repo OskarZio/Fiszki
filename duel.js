@@ -27,6 +27,8 @@ const DBOT = [['Kot Bojowy', 'cat'], ['Żabson', 'frog'], ['Pieseł', 'dog'], ['
 let D = null, DUEL_DECK = '', DUEL_MODE = 'turn';   // turn = turowy, speed = kto szybciej
 // ✍️ rodzaj pytań (Panel admina): type = tylko wpisywanie (liczy się, kto bliżej), abcd = tylko ABCD, mix = ABCD + prawda/fałsz + wpisz
 const DUEL_QF = { type: '✍️ Wpisywanie – kto bliżej', abcd: '🔤 ABCD', mix: '🎲 Mieszane (ABCD, prawda/fałsz, wpisz)' };
+// wybór rodzaju pytań prosto w pojedynku (gospodarz ustala dla obu graczy)
+const duelQfHTML = () => `<div class="seg duel-qf">${[['type', '✍️', 'Wpisywanie', 'kto bliżej'], ['abcd', '🔤', 'ABCD', 'szybkie'], ['mix', '🎲', 'Mieszane', 'ABCD + wpisz']].map(([k, i, n, d]) => `<button class="${duelQf() === k ? 'on' : ''}" data-act="duel-qf" data-q="${k}"><b>${i} ${n}</b><small>${d}</small></button>`).join('')}</div>`;
 const duelQf = () => DUEL_QF[S.settings.duelQ] ? S.settings.duelQ : 'type';
 const duelKind = (d, k) => d.qf === 'type' ? 'type' : d.qf === 'abcd' ? 'abcd' : DMOVES[k].q;
 const QF_WORD = { type: 'wpisz', abcd: 'ABCD', tf: 'prawda/fałsz' };
@@ -246,16 +248,16 @@ function duelLobbyView() {
   if (d && !d.bot && d.phase === 'lobby') { const link = `${location.origin}${location.pathname}#/duel/${d.code}`;
     return { tab: 'arena', html: `${head}<div class="card center"><div class="small muted">Kod pojedynku</div><div class="coop-code">${esc(d.code)}</div><button class="sm" data-act="duel-share" data-link="${esc(link)}">📤 Wyślij koledze</button></div>
       <div class="card dvs">${duelFig(d.me, 'me')}<b class="vs">VS</b>${d.opp ? duelFig(d.opp, 'op') : '<div class="dwait">⏳</div>'}<div class="dvs-n"><b>${esc(d.me.nick)}</b><b>${d.opp ? esc(d.opp.nick) : 'czekam…'}</b></div></div>
-      ${d.host ? `<div class="card"><h3 style="margin-top:0">Tryb</h3>${duelModeHTML()}<p class="small muted" style="margin:6px 0 0">Pytania: <b>${DUEL_QF[duelQf()]}</b> (Panel admina)</p><h3>Talia pojedynku</h3><div class="row nowrap">${pick}</div><p class="small muted" style="margin:6px 0 0">Kolega dostanie te fiszki na czas walki.</p></div><button class="primary block boss-go" data-act="duel-start" ${d.opp ? '' : 'disabled'}>⚔️ Walcz!</button>` : '<p class="center muted">Gospodarz wybiera talię i zaczyna…</p>'}
+      ${d.host ? `<div class="card"><h3 style="margin-top:0">Tryb</h3>${duelModeHTML()}<h3>Pytania</h3>${duelQfHTML()}<h3>Talia pojedynku</h3><div class="row nowrap">${pick}</div><p class="small muted" style="margin:6px 0 0">Kolega dostanie te fiszki na czas walki.</p></div><button class="primary block boss-go" data-act="duel-start" ${d.opp ? '' : 'disabled'}>⚔️ Walcz!</button>` : '<p class="center muted">Gospodarz wybiera talię i zaczyna…</p>'}
       <button class="ghost block" data-act="duel-leave">Wyjdź</button>` }; }
   return { tab: 'arena', html: `${head}
   <div class="card dintro"><div class="dvs">${duelFig(duelMe(), 'me')}<b class="vs">VS</b><div class="dwait">❓</div></div>
     <p style="margin:8px 0 4px"><b>Turowa walka 1 na 1</b> – Twój bohater kontra bohater kolegi.</p>
-    <p class="small" style="margin:0 0 4px">Pytania: <b>${DUEL_QF[duelQf()]}</b> <span class="muted">(zmienisz w Ustawieniach → 🛠️ Panel admina)</span></p>
+    <p class="small" style="margin:0 0 4px">Pytania: <b>${DUEL_QF[duelQf()]}</b> <span class="muted">(wybierasz niżej)</span></p>
     <ul class="small" style="text-align:left;margin:0"><li>W swojej turze wybierasz ruch: ⚔️ atak, 💥 mocny cios, 🛡️ garda, 💚 mikstura (mają PP).</li><li>Żeby ruch się udał – odpowiadasz na fiszkę. ${duelQf() === 'abcd' ? '' : 'Przy wpisywaniu siła ciosu = <b>celność</b> (literówka = słabszy cios). '}Szybko = mocniej, źle = <b>pudło</b>.</li><li>3 trafienia ładują supercios Twojej postaci.</li><li><b>⚡ Kto szybciej:</b> ta sama fiszka u obu naraz – ${duelQf() === 'type' ? 'obaj wpisujecie, <b>bliższa odpowiedź</b> atakuje (remis – szybsza)' : 'pierwsza dobra odpowiedź atakuje, zła = blokada do końca rundy'}.</li></ul></div>
   <div class="card dpvp"><h3 style="margin-top:0">🎒 Przedmioty PvP <small class="muted">(${pvpCount()})</small></h3>${Object.keys(PVP).map(k => `<div class="row nowrap dpvp-it"><span>${PVP[k][0]}</span><div class="grow"><b>${PVP[k][1]}</b> <small class="muted">×${itemCount('pvp', k)}</small><div class="small muted">${PVP[k][2]}</div></div></div>`).join('')}
     <p class="small muted" style="margin:8px 0 0">Zdobywasz je za pojedynki (wygrana z kolegą = zawsze). Max ${PVP_MAX} na walkę. ⚖️ Wiedza wygrywa: seria dobrych odpowiedzi daje do +30%, poziom postaci do +20% ❤️ i +15% obrażeń, a ekwipunek z bossów się nie liczy.</p></div>
-  <div class="card"><h3 style="margin-top:0">Tryb</h3>${duelModeHTML()}<h3>Talia</h3><div class="row nowrap">${pick || '<p class="muted">Dodaj fiszki, żeby walczyć.</p>'}</div></div>
+  <div class="card"><h3 style="margin-top:0">Tryb</h3>${duelModeHTML()}<h3>Pytania</h3>${duelQfHTML()}<h3>Talia</h3><div class="row nowrap">${pick || '<p class="muted">Dodaj fiszki, żeby walczyć.</p>'}</div></div>
   <button class="primary block boss-go" data-act="duel-host" ${decks.length ? '' : 'disabled'}>➕ Stwórz pojedynek</button>
   <div class="row nowrap" style="margin-top:10px"><input id="duel-code" class="grow" maxlength="6" placeholder="Kod od kolegi" autocapitalize="characters" autocomplete="off" value="${esc(DUEL_JOIN)}"><button data-act="duel-join">Dołącz</button></div>
   <button class="block" data-act="duel-bot" style="margin-top:10px" ${decks.length ? '' : 'disabled'}>🤖 Trening z botem</button>` };
@@ -275,6 +277,7 @@ Object.assign(ACTIONS, {
   'duel-join': () => { const c = ($('#duel-code')?.value || '').trim().toUpperCase(); if (!/^[A-Z0-9]{6}$/.test(c)) return toast('Kod ma 6 znaków'); DUEL_JOIN = ''; duelOpen(c, false); render(); },
   'duel-start': () => duelStart(),
   'duel-mode': el => { DUEL_MODE = el.dataset.m; render(); },
+  'duel-qf': el => { if (DUEL_QF[el.dataset.q]) { S.settings.duelQ = el.dataset.q; save(); render(); } },
   'duel-speed': el => duelSpeedPick(+el.dataset.i),
   'duel-bot': () => { D?.ch?.close(); duelBot(); },
   'duel-move': el => duelPick(el.dataset.k),
@@ -298,7 +301,7 @@ ROUTES.duel = (...a) => { const v = duelRoute0(...a); if (!v || v.focus || typeo
 const SPEED_MS = 12000, SPEED_TYPE_MS = 22000, SPEED_DMG = 22;
 const speedMs = r => r?.kind === 'type' ? SPEED_TYPE_MS : SPEED_MS;
 const duelHint = a => { const t = String(a).trim(); return t.slice(0, Math.max(1, Math.min(3, Math.floor(t.length / 3)))) + '…'; };
-const duelModeHTML = () => `<div class="seg duel-mode"><button class="${DUEL_MODE === 'turn' ? 'on' : ''}" data-act="duel-mode" data-m="turn"><b>🎯 Turowy</b><small>na zmianę, ruchy i przedmioty</small></button><button class="${DUEL_MODE === 'speed' ? 'on' : ''}" data-act="duel-mode" data-m="speed"><b>⚡ ${duelQf() === 'type' ? 'Kto bliżej' : 'Kto szybciej'}</b><small>ta sama fiszka naraz</small></button></div>`;
+const duelModeHTML = () => `<div class="seg duel-mode"><button class="${DUEL_MODE === 'turn' ? 'on' : ''}" data-act="duel-mode" data-m="turn"><b>🎯 Turowy</b><small>na zmianę</small></button><button class="${DUEL_MODE === 'speed' ? 'on' : ''}" data-act="duel-mode" data-m="speed"><b>⚡ ${duelQf() === 'type' ? 'Kto bliżej' : 'Kto szybciej'}</b><small>ta sama fiszka</small></button></div>`;
 function duelRound() {
   const d = D; if (!d || d.phase !== 'fight' || d.mode !== 'speed' || !d.host) return;
   const x = duelCard(d), type = d.qf === 'type', r = { i: (d.ri || 0) + 1, q: x.q, a: x.a, kind: type ? 'type' : 'abcd', opts: type ? [] : shuffle([x.a, ...duelWrong(d, x, 3)]) }; d.ri = r.i;

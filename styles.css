@@ -2668,3 +2668,9 @@ body:not(.focus) #gc-fab { top: auto; bottom: calc(var(--tabs-h) + 16px + env(sa
 .ice img { width: clamp(28px, 6dvh, 52px) !important; height: clamp(28px, 6dvh, 52px) !important; flex: none; }
 .ice b { position: relative; z-index: 1; font-size: clamp(15px, 2.4dvh, 20px); line-height: 1.25; text-align: center; max-width: 100%; }
 @media (max-height: 720px) { .bf .abcd { min-height: 42px !important; padding: 7px 10px !important; font-size: 15px !important; } .bf .boss-q { min-height: 92px !important; } .bf .abcd-grid { gap: 6px !important; } }
+/* pojedynek: przyciski trybu i pytań zawsze się mieszczą */
+.duel-mode, .duel-qf { display: flex !important; width: 100%; }
+.duel-mode button, .duel-qf button { flex: 1 1 0; min-width: 0; display: grid; justify-items: center; gap: 2px; padding: 8px 4px !important; white-space: normal; text-align: center; }
+.duel-mode button b, .duel-qf button b { font-size: 14px; line-height: 1.2; } .duel-mode button small, .duel-qf button small { font-size: 11.5px; color: var(--muted); line-height: 1.2; }
+/* zaproszenie: 3 przyciski bez ucinania */
+.ref-btns > button { font-size: 15px; padding-left: 6px !important; padding-right: 6px !important; gap: 5px; }

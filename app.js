@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '165';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '166';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -307,7 +307,9 @@ function recentHardSet() {
   const set = new Set(); for (const [id, gs] of last) if (gs.some(g => g <= 2)) set.add(id);
   HARD_CACHE = { n: S.log.length, set }; return set;
 }
-const isHardCard = c => c.srs.lapses >= 2 || c.srs.state === 'relearn' || recentHardSet().has(c.id);
+// talia zdana (kolokwium zaliczone) – jej fiszki nie są już ani trudne, ani oznaczone do powtórki
+const deckPassed = id => !!deckById(id)?.done;
+const isHardCard = c => !deckPassed(c.deckId) && (c.srs.lapses >= 2 || c.srs.state === 'relearn' || recentHardSet().has(c.id));
 const difficultCards = () => S.cards.filter(isHardCard);
 
 // ============================================================ Wygląd karty
@@ -893,7 +895,7 @@ const fmtDur = ms => { const m = Math.round(ms / MIN); if (m < 1) return ms > 0 
 const fmtClock = ms => { const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), x = t % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
 const sessLiveMs = s => (s.timeMs || 0) + (s.card ? Math.min(60000, Date.now() - (s.shownAt || Date.now())) : 0);
 // fiszki oznaczone gwiazdką (⭐ = „cięższe”) – gwiazdka jest na notatce, więc dotyczy obu kierunków
-const starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && noteById(c.noteId)?.star);
+const starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && !deckPassed(c.deckId) && noteById(c.noteId)?.star);
 function viewStudy(deckId, mode, q) {
   const all = q.get('all') === '1', cq = q.get('cram') || '', only = q.get('only') || '', key = `${deckId}/${mode}/${cq}${cq === 'list' ? ':' + idHash(q.get('ids') || '') : ''}${all ? '/all' : ''}${only ? '/only:' + idHash(only) : ''}`;
   if (!SESSION || SESSION.key !== key) {
