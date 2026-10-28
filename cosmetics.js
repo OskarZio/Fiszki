@@ -71,6 +71,10 @@ COS.push(
   { id: 't_alchemik', t: 'title', n: 'Alchemik', r: 'rare' }, { id: 't_ratownik', t: 'title', n: 'Ratownik', r: 'rare' },
   { id: 't_snajper', t: 'title', n: 'Snajper', r: 'epic' }, { id: 't_magister', t: 'title', n: 'Magister', r: 'epic' },
   { id: 't_smok', t: 'title', n: 'Pogromca Smoków', r: 'legendary' }, { id: 't_diament', t: 'title', n: 'Diamentowy umysł', r: 'legendary' },
+  { id: 't_zar', t: 'title', n: 'Żar nauki', r: 'common' }, { id: 't_sto', t: 'title', n: 'Stuprocentowy', r: 'rare' },
+  { id: 't_czas', t: 'title', n: 'Strażnik Czasu', r: 'rare' }, { id: 't_wrozbita', t: 'title', n: 'Jasnowidz', r: 'epic' },
+  { id: 't_weteran', t: 'title', n: 'Weteran', r: 'epic' }, { id: 't_aniol', t: 'title', n: 'Anioł Stróż', r: 'epic' },
+  { id: 't_skarb', t: 'title', n: 'Łowca Skarbów', r: 'legendary' }, { id: 't_krol', t: 'title', n: 'Władca Fiszek', r: 'mythic' },
   { id: 'r_potion', t: 'react', n: 'Eliksir', r: 'epic', e: '🧪' }, { id: 'r_diamond', t: 'react', n: 'Diament', r: 'legendary', e: '💎' });
 // 👾 grafiki 8-bit zamiast zwykłych emotek (assets/px8: b_* – odznaki tytułów, e_* – reakcje, efekty, aury)
 const COS_IMG = {
@@ -78,6 +82,7 @@ const COS_IMG = {
   t_pogromca: 'b_swords', t_gladiator: 'b_shield', t_nieomylny: 'b_target', t_pamiec: 'b_dna', t_niezlomny: 'b_fire', t_odkrywca: 'b_comet',
   t_prymus: 'b_scroll', t_magnes: 'b_magnet', t_gwiazda: 'b_sparkle', t_sprinter: 'b_stopwatch', t_alchemik: 'b_flasks', t_ratownik: 'b_medkit',
   t_snajper: 'b_bow', t_magister: 'b_gradcap', t_smok: 'b_dragon', t_diament: 'b_ring',
+  t_zar: 'b_fire2', t_sto: 'b_hundred', t_czas: 'b_hourglass', t_wrozbita: 'b_orb', t_weteran: 'b_swords2', t_aniol: 'b_wing2', t_skarb: 'b_chest', t_krol: 'b_crown2',
   x_hearts: 'e_heartdark', x_stars: 'e_shootstar', x_confetti: 'e_popper', x_thunder: 'e_bolt', x_rainbow: 'e_rainbow', x_nova: 'e_nova',
   r_heart: 'e_heartbeat', r_fire: 'e_fire', r_clap: 'e_clap', r_100: 'e_hundred', r_crown: 'e_crown', r_unicorn: 'e_unicorn', r_potion: 'e_potion', r_diamond: 'e_diamond',
   a_hearts: 'e_heartbeat', a_sparkle: 'e_star', a_fire: 'e_fire', a_cosmic: 'e_atom',
