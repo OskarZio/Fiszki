@@ -42,7 +42,7 @@ function questsCardHTML() {
   return `<div class="card" id="quests"><div class="row nowrap"><h2 class="grow" style="margin:0">📋 Zadania dnia</h2><span class="small muted">${st.list.filter(q => q.claimed).length}/3</span></div>
     <p class="small muted">Nowe zadania codziennie o północy. Za komplet: +${QUEST_BONUS} 💎.</p>
     <details class="small muted"><summary>Jak liczą się punkty nauki i 💎?</summary>
-      <ul class="perks"><li><b>Wpisz</b> albo <b>test ABCD / pisemny</b>: 1 pkt za odpowiedź, 💎 za każdą poprawną.</li>
+      <ul class="perks"><li><b>Wpisz</b> albo <b>test ABCD / pisemny</b>: 1 pkt za odpowiedź, 1 💎 za każdą poprawną wpisaną. 🔥 10 wpisanych dobrze z rzędu = +5 💎, 🌳 karta zapamiętana na 3 tygodnie = +3 💎.</li>
       <li><b>Przewijanie fiszek</b>: 10 fiszek = tyle co 1 wpisana. Przewinięte w mniej niż 1,5 s nie liczą się wcale.</li>
       <li>Testy: progi za wynik (np. 70% → 20 💎, 80% → 30 💎 na 10 pytań), max ${QUIZ_GEM_CAP} 💎 dziennie. Cel dzienny i jego premia liczą się w punktach nauki.</li></ul></details>
     ${st.list.map(q => `<div class="quest${q.claimed ? ' got' : ''}"><span class="qi">${q.icon}</span>

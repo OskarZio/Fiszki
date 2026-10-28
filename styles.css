@@ -2329,3 +2329,24 @@ body.px-theme::after { content: ''; position: fixed; inset: 0; pointer-events: n
 /* 💎 nagroda za ukończony zestaw */
 .set-reward { margin: 10px auto; padding: 10px 14px; border-radius: 14px; background: var(--accent-soft, rgba(79,70,229,.12)); max-width: 320px; }
 .set-reward > b { font-size: 20px; }
+/* 👋 Instrukcja przy pierwszym uruchomieniu */
+.wl-overlay { position: fixed; inset: 0; z-index: 90; background: rgba(15,23,42,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: grid; place-items: center;
+  padding: calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom)); }
+.wl-box { width: 100%; max-width: 440px; max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); display: flex; flex-direction: column; margin: 0; padding: 14px 16px; }
+.wl-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wl-dots { display: flex; gap: 6px; } .wl-dots i { width: 8px; height: 8px; border-radius: 99px; background: var(--line); transition: width .2s; }
+.wl-dots i.on { width: 22px; background: var(--accent); } .wl-dots i.done { background: var(--accent-soft, var(--accent)); }
+.wl-body { overflow-y: auto; overscroll-behavior: contain; flex: 1; min-height: 0; padding: 4px 2px; }
+.wl-ic { font-size: 52px; text-align: center; line-height: 1.1; margin: 6px 0 2px; }
+.wl-body h2 { text-align: center; margin: 4px 0 10px; }
+.wl-pts { margin: 0 0 10px; padding-left: 20px; display: grid; gap: 8px; line-height: 1.4; }
+ul.wl-pts { list-style: none; padding-left: 0; }
+.wl-chk { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: var(--card2); margin: 8px 0; line-height: 1.35; font-size: 14px; }
+.wl-chk input { flex: none; width: 22px; height: 22px; margin-top: 1px; }
+.wl-chk small { display: block; margin-top: 2px; }
+.wl-more { margin-top: 10px; font-size: 14px; } .wl-more summary { color: var(--accent); font-weight: 600; cursor: pointer; }
+.wl-more p { line-height: 1.45; }
+.wl-docs details { margin: 6px 0; } .wl-docs summary { color: var(--text); font-weight: 600; }
+.wl-docs .legal { font-size: 13px; max-height: 50vh; overflow: auto; padding: 6px 8px; border-radius: 10px; background: var(--card2); }
+.wl-ok { text-align: center; color: #16a34a; font-weight: 700; }
+.wl-nav { margin-top: 10px; gap: 8px; }

@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '149';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '150';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -508,7 +508,9 @@ function answer(g) {
     const typed = s.mode === 'type' && s.verdict;   // m/v: tryb i wynik – wpisywane odpowiedzi są warte więcej niż przewijane
     const entry = { id: uid(), c: c.id, d: c.deckId, t: Date.now(), g, n: wasNew ? 1 : 0, ms: Math.min(60000, Date.now() - s.shownAt), m: typed ? 'type' : 'flip', ...(typed ? { v: s.verdict } : {}) };
     s.undo = { cardId: c.id, srs: c.srs, logId: entry.id, mod: c.mod };
+    const ivl0 = c.srs.ivl || 0;
     c.srs = schedule(c.srs, g); touch(c); S.log.push(entry); s.done++;
+    proofGems(s, c, typed ? s.verdict : null, ivl0);
     // egzamin: każda karta wraca najpóźniej dzień przed egzaminem (powtórka „na świeżo”)
     const ex = examDay(deckById(c.deckId)), before = ex - DAY + 8 * 3600e3;
     if (ex > Date.now() + DAY && c.srs.due > before) c.srs = { ...c.srs, due: Math.max(Date.now() + 10 * MIN, before) };
@@ -525,6 +527,24 @@ function answer(g) {
   render();
   if (!s.card) emit('sessionEnd', s);
 }
+// 💎 Dowód wiedzy (poza bossami): 🔥 seria 10 wpisanych dobrze z rzędu = +5 (max 8 serii dziennie),
+// 🌳 karta pierwszy raz zapamiętana na 3 tygodnie = +3 (gdy wpisana) albo +1 (przewijana) – raz na kartę
+const PROOF_STREAK = 10, PROOF_STREAK_GEMS = 5, PROOF_STREAK_MAX = 8, MATURE_IVL = 21;
+function proofGems(s, c, verdict, ivl0) {
+  const day = dayKey(Date.now());
+  if (verdict) {
+    s.tStreak = verdict === 'ok' ? (s.tStreak || 0) + 1 : verdict === 'close' ? (s.tStreak || 0) : 0;
+    if (s.tStreak && s.tStreak % PROOF_STREAK === 0) {
+      const k = S.wallet.filter(w => w.why === 'type-streak' && dayKey(w.t) === day).length;
+      if (k < PROOF_STREAK_MAX) { S.wallet.push({ id: `tstreak-${day}-${k}`, n: PROOF_STREAK_GEMS, why: 'type-streak', t: Date.now() }); toast(`🔥 ${s.tStreak} wpisanych dobrze z rzędu! +${PROOF_STREAK_GEMS} 💎`, 2500); }
+    }
+  }
+  if (ivl0 < MATURE_IVL && (c.srs.ivl || 0) >= MATURE_IVL) {
+    const id = 'mature-' + c.id;
+    if (!S.wallet.some(w => w.id === id)) { const n = verdict === 'ok' || verdict === 'close' ? 3 : 1; S.wallet.push({ id, n, why: 'mature', t: Date.now() }); toast(`🌳 Karta zapamiętana na długo! +${n} 💎`, 2200); }
+  }
+}
+
 // 💎 Ukończony zestaw: im więcej fiszek, tym więcej kryształów; za wpisywanie ×2. Raz dziennie na talię i tryb (żeby nie farmić).
 const SET_GEM = 0.4, SET_TYPE_MUL = 2, SET_MIN = 5, SET_CAP = 250;
 function setDoneReward(s) {

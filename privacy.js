@@ -68,7 +68,7 @@ const prAcc0 = accountCardHTML;
 accountCardHTML = function () {
   let h = prAcc0();
   if (SB && !SB_USER) h = h.replace('<div class="row"><button class="primary grow" data-act="acc-login">',
-    `<label class="check small consent"><input type="checkbox" id="acc-consent"> <span>Mam ukończone 16 lat (albo zgodę rodzica) i akceptuję <a href="#/terms">Regulamin</a> oraz <a href="#/privacy">Politykę prywatności</a> <span class="muted">(wymagane do założenia konta)</span></span></label>
+    `<label class="check small consent"><input type="checkbox" id="acc-consent" ${consentOk() ? 'checked' : ''}> <span>Mam ukończone 16 lat (albo zgodę rodzica) i akceptuję <a href="#/terms">Regulamin</a> oraz <a href="#/privacy">Politykę prywatności</a> <span class="muted">(wymagane do założenia konta)</span></span></label>
     <div class="spacer"></div><div class="row"><button class="primary grow" data-act="acc-login">`);
   if (SB && SB_USER) h = h.replace(/<button class="ghost sm" data-act="cloud-check">/, `<details class="danger-zone"><summary class="small">🔒 Prywatność i dane</summary>
       <p class="small muted">Masz prawo do kopii swoich danych i do usunięcia konta (RODO art. 15, 17, 20).</p>
