@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '163';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '164';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -771,7 +771,7 @@ function viewDeck(id, q) {
     <div class="spacer"></div>
     <div class="row">
       ${(() => {   // gdy na dziś nic nie zostało: nowe ponad limit albo swobodna powtórka całej talii (bez wpływu na harmonogram)
-        const q = k.total ? '' : hiddenNew(id) ? '?all=1' : '?cram=all', extra = k.total ? '' : `<small class="study-extra">${hiddenNew(id) ? 'nowe ponad limit' : 'powtórka bez harmonogramu'}</small>`;
+        const q = k.total ? '' : hiddenNew(id) ? '?all=1' : '?cram=all', extra = k.total ? '' : `<small class="study-extra">${hiddenNew(id) ? 'nowe ponad limit' : 'bez harmonogramu'}</small>`;
         return `<button class="primary grow study-go" data-go="#/study/${id}/flip${q}" ${cards.length ? '' : 'disabled'}><span>▶ Fiszki</span>${extra}</button>
       <button class="grow study-go" data-go="#/study/${id}/type${q}" ${cards.length ? '' : 'disabled'}><span>⌨️ Wpisywanie</span>${extra}</button>`; })()}
     </div>

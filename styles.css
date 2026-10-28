@@ -2653,3 +2653,7 @@ body:not(.focus) #gc-fab { top: auto; bottom: calc(var(--tabs-h) + 16px + env(sa
 .mode-sw .seg { display: flex; width: 100%; } .mode-sw .seg button { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 6px 4px; min-height: 52px; }
 .mode-sw .seg button i { font-style: normal; font-size: 18px; } .mode-sw .seg button span { font-size: 12px; white-space: normal; line-height: 1.15; }
 .pp-box .mode-sw { margin: 12px 0 4px; }
+/* przyciski nauki z podpisem: tekst zawsze się mieści */
+.study-go { min-width: 0; padding-left: 10px !important; padding-right: 10px !important; text-align: center; }
+.study-go > span, .study-go .study-extra { max-width: 100%; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }
+.study-go .study-extra { font-size: 12px; margin-top: 2px; }
