@@ -13,7 +13,7 @@ const DMOVES = {
 };
 const DQ_MS = { abcd: 15000, tf: 10000, type: 25000 };
 const DBOT = [['Kot Bojowy', 'cat'], ['Żabson', 'frog'], ['Pieseł', 'dog'], ['Sowa Sesji', 'owl'], ['Lis Spryciarz', 'fox'], ['Chomik Turbo', 'hamster']];
-let D = null, DUEL_DECK = '';
+let D = null, DUEL_DECK = '', DUEL_MODE = 'turn';   // turn = turowy (Pokémon), speed = kto szybciej
 const duelMe = () => { const h = hero(), st = heroStats(); return { nick: (S.profile.nick || 'Gracz').slice(0, 24), line: heroLine(h), form: heroForm(h), g: h.g === 'm' ? 'm' : 'w', lv: heroLv(), crit: Math.min(.2, +st.crit.toFixed(3)), ult: lineDef().ult[0] }; };
 const sDuelP = p => p && typeof p === 'object' ? { nick: sStr(p.nick, 24) || 'Gracz', line: CHAR_LINES[p.line] ? p.line : 'cat', form: sInt(p.form, 0, 3), g: p.g === 'm' ? 'm' : 'w', lv: sInt(p.lv, 1, 99, 1), crit: sNum(p.crit, 0, .2, 0), ult: sStr(p.ult, 40) || '⚡ Supercios' } : null;
 function sDuel(m) {
@@ -21,8 +21,10 @@ function sDuel(m) {
   const o = { t: sStr(m.t, 10), from: sStr(m.from, 40) };
   if (m.p) o.p = sDuelP(m.p);
   if (m.set && Array.isArray(m.set.cards)) o.set = { name: sStr(m.set.name, 60), cards: m.set.cards.slice(0, 260).map(x => ({ q: sStr(x?.q, 300), a: sStr(x?.a, 300), o: sStr(x?.o, 8) })).filter(x => x.q && x.a) };
-  for (const k of ['k', 'q', 'a', 'kind']) if (m[k] != null) o[k] = sStr(m[k], 300);
-  for (const k of ['dmg', 'heal', 'ms']) if (m[k] != null) o[k] = sInt(m[k], 0, 500);
+  for (const k of ['k', 'q', 'a', 'kind', 'mode', 'win']) if (m[k] != null) o[k] = sStr(m[k], 300);
+  for (const k of ['dmg', 'heal']) if (m[k] != null) o[k] = sInt(m[k], 0, 500);
+  for (const k of ['ms', 'i']) if (m[k] != null) o[k] = sInt(m[k], 0, 1e6);
+  if (Array.isArray(m.opts)) o.opts = m.opts.slice(0, 4).map(x => sStr(x, 300));
   for (const k of ['ok', 'fast', 'slow', 'crit', 'first']) if (m[k] != null) o[k] = !!m[k];
   return o;
 }
@@ -40,11 +42,13 @@ function duelBeat() {
   clearTimeout(d.beat); d.beat = setTimeout(duelBeat, 5000);
 }
 const duelDeckSet = id => { const d = deckById(id); return d && typeof coopSetPack === 'function' ? coopSetPack(d) : null; };
-function duelBegin(set, first) {
-  const d = D; d.phase = 'fight'; d.set = set; d.answers = [...new Set(set.cards.map(x => x.a))];
+function duelBegin(set, first, mode) {
+  const d = D; d.phase = 'fight'; d.mode = mode === 'speed' ? 'speed' : 'turn'; d.r = null; d.ri = 0; d.set = set; d.answers = [...new Set(set.cards.map(x => x.a))];
   d.hp = { me: DUEL_HP, opp: DUEL_HP }; d.pp = Object.fromEntries(Object.entries(DMOVES).map(([k, m]) => [k, m.pp])); d.ult = 0; d.guard = { me: false, opp: false };
   d.turn = first ? 'me' : 'opp'; d.log = []; d.q = null; d.ask = null; d.deck = shuffle(set.cards.map((_, i) => i)); d.di = 0; d.stats = { ok: 0, bad: 0 }; d.seen = Date.now();
-  duelLog(`⚔️ ${d.me.nick} kontra ${d.opp.nick}! Talia: „${set.name}”`); duelLog(d.turn === 'me' ? '👉 Zaczynasz – wybierz ruch!' : `⏳ Zaczyna ${d.opp.nick}…`);
+  duelLog(`⚔️ ${d.me.nick} kontra ${d.opp.nick}! Talia: „${set.name}”`);
+  if (d.mode === 'speed') { d.turn = null; duelLog('⚡ Kto szybciej! Ta sama fiszka u obu – pierwsza dobra odpowiedź atakuje.'); go('#/duel/fight'); render(); if (d.host) setTimeout(() => { if (D === d) duelRound(); }, 1500); return; }
+  duelLog(d.turn === 'me' ? '👉 Zaczynasz – wybierz ruch!' : `⏳ Zaczyna ${d.opp.nick}…`);
   go('#/duel/fight'); render(); if (d.bot && d.turn === 'opp') duelBotTurn();
 }
 const duelLog = t => { if (D) { D.log.unshift(t); D.log = D.log.slice(0, 3); D.msgAt = Date.now(); } };
@@ -101,8 +105,13 @@ function duelMsg(m0) {
   const m = sDuel(m0), d = D; if (!m || !d) return; d.seen = Date.now();
   if (m.t === 'join' && d.host && d.phase === 'lobby' && m.p) { d.opp = m.p; dSend({ t: 'lobby', p: d.me }); return render(); }
   if (m.t === 'lobby' && !d.host && m.p) { d.opp = m.p; return render(); }
-  if (m.t === 'start' && !d.host && m.set?.cards.length) { if (!d.opp && m.p) d.opp = m.p; return duelBegin(m.set, !m.first); }
+  if (m.t === 'start' && !d.host && m.set?.cards.length) { if (!d.opp && m.p) d.opp = m.p; return duelBegin(m.set, !m.first, m.mode); }
   if (d.phase !== 'fight') { if (m.t === 'rematch' && d.phase === 'end') { d.oppRematch = true; if (d.host && d.myRematch) duelStart(); render(); } return; }
+  if (d.mode === 'speed') {
+    if (m.t === 'round' && !d.host && m.opts?.length) return duelRoundShow({ i: m.i, q: m.q, a: m.a, opts: m.opts });
+    if (m.t === 'buzz' && d.host) return duelBuzz('opp', m.i, m.ok, m.ms);
+    if (m.t === 'rres' && !d.host && d.r?.i === m.i) return duelRoundRes(m);
+  }
   if (m.t === 'ask' && d.turn === 'opp') { d.ask = { k: m.k, kind: m.kind, q: m.q, at: Date.now() }; return render(); }
   if (m.t === 'move' && d.turn === 'opp' && (DMOVES[m.k] || m.k === 'ult')) return duelApply('opp', m);
   if (m.t === 'ff') { duelLog(`🏳️ ${d.opp.nick} się poddał`); return duelEnd(true); }
@@ -111,14 +120,14 @@ function duelStart() {
   const d = D; if (!d?.host || !d.opp) return;
   const set = duelDeckSet(DUEL_DECK); if (!set || set.cards.length < 4) return toast('Wybierz talię z co najmniej 4 fiszkami');
   d.myRematch = d.oppRematch = false; const first = Math.random() < .5;
-  dSend({ t: 'start', set, first, p: d.me }); duelBegin(set, first);
+  dSend({ t: 'start', set, first, p: d.me, mode: DUEL_MODE }); duelBegin(set, first, DUEL_MODE);
 }
 // 🤖 trening z botem
 function duelBot() {
   const set = duelDeckSet(DUEL_DECK); if (!set || set.cards.length < 4) return toast('Wybierz talię z co najmniej 4 fiszkami');
   const [nick, line] = DBOT[Math.random() * DBOT.length | 0], lv = heroLv();
   D = { code: 'BOT', host: true, bot: true, phase: 'lobby', me: duelMe(), opp: { nick: `🤖 ${nick}`, line, form: Math.min(3, Math.floor(lv / 8)), g: 'w', lv, crit: .08, ult: LINES[line]?.ult?.[0] || '⚡ Supercios' } };
-  duelBegin(set, true);
+  duelBegin(set, true, DUEL_MODE);
 }
 function duelBotTurn() {
   const d = D; setTimeout(() => {
@@ -133,6 +142,7 @@ function duelBotTurn() {
 setInterval(() => {
   const d = D; if (!d || d.phase !== 'fight' || parseRoute().parts[0] !== 'duel') return;
   const q = d.q, a = d.ask, el = document.querySelector('.dq-bar i');
+  if (d.mode === 'speed') { if (d.r && !d.r.res && el) el.style.width = Math.max(0, 100 - (Date.now() - d.r.at) / SPEED_MS * 100) + '%'; return; }
   if (q && !q.done) { const f = (Date.now() - q.at) / DQ_MS[q.kind]; if (el) el.style.width = Math.max(0, 100 - f * 100) + '%'; if (f >= 1) duelAnswer(false, ''); }
   else if (a && el) el.style.width = Math.max(0, 100 - (Date.now() - a.at) / DQ_MS[a.kind] * 100) + '%';
 }, 200);
@@ -143,7 +153,8 @@ const duelBox = (p, hp, mine, guard) => `<div class="dbox ${mine ? 'me' : 'op'}"
 function duelFightView() {
   const d = D, now = Date.now(), fx = d.fx && now - d.fx.t < 900 ? d.fx : null, q = d.q, a = d.ask;
   let panel;
-  if (d.phase === 'end') panel = `<div class="dtext"><b>${d.won ? `🏆 ${esc(d.opp.nick)} pokonany! Wygrywasz!` : `💀 ${esc(d.me.nick)} pada… Wygrywa ${esc(d.opp.nick)}.`}</b><small>+${d.xp} XP${d.gems ? ` · +${d.gems} 💎` : ''} · ${d.stats.ok} dobrych, ${d.stats.bad} błędów</small></div>
+  if (d.phase === 'fight' && d.mode === 'speed') panel = duelSpeedPanel(d);
+  else if (d.phase === 'end') panel = `<div class="dtext"><b>${d.won ? `🏆 ${esc(d.opp.nick)} pokonany! Wygrywasz!` : `💀 ${esc(d.me.nick)} pada… Wygrywa ${esc(d.opp.nick)}.`}</b><small>+${d.xp} XP${d.gems ? ` · +${d.gems} 💎` : ''} · ${d.stats.ok} dobrych, ${d.stats.bad} błędów</small></div>
     <div class="row" style="margin-top:8px">${d.bot ? '<button class="primary grow" data-act="duel-bot">🔁 Jeszcze raz</button>' : `<button class="primary grow" data-act="duel-rematch" ${d.myRematch ? 'disabled' : ''}>${d.myRematch ? '⏳ Czekam…' : d.oppRematch ? '✅ Rewanż!' : '🔁 Rewanż'}</button>`}<button class="grow" data-act="duel-leave">Wyjdź</button></div>`;
   else if (q) {
     const v = q.card, done = q.done;
@@ -156,7 +167,7 @@ function duelFightView() {
     <div class="dmoves">${Object.entries(DMOVES).map(([k, m]) => `<button data-act="duel-move" data-k="${k}" ${d.pp[k] > 0 ? '' : 'disabled'}><b>${m.ic} ${m.n}</b><small>${m.d}</small><i>PP ${m.pp > 50 ? '∞' : `${d.pp[k]}/${m.pp}`}</i></button>`).join('')}</div>
     <button class="dult${d.ult >= DUEL_ULT ? ' ready' : ''}" data-act="duel-move" data-k="ult" ${d.ult >= DUEL_ULT ? '' : 'disabled'}><b>⚡ ${esc(d.me.ult)}</b><small>${d.ult >= DUEL_ULT ? 'GOTOWY – 40 obrażeń bez pytania!' : `ładowanie ${d.ult}/${DUEL_ULT} trafień`}</small></button>`;
   else panel = `<div class="dtext">${a ? `<small>${esc(d.opp.nick)} używa ${DMOVES[a.k]?.ic || '⚡'} ${DMOVES[a.k]?.n || ''} i odpowiada na:</small><b>${esc(a.q)}</b><div class="dq-bar opp"><i></i></div><small class="muted">Też spróbuj odpowiedzieć w myślach 🧠</small>` : `<b>⏳ ${esc(d.opp.nick)} wybiera ruch…</b>`}${d.log[0] ? `<small>${esc(d.log[0])}</small>` : ''}</div>`;
-  return { tab: 'arena', focus: true, html: `<div class="studybar"><button class="iconbtn" data-act="duel-ff">✕</button><div class="title">🥊 Pojedynek${d.bot ? ' z botem' : ''}</div><span class="small muted">${d.phase === 'end' ? 'koniec' : d.turn === 'me' ? 'Twoja tura' : 'tura rywala'}</span></div>
+  return { tab: 'arena', focus: true, html: `<div class="studybar"><button class="iconbtn" data-act="duel-ff">✕</button><div class="title">🥊 Pojedynek${d.bot ? ' z botem' : ''}</div><span class="small muted">${d.phase === 'end' ? 'koniec' : d.mode === 'speed' ? '⚡ kto szybciej' : d.turn === 'me' ? 'Twoja tura' : 'tura rywala'}</span></div>
   <div class="darena${fx?.k === 'hit' ? ' shake-' + fx.who : ''}">
     ${duelBox(d.opp, d.hp.opp, false, d.guard.opp)}<div class="dplat op">${duelFig(d.opp, 'op' + (fx?.who === 'opp' && fx.k === 'hit' ? ' hit' : '') + (d.phase === 'end' && d.won ? ' ko' : ''))}${fx?.who === 'opp' && fx.k === 'hit' ? `<b class="dmg${fx.crit ? ' crit' : ''}">−${fx.n}</b>` : ''}${fx?.who === 'opp' && fx.k === 'heal' ? '<b class="dmg heal">💚</b>' : ''}</div>
     <div class="dplat me">${duelFig(d.me, 'me' + (fx?.who === 'me' && fx.k === 'hit' ? ' hit' : '') + (d.phase === 'end' && !d.won ? ' ko' : ''))}${fx?.who === 'me' && fx.k === 'hit' ? `<b class="dmg${fx.crit ? ' crit' : ''}">−${fx.n}</b>` : ''}${fx?.who === 'me' && fx.k === 'heal' ? '<b class="dmg heal">💚</b>' : ''}</div>${duelBox(d.me, d.hp.me, true, d.guard.me)}
@@ -171,13 +182,13 @@ function duelLobbyView() {
   if (d && !d.bot && d.phase === 'lobby') { const link = `${location.origin}${location.pathname}#/duel/${d.code}`;
     return { tab: 'arena', html: `${head}<div class="card center"><div class="small muted">Kod pojedynku</div><div class="coop-code">${esc(d.code)}</div><button class="sm" data-act="duel-share" data-link="${esc(link)}">📤 Wyślij koledze</button></div>
       <div class="card dvs">${duelFig(d.me, 'me')}<b class="vs">VS</b>${d.opp ? duelFig(d.opp, 'op') : '<div class="dwait">⏳</div>'}<div class="dvs-n"><b>${esc(d.me.nick)}</b><b>${d.opp ? esc(d.opp.nick) : 'czekam…'}</b></div></div>
-      ${d.host ? `<div class="card"><h3 style="margin-top:0">Talia pojedynku</h3><div class="row nowrap">${pick}</div><p class="small muted" style="margin:6px 0 0">Kolega dostanie te fiszki na czas walki.</p></div><button class="primary block boss-go" data-act="duel-start" ${d.opp ? '' : 'disabled'}>⚔️ Walcz!</button>` : '<p class="center muted">Gospodarz wybiera talię i zaczyna…</p>'}
+      ${d.host ? `<div class="card"><h3 style="margin-top:0">Tryb</h3>${duelModeHTML()}<h3>Talia pojedynku</h3><div class="row nowrap">${pick}</div><p class="small muted" style="margin:6px 0 0">Kolega dostanie te fiszki na czas walki.</p></div><button class="primary block boss-go" data-act="duel-start" ${d.opp ? '' : 'disabled'}>⚔️ Walcz!</button>` : '<p class="center muted">Gospodarz wybiera talię i zaczyna…</p>'}
       <button class="ghost block" data-act="duel-leave">Wyjdź</button>` }; }
   return { tab: 'arena', html: `${head}
   <div class="card dintro"><div class="dvs">${duelFig(duelMe(), 'me')}<b class="vs">VS</b><div class="dwait">❓</div></div>
     <p style="margin:8px 0 4px"><b>Turowa walka jak w Pokémonach</b> – Twój bohater kontra bohater kolegi.</p>
-    <ul class="small" style="text-align:left;margin:0"><li>W swojej turze wybierasz ruch: ⚔️ atak, 💥 mocny cios, 🛡️ garda, 💚 mikstura (mają PP).</li><li>Żeby ruch się udał – odpowiadasz na fiszkę. Szybko = <b>super skuteczne!</b>, źle = <b>chybił</b>.</li><li>3 trafienia ładują supercios Twojej postaci.</li></ul></div>
-  <div class="card"><h3 style="margin-top:0">Talia</h3><div class="row nowrap">${pick || '<p class="muted">Dodaj fiszki, żeby walczyć.</p>'}</div></div>
+    <ul class="small" style="text-align:left;margin:0"><li>W swojej turze wybierasz ruch: ⚔️ atak, 💥 mocny cios, 🛡️ garda, 💚 mikstura (mają PP).</li><li>Żeby ruch się udał – odpowiadasz na fiszkę. Szybko = <b>super skuteczne!</b>, źle = <b>chybił</b>.</li><li>3 trafienia ładują supercios Twojej postaci.</li><li><b>⚡ Kto szybciej:</b> ta sama fiszka u obu naraz – pierwsza dobra odpowiedź atakuje, zła = blokada do końca rundy.</li></ul></div>
+  <div class="card"><h3 style="margin-top:0">Tryb</h3>${duelModeHTML()}<h3>Talia</h3><div class="row nowrap">${pick || '<p class="muted">Dodaj fiszki, żeby walczyć.</p>'}</div></div>
   <button class="primary block boss-go" data-act="duel-host" ${decks.length ? '' : 'disabled'}>➕ Stwórz pojedynek</button>
   <div class="row nowrap" style="margin-top:10px"><input id="duel-code" class="grow" maxlength="6" placeholder="Kod od kolegi" autocapitalize="characters" autocomplete="off" value="${esc(DUEL_JOIN)}"><button data-act="duel-join">Dołącz</button></div>
   <button class="block" data-act="duel-bot" style="margin-top:10px" ${decks.length ? '' : 'disabled'}>🤖 Trening z botem</button>` };
@@ -196,6 +207,8 @@ Object.assign(ACTIONS, {
   'duel-host': () => { duelOpen(roomCode(), true); render(); },
   'duel-join': () => { const c = ($('#duel-code')?.value || '').trim().toUpperCase(); if (!/^[A-Z0-9]{6}$/.test(c)) return toast('Kod ma 6 znaków'); DUEL_JOIN = ''; duelOpen(c, false); render(); },
   'duel-start': () => duelStart(),
+  'duel-mode': el => { DUEL_MODE = el.dataset.m; render(); },
+  'duel-speed': el => duelSpeedPick(+el.dataset.i),
   'duel-bot': () => { D?.ch?.close(); duelBot(); },
   'duel-move': el => duelPick(el.dataset.k),
   'duel-opt': el => { const q = D?.q; if (!q || q.done) return; const o = q.opts[+el.dataset.i]; duelAnswer(norm(o) === norm(q.card.a), o); },
@@ -210,3 +223,52 @@ Object.assign(ACTIONS, {
 const duelRoute0 = ROUTES.duel;
 ROUTES.duel = (...a) => { const v = duelRoute0(...a); if (!v || v.focus || typeof hubNav !== 'function') return v; LAST_HUB.arena = 'duel';
   return { ...v, tab: 'arena', html: hubNav('arena', 'duel') + (typeof stripBack === 'function' ? stripBack(v.html) : v.html) }; };
+
+// ⚡ tryb „Kto szybciej”: ta sama fiszka u obu naraz, pierwsza dobra odpowiedź atakuje. Gospodarz losuje fiszki i sędziuje
+// (porównuje czas od pokazania pytania na każdym telefonie – opóźnienie internetu nie faworyzuje nikogo). Zła odpowiedź = blokada do końca rundy.
+const SPEED_MS = 12000, SPEED_DMG = 22;
+const duelModeHTML = () => `<div class="seg duel-mode"><button class="${DUEL_MODE === 'turn' ? 'on' : ''}" data-act="duel-mode" data-m="turn"><b>🎯 Turowy</b><small>jak w Pokémonach</small></button><button class="${DUEL_MODE === 'speed' ? 'on' : ''}" data-act="duel-mode" data-m="speed"><b>⚡ Kto szybciej</b><small>ta sama fiszka naraz</small></button></div>`;
+function duelRound() {
+  const d = D; if (!d || d.phase !== 'fight' || d.mode !== 'speed' || !d.host) return;
+  const x = duelCard(d), r = { i: (d.ri || 0) + 1, q: x.q, a: x.a, opts: shuffle([x.a, ...duelWrong(d, x, 3)]) }; d.ri = r.i;
+  dSend({ t: 'round', ...r }); duelRoundShow(r);
+  clearTimeout(d.rT); d.rT = setTimeout(() => duelResolve(r.i), SPEED_MS + 400);
+  if (d.bot) { const ok = Math.random() < .68, ms = 2200 + Math.random() * 5800; setTimeout(() => { if (D === d && d.r?.i === r.i && !d.r.res) duelBuzz('opp', r.i, ok, ms); }, ms); }
+}
+function duelRoundShow(r) { const d = D; d.r = { ...r, at: Date.now(), mine: null, buzz: [], res: null }; render(); }
+function duelSpeedPick(k) {
+  const d = D, r = d?.r; if (!r || r.res || r.mine != null) return; r.mine = k;
+  const ok = norm(r.opts[k]) === norm(r.a), ms = Date.now() - r.at; if (ok) d.stats.ok++; else d.stats.bad++;
+  if (d.host) duelBuzz('me', r.i, ok, ms); else dSend({ t: 'buzz', i: r.i, ok, ms }); render();
+}
+function duelBuzz(who, i, ok, ms) {
+  const d = D, r = d?.r; if (!r || r.i !== i || r.res || r.buzz.some(b => b.who === who)) return;
+  r.buzz.push({ who, ok, ms });
+  if (r.buzz.some(b => b.ok)) { clearTimeout(d.rT2); d.rT2 = setTimeout(() => duelResolve(i), r.buzz.length >= 2 ? 0 : 400); }   // chwila na spóźniony, ale szybszy sygnał rywala
+  else if (r.buzz.length >= 2) duelResolve(i);
+}
+function duelResolve(i) {
+  const d = D, r = d?.r; if (!r || r.i !== i || r.res) return; clearTimeout(d.rT); clearTimeout(d.rT2);
+  const best = r.buzz.filter(b => b.ok).sort((a, b) => a.ms - b.ms)[0];
+  const res = best ? { win: best.who === 'me' ? 'host' : 'guest', ms: Math.round(best.ms), dmg: best.ms < 3500 ? 30 : SPEED_DMG } : { win: 'none', ms: 0, dmg: 0 };
+  dSend({ t: 'rres', i, ...res }); duelRoundRes(res);
+}
+function duelRoundRes(res) {
+  const d = D, r = d?.r; if (!r || r.res) return; r.res = res;
+  const who = res.win === 'host' || res.win === 'guest' ? ((res.win === 'host') === !!d.host ? 'me' : 'opp') : null;
+  if (who) { const def = who === 'me' ? 'opp' : 'me'; d.hp[def] = Math.max(0, d.hp[def] - res.dmg); d.fx = { who: def, k: 'hit', n: res.dmg, crit: res.dmg > SPEED_DMG, t: Date.now() };
+    duelLog(`⚡ ${(who === 'me' ? d.me : d.opp).nick} był szybszy (${(res.ms / 1000).toFixed(1).replace('.', ',')} s)! −${res.dmg}${res.dmg > SPEED_DMG ? ' · Błyskawica!' : ''}`);
+    if (typeof bossSfx === 'function') bossSfx(who === 'me' ? 'hit' : 'hurt'); }
+  else duelLog(`😶 Nikt nie trafił: ${mShort(r.q, 40)} → ${mShort(r.a, 40)}`);
+  render();
+  if (d.hp.me <= 0 || d.hp.opp <= 0) return setTimeout(() => { if (D === d) duelEnd(d.hp.opp <= 0); }, 900);
+  if (d.host) setTimeout(() => { if (D === d && d.phase === 'fight') duelRound(); }, 2000);
+}
+function duelSpeedPanel(d) {
+  const r = d.r; if (!r) return `<div class="dtext"><b>⚡ Kto szybciej – przygotuj się…</b><small>${esc(d.log[0] || '')}</small></div>`;
+  const res = r.res, mineOk = r.mine != null && norm(r.opts[r.mine]) === norm(r.a);
+  const status = res ? (res.win === 'none' ? `<small class="bad">Nikt nie trafił. Poprawnie: ${esc(r.a)}</small>` : `<small class="${(res.win === 'host') === !!d.host ? 'good' : 'bad'}">${esc(d.log[0] || '')}</small>`)
+    : r.mine != null ? (mineOk ? '<small class="good">✓ Dobrze! Czekam, kto był pierwszy…</small>' : '<small class="bad">✗ Źle – blokada do końca rundy</small>') : '<div class="dq-bar"><i></i></div>';
+  return `<div class="dtext"><small>⚡ Runda ${r.i} – kto pierwszy odpowie dobrze, ten atakuje!</small><b>${esc(r.q)}</b>${status}</div>
+    <div class="dmoves q">${r.opts.map((o, k) => { const right = norm(o) === norm(r.a); return `<button class="${res || r.mine != null ? (right && (res || r.mine === k) ? 'right' : r.mine === k ? 'wrong' : '') : ''}" data-act="duel-speed" data-i="${k}" ${res || r.mine != null ? 'disabled' : ''}>${esc(o)}</button>`; }).join('')}</div>`;
+}
