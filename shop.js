@@ -20,7 +20,7 @@ const stE = s => s?.img ? `<img class="st-img" src="${s.img}" alt="${s.e}" dragg
   : !s ? '' : stStyle() === 'svg' && typeof stickerArt === 'function' && stickerArt(s) ? stickerArt(s)
   : stStyle() !== 'emoji' && FLUENT_ST.has(s.id) ? `<img class="st-img fl" src="assets/fluent/${s.id}.webp" alt="${s.e}" draggable="false">` : (s.e || '');
 // 📦 skrzynki 8-bit (assets/crates): każdy rodzaj ma własną; boss, łup PvP i skrzynka do złapania w walce też
-const CRATE_OF = { basic: 'basic', epic: 'epic', daily: 'daily', cats: 'cats', animals: 'animals', food: 'food', magic: 'magic', gif: 'gif', hero: 'hero', boss: 'boss', pvp: 'ice', grab: 'gem' };
+const CRATE_OF = { prest: 'gem', basic: 'basic', epic: 'epic', daily: 'daily', cats: 'cats', animals: 'animals', food: 'food', magic: 'magic', gif: 'gif', hero: 'hero', boss: 'boss', pvp: 'ice', grab: 'gem' };
 const crateImg = (k, cls = '') => `<img class="crate-img ${cls}" src="assets/crates/${CRATE_OF[k] || 'basic'}.webp" alt="" draggable="false">`;
 const caseIco = k => crateImg(k, 'case-img');
 const STICKERS = [
@@ -215,10 +215,12 @@ ROUTES.shop = () => {
     <p>Poza tym: bitwy, osiągnięcia (od 30 💎 za łatwe do 600 💎 za legendarne, platyna 2000 💎), dni z celem dziennym (20 💎), zadania dnia, testy, gry pamięciowe – i skrzynki. 🌞 <b>Codzienna skrzynka</b> (lepsze szanse!) za ukończony zestaw fiszek albo cel dzienny.</p></details>
   ${freeN ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${freeN}</b> darmowe ${plural(freeN, 'skrzynkę', 'skrzynki', 'skrzynek')}: ${freeKinds.map(k => `${crateImg(k, 'inline')} ${CASES[k].name} ×${itemCount('case', k)}`).join(', ')}</span>
     <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}
-  <div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2><div class="cases">${Object.entries(CASES).filter(([, c]) => !c.freeOnly && (!c.gif || gifCaseReady())).map(([k, c]) => `
-    <div class="case ${k}"><div class="ci" data-act="case-drops" data-k="${k}" role="button" title="Zawartość i szanse">${caseIco(k)}</div><b data-act="case-drops" data-k="${k}">${c.name}</b>
-      <div class="odds">${Object.entries(c.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${p}%</span>`).join('')}${CASE_GIF[k] && legendGifReady() ? `<span style="color:${RARITY.legendary.color}">🎞️ GIF legendarny ${CASE_GIF[k]}%</span>` : ''}<span style="color:#0369a1"><img class="gem8" src="${GEM8}" alt="💎"> do ${(GEM_PRIZES[k] || GEM_PRIZES.basic).at(-1)[0]} · 🔁 jeszcze raz</span>${mythicP(k) ? `<span style="color:${RARITY.mythic.color};font-weight:700">🪖 Kot żołnierz ${pctFmt(MYTHIC_P)}</span>` : ''}<span style="color:${RARITY.mythic.color};font-weight:700">🔴 ${MEGA_GEMS} 💎 ${pctFmt(MEGA_GEMS_P)}</span></div>
-      <button class="sm ghost block" data-act="case-drops" data-k="${k}">📋 Zawartość i szanse</button><button class="primary block" data-go="#/case/${k}">Otwórz · ${c.price} 💎</button></div>`).join('')}</div></div>
+  <div class="card case-groups"><h2 style="margin-top:0">Skrzynki z naklejkami</h2>
+    ${[['⭐ Główne', ['basic', 'epic', 'gif']], ['🎯 Tematyczne – tylko naklejki z jednego działu', ['cats', 'animals', 'food', 'magic']]].map(([title, keys]) => `<h3 class="case-gh">${title}</h3>
+    <div class="case-list">${keys.filter(k => CASES[k] && !CASES[k].freeOnly && (!CASES[k].gif || gifCaseReady())).map(k => { const c = CASES[k];
+      return `<div class="case-row ${k}"><div class="ci" data-act="case-drops" data-k="${k}" role="button" title="Zawartość i szanse">${caseIco(k)}</div>
+        <div class="grow cr-mid"><b data-act="case-drops" data-k="${k}">${c.name}</b><div class="odds-bar" title="${Object.entries(c.odds).map(([r, p]) => `${RARITY[r].name} ${p}%`).join(' · ')}">${Object.entries(c.odds).map(([r, p]) => `<i style="flex:${p};background:${RARITY[r].color}"></i>`).join('')}</div></div>
+        <div class="cr-btns"><button class="sm ghost" data-act="case-drops" data-k="${k}" title="Zawartość i szanse">📋</button><button class="primary sm" data-go="#/case/${k}">${c.price} 💎</button></div></div>`; }).join('')}</div>`).join('')}</div>
   <div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">Album naklejek</h2><span class="small muted">${owned}/${STICKERS.length}</span></div>
     <ul class="small muted perks"><li>Wysyłasz je przeciwnikowi w bitwie albo <b>podarujesz znajomemu</b> (💬 w rankingu). Stuknij naklejkę, żeby zobaczyć animację i usłyszeć jej dźwięk.</li>
       <li><b>3 duplikaty → złota wersja ✨</b> – złoty połysk w albumie, profilu i bitwach.</li>

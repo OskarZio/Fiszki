@@ -1,7 +1,10 @@
-// Pierwsza pomoc – zaliczenie AWF 2025/2026. Tylko fragmenty zaznaczone na czerwono w materiałach.
+// Pierwsza pomoc – zaliczenie AWF 2025/2026. Fragmenty zaznaczone na czerwono oraz podkreślone w materiałach.
 #fiszki
 #talia: Pierwsza pomoc – zaliczenie
 #przedmiot: med
+// ---------- Podkreślone: definicja i cel
+Czy pierwsza pomoc jest postępowaniem leczniczym? | Nie – nie stanowi postępowania leczniczego; polega na czynnościach ratunkowych, które mają zredukować następstwa urazów i ustabilizować stan poszkodowanego
+Najważniejszy cel pierwszej pomocy | Ratowanie życia (i zdrowia)
 // ---------- Ocena i schematy
 Ocena miejsca zdarzenia – co obejmuje? (5) | Bezpieczeństwo własne, innych ratowników, świadków i poszkodowanych\nCharakter zdarzenia (np. mechanizm urazu)\nLiczba poszkodowanych – selekcja/triage\nRyzyko zakażenia krwią (HBV, HCV, HIV…)\nPotrzeba dodatkowej pomocy lub sprzętu | Kolejność: ja → co się stało → ilu → krew → czego brakuje
 Ocena stanu poszkodowanego – schemat ABCDE | A (airway) – niedrożność dróg oddechowych\nB (breathing) – niewydolność oddechowa (brak oddechu lub oddech agonalny)\nC (circulation) – krwotok, wstrząs, niewydolność serca\nD (disability) – obniżenie progu świadomości\nE (exposure) – uwidocznienie okolicy
@@ -139,6 +142,12 @@ Oparzenie I stopnia – co jest uszkodzone i jakie objawy? | Naskórek – martw
 Oparzenie II stopnia – co jest uszkodzone i jakie objawy? | Powierzchowne warstwy skóry właściwej (rumień, pęcherze, czucie zachowane)
 Oparzenie III stopnia – co jest uszkodzone i jakie objawy? | Skóra właściwa z przydatkami i tkanka podskórna (skóra sucha, biała lub szara, możliwy strup, brak czucia bólu)
 Które oparzenia wymagają przeszczepów skóry? | Oparzenia III stopnia
+Oparzenia lekkie – kryteria | I i II stopień poniżej 15% powierzchni ciała\nIII stopień poniżej 5% powierzchni ciała
+Oparzenia średnie – kryteria | I i II stopień do 30% powierzchni ciała\nIII stopień poniżej 10% powierzchni ciała
+Oparzenia ciężkie – kryteria | I i II stopień powyżej 30% powierzchni ciała\nIII stopień powyżej 10% lub w okolicy twarzy, stóp i rąk\nOparzenia dróg oddechowych\nOparzenia powikłane złamaniami i/lub ranami\nOparzenia osób z ciężkimi chorobami (serce, płuca, cukrzyca)
+Oparzenie III stopnia na 7% ciała – lekkie, średnie czy ciężkie? | Średnie (III stopień poniżej 10%)
+Oparzenie I–II stopnia na 20% ciała – lekkie, średnie czy ciężkie? | Średnie (I i II do 30%)
+Oparzenie III stopnia dłoni – lekkie, średnie czy ciężkie? | Ciężkie (III stopień w okolicy twarzy, stóp i rąk)
 Dlaczego w oparzeniu III stopnia nie ma bólu? | Uszkodzone są zakończenia nerwowe
 Kogo dotyczy największe ryzyko oparzeń? | Dzieci pięcioletnich – druga przyczyna wypadków śmiertelnych (!)
 Oparzenie – jak długo chłodzić ranę? | Kilkanaście minut – min. 10 (chłodna, bieżąca woda) [3×10]
@@ -189,6 +198,9 @@ Objawy zatrucia – ogólnie | Tylko niektóre trucizny dają objawy charakterys
 Kiedy należy podejrzewać zatrucie? | Przy każdym niewyjaśnionym objawie chorobowym – zwłaszcza u dzieci < 5 r.ż.
 // ---------- Zadławienie
 Zadławienie przytomnego dorosłego – standard europejski (ERC) | 5 uderzeń w okolicę międzyłopatkową + 5 rękoczynów Heimlicha, naprzemiennie
+Zadławienie przytomnego dorosłego – standard amerykański | Rękoczyny Heimlicha w seriach po 5
+Do kiedy wykonuje się rękoczyny przy zadławieniu (oba standardy)? | Do usunięcia ciała obcego lub utraty przytomności zadławionego
+Rękoczyn Heimlicha – na czym polega? | Uciśnięcia nadbrzusza w celu symulowania kaszlu (kaszel usuwa ciało obce/wydzielinę z drzewa tchawiczo-oskrzelowego)
 Dorosły zadławiony, nieprzytomny – postępowanie | 112 (call first); przy braku oddechu – RKO
 Kto po usunięciu ciała obcego uciśnięciami nadbrzusza/klatki wymaga oceny medycznej? | Każda taka osoba – mogły rozwinąć się powikłania lub uraz
 Zadławienie osoby otyłej lub ciężarnej – co zamiast rękoczynu Heimlicha? | Uciskanie środkowej części mostka (u przytomnych i nieprzytomnych)

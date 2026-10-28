@@ -1,7 +1,7 @@
 'use strict';
 /* 👑 Prestiż: rzeczy, które WIDAĆ przy Tobie wszędzie (ranking, czat, klasa, pojedynek) – nie leżą w albumie.
    Rodzaje: ramki awatara, tytuły, efekty nicku, słodkie dodatki bohatera, aury, efekty pojedynku (wejście i wygrana),
-   dymki czatu i reakcje premium. Zdobywasz je ze 💠 Skrzynki prestiżu (rzadkości: zwykły → mityczny) albo tylko za wyczyn
+   dymki czatu i reakcje premium. Zdobywasz je ze Skrzynki prestiżu (rzadkości: zwykły → mityczny) albo tylko za wyczyn
    (tytuły i ramki osiągnięć – nie do wylosowania). Legendarny / mityczny drop = ogłoszenie dla wszystkich, a kto pierwszy
    w aplikacji go zdobędzie – dostaje na zawsze tytuł ✦ Odkrywca. Animacje wyłączysz w Wyglądzie („Animacje prestiżu”).
    Założone rzeczy idą w profilu (stats.cos) – inni widzą tylko identyfikatory z katalogu (sCos), nic więcej. */
@@ -140,7 +140,7 @@ function cosReveal(ov) {
     ${dup ? `<p class="small muted">Masz już ten przedmiot – zamieniony na <b>+${R.dup} 💎</b></p>` : `<p class="small muted">${big ? (S.settings.showGlobal ? '🔥 Wow! To prawdziwa rzadkość – wszyscy zobaczą ogłoszenie.' : '🔥 Wow! To prawdziwa rzadkość!') : 'Nowy przedmiot w Prestiżu.'}</p>`}
     <div class="row nowrap">${dup ? '' : `<button class="primary grow" data-act="cos-equip" data-id="${win.id}" data-close="1">Załóż</button>`}<button class="grow" data-act="cos-close">${dup ? 'OK' : 'Później'}</button></div>
     ${big && !dup && !S.settings.showGlobal ? `<button class="block cos-ann" data-act="cos-announce" data-id="${win.id}">📣 Ogłoś wszystkim (i sprawdź, czy jesteś pierwszy ✦)</button><p class="small muted" style="margin:4px 0 0">Wszyscy zalogowani zobaczą Twój nick i ten przedmiot.</p>` : ''}
-    <button class="ghost block" data-act="cos-again">💠 Jeszcze raz (${COS_CASE_PRICE} 💎)</button></div>`;
+    <button class="ghost block" data-act="cos-again">Jeszcze raz (${COS_CASE_PRICE} 💎)</button></div>`;
   if (typeof bossSfx === 'function') try { bossSfx(big ? 'win' : 'chest'); } catch { /* */ }
   if (big && typeof confetti === 'function') confetti(win.r === 'mythic' ? 260 : 160);
   if (big && !dup && S.settings.showGlobal) cosAnnounce(win);
@@ -254,9 +254,9 @@ ROUTES.cos = () => {
   <div class="card cos-me center"><div class="cos-me-av">${avatarHTML(S.profile, 72)}</div><div class="cos-me-nick">${nickHTML(S.profile.nick || 'Ty', S.profile.cos)}</div>
     <div class="row nowrap" style="justify-content:center;gap:16px;margin-top:10px">${heroSVG('sm')}<div class="msg me${c?.bubble ? ' bb-' + c.bubble : ''} cos-bprev"><div class="msg-t">Tak widzą mnie inni ✨</div></div></div>
     <p class="small muted" style="margin:10px 0 0">Masz ${ownN}/${COS.length} przedmiotów · ramkę, nick i tytuł widać w rankingu, czacie, klasie i pojedynkach</p></div>
-  <div class="card cos-case-card"><div class="row nowrap"><div class="cos-case-ic">💠</div><div class="grow"><b>Skrzynka prestiżu</b><div class="small muted">Ramki, tytuły, nicki, dodatki bohatera, aury, efekty, dymki, reakcje.
+  <div class="card cos-case-card"><div class="row nowrap"><div class="cos-case-ic">${crateImg('prest', 'cos-crate')}</div><div class="grow"><b>Skrzynka prestiżu</b><div class="small muted">Ramki, tytuły, nicki, dodatki bohatera, aury, efekty, dymki, reakcje.
     ${Object.entries(COS_R).map(([k, r]) => `<span style="color:${r.c};font-weight:700">${r.n} ${((r.w / Object.values(COS_R).reduce((a, x) => a + x.w, 0)) * 100).toFixed(r.w < 2 ? 1 : 0)}%</span>`).join(' · ')}</div></div></div>
-    <button class="primary block cos-buy" data-act="cos-open">💠 Otwórz – ${COS_CASE_PRICE} 💎</button>
+    <button class="primary block cos-buy" data-act="cos-open">Otwórz – ${COS_CASE_PRICE} 💎</button>
     <p class="small muted" style="margin:8px 0 0">Duplikat = kryształy (do ${COS_R.mythic.dup} 💎). Legendarny i mityczny drop możesz ogłosić wszystkim (automatycznie, jeśli jesteś w publicznym rankingu), a kto pierwszy w aplikacji go zdobędzie – dostaje tytuł ✦ Odkrywca.</p></div>
   ${COS_FEED.length ? `<div class="card"><h3 style="margin-top:0">🔥 Ostatnie rzadkie dropy</h3>${cosFeedHTML(6)}</div>` : ''}
   <div class="seg cos-tabs">${Object.entries(COS_T).map(([k, [i, n]]) => `<button class="${COS_TAB === k ? 'on' : ''}" data-act="cos-tab" data-k="${k}"><i>${i}</i><span>${n.split(' ')[0]}</span></button>`).join('')}</div>
@@ -300,8 +300,8 @@ Object.assign(ACTIONS, {
 // sklep: karta Skrzynki prestiżu nad skrzynkami z naklejkami
 const cosShop0 = ROUTES.shop;
 ROUTES.shop = (...a) => { const v = cosShop0(...a); if (!v?.html) return v;
-  const card = `<div class="card cos-case-card row nowrap" data-go="#/cos" style="cursor:pointer"><div class="cos-case-ic">💠</div><div class="grow"><b>Skrzynka prestiżu</b><div class="small muted">Rzeczy, które widać przy Tobie wszędzie: ramki, tytuły, efekty nicku, aury… Od zwykłych po mityczne.</div></div><span>›</span></div>`;
-  return { ...v, html: v.html.replace('<div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2>', card + '<div class="card"><h2 style="margin-top:0">Skrzynki z naklejkami</h2>') }; };
+  const card = `<div class="card cos-case-card row nowrap" data-go="#/cos" style="cursor:pointer"><div class="cos-case-ic">${crateImg('prest', 'cos-crate')}</div><div class="grow"><b>Skrzynka prestiżu</b><div class="small muted">Rzeczy, które widać przy Tobie wszędzie: ramki, tytuły, efekty nicku, aury… Od zwykłych po mityczne.</div></div><span>›</span></div>`;
+  return { ...v, html: v.html.replace('<div class="card case-groups">', card + '<div class="card case-groups">') }; };
 // czat: dymki (moje i znajomego) + reakcje premium w wyborze emotek
 const cosChat0 = ROUTES.chat;
 ROUTES.chat = (...a) => {
@@ -312,7 +312,7 @@ ROUTES.chat = (...a) => {
   if (theirs) h = h.replaceAll('<div class="msg them ', `<div class="msg them bb-${theirs} `);
   if (f) h = h.replace(`${esc(f.nick || 'Znajomy')}</h1>`, `${nickHTML(f.nick || 'Znajomy', f.stats?.cos)}</h1>`);
   const rx = COS.filter(c => c.t === 'react' && cosOwned(c.id));
-  if (h.includes('class="emo-row"')) h = h.replace('<b class="small">🃏 Naklejki</b>', `<b class="small">✨ Reakcje premium</b>${rx.length ? `<div class="rx-row">${rx.map(c => `<button data-act="cos-rx" data-id="${c.id}" class="r-${c.r}" style="--rc:${COS_R[c.r].c}" title="${esc(c.n)}">${c.e}</button>`).join('')}</div>` : '<p class="small muted" style="margin:4px 0">Animowane reakcje zdobywasz w 💠 Skrzynce prestiżu (<a href="#/cos">👑 Prestiż</a>).</p>'}<b class="small">🃏 Naklejki</b>`);
+  if (h.includes('class="emo-row"')) h = h.replace('<b class="small">🃏 Naklejki</b>', `<b class="small">✨ Reakcje premium</b>${rx.length ? `<div class="rx-row">${rx.map(c => `<button data-act="cos-rx" data-id="${c.id}" class="r-${c.r}" style="--rc:${COS_R[c.r].c}" title="${esc(c.n)}">${c.e}</button>`).join('')}</div>` : '<p class="small muted" style="margin:4px 0">Animowane reakcje zdobywasz w Skrzynce prestiżu (<a href="#/cos">👑 Prestiż</a>).</p>'}<b class="small">🃏 Naklejki</b>`);
   return { ...v, html: h };
 };
 // start: najnowsze rzadkie dropy
