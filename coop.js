@@ -17,7 +17,7 @@ function coopUseSet(set) {
   COOP_V = new Map(); const out = [], answers = [...new Set(set.cards.map(x => x.a))];
   set.cards.forEach((x, i) => {
     const own = S.cards.find(c => c.noteId === x.n && String(c.ord) === x.o && fightable(c)); if (own) return out.push(own);
-    const w = shuffle(answers.filter(a => norm(a) !== norm(x.a))).slice(0, 3), id = 'cv:' + i;
+    const same = [...new Set(set.cards.filter(y => y.o === x.o).map(y => y.a))].filter(a => norm(a) !== norm(x.a)), w = shuffle(same.length >= 3 ? same : answers.filter(a => norm(a) !== norm(x.a))).slice(0, 3), id = 'cv:' + i;
     const c = { id, gk: true, coopv: true, deckId: 'coop', cat: '', q: x.q, a: x.a, w, srs: GK_SRS }; COOP_V.set(id, c); out.push(c);
   });
   COOP_LASTSET = set; return out;
