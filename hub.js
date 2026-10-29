@@ -49,7 +49,6 @@ ROUTES.me = () => {
     <a class="lnk" href="#/shop"><span>🎁</span><b class="grow">Skrzynki i album naklejek</b><i>›</i></a>
     <a class="lnk" href="#/more" data-anchor="anki"><span>🔁</span><b class="grow">Import / eksport Anki</b><i>›</i></a>
     <a class="lnk" href="#/more"><span>⚙️</span><b class="grow">Ustawienia, motyw, dźwięki, kopie</b><i>›</i></a></div>
-  ${typeof pvpCardHTML === 'function' ? pvpCardHTML() : ''}
   ${typeof accountCardHTML === 'function' ? accountCardHTML() : ''}
   ${typeof profileCardHTML === 'function' ? profileCardHTML() : ''}` };
 };

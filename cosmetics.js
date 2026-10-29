@@ -125,7 +125,8 @@ const cosFigAttr = c => { c = sCos(c); const s = c?.skin && COS_BY[c.skin], a = 
 // bohater: własne dodatki i aura na każdej figurze własnego bohatera (pojedynek ma swoje)
 const cosHero0 = heroSVG;
 heroSVG = function (cls = '', pr, h) {
-  const own = h === undefined || h === hero(); let html = cosHero0(cls, pr, h);
+  // aury i dodatki widać tylko na ekranach profilu (Bohater, Prestiż, pasek bohatera) – w walkach (rozmiar xs) nie
+  const own = (h === undefined || h === hero()) && !/\bxs\b/.test(cls); let html = cosHero0(cls, pr, h);
   if (!own) return html; const c = myCos(); if (!c?.skin && !c?.aura) return html;
   return html.replace('<div class="hero-fig ', `<div${cosFigAttr(c)} class="hero-fig${cosFigCls(c)} `);
 };

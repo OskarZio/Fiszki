@@ -211,7 +211,7 @@ setInterval(() => {
   else if (a && el) el.style.width = Math.max(0, 100 - (Date.now() - a.at) / (a.lim || DQ_MS[a.kind]) * 100) + '%';
 }, 200);
 // ---------- widoki
-const duelFig = (p, cls) => `<div${typeof cosFigAttr === 'function' ? cosFigAttr(p.cos) : ''} class="hero-fig duel-fig ${cls}${typeof cosFigCls === 'function' ? cosFigCls(p.cos) : ''} ln-${p.line}${typeof spriteVars === 'function' ? spriteVars(p.line, p.form) : ''}">${heroArt(p.line, p.form, p.g)}</div>`;
+const duelFig = (p, cls) => `<div class="hero-fig duel-fig ${cls} ln-${p.line}${typeof spriteVars === 'function' ? spriteVars(p.line, p.form) : ''}">${heroArt(p.line, p.form, p.g)}</div>`;
 const duelBox = (p, hp, mine, guard, max = DUEL_HP, fx = '') => `<div class="dbox ${mine ? 'me' : 'op'}"><div class="dbox-h"><b>${typeof nickHTML === 'function' ? nickHTML(p.nick, p.cos, false) : esc(p.nick)}</b><small>Poz. ${p.lv}</small></div>
   <div class="dhp"><span>HP</span><div class="dhp-bar"><i class="${hp / max < .25 ? 'red' : hp / max < .5 ? 'yel' : ''}" style="width:${(hp / max * 100).toFixed(1)}%"></i></div></div>${mine ? `<div class="dhp-n">${hp} / ${max}</div>` : ''}${guard || fx ? `<em>${guard ? '🛡️ garda ' : ''}${fx}</em>` : ''}</div>`;
 // stany na ramce: seria, zamrożenie, tarcza, regeneracja, adrenalina
@@ -260,6 +260,8 @@ function duelLobbyView() {
     <p style="margin:8px 0 4px"><b>Turowa walka 1 na 1</b> – Twój bohater kontra bohater kolegi.</p>
     <p class="small" style="margin:0 0 4px">Pytania: <b>${DUEL_QF[duelQf()]}</b> <span class="muted">(wybierasz niżej)</span></p>
     <ul class="small" style="text-align:left;margin:0"><li>W swojej turze wybierasz ruch: ⚔️ atak, 💥 mocny cios, 🛡️ garda, 💚 mikstura (mają PP).</li><li>Żeby ruch się udał – odpowiadasz na fiszkę. ${duelQf() === 'abcd' ? '' : 'Przy wpisywaniu siła ciosu = <b>celność</b> (literówka = słabszy cios). '}Szybko = mocniej, źle = <b>pudło</b>.</li><li>3 trafienia ładują supercios Twojej postaci.</li><li><b>⚡ Kto szybciej:</b> ta sama fiszka u obu naraz – ${duelQf() === 'type' ? 'obaj wpisujecie, <b>bliższa odpowiedź</b> atakuje (remis – szybsza)' : 'pierwsza dobra odpowiedź atakuje, zła = blokada do końca rundy'}.</li></ul></div>
+  <div class="card dpvp"><h3 style="margin-top:0">🎒 Przedmioty PvP <small class="muted">(${pvpCount()})</small></h3>${Object.keys(PVP).map(k => `<div class="row nowrap dpvp-it"><span>${pvpIc(k)}</span><div class="grow"><b>${PVP[k][1]}</b> <small class="muted">×${itemCount('pvp', k)}</small><div class="small muted">${PVP[k][2]}</div></div></div>`).join('')}
+    <p class="small muted" style="margin:8px 0 0">Zdobywasz je za pojedynki (wygrana z kolegą = zawsze). Max ${PVP_MAX} na walkę. ⚖️ Wiedza wygrywa: seria dobrych odpowiedzi daje do +30%, poziom postaci do +20% ❤️ i +15% obrażeń, a ekwipunek z bossów się nie liczy.</p></div>
   <div class="card"><h3 style="margin-top:0">Tryb</h3>${duelModeHTML()}<h3>Pytania</h3>${duelQfHTML()}<h3>Talia</h3><div class="row nowrap">${pick || '<p class="muted">Dodaj fiszki, żeby walczyć.</p>'}</div></div>
   <button class="primary block boss-go" data-act="duel-host" ${decks.length ? '' : 'disabled'}>➕ Stwórz pojedynek</button>
   <div class="row nowrap" style="margin-top:10px"><input id="duel-code" class="grow" maxlength="6" placeholder="Kod od kolegi" autocapitalize="characters" autocomplete="off" value="${esc(DUEL_JOIN)}"><button data-act="duel-join">Dołącz</button></div>
@@ -374,7 +376,3 @@ function duelSpeedPanel(d) {
   return `<div class="dtext"><small>⚡ Runda ${r.i} – kto pierwszy odpowie dobrze, ten atakuje!</small><b>${esc(r.q)}</b>${status}</div>
     <div class="dmoves q">${r.opts.map((o, k) => { const right = norm(o) === norm(r.a); return `<button class="${res || r.mine != null ? (right && (res || r.mine === k) ? 'right' : r.mine === k ? 'wrong' : '') : ''}${r.hide?.includes(k) ? ' hid' : ''}" data-act="duel-speed" data-i="${k}" ${res || r.mine != null || r.hide?.includes(k) ? 'disabled' : ''}>${esc(o)}</button>`; }).join('')}</div>${duelBagHTML(d, true)}`;
 }
-
-// 🎒 przedmioty PvP – w profilu (Ty → Profil)
-const pvpCardHTML = () => `<div class="card dpvp"><h3 style="margin-top:0">🎒 Przedmioty PvP <small class="muted">(${pvpCount()})</small></h3>${Object.keys(PVP).map(k => `<div class="row nowrap dpvp-it"><span>${pvpIc(k)}</span><div class="grow"><b>${PVP[k][1]}</b> <small class="muted">×${itemCount('pvp', k)}</small><div class="small muted">${PVP[k][2]}</div></div></div>`).join('')}
-    <p class="small muted" style="margin:8px 0 0">Zdobywasz je za pojedynki (wygrana z kolegą = zawsze). Max ${PVP_MAX} na walkę. ⚖️ Wiedza wygrywa: seria dobrych odpowiedzi daje do +30%, poziom postaci do +20% ❤️ i +15% obrażeń, a ekwipunek z bossów się nie liczy.</p></div>`;
