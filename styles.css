@@ -2719,3 +2719,6 @@ button:has(> .gemw) { flex-wrap: wrap; column-gap: 5px; row-gap: 0; text-wrap: b
 .rankrow .nickrow { flex: 1 1 auto; min-width: 0; gap: 6px; }
 .rankrow .nickrow .nm { max-width: 100% !important; }
 .rankrow .grow > .row.nowrap > span:last-child { flex: none; white-space: nowrap; }
+/* klejnot przy liczbie nie dziedziczy stylów dużych ikon (kafelki skrzynek, naklejki itp.) */
+.gemw { font-size: inherit !important; line-height: inherit !important; width: auto !important; height: auto !important; display: inline !important; animation: none !important; transform: none !important; filter: none !important; background: none !important; }
+.gemw .gem8, .tile small .gem8 { width: 1em !important; height: 1em !important; display: inline-block !important; vertical-align: -.12em; margin: 0 0 0 2px !important; }
