@@ -56,7 +56,7 @@ function towerEnd(B, won) {
   TW_GK = !!B.b.gk;
   const h = hero(), T = h[twKey()]; if (!T) return;
   if (won) {
-    const f = T.floor, xp = Math.round((B.ok * 3 + 30 + 15 * f) * (TW_GK ? 1 : 2) * xpMul()), gems = Math.round((8 + 4 * f) * gemMul());
+    const f = T.floor, xp = Math.round((B.ok * 3 + 30 + 15 * f) * (TW_GK ? 1 : 2) * xpMul()), gems = Math.round((TW_GK ? 3 + 1.5 * f : 8 + 4 * f) * gemMul());   // wieża wiedzy (quiz): mniej 💎
     const m = 1 + (T.buff.gold || 0), gx = Math.round(xp * m), gg = Math.round(gems * m);
     giveXP(gx, 'wieża'); S.wallet.push({ id: 'tower-' + uid(), n: gg, why: 'tower', t: Date.now() });
     T.bank.xp += gx; T.bank.gems += gg; B.towerGain = { xp: gx, gems: gg };

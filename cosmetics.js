@@ -120,7 +120,7 @@ function nickHTML(name, c, title = true) {
   const n = c?.nick ? `<span class="nkx nk-${c.nick}">${esc(name)}</span>` : esc(name);
   return n + (title ? cosTitleHTML(c) : '');
 }
-const cosFigCls = c => { c = sCos(c); return c ? `${c.skin ? ' sk sk-' + c.skin : ''}${c.aura ? ' au au-' + c.aura : ''}` : ''; };
+const cosFigCls = c => { c = sCos(c); return c ? `${c.skin ? ' cskin cs-' + c.skin : ''}${c.aura ? ' caura ca-' + c.aura : ''}` : ''; };
 const cosFigAttr = c => { c = sCos(c); const s = c?.skin && COS_BY[c.skin], a = c?.aura && COS_BY[c.aura]; return `${s ? ` data-acc="${s.e}"` : ''}${a ? (a.img ? ` data-aura="" style="--aimg:url(${a.img})"` : ` data-aura="${a.e}"`) : ''}`; };
 // bohater: własne dodatki i aura na każdej figurze własnego bohatera (pojedynek ma swoje)
 const cosHero0 = heroSVG;
