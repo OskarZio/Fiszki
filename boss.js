@@ -550,7 +550,9 @@ const RAR_ORDER = ['mythic', 'legendary', 'epic', 'rare', 'common'];
 function rollTier(odds) { let r = Math.random() * 100; for (const k of RAR_ORDER) { if (r < odds[k]) return k; r -= odds[k]; } return 'common'; }
 function rollLoot(tier) {
   const t = Math.max(0, Math.min(4, tier)), cat = (() => { let r = Math.random() * 100; for (const [k, w] of LOOT_CAT) { if (r < w) return k; r -= w; } return 'potion'; })();
-  if (cat === 'gear') { const r = rollTier(TIER_ODDS[t]), pool = Object.keys(GEAR).filter(id => GEAR[id].r === r); return { k: 'gear', id: pool[Math.random() * pool.length | 0], r }; }
+  if (cat === 'gear') { const RS = ['common', 'rare', 'epic', 'legendary', 'mythic']; let r = rollTier(TIER_ODDS[t]), pool = Object.keys(GEAR).filter(id => GEAR[id].r === r);
+    for (let k = RS.indexOf(r); !pool.length && k < RS.length; k++) { r = RS[k]; pool = Object.keys(GEAR).filter(id => GEAR[id].r === r); }   // brak przedmiotów tej rzadkości → najbliższa wyższa
+    return { k: 'gear', id: pool[Math.random() * pool.length | 0], r }; }
   if (cat === 'potion') { const ks = Object.keys(POTIONS), k = ks[Math.random() * ks.length | 0]; return { k: 'potion', id: k, n: 1 + (t >= 3 ? 1 : 0), r: k === 'phoenix' ? 'epic' : 'rare' }; }
   if (cat === 'gems') return { k: 'gems', n: Math.round((12 + 8 * t) * (.7 + Math.random() * .6)) * gemMul(), r: t >= 3 ? 'epic' : 'rare' };
   if (cat === 'boost') { const ks = Object.keys(BOOSTS); return { k: 'boost', id: ks[Math.random() * ks.length | 0], r: 'epic' }; }

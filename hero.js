@@ -190,6 +190,15 @@ const PX8_OF = { g_bow: 'b_bow', g_swords: 'b_swords', g_orb: 'b_orb', g_volt: '
   g_dna: 'b_dna', g_heartfire: 'b_heartcrown', g_labcoat: 'b_flasks', g_mhelmet: 'b_swords2', g_key: 'b_chest', g_stopwatch: 'b_stopwatch', g_cball: 'b_orb', g_bomb: 'e_nova',
   p_heal: 'b_potion', p_power: 'e_potion', p_guard: 'b_flasks', fire: 'b_fire', b_star: 'e_star', b_gstar: 'b_sparkle', b_swords: 'b_swords2' };
 const fsrc = img => PX8_OF[img] ? `assets/px8/${PX8_OF[img]}.webp` : `assets/fluent/${img}.webp`;
+// przedmioty bez grafiki 8-bit wycofane – zdjęte z katalogu; kto je miał: zdjęte z postaci i zwrot połowy ceny (raz)
+const GEAR_GONE = Object.keys(GEAR).filter(id => !PX8_OF[GEAR[id].img]).map(id => [id, GEAR[id]]);
+for (const [id] of GEAR_GONE) delete GEAR[id];
+on('start', () => {
+  const h = hero(); let n = 0;
+  for (const [id, g] of GEAR_GONE) { const k = itemCount('gear', id); if (k > 0) { addItem('gear', id, -k, 'geargone-' + id); n += Math.round((GEAR_PRICE[g.r] || 200) / 2); }
+    for (const sl of ['w', 'h', 'a', 'c']) if (h.eq?.[sl] === id) delete h.eq[sl]; if (h.forge?.[id]) delete h.forge[id]; }
+  if (n) { h.mod = Date.now(); S.wallet.push({ id: 'geargone-' + uid(), n, why: 'gear-refund', t: Date.now() }); save(); setTimeout(() => toast(`⚔️ Część przedmiotów wycofana – zwrot +${n} 💎`, 4500), 1800); }
+});
 const gearImg = (id, cls = '') => { const g = GEAR[id]; return g ? `<img class="gear-img ${cls}" src="${fsrc(g.img)}" alt="${esc(g.name)}" draggable="false">` : ''; };
 const ownsGear = id => hasItem('gear', id);
 const gearStats = g => [g.atk && `⚔️ +${g.atk}%`, g.hp && `❤️ +${g.hp}`, g.def && `🛡️ ${g.def}%`, g.crit && `🎯 +${g.crit}%`, g.dodge && `💨 ${g.dodge}%`, g.desc].filter(Boolean).join(' · ');
