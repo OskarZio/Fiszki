@@ -1,6 +1,6 @@
 'use strict';
 /* 👑 Prestiż: rzeczy, które WIDAĆ przy Tobie wszędzie (ranking, czat, klasa, pojedynek) – nie leżą w albumie.
-   Rodzaje: ramki awatara, tytuły, efekty nicku, aury, efekty pojedynku (wejście i wygrana),
+   Rodzaje: ramki awatara, tytuły, efekty nicku, efekty pojedynku (wejście i wygrana),
    dymki czatu i reakcje premium. Zdobywasz je ze Skrzynki prestiżu (rzadkości: zwykły → mityczny) albo tylko za wyczyn
    (tytuły i ramki osiągnięć – nie do wylosowania). Legendarny / mityczny drop = ogłoszenie dla wszystkich, a kto pierwszy
    w aplikacji go zdobędzie – dostaje na zawsze tytuł ✦ Odkrywca. Animacje wyłączysz w Wyglądzie („Animacje prestiżu”).
@@ -90,13 +90,13 @@ const COS_IMG = {
 for (const c of COS) if (COS_IMG[c.id]) c.img = `assets/px8/${COS_IMG[c.id]}.webp`;
 const cosPic = (c, cls = '') => c.img ? `<img class="px8 ${cls}" src="${c.img}" alt="" draggable="false">` : `<span class="${cls}">${c.e || COS_T[c.t][0]}</span>`;
 // 🎀 dodatki bohatera wycofane (będą skiny postaci) – zdjęte z katalogu; kto je miał, dostaje zwrot w 💎 (raz)
-const COS_GONE = COS.filter(c => c.t === 'skin');
-for (let i = COS.length - 1; i >= 0; i--) if (COS[i].t === 'skin') COS.splice(i, 1);
-delete COS_T.skin;
+const COS_GONE = COS.filter(c => c.t === 'skin' || c.t === 'aura');
+for (let i = COS.length - 1; i >= 0; i--) if (COS[i].t === 'skin' || COS[i].t === 'aura') COS.splice(i, 1);
+delete COS_T.skin; delete COS_T.aura;
 on('start', () => {
   let n = 0; for (const c of COS_GONE) { const k = itemCount('cos', c.id); if (k > 0) { addItem('cos', c.id, -k, 'cosgone-' + c.id); n += COS_R[c.r].dup; } }
-  if (S.profile.cos?.skin) { delete S.profile.cos.skin; S.profile.mod = Date.now(); }
-  if (n) { S.wallet.push({ id: 'cosgone-refund-' + uid(), n, why: 'cos-refund', t: Date.now() }); setTimeout(() => toast(`🎀 Dodatki bohatera wycofane – zwrot +${n} 💎`, 4500), 1500); }
+  for (const t of ['skin', 'aura']) if (S.profile.cos?.[t]) { delete S.profile.cos[t]; S.profile.mod = Date.now(); }
+  if (n) { S.wallet.push({ id: 'cosgone-refund-' + uid(), n, why: 'cos-refund', t: Date.now() }); setTimeout(() => toast(`🎀 Dodatki i aury bohatera wycofane – zwrot +${n} 💎`, 4500), 1500); }
   if (n || COS_GONE.length) save();
 });
 const COS_BY = Object.fromEntries(COS.map(c => [c.id, c]));
@@ -291,7 +291,7 @@ ROUTES.cos = () => {
   <div class="card cos-me center"><div class="cos-me-av">${avatarHTML(S.profile, 72)}</div><div class="cos-me-nick">${nickHTML(S.profile.nick || 'Ty', S.profile.cos)}</div>
     <div class="row nowrap" style="justify-content:center;gap:16px;margin-top:10px">${heroSVG('sm')}<div class="msg me${c?.bubble ? ' bb-' + c.bubble : ''} cos-bprev"><div class="msg-t">Tak widzą mnie inni ✨</div></div></div>
     <p class="small muted" style="margin:10px 0 0">Masz ${ownN}/${COS.length} przedmiotów · ramkę, nick i tytuł widać w rankingu, czacie, klasie i pojedynkach</p></div>
-  <div class="card cos-case-card"><div class="row nowrap"><div class="cos-case-ic">${crateImg('prest', 'cos-crate')}</div><div class="grow"><b>Skrzynka prestiżu</b><div class="small muted">Ramki, tytuły, nicki, aury, efekty, dymki, reakcje.
+  <div class="card cos-case-card"><div class="row nowrap"><div class="cos-case-ic">${crateImg('prest', 'cos-crate')}</div><div class="grow"><b>Skrzynka prestiżu</b><div class="small muted">Ramki, tytuły, nicki, efekty, dymki, reakcje.
     ${Object.entries(COS_R).map(([k, r]) => `<span style="color:${r.c};font-weight:700">${r.n} ${((r.w / Object.values(COS_R).reduce((a, x) => a + x.w, 0)) * 100).toFixed(r.w < 2 ? 1 : 0)}%</span>`).join(' · ')}</div></div></div>
     <button class="primary block cos-buy" data-act="cos-open">Otwórz – ${COS_CASE_PRICE} 💎</button>
     <p class="small muted" style="margin:8px 0 0">Duplikat = kryształy (do ${COS_R.mythic.dup} 💎). Legendarny i mityczny drop możesz ogłosić wszystkim (automatycznie, jeśli jesteś w publicznym rankingu), a kto pierwszy w aplikacji go zdobędzie – dostaje tytuł ✦ Odkrywca.</p></div>
