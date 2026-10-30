@@ -2726,3 +2726,17 @@ button:has(> .gemw) { flex-wrap: wrap; column-gap: 5px; row-gap: 0; text-wrap: b
 .boost-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 10px; }
 .boost-btns > button { width: 100%; }
 img[src*="/px8/"] { image-rendering: pixelated; object-fit: contain; }
+/* 🎨 skiny postaci */
+.hero-fig.skinned .skinpx { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; display: block; image-rendering: pixelated; }
+.skin-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.skin-t { flex-direction: column; gap: 4px; padding: 8px 4px !important; border-radius: 14px; background: var(--card2); border: 2px solid transparent; min-width: 0; }
+.skin-t.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.skin-t.r-legendary:not(.locked), .skin-t.r-mythic:not(.locked) { box-shadow: inset 0 0 0 1.5px var(--rc), 0 4px 16px -8px var(--rc); }
+.skin-t.locked .skin-pic { filter: grayscale(.9) brightness(.55); }
+.skin-t b { font-size: 10.5px; line-height: 1.1; } .skin-t small { font-size: 11px; }
+.skin-pic { width: 100%; aspect-ratio: 1; display: grid; place-items: end center; }
+.skin-pic img, .skin-pic svg { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; image-rendering: pixelated; }
+.skin-case { display: flex; gap: 10px; margin-top: 14px; padding: 12px; border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, #a855f7 14%, var(--card2)), color-mix(in srgb, #f59e0b 10%, var(--card2))); }
+.skin-btns { display: grid; gap: 8px; margin-top: 10px; }
+.skin-big { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 6px; min-height: 0 !important; }
+.skin-big img { width: 100%; aspect-ratio: 1; object-fit: contain; object-position: center bottom; image-rendering: pixelated; }

@@ -45,8 +45,8 @@ function duelAcc(input, correct) {
   const sim = Math.max(0, ...alts.map(a => 1 - lev(x, a) / Math.max(a.length, x.length, 1)));
   return Math.round(60 + 35 * Math.max(0, Math.min(1, sim)));
 }
-const duelMe = () => { const h = hero(), st = heroStats(); return { nick: (S.profile.nick || 'Gracz').slice(0, 24), line: heroLine(h), form: heroForm(h), g: h.g === 'm' ? 'm' : 'w', lv: heroLv(), crit: Math.min(.1, +st.crit.toFixed(3)), ult: lineDef().ult[0], cos: typeof myCos === 'function' ? myCos() : null }; };
-const sDuelP = p => p && typeof p === 'object' ? { nick: sStr(p.nick, 24) || 'Gracz', line: CHAR_LINES[p.line] ? p.line : 'cat', form: sInt(p.form, 0, 3), g: p.g === 'm' ? 'm' : 'w', lv: sInt(p.lv, 1, 99, 1), crit: sNum(p.crit, 0, .1, 0), ult: sStr(p.ult, 40) || '⚡ Supercios', cos: typeof sCos === 'function' ? sCos(p.cos) : null } : null;
+const duelMe = () => { const h = hero(), st = heroStats(); return { nick: (S.profile.nick || 'Gracz').slice(0, 24), line: heroLine(h), form: heroForm(h), g: h.g === 'm' ? 'm' : 'w', lv: heroLv(), crit: Math.min(.1, +st.crit.toFixed(3)), ult: lineDef().ult[0], cos: typeof myCos === 'function' ? myCos() : null, skin: typeof mySkin === 'function' ? mySkin() : null }; };
+const sDuelP = p => p && typeof p === 'object' ? { nick: sStr(p.nick, 24) || 'Gracz', line: CHAR_LINES[p.line] ? p.line : 'cat', form: sInt(p.form, 0, 3), g: p.g === 'm' ? 'm' : 'w', lv: sInt(p.lv, 1, 99, 1), crit: sNum(p.crit, 0, .1, 0), ult: sStr(p.ult, 40) || '⚡ Supercios', cos: typeof sCos === 'function' ? sCos(p.cos) : null, skin: typeof sSkin === 'function' ? sSkin(p.skin) : null } : null;
 function sDuel(m) {
   if (!m || typeof m !== 'object' || typeof m.t !== 'string') return null;
   const o = { t: sStr(m.t, 10), from: sStr(m.from, 40) };
@@ -211,7 +211,8 @@ setInterval(() => {
   else if (a && el) el.style.width = Math.max(0, 100 - (Date.now() - a.at) / (a.lim || DQ_MS[a.kind]) * 100) + '%';
 }, 200);
 // ---------- widoki
-const duelFig = (p, cls) => `<div class="hero-fig duel-fig ${cls} ln-${p.line}${typeof spriteVars === 'function' ? spriteVars(p.line, p.form) : ''}">${heroArt(p.line, p.form, p.g)}</div>`;
+const duelFig = (p, cls) => p.skin && typeof skinImg === 'function' ? `<div class="hero-fig duel-fig ${cls} ln-${p.line} skinned">${skinImg(p.line, p.form, p.skin)}</div>`
+  : `<div class="hero-fig duel-fig ${cls} ln-${p.line}${typeof spriteVars === 'function' ? spriteVars(p.line, p.form) : ''}">${heroArt(p.line, p.form, p.g)}</div>`;
 const duelBox = (p, hp, mine, guard, max = DUEL_HP, fx = '') => `<div class="dbox ${mine ? 'me' : 'op'}"><div class="dbox-h"><b>${typeof nickHTML === 'function' ? nickHTML(p.nick, p.cos, false) : esc(p.nick)}</b><small>Poz. ${p.lv}</small></div>
   <div class="dhp"><span>HP</span><div class="dhp-bar"><i class="${hp / max < .25 ? 'red' : hp / max < .5 ? 'yel' : ''}" style="width:${(hp / max * 100).toFixed(1)}%"></i></div></div>${mine ? `<div class="dhp-n">${hp} / ${max}</div>` : ''}${guard || fx ? `<em>${guard ? '🛡️ garda ' : ''}${fx}</em>` : ''}</div>`;
 // stany na ramce: seria, zamrożenie, tarcza, regeneracja, adrenalina
