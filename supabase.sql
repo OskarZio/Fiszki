@@ -390,6 +390,49 @@ $$;
 revoke all on function public.get_deck_link(text) from public;
 grant execute on function public.get_deck_link(text) to anon, authenticated;
 
+-- 📊 Statystyki dla właściciela (Panel hosta): same liczby, bez e-maili. Właściciel = pierwsze konto, które odbierze
+-- uprawnienie (claim_admin) – potem nikt inny nie może. Licznik otwarć linków do talii zwiększa get_deck_link.
+create table if not exists public.app_admins (user_id uuid primary key references auth.users on delete cascade);
+alter table public.app_admins enable row level security;
+drop policy if exists "adm_read" on public.app_admins;
+create policy "adm_read" on public.app_admins for select to authenticated using (user_id = auth.uid());
+alter table public.deck_links add column if not exists opens int not null default 0;
+alter table public.deck_links add column if not exists opened_at timestamptz;
+create or replace function public.claim_admin() returns boolean language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then return false; end if;
+  if exists (select 1 from public.app_admins where user_id = auth.uid()) then return true; end if;
+  if exists (select 1 from public.app_admins) then return false; end if;
+  insert into public.app_admins values (auth.uid()); return true;
+end $$;
+revoke all on function public.claim_admin() from public, anon;
+grant execute on function public.claim_admin() to authenticated;
+create or replace function public.host_stats() returns json language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  return json_build_object(
+    'users', (select count(*) from auth.users),
+    'new_today', (select count(*) from auth.users where created_at >= date_trunc('day', now())),
+    'new_7d', (select count(*) from auth.users where created_at >= now() - interval '7 days'),
+    'active_today', (select count(*) from public.profiles where updated_at >= date_trunc('day', now())),
+    'active_7d', (select count(*) from public.profiles where updated_at >= now() - interval '7 days'),
+    'links', (select count(*) from public.deck_links),
+    'link_opens', (select coalesce(sum(opens), 0) from public.deck_links),
+    'link_opens_today', (select count(*) from public.deck_links where opened_at >= date_trunc('day', now())),
+    'top_links', (select coalesce(json_agg(t), '[]'::json) from (select name, opens, created_at from public.deck_links order by opens desc, created_at desc limit 5) t));
+end $$;
+revoke all on function public.host_stats() from public, anon;
+grant execute on function public.host_stats() to authenticated;
+-- otwarcie linku: zwraca talię i liczy otwarcie
+create or replace function public.get_deck_link(p_id text) returns text language plpgsql volatile security definer set search_path = '' as $$
+declare d text;
+begin
+  update public.deck_links set opens = opens + 1, opened_at = now() where id = p_id returning data into d;
+  return d;
+end $$;
+revoke all on function public.get_deck_link(text) from public;
+grant execute on function public.get_deck_link(text) to anon, authenticated;
+
 -- Wersja skryptu – aplikacja sprawdza ją w Panelu hosta („Aktualizacja bazy”)
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-30'::text $$;
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-30b'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

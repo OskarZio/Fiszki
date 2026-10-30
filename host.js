@@ -72,12 +72,36 @@ async function writeGlobalJson(data, sha, msg) {
   await ghRepo('assets/global.json', { method: 'PUT', body: JSON.stringify({ message: msg, content: b64utf8(JSON.stringify(data, null, 2)), ...(sha ? { sha } : {}) }) });
 }
 
+// 📊 statystyki aplikacji (tylko liczby) – pierwsze zalogowane konto, które otworzy Panel hosta, zostaje właścicielem
+let HOST_ST = null;
+async function hostStatsLoad() {
+  HOST_ST = { loading: true };
+  if (!(typeof cloudOn === 'function' && cloudOn())) { HOST_ST = { err: 'Zaloguj się na swoje konto, żeby zobaczyć statystyki.' }; return render(); }
+  try {
+    const c = await SB.rpc('claim_admin'); if (c.error) throw c.error;
+    if (c.data !== true) { HOST_ST = { err: 'Statystyki widzi tylko konto właściciela aplikacji.' }; return render(); }
+    const r = await SB.rpc('host_stats'); if (r.error) throw r.error;
+    HOST_ST = { d: r.data, t: Date.now() };
+  } catch (e) { HOST_ST = { err: /function|schema cache|does not exist/i.test(e.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy niżej), żeby zobaczyć statystyki.' : 'Błąd: ' + (e.message || e) }; }
+  render();
+}
+function hostStatsHTML() {
+  const H = HOST_ST, d = H?.d, n = v => Number(v || 0).toLocaleString('pl');
+  const tile = (v, l) => `<div><b>${n(v)}</b><small>${l}</small></div>`;
+  return `<div class="card host-stats"><div class="row nowrap"><h3 class="grow" style="margin:0">📊 Statystyki aplikacji</h3><button class="sm" data-act="host-stats">🔄</button></div>
+    ${!H || H.loading ? '<p class="small muted">Ładuję…</p>' : H.err ? `<p class="small muted">${esc(H.err)}</p>` : `
+    <h4>👥 Konta</h4><div class="time-kpis">${tile(d.users, 'wszystkie')}${tile(d.new_today, 'nowe dziś')}${tile(d.new_7d, 'nowe 7 dni')}${tile(d.active_today, 'aktywne dziś')}</div>
+    <h4>🔗 Linki do talii</h4><div class="time-kpis">${tile(d.links, 'udostępnione')}${tile(d.link_opens, 'otwarcia')}${tile(d.link_opens_today, 'otwarte dziś')}${tile(d.active_7d, 'aktywne 7 dni')}</div>
+    ${(d.top_links || []).length ? `<div class="small" style="margin-top:10px">${d.top_links.map(x => `<div class="row nowrap" style="justify-content:space-between"><span>${esc(x.name)}</span><b>${n(x.opens)}×</b></div>`).join('')}</div>` : ''}
+    <p class="small muted" style="margin:10px 0 0">Same liczby – bez e-maili i nazw użytkowników. Odświeżone ${new Date(H.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}.</p>`}</div>`;
+}
 ROUTES.host = () => {
   const back = `<div class="row nowrap"><button class="iconbtn" data-go="#/more">‹</button><h1 class="grow">🔑 Panel hosta</h1></div>`;
   if (!hostUnlocked()) return { tab: 'more', html: back + `<div class="card"><p class="small muted" style="margin-top:0">Panel dla właściciela aplikacji – ustawianie GIF-ów dla wszystkich użytkowników.</p>
       <div class="row nowrap"><input id="host-code" class="grow" type="password" placeholder="Kod hosta" autocomplete="off" autocapitalize="off"><button class="primary" data-act="host-unlock">Odblokuj</button></div></div>` };
   const st = S.settings;
-  return { tab: 'more', html: back + `
+  if (!HOST_ST) hostStatsLoad();
+  return { tab: 'more', html: back + hostStatsHTML() + `
     <div class="card"><h3 style="margin-top:0">Połączenie z repozytorium</h3>
       <label class="field"><span>Repozytorium (właściciel/nazwa)</span><input id="host-repo" value="${esc(hostRepo())}" autocapitalize="off"></label>
       <label class="field"><span>Token GitHub z prawem zapisu do tego repozytorium</span><input id="host-token" type="password" value="${esc(st.hostToken || '')}" placeholder="github_pat_…" autocomplete="off"></label>
@@ -132,6 +156,7 @@ document.addEventListener('change', e => {
 const readB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
 
 Object.assign(ACTIONS, {
+  'host-stats': () => hostStatsLoad(),
   'host-test-case': el => { if (!hostUnlocked()) return; const r = $('#host-case-r')?.value; SPIN = null; go(`#/case/${el.dataset.k}?test=1${r ? '&r=' + r : ''}`); },
   'host-unlock': async () => {
     const ok = (await sha256($('#host-code').value.trim())) === HOST_HASH;

@@ -2852,3 +2852,4 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .meadow { height: max(360px, calc(var(--rows) * 92px + 100px)) !important; }
 .mw-in { inset: 70px 20px 34px !important; }
 .mw-in { inset: auto 20px auto !important; top: 50% !important; height: calc(var(--rows) * 92px); transform: translateY(-38%); }
+.host-stats h4 { margin: 14px 0 8px; font-size: 14px; color: var(--muted); } .host-stats .time-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
