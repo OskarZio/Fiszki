@@ -69,7 +69,11 @@ ROUTES.import = (parts, q) => {
       .catch(() => toast('Nie udało się pobrać pakietu – spróbuj za 1–2 min (GitHub publikuje plik)', 5000));
   }
   const dz = q.get('d') || '';
-  if (dz && 'z:' + dz.length + dz.slice(-12) !== IMPORT_SRC) { IMPORT_SRC = 'z:' + dz.length + dz.slice(-12); packUnzip(dz).then(t => { IMPORT_TXT = t; render(); }).catch(() => toast('Ten link do talii jest uszkodzony albo niepełny', 4500)); }
+  if (dz && 'z:' + dz.length + dz.slice(-12) !== IMPORT_SRC) { IMPORT_SRC = 'z:' + dz.length + dz.slice(-12); packUnzip(dz).then(t => {   // link do talii: od razu cała talia u odbiorcy i start nauki – bez żadnego tworzenia
+      const P = parsePack(t); if (!P.items.length) { IMPORT_TXT = t; return render(); }
+      importPack(P); const d = S.decks.find(x => x.name.trim().toLowerCase() === (P.deck || 'Nowa talia').toLowerCase());
+      if (d) { celebrate(`📚 Masz talię „${d.name}”!`, `${S.notes.filter(n => n.deckId === d.id).length} fiszek – możesz od razu się uczyć`); location.replace(location.pathname + '#/deck/' + d.id); }
+    }).catch(() => toast('Ten link do talii jest uszkodzony albo niepełny', 4500)); }
   const P = parsePack(IMPORT_TXT);
   return { tab: 'add', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/add">‹</button><h1 class="grow" style="margin:0">📥 Pakiet fiszek</h1></div>
