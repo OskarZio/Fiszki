@@ -242,11 +242,12 @@ function nestHTML() {
   }
   const grid = ok.slice().reverse().slice(0, 120);
   // 🌱 łąka jak w Forest: każde jajko z wybranego okresu stoi na pikselowej trawie (stała pozycja dla każdego jajka)
-  const EGI = ['plain', 'green', 'blue', 'purple', 'gold', 'red'], field = list.slice(-300), cols = 7, rows = Math.max(4, Math.ceil(field.length / cols));
+  const EGI = ['plain', 'green', 'blue', 'purple', 'gold', 'red'], field = list.slice(-300), cols = 7, rows = Math.max(2, Math.ceil(field.length / cols));
   const rnd = k => { let h = 2166136261; for (const ch of String(k)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
-  const meadow = `<div class="meadow" style="--rows:${rows}">${field.map((x, i) => { const c = i % cols, r = Math.floor(i / cols), tx = (c + .5 + (rnd(x.id) - .5) * .55) / cols * 100, ty = (r + .55 + (rnd(x.id + 'y') - .5) * .4) / rows * 100;
+  const meadow = `<div class="meadow" style="--rows:${rows}"><div class="mw-in">${field.map((x, i) => { const c = i % cols, r = Math.floor(i / cols), tx = (c + .5 + (rnd(x.id) - .5) * .55) / cols * 100, ty = (r + .55 + (rnd(x.id + 'y') - .5) * .4) / rows * 100;
       const ti = Math.max(0, EGG_TIERS.findIndex(t => t.min === x.min));
       return `<button class="mw-egg${x.ok ? '' : ' bad'}" data-act="${x.ok ? 'cr-open' : 'noop'}" data-id="${x.id}" style="left:${tx.toFixed(1)}%;top:${ty.toFixed(1)}%;z-index:${r * 10 + 5};--s:${(.85 + ti * .07).toFixed(2)}" title="${x.min} min${x.ok ? '' : ' · pęknięte'}"><img src="assets/egg8/egg_${EGI[ti]}.webp" alt=""></button>`; }).join('')}
+</div>
     ${field.length ? '' : '<p class="mw-empty">Twoja łąka czeka na pierwsze jajko 🥚</p>'}</div>`;
   return `<div class="card nest"><div class="row nowrap"><h2 class="grow" style="margin:0">🪺 Twoje gniazdo</h2></div>
     <div class="seg nest-seg">${seg}</div>

@@ -2841,3 +2841,7 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .mw-egg.bad img { filter: grayscale(.85) brightness(.55); opacity: .65; }
 .mw-egg:not(.bad):active { transform: translate(-50%, -80%) scale(calc(var(--s, 1) * 1.15)); }
 .mw-empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: #fff; font-weight: 700; text-shadow: 0 2px 0 #1e4a17; }
+/* łąka: jajka z zapasem miejsca od krawędzi (nic nie jest ucięte) */
+.meadow { height: calc(var(--rows) * 70px + 40px) !important; }
+.mw-in { position: absolute; inset: 58px 30px 18px; }
+.mw-egg { width: 42px; height: 50px; }
