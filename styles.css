@@ -2816,3 +2816,10 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .notes-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; }
 .notes-head h2 { white-space: nowrap; flex: 0 0 auto; }
 .notes-head-btns { display: flex; gap: 10px; flex: 1 1 auto; justify-content: flex-end; }
+/* skrzynka bohaterów: ikona + tytuł w rzędzie, szanse i przycisk pod spodem na całą szerokość */
+.hero-case.row.nowrap { display: grid !important; grid-template-columns: 64px 1fr; gap: 10px 14px; align-items: center; padding: 16px !important; }
+.hero-case .hc-ic img { width: 64px; height: 64px; object-fit: contain; }
+.hero-case > .grow { min-width: 0; } .hero-case > .grow b { font-size: 18px; display: block; margin-bottom: 4px; }
+.hero-case > .grow .small { line-height: 1.55; }
+.hero-case > button { grid-column: 1 / -1; width: 100%; }
+.hero-case > .grow .small > span { white-space: nowrap; }
