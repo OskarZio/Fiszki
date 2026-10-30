@@ -184,19 +184,25 @@ const GEAR = {
 };
 const GEAR_PRICE = { common: 150, rare: 450, epic: 1200, legendary: 3500, mythic: 9000 };
 const FORGE_MAX = 5;
-const gearImg = (id, cls = '') => { const g = GEAR[id]; return g ? `<img class="gear-img ${cls}" src="assets/fluent/${g.img}.webp" alt="${esc(g.name)}" draggable="false">` : ''; };
+// 👾 ikonki 8-bit (assets/px8) zamiast zwykłych dla przedmiotów kowala, mikstur i boosterów – reszta zostaje
+const PX8_OF = { g_bow: 'b_bow', g_swords: 'b_swords', g_orb: 'b_orb', g_volt: 'b_bolt', g_comet2: 'b_comet', g_gradcap: 'b_gradcap', g_crown: 'b_crown2', g_dragonf: 'b_dragon',
+  g_shield: 'b_shield', g_ring: 'b_ring', g_gem: 'e_diamond', g_wing: 'b_wing', g_scroll: 'b_scroll', g_hourglass: 'b_hourglass', g_feather: 'b_feather', g_sparkles: 'b_sparkle',
+  g_dna: 'b_dna', g_heartfire: 'b_heartcrown', g_labcoat: 'b_flasks', g_mhelmet: 'b_swords2', g_key: 'b_chest', g_stopwatch: 'b_stopwatch', g_cball: 'b_orb', g_bomb: 'e_nova',
+  p_heal: 'b_potion', p_power: 'e_potion', p_guard: 'b_flasks', fire: 'b_fire', b_star: 'e_star', b_gstar: 'b_sparkle', b_swords: 'b_swords2' };
+const fsrc = img => PX8_OF[img] ? `assets/px8/${PX8_OF[img]}.webp` : `assets/fluent/${img}.webp`;
+const gearImg = (id, cls = '') => { const g = GEAR[id]; return g ? `<img class="gear-img ${cls}" src="${fsrc(g.img)}" alt="${esc(g.name)}" draggable="false">` : ''; };
 const ownsGear = id => hasItem('gear', id);
 const gearStats = g => [g.atk && `⚔️ +${g.atk}%`, g.hp && `❤️ +${g.hp}`, g.def && `🛡️ ${g.def}%`, g.crit && `🎯 +${g.crit}%`, g.dodge && `💨 ${g.dodge}%`, g.desc].filter(Boolean).join(' · ');
 
 // ---------- 🧪 mikstury i power-upy (max 3 użycia na walkę)
 const POTIONS = {
-  heal: { name: 'Mikstura życia', c: '#ef4444', desc: '+40 ❤️', price: 40 }, power: { name: 'Mikstura siły', c: '#f59e0b', desc: '3 ciosy ×2', price: 60 },
-  guard: { name: 'Eliksir tarczy', c: '#3b82f6', desc: 'blokuje następny atak', price: 50 }, bomb: { name: 'Mocny cios', img: 'g_bomb', desc: 'od razu cios ×3', price: 80 },
+  heal: { name: 'Mikstura życia', img: 'p_heal', c: '#ef4444', desc: '+40 ❤️', price: 40 }, power: { name: 'Mikstura siły', img: 'p_power', c: '#f59e0b', desc: '3 ciosy ×2', price: 60 },
+  guard: { name: 'Eliksir tarczy', img: 'p_guard', c: '#3b82f6', desc: 'blokuje następny atak', price: 50 }, bomb: { name: 'Mocny cios', img: 'g_bomb', desc: 'od razu cios ×3', price: 80 },
   hint: { name: 'Podpowiedź', img: 'g_cball', desc: 'ABCD: 50/50 · wpisz/fiszki: pierwsze litery', price: 40 }, time: { name: 'Stoper', img: 'g_stopwatch', desc: '5 pytań bez limitu czasu, bez lodu i robaków', price: 50 },
   phoenix: { name: 'Feniks', img: 'fire', desc: 'gdy padniesz – wstajesz z 50% ❤️', price: 150 },
 };
 const POT_MAX = 3;
-const potionSVG = k => { const p = POTIONS[k]; if (p.img) return `<img class="gear-img potion" src="assets/fluent/${p.img}.webp" alt="">`; const c = p.c;
+const potionSVG = k => { const p = POTIONS[k]; if (p.img) return `<img class="gear-img potion" src="${fsrc(p.img)}" alt="">`; const c = p.c;
   return `<svg class="potion" viewBox="0 0 64 64"><path d="M24 6h16v6h-3v10c10 4 16 12 16 22 0 10-9 16-21 16S11 54 11 44c0-10 6-18 16-22V12h-3z" fill="#e0f2fe" stroke="#334155" stroke-width="3" stroke-linejoin="round"/><path d="M14 44c0-3 1-6 3-8h30c2 2 3 5 3 8 0 8-8 13-18 13S14 52 14 44z" fill="${c}"/><circle cx="25" cy="44" r="3" fill="#fff" opacity=".6"/><circle cx="36" cy="49" r="2" fill="#fff" opacity=".5"/><rect x="22" y="3" width="20" height="6" rx="2" fill="#a16207"/></svg>`; };
 const potionN = k => itemCount('potion', k);
 
@@ -304,7 +310,7 @@ ROUTES.hero = () => {
       <div class="card"><h2 style="margin-top:0">⏱️ Boostery</h2>${boostChips() ? `<div class="boost-row">${boostChips()}</div>` : ''}
       <p class="small muted" style="margin-top:0">Włączasz na 30 minut. W weekend podwójne XP jest za darmo, a co ${FREE_BOOST_DAYS} dni czeka darmowy booster.</p>
       ${freeBoostReady() ? '<button class="primary block" data-act="boost-free">🎁 Odbierz darmowy booster</button>' : ''}
-      <div class="shop-grid">${Object.entries(BOOSTS).map(([k, x]) => `<div class="shop-it boost-it${boostOn(k) ? ' on' : ''}"><img class="gear-img" src="assets/fluent/${x.img}.webp" alt=""><b>${x.name}</b><small>${x.desc}</small>
+      <div class="shop-grid">${Object.entries(BOOSTS).map(([k, x]) => `<div class="shop-it boost-it${boostOn(k) ? ' on' : ''}"><img class="gear-img" src="${fsrc(x.img)}" alt=""><b>${x.name}</b><small>${x.desc}</small>
         <div class="boost-btns">${itemCount('boost', k) ? `<button class="sm primary" data-act="boost-on" data-k="${k}">Włącz (${itemCount('boost', k)})</button>` : ''}<button class="sm" data-act="boost-buy" data-k="${k}">${x.price} 💎</button></div></div>`).join('')}</div></div>`,
   };
   return { tab: 'arena', html: `${evolveHTML()}

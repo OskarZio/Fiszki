@@ -2725,3 +2725,4 @@ button:has(> .gemw) { flex-wrap: wrap; column-gap: 5px; row-gap: 0; text-wrap: b
 /* boostery: przyciski pod opisem, na całą szerokość */
 .boost-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 10px; }
 .boost-btns > button { width: 100%; }
+img[src*="/px8/"] { image-rendering: pixelated; object-fit: contain; }
