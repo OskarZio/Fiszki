@@ -2755,3 +2755,26 @@ img[src*="/px8/"] { image-rendering: pixelated; object-fit: contain; }
 .skin-tile { height: 132px !important; gap: 4px !important; }
 .skin-tile .skinpx { width: 84px; height: 84px; object-fit: contain; object-position: center bottom; image-rendering: pixelated; }
 .skin-tile small { color: var(--rc); }
+.emo8 { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.22em; object-fit: contain; image-rendering: pixelated; margin: 0 .04em; } .abil8 { image-rendering: auto; }
+/* 🦸 karta bohatera – nowy układ: nagłówek, HP nad postacią, scena, ekwipunek, statystyki */
+.hc2 { padding: 18px 16px 20px !important; display: grid; gap: 14px; text-align: left; background: radial-gradient(120% 70% at 50% 30%, color-mix(in srgb, var(--accent) 22%, var(--card)), var(--card) 70%) !important; }
+.hc-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hc-id { display: grid; gap: 2px; min-width: 0; } .hc-name { font-size: 22px; line-height: 1.15; overflow-wrap: anywhere; } .hc-id small { color: var(--muted); font-size: 13px; }
+.hc-lv { flex: none; display: grid; justify-items: center; padding: 6px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 20%, var(--card2)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 50%, transparent); }
+.hc-lv small { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; } .hc-lv b { font-size: 22px; line-height: 1.1; }
+.hc-hp { display: flex; align-items: center; gap: 10px; }
+.hc-hpic { flex: none; display: grid; place-items: center; width: 28px; } .hc-hpic img, .hc-hpic svg { width: 26px; height: 26px; }
+.hc-hpbar { position: relative; flex: 1; height: 22px; border-radius: 99px; background: rgba(0,0,0,.35); overflow: hidden; box-shadow: inset 0 0 0 2px rgba(0,0,0,.3); }
+.hc-hpbar i { position: absolute; inset: 0; background: linear-gradient(90deg, #16a34a, #4ade80); border-radius: inherit; }
+.hc-hpbar b { position: relative; display: block; text-align: center; font-size: 12.5px; line-height: 22px; color: #052e16; }
+.hc-stage { display: grid; place-items: center; padding: 6px 0 0; } .hc-stage .hero-fig { margin: 0 auto !important; }
+.hc2 .mc-bar { margin: 0 auto; }
+.hc-xp { display: grid; gap: 6px; text-align: center; } .hc-xp .pbar { margin: 0; }
+.hc-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.hc-stats span { display: grid; justify-items: center; gap: 2px; padding: 10px 4px; border-radius: 14px; background: rgba(0,0,0,.22); }
+.hc-stats i { font-style: normal; font-size: 22px; line-height: 1; } .hc-stats b { font-size: 16px; } .hc-stats small { font-size: 11px; color: var(--muted); }
+.hc-abil { margin: 0 !important; gap: 10px !important; } .hc-abil span { padding: 12px !important; gap: 4px !important; } .hc-abil b { font-size: 14px; } .hc-abil b .abil8 { width: 1.7em; height: 1.7em; vertical-align: -.55em; margin-right: 4px; }
+.hc2 .hero-lives, .hc2 .evo-chain { justify-self: center; }
+img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !important; display: inline-block !important; vertical-align: -.22em !important; margin: 0 .04em !important; filter: none; }
+.hc-abil b img.abil8, .char small b img.abil8 { width: 1.6em !important; height: 1.6em !important; vertical-align: -.5em !important; margin-right: 3px !important; }
+.hc-stats i img.emo8 { width: 26px !important; height: 26px !important; }

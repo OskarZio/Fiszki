@@ -344,13 +344,15 @@ ROUTES.hero = () => {
   };
   return { tab: 'arena', html: `${evolveHTML()}
   <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow row nowrap" style="margin:0;gap:8px">${heroIcon()} Bohater</h1>${coinsHTML()}</div>
-  <div class="card center hero-card pr-card-${Math.min(6, pr)}">${heroSVG('lg')}${heroHotbar(h)}
-    <b style="font-size:20px">${esc(S.profile.nick || 'Bohater')} · poziom ${L.lv}${L.max ? ' (MAX)' : ''}</b>
-    <div class="small"><b style="color:var(--accent)">${heroFormName()}</b> · ${PR_TITLES[Math.min(6, pr)]}${pr ? ` · prestiż ${'★'.repeat(Math.min(5, pr))}${pr > 5 ? '+' + (pr - 5) : ''}` : ''}</div>
-    <div class="pbar" style="margin:8px 0 4px"><i style="width:${L.max ? 100 : (L.cur / L.need * 100).toFixed(1)}%"></i></div><small class="muted">${L.max ? 'Maksymalny poziom – czas na prestiż i ewolucję!' : `${Math.round(L.cur)} / ${Math.round(L.need)} XP do poziomu ${L.lv + 1} · XP zdobywasz głównie nauką`}</small>
+  <div class="card center hero-card hc2 pr-card-${Math.min(6, pr)}">
+    <div class="hc-top"><div class="hc-id"><b class="hc-name">${esc(S.profile.nick || 'Bohater')}</b><small><b style="color:var(--accent)">${heroFormName()}</b> · ${PR_TITLES[Math.min(6, pr)]}${pr ? ` · ${'★'.repeat(Math.min(5, pr))}${pr > 5 ? '+' + (pr - 5) : ''}` : ''}</small></div><span class="hc-lv"><small>poziom</small><b>${L.lv}${L.max ? '★' : ''}</b></span></div>
+    <div class="hc-hp"><span class="hc-hpic">${heartPX()}</span><div class="hc-hpbar"><i></i><b>${st.hp} / ${st.hp}</b></div></div>
+    <div class="hc-stage">${heroSVG('lg')}</div>
+    ${heroHotbar(h)}
+    <div class="hc-xp"><div class="pbar"><i style="width:${L.max ? 100 : (L.cur / L.need * 100).toFixed(1)}%"></i></div><small class="muted">${L.max ? 'Maksymalny poziom – czas na prestiż i ewolucję!' : `${Math.round(L.cur)} / ${Math.round(L.need)} XP do poziomu ${L.lv + 1}`}</small></div>
     ${L.max ? '<button class="primary block prestige-btn" data-act="hero-prestige">🌟 Prestiż i ewolucja</button>' : ''}
-    <div class="hero-stats"><span>${heartPX()} <b>${st.hp}</b></span><span>⚔️ <b>×${st.atk.toFixed(2)}</b></span><span>🎯 <b>${Math.round(st.crit * 100)}%</b></span><span>🛡️ <b>${Math.round(st.def * 100)}%</b></span>${st.dodge ? `<span>💨 <b>${Math.round(st.dodge * 100)}%</b></span>` : ''}</div>
-    <div class="hero-abil"><span><b>${ld.passive[0]}</b><small>${ld.passive[1]}</small></span><span><b>${ld.ult[0]}</b><small>supercios · ${st.ultNeed} dobre odpowiedzi</small></span></div>
+    <div class="hc-stats"><span><i>⚔️</i><b>×${st.atk.toFixed(2)}</b><small>atak</small></span><span><i>🎯</i><b>${Math.round(st.crit * 100)}%</b><small>krytyk</small></span><span><i>🛡️</i><b>${Math.round(st.def * 100)}%</b><small>obrona</small></span><span><i>🪽</i><b>${Math.round((st.dodge || 0) * 100)}%</b><small>unik</small></span></div>
+    <div class="hero-abil hc-abil"><span><b>${ld.passive[0]}</b><small>${ld.passive[1]}</small></span><span><b>${ld.ult[0]}</b><small>supercios · ${st.ultNeed} dobre odpowiedzi</small></span></div>
     <div class="hero-lives">${livesHTML()}</div>
     <div class="evo-chain">${[0, 1, 2, 3].map(i => `<span class="${i <= heroForm() ? 'on' : ''}" title="${line.forms[i]}">${heroSVG('xs', i)}<small>${line.forms[i]}</small></span>`).join('<i>›</i>')}</div></div>
   <div class="seg hero-tabs">${tabs.map(([k, i, l]) => `<button class="${HERO_TAB === k ? 'on' : ''}" data-act="hero-tab" data-k="${k}"><i>${i}</i><span>${l}</span></button>`).join('')}</div>
