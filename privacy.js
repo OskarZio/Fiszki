@@ -139,7 +139,7 @@ async function gdprDelete() {
   else {   // baza bez funkcji – usuwamy przynajmniej wszystkie dane (konto logowania usunie administrator)
     for (const [t, q] of [['messages', `from_id.eq.${me},to_id.eq.${me}`], ['friends', `user_id.eq.${me},friend_id.eq.${me}`]]) await SB.from(t).delete().or(q);
     await SB.from('user_images').delete().eq('user_id', me);
-    for (const t of ['cos_drops', 'cos_firsts']) { try { await SB.from(t).delete().eq('user_id', me); } catch { /* stara baza */ } }
+    for (const t of ['cos_drops', 'cos_firsts', 'deck_links']) { try { await SB.from(t).delete().eq('user_id', me); } catch { /* stara baza */ } }
     await SB.from('user_data').delete().eq('user_id', me);
     await SB.from('profiles').delete().eq('id', me);
   }
@@ -168,7 +168,7 @@ viewMore = function () { return prMore0() + `<div class="card small center legal
 if (/(access_token|refresh_token)=/.test(location.hash)) history.replaceState(null, '', location.pathname);
 
 // ---------- 🛠️ Panel hosta: aktualizacja bazy jednym przyciskiem + dane administratora (RODO)
-const DB_VERSION = '2026-10-28c';   // podbijaj razem z public.db_version() w supabase.sql
+const DB_VERSION = '2026-10-30';   // podbijaj razem z public.db_version() w supabase.sql
 let DB_STATE = null, DB_SQL = '';  // null = nie sprawdzono, 'ok', 'old', 'err'; skrypt pobrany z góry (schowek na iPhonie wymaga kliknięcia bez czekania)
 async function dbCheck(quiet) {
   if (!SB) { DB_STATE = 'err'; return; }

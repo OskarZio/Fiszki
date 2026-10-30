@@ -60,7 +60,40 @@ function deckPackText(d) {
   return ['#fiszki', `#talia: ${d.name.replace(/^(👥|🏫)\s*/, '')}`, ...(d.subject ? [`#przedmiot: ${d.subject}`] : []), ...(rev ? ['#odwrotne: tak'] : []),
     ...ns.map(n => n.type === 'cloze' ? cl(n.text) : n.front && n.back ? [cl(n.front), cl(n.back), ...(n.hint ? [cl(n.hint)] : [])].join(' | ') : '').filter(Boolean)].join('\n');
 }
-async function deckLink(d) { return `${location.origin}${location.pathname}#/import?d=${await packZip(deckPackText(d))}`; }
+async function deckLink(d) {
+  const z = await packZip(deckPackText(d)), base = location.origin + location.pathname;
+  // krótki link (#/t/ID) – talia zapisana w bazie; bez konta / stara baza → długi link z całą talią w adresie
+  if (typeof cloudOn === 'function' && cloudOn()) {
+    const key = 'dl:' + d.id, prev = S.stats.deckLinks?.[key];
+    if (prev && prev.z === z.length + z.slice(-16)) return `${base}#/t/${prev.id}`;
+    const AB = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789', id = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => AB[b % AB.length]).join('');
+    try { const r = await SB.from('deck_links').insert({ id, owner: SB_USER.id, name: d.name.slice(0, 80), data: z });
+      if (!r.error) { (S.stats.deckLinks = S.stats.deckLinks || {})[key] = { id, z: z.length + z.slice(-16) }; save(); return `${base}#/t/${id}`; } } catch { /* stara baza */ }
+  }
+  return `${base}#/import?d=${z}`;
+}
+// otwarcie linku (krótkiego lub długiego): od razu cała talia u odbiorcy i strona talii gotowa do nauki
+let PACK_DONE = '';
+async function importZip(z) {
+  const t = await packUnzip(z), P = parsePack(t);
+  if (!P.items.length) { IMPORT_TXT = t; return go('#/import'); }
+  importPack(P); const d = S.decks.find(x => x.name.trim().toLowerCase() === (P.deck || 'Nowa talia').toLowerCase());
+  if (d) { celebrate(`📚 Masz talię „${d.name}”!`, `${S.notes.filter(n => n.deckId === d.id).length} fiszek – możesz od razu się uczyć`); location.replace(location.pathname + '#/deck/' + d.id); }
+}
+ROUTES.t = parts => {
+  const id = (parts[1] || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 8);
+  if (id && PACK_DONE !== id) {
+    PACK_DONE = id;
+    const tryGet = async (n = 0) => {
+      if (typeof SB === 'undefined' || !SB) { if (n < 40) return setTimeout(() => tryGet(n + 1), 250); return toast('Brak połączenia z bazą – spróbuj za chwilę', 4000); }
+      const r = await SB.rpc('get_deck_link', { p_id: id });
+      if (r.error || !r.data) { PACK_DONE = ''; return toast('Nie znaleziono tej talii (link nieaktualny?)', 4500); }
+      importZip(r.data).catch(() => toast('Nie udało się otworzyć talii', 4000));
+    };
+    tryGet();
+  }
+  return { tab: 'home', html: '<div class="card center" style="padding:40px 16px"><div style="font-size:44px">📚</div><h2>Pobieram talię…</h2><p class="muted small">Za chwilę będzie gotowa do nauki.</p></div>' };
+};
 ROUTES.import = (parts, q) => {
   const f = q.get('f') || '', fv = f + '#' + (q.get('v') || '');   // ?v=… wymusza ponowne pobranie (zaktualizowany pakiet)
   if (f && fv !== IMPORT_SRC && /^assets\/imports\/[\w.-]+\.txt$/.test(f)) {
@@ -69,11 +102,7 @@ ROUTES.import = (parts, q) => {
       .catch(() => toast('Nie udało się pobrać pakietu – spróbuj za 1–2 min (GitHub publikuje plik)', 5000));
   }
   const dz = q.get('d') || '';
-  if (dz && 'z:' + dz.length + dz.slice(-12) !== IMPORT_SRC) { IMPORT_SRC = 'z:' + dz.length + dz.slice(-12); packUnzip(dz).then(t => {   // link do talii: od razu cała talia u odbiorcy i start nauki – bez żadnego tworzenia
-      const P = parsePack(t); if (!P.items.length) { IMPORT_TXT = t; return render(); }
-      importPack(P); const d = S.decks.find(x => x.name.trim().toLowerCase() === (P.deck || 'Nowa talia').toLowerCase());
-      if (d) { celebrate(`📚 Masz talię „${d.name}”!`, `${S.notes.filter(n => n.deckId === d.id).length} fiszek – możesz od razu się uczyć`); location.replace(location.pathname + '#/deck/' + d.id); }
-    }).catch(() => toast('Ten link do talii jest uszkodzony albo niepełny', 4500)); }
+  if (dz && 'z:' + dz.length + dz.slice(-12) !== IMPORT_SRC) { IMPORT_SRC = 'z:' + dz.length + dz.slice(-12); importZip(dz).catch(() => toast('Ten link do talii jest uszkodzony albo niepełny', 4500)); }
   const P = parsePack(IMPORT_TXT);
   return { tab: 'add', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/add">‹</button><h1 class="grow" style="margin:0">📥 Pakiet fiszek</h1></div>

@@ -359,6 +359,37 @@ create trigger cos_drops_guard before insert on public.cos_drops for each row ex
 drop trigger if exists cos_firsts_guard on public.cos_firsts;
 create trigger cos_firsts_guard before insert on public.cos_firsts for each row execute function public.cos_guard();
 
+-- 🔗 Krótkie linki do talii: skompresowany pakiet fiszek pod krótkim id (#/t/ID). Zapisuje zalogowany autor,
+-- odczyt tylko po znanym id przez funkcję (także bez konta) – nie da się przeglądać cudzych talii.
+create table if not exists public.deck_links (
+  id text primary key,
+  owner uuid not null references auth.users on delete cascade,
+  name text not null default 'Talia',
+  data text not null,
+  created_at timestamptz not null default now());
+alter table public.deck_links enable row level security;
+alter table public.deck_links drop constraint if exists dl_chk;
+alter table public.deck_links add constraint dl_chk check (id ~ '^[A-Za-z0-9]{8}$' and char_length(name) <= 80 and octet_length(data) < 800000 and data ~ '^[A-Za-z0-9_-]+$') not valid;
+drop policy if exists "dl_insert" on public.deck_links;
+drop policy if exists "dl_own" on public.deck_links;
+drop policy if exists "dl_delete" on public.deck_links;
+create policy "dl_insert" on public.deck_links for insert to authenticated with check (owner = auth.uid());
+create policy "dl_own" on public.deck_links for select to authenticated using (owner = auth.uid());
+create policy "dl_delete" on public.deck_links for delete to authenticated using (owner = auth.uid());
+revoke update on public.deck_links from authenticated;
+create or replace function public.dl_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.deck_links where owner = new.owner and created_at > now() - interval '1 day') >= 30 then raise exception 'rate limit'; end if;
+  new.created_at := now(); return new;
+end $$;
+drop trigger if exists dl_guard on public.deck_links;
+create trigger dl_guard before insert on public.deck_links for each row execute function public.dl_guard();
+create or replace function public.get_deck_link(p_id text) returns text language sql stable security definer set search_path = '' as $$
+  select data from public.deck_links where id = p_id limit 1;
+$$;
+revoke all on function public.get_deck_link(text) from public;
+grant execute on function public.get_deck_link(text) to anon, authenticated;
+
 -- Wersja skryptu – aplikacja sprawdza ją w Panelu hosta („Aktualizacja bazy”)
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-28c'::text $$;
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-30'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
