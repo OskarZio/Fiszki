@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '195';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '196';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -804,9 +804,9 @@ function viewDeck(id, q) {
     <button class="block sm${d.mix ? ' primary' : ''}" data-act="deck-mix" data-id="${id}">🔀 Przeplatanie: ${d.mix ? 'włączone – nowe karty w losowej kolejności' : 'wyłączone (stuknij, by mieszać terminy z obrazami)'}</button>
   </div>
   <div class="card">
-    <div class="row nowrap"><h2 class="grow" style="margin:0;white-space:nowrap">Fiszki (${notes.length})</h2>
+    <div class="notes-head"><h2 style="margin:0">Fiszki <span class="muted">(${notes.length})</span></h2><div class="notes-head-btns">
       ${notes.length ? `<button class="sm${NOTE_SEL ? ' primary' : ''}" data-act="note-selmode">${NOTE_SEL ? 'Anuluj' : '☑️ Zaznacz'}</button>` : ''}
-      ${NOTE_SEL ? '' : `<button class="sm primary" data-go="#/add?deck=${id}">➕ Dodaj</button>`}</div>
+      ${NOTE_SEL ? '' : `<button class="sm primary" data-go="#/add?deck=${id}">➕ Dodaj</button>`}</div></div>
     ${NOTE_SEL ? `<div class="selbar row nowrap"><span class="grow small"><b>${NOTE_SEL.size}</b> zaznaczonych</span>
       <button class="sm" data-act="note-selall" data-id="${id}">${NOTE_SEL.size === notes.length ? 'Odznacz' : 'Wszystkie'}</button>
       <button class="sm" data-act="note-selsus" ${NOTE_SEL.size ? '' : 'disabled'} title="Zaznaczone fiszki znikną z powtórek, ale liczą się jako nauczone">✓ Opanowane</button>

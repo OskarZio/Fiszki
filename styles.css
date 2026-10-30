@@ -2812,3 +2812,7 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .evo-dots { display: flex; justify-content: center; gap: 8px; }
 .evo-dots i { width: 10px; height: 10px; border-radius: 99px; background: var(--line); cursor: pointer; transition: width .2s; } .evo-dots i.got { background: color-mix(in srgb, var(--accent) 55%, var(--line)); } .evo-dots i.on { width: 24px; background: var(--accent); }
 .deck-link-btn { margin: 12px 0; }
+/* nagłówek listy fiszek: tytuł z liczbą w całości, przyciski pod nim, gdy brak miejsca */
+.notes-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; }
+.notes-head h2 { white-space: nowrap; flex: 0 0 auto; }
+.notes-head-btns { display: flex; gap: 10px; flex: 1 1 auto; justify-content: flex-end; }
