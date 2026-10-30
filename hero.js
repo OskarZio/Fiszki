@@ -189,9 +189,29 @@ const PX8_OF = { g_bow: 'b_bow', g_swords: 'b_swords', g_orb: 'b_orb', g_volt: '
   g_shield: 'b_shield', g_ring: 'b_ring', g_gem: 'e_diamond', g_wing: 'b_wing', g_scroll: 'b_scroll', g_hourglass: 'b_hourglass', g_feather: 'b_feather', g_sparkles: 'b_sparkle',
   g_dna: 'b_dna', g_heartfire: 'b_heartcrown', g_labcoat: 'b_flasks', g_mhelmet: 'b_swords2', g_key: 'b_chest', g_stopwatch: 'b_stopwatch', g_cball: 'b_orb', g_bomb: 'e_nova',
   p_heal: 'b_potion', p_power: 'e_potion', p_guard: 'b_flasks', fire: 'b_fire', b_star: 'e_star', b_gstar: 'b_sparkle', b_swords: 'b_swords2' };
-const fsrc = img => PX8_OF[img] ? `assets/px8/${PX8_OF[img]}.webp` : `assets/fluent/${img}.webp`;
+const fsrc = img => img?.startsWith('x_') ? `assets/gear8/${img.slice(2)}.webp` : PX8_OF[img] ? `assets/px8/${PX8_OF[img]}.webp` : `assets/fluent/${img}.webp`;
+// ⚔️ kolekcja 8-bit (assets/gear8): 8 rodzajów × 10 motywów – zwykły, lodowy, tajemny, ognisty, leśny, mroźny, złoty, krwawy, anielski, kosmiczny
+{
+  const TH = [['Żelazny', 'Żelazna', 'common'], ['Lodowy', 'Lodowa', 'rare'], ['Tajemny', 'Tajemna', 'rare'], ['Ognisty', 'Ognista', 'epic'], ['Leśny', 'Leśna', 'epic'],
+    ['Mroźny', 'Mroźna', 'legendary'], ['Złoty', 'Złota', 'legendary'], ['Krwawy', 'Krwawa', 'mythic'], ['Anielski', 'Anielska', 'mythic'], ['Kosmiczny', 'Kosmiczna', 'mythic']];
+  const RI = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
+  const ST = {   // statystyki wg rzadkości [zwykły, rzadki, epicki, legendarny, mityczny]
+    sword: ['w', 'miecz', 0, r => ({ atk: [12, 20, 30, 44, 62][r], crit: [0, 4, 6, 8, 10][r] })],
+    bow: ['w', 'łuk', 0, r => ({ atk: [8, 15, 24, 36, 52][r], crit: [6, 10, 13, 16, 20][r] })],
+    staff: ['w', 'kostur', 0, r => ({ atk: [9, 16, 25, 38, 54][r], crit: [2, 4, 6, 8, 10][r], xp: [5, 8, 12, 15, 20][r] })],
+    helm: ['h', 'hełm', 0, r => ({ hp: [15, 22, 32, 42, 55][r], def: [0, 4, 8, 10, 14][r], ...(r >= 3 ? { crit: r * 2 } : {}) })],
+    ring: ['a', 'pierścień', 0, r => ({ hp: [15, 25, 35, 55, 70][r], def: [3, 6, 10, 16, 18][r], ...(r === 4 ? { dodge: 10 } : {}) })],
+    potion: ['c', 'fiolka', 1, r => ({ hp: [10, 15, 20, 30, 40][r], ...(r ? { regen: r >= 3 ? 2 : 1 } : {}), ...(r === 4 ? { vamp: 8 } : {}) })],
+    scroll: ['c', 'zwój', 0, r => ({ xp: [5, 10, 15, 20, 30][r], ...(r >= 2 ? { time: [0, 0, 15, 25, 30][r] } : {}) })],
+    orb: ['c', 'kula', 1, r => ({ crit: [4, 6, 8, 10, 12][r], ...(r >= 2 ? { dmg: [0, 0, 5, 8, 12][r] } : {}) })],
+  };
+  for (const [k, [slot, noun, fem, stf]] of Object.entries(ST)) TH.forEach(([m, f, r], i) => {
+    const n = k === 'scroll' && i >= 7 ? 'księga' : noun, fe = fem || n === 'księga';
+    GEAR[`x_${k}${i}`] = GR(slot, `${fe ? f : m} ${n}`, r, `x_${k}${i}`, stf(RI[r]));
+  });
+}
 // przedmioty bez grafiki 8-bit wycofane – zdjęte z katalogu; kto je miał: zdjęte z postaci i zwrot połowy ceny (raz)
-const GEAR_GONE = Object.keys(GEAR).filter(id => !PX8_OF[GEAR[id].img]).map(id => [id, GEAR[id]]);
+const GEAR_GONE = Object.keys(GEAR).filter(id => !PX8_OF[GEAR[id].img] && !GEAR[id].img.startsWith('x_')).map(id => [id, GEAR[id]]);
 for (const [id] of GEAR_GONE) delete GEAR[id];
 on('start', () => {
   const h = hero(); let n = 0;

@@ -43,7 +43,7 @@ const STICKERS = [
 ];
 // 🔴 ultra rzadkie dropy w każdej skrzynce: mityczna naklejka i mega pula kryształów (po 0,1%)
 // 💎 w skrzynkach jako kryształ 8-bit
-const GEM8 = 'assets/stickers/px/044.webp';
+const GEM8 = 'assets/gear8/gem0.webp';
 const MYTHIC_P = .1, MEGA_GEMS_P = .1, MEGA_GEMS = 10000;
 // mityczna naklejka nie wypada ze skrzynki z GIF-ami (tam tylko mega kryształy)
 const mythicP = k => CASES[k]?.gif ? 0 : MYTHIC_P;
