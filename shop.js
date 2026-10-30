@@ -39,7 +39,12 @@ const STICKERS = [
   ST('soldiercat', '🪖', 'Kot żołnierz', 'mythic', 'assets/stickers/kot-zolnierz-cut.webp'),
   // 🥚 tylko z inkubatora (egg.js) – nie wypadają ze skrzynek
   ...[ST('chick', '🐣', "Pisklak", 'common', 'assets/stickers/px/069.webp'), ST('hatchling', '🐥', "Pingwinek", 'common', 'assets/stickers/px/022.webp'), ST('penguin', '🐧', "Pingwin", 'rare', 'assets/stickers/px/127.webp'), ST('parrot', '🦜', "Papuga", 'rare', 'assets/stickers/px/212.webp'),
-    ST('dino', '🦕', "Kameleon", 'epic', 'assets/stickers/px/081.webp'), ST('trex', '🦖', "Rekin", 'epic', 'assets/stickers/px/175.webp'), ST('dragonling', '🐲', "Smoczy liść", 'legendary', 'assets/stickers/px/015.webp'), ST('swan', '🦢', "Kaczka", 'legendary', 'assets/stickers/px/126.webp')].map(s => ({ ...s, hatch: true })),
+    ST('dino', '🦕', "Kameleon", 'epic', 'assets/stickers/px/081.webp'), ST('trex', '🦖', "Rekin", 'epic', 'assets/stickers/px/175.webp'), ST('dragonling', '🐲', "Smoczy liść", 'legendary', 'assets/stickers/px/015.webp'), ST('swan', '🦢', "Kaczka", 'legendary', 'assets/stickers/px/126.webp'),
+    // legendarne – tylko z jaj
+    ST('eg_phoenix', '🔥', "Feniks", 'legendary', 'assets/stickers/egg/phoenix.webp'), ST('eg_dragon', '🐉', "Fioletowy smok", 'legendary', 'assets/stickers/egg/dragon.webp'),
+    ST('eg_crown', '👑', "Korona królów", 'legendary', 'assets/stickers/egg/crown.webp'), ST('eg_scroll', '📜', "Zwój czarów", 'legendary', 'assets/stickers/egg/scroll.webp'),
+    ST('eg_sword', '🗡️', "Lodowy miecz", 'legendary', 'assets/stickers/egg/sword.webp'), ST('eg_amulet', '😇', "Anielski amulet", 'legendary', 'assets/stickers/egg/amulet.webp'),
+    ST('eg_void', '🌀', "Czarna dziura", 'legendary', 'assets/stickers/egg/void.webp'), ST('eg_claw', '🐾', "Smoczy pazur", 'legendary', 'assets/stickers/egg/claw.webp')].map(s => ({ ...s, hatch: true })),
 ];
 // 🔴 ultra rzadkie dropy w każdej skrzynce: mityczna naklejka i mega pula kryształów (po 0,1%)
 // 💎 w skrzynkach jako kryształ 8-bit
