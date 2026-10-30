@@ -1,5 +1,5 @@
 'use strict';
-/* 👥 Ucz się ze znajomymi – postęp grupy jak w Quizlecie. Grupa = wspólna talia (share.js): te same fiszki u wszystkich,
+/* 👥 Ucz się ze znajomymi – postęp grupy. Grupa = wspólna talia (share.js): te same fiszki u wszystkich,
    każdy ma własny postęp. Postęp każdej osoby (nowe / w nauce / opanowane, dziś) trafia do jej profilu (stats.grp),
    który widzą znajomi – więc widać go też, gdy kolega jest offline. Na żywo (kto teraz się uczy) – przez kanał Realtime.
    Zaproszenie linkiem: kto go otworzy (zalogowany), dodaje Cię do znajomych i prosi o dołączenie; Twoja aplikacja
@@ -142,7 +142,7 @@ Object.assign(ACTIONS, {
 const grpShareCard0 = shareCardHTML;
 shareCardHTML = d => {
   const sh = d.share, n = sh?.members?.length || 0;
-  return `<button class="card row nowrap g-cta" data-go="#/group/${d.id}"><span class="g-cta-ic">👥</span><div class="grow" style="text-align:left"><b>${sh ? `Postęp grupy · ${n} ${plural(n, 'osoba', 'osoby', 'osób')}` : 'Ucz się ze znajomymi'}</b><div class="small muted">${sh ? 'zobacz, jak wypadasz na tle znajomych' : 'zaproś linkiem i porównujcie postępy jak w Quizlecie'}</div></div><span>›</span></button>${cloudOn() && sh ? grpShareCard0(d) : ''}`;
+  return `<button class="card row nowrap g-cta" data-go="#/group/${d.id}"><span class="g-cta-ic">👥</span><div class="grow" style="text-align:left"><b>${sh ? `Postęp grupy · ${n} ${plural(n, 'osoba', 'osoby', 'osób')}` : 'Ucz się ze znajomymi'}</b><div class="small muted">${sh ? 'zobacz, jak wypadasz na tle znajomych' : 'zaproś linkiem i porównujcie postępy'}</div></div><span>›</span></button>${cloudOn() && sh ? grpShareCard0(d) : ''}`;
 };
 
 // ---------- 💬 czat grupy podczas nauki: pływający przycisk + panel od dołu (nie przerywa sesji)
