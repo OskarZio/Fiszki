@@ -2778,3 +2778,10 @@ img[src*="/px8/"] { image-rendering: pixelated; object-fit: contain; }
 img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !important; display: inline-block !important; vertical-align: -.22em !important; margin: 0 .04em !important; filter: none; }
 .hc-abil b img.abil8, .char small b img.abil8 { width: 1.6em !important; height: 1.6em !important; vertical-align: -.5em !important; margin-right: 3px !important; }
 .hc-stats i img.emo8 { width: 26px !important; height: 26px !important; }
+/* ranking: więcej oddechu w wierszu (nick → pasek → tytuł i statystyki) */
+.rankrow { padding-top: 14px !important; padding-bottom: 14px !important; }
+.rankrow > .grow { display: grid; gap: 8px; min-width: 0; }
+.rankrow > .grow > .progress, .rankrow > .grow > .pbar { margin: 2px 0 !important; }
+.rankrow .small.muted { line-height: 1.6; }
+.rankrow .ttl.ttl-l { display: inline-flex; align-items: center; gap: 4px; margin: 0 8px 4px 0 !important; vertical-align: middle; }
+.rankrow + .rankrow { margin-top: 4px; }
