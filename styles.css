@@ -2827,3 +2827,17 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .egg8 { position: relative; display: inline-block; aspect-ratio: 3 / 4; }
 .egg8 img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; display: block; }
 .egg8 .egg-cracks { position: absolute; inset: 14% 18% 8%; width: auto; height: auto; }
+/* 🌱 łąka jajek (jak w Forest): pikselowa trawa, jajka w swoich miejscach */
+.meadow { position: relative; margin: 12px 0 14px; height: calc(var(--rows) * 56px + 24px); border-radius: 18px; overflow: hidden; image-rendering: pixelated;
+  background:
+    radial-gradient(circle at 20% 30%, #6fbf3f 0 3px, transparent 4px) 0 0 / 46px 38px,
+    radial-gradient(circle at 70% 70%, #2f7d32 0 3px, transparent 4px) 0 0 / 58px 44px,
+    repeating-conic-gradient(#4caf3c 0 25%, #46a336 0 50%) 0 0 / 16px 16px;
+  box-shadow: inset 0 0 0 4px #2e6b23, inset 0 -10px 0 #2e6b23, 0 8px 22px -10px rgba(0,0,0,.6); border: 3px solid #1e4a17; }
+.meadow::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.12), transparent 30%, rgba(0,0,0,.18)); pointer-events: none; }
+.mw-egg { position: absolute; width: 38px; height: 46px; min-height: 0 !important; padding: 0 !important; background: none !important; box-shadow: none !important; transform: translate(-50%, -80%) scale(var(--s, 1)); }
+.mw-egg::after { content: ''; position: absolute; left: 18%; right: 18%; bottom: -2px; height: 7px; border-radius: 50%; background: rgba(0,0,0,.28); z-index: -1; }
+.mw-egg img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; display: block; filter: drop-shadow(0 2px 0 rgba(0,0,0,.25)); }
+.mw-egg.bad img { filter: grayscale(.85) brightness(.55); opacity: .65; }
+.mw-egg:not(.bad):active { transform: translate(-50%, -80%) scale(calc(var(--s, 1) * 1.15)); }
+.mw-empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: #fff; font-weight: 700; text-shadow: 0 2px 0 #1e4a17; }
