@@ -227,7 +227,7 @@ function nestHTML() {
   const seg = [['month', 'Miesiąc'], ['year', 'Rok'], ['all', 'Wszystkie']].map(([k, l]) => `<button class="${NEST.range === k ? 'on' : ''}" data-act="nest-range" data-k="${k}">${l}</button>`).join('');
   const nav = NEST.range === 'all' ? `<b>${R.label}</b>` : `<button class="iconbtn" data-act="nest-off" data-d="-1" aria-label="Wcześniej">‹</button><b>${R.label}</b><button class="iconbtn" data-act="nest-off" data-d="1" ${NEST.off >= 0 ? 'disabled' : ''} aria-label="Później">›</button>`;
   let body = '';
-  if (NEST.range === 'month') {
+  if (false) {
     const by = {}; for (const x of list) (by[dayKey(x.end)] = by[dayKey(x.end)] || []).push(x);
     const first = R.d, days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate(), lead = (first.getDay() + 6) % 7, today = dayKey(Date.now());
     body = `<div class="egg-cal">${['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'].map(d => `<b>${d}</b>`).join('')}${'<i></i>'.repeat(lead)}${Array.from({ length: days }, (_, i) => {
@@ -242,9 +242,11 @@ function nestHTML() {
   }
   const grid = ok.slice().reverse().slice(0, 120);
   // 🌱 łąka jak w Forest: każde jajko z wybranego okresu stoi na pikselowej trawie (stała pozycja dla każdego jajka)
-  const EGI = ['plain', 'green', 'blue', 'purple', 'gold', 'red'], field = list.slice(-300), cols = 7, rows = Math.max(2, Math.ceil(field.length / cols));
+  const EGI = ['plain', 'green', 'blue', 'purple', 'gold', 'red'], field = list.slice(-300), cols = 6, rows = Math.max(4, Math.ceil(field.length / cols));
   const rnd = k => { let h = 2166136261; for (const ch of String(k)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
-  const meadow = `<div class="meadow" style="--rows:${rows}"><div class="mw-in">${field.map((x, i) => { const c = i % cols, r = Math.floor(i / cols), tx = (c + .5 + (rnd(x.id) - .5) * .55) / cols * 100, ty = (r + .55 + (rnd(x.id + 'y') - .5) * .4) / rows * 100;
+  // jajka rozsiane po całej łące (stała, pseudolosowa kolejność pól), a nie stłoczone w górnych rzędach
+  const cellOrder = Array.from({ length: cols * rows }, (_, k) => k).sort((p, q) => rnd('c' + p) - rnd('c' + q));
+  const meadow = `<div class="meadow" style="--rows:${rows}"><div class="mw-in">${field.map((x, i0) => { const i = cellOrder[i0], c = i % cols, r = Math.floor(i / cols), tx = (c + .5 + (rnd(x.id) - .5) * .55) / cols * 100, ty = (r + .55 + (rnd(x.id + 'y') - .5) * .4) / rows * 100;
       const ti = Math.max(0, EGG_TIERS.findIndex(t => t.min === x.min));
       return `<button class="mw-egg${x.ok ? '' : ' bad'}" data-act="${x.ok ? 'cr-open' : 'noop'}" data-id="${x.id}" style="left:${tx.toFixed(1)}%;top:${ty.toFixed(1)}%;z-index:${r * 10 + 5};--s:${(.85 + ti * .07).toFixed(2)}" title="${x.min} min${x.ok ? '' : ' · pęknięte'}"><img src="assets/egg8/egg_${EGI[ti]}.webp" alt=""></button>`; }).join('')}
 </div>
