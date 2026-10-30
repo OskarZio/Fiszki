@@ -2849,3 +2849,6 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .meadow { height: calc(var(--rows) * 82px + 60px) !important; min-height: 380px; }
 .mw-in { inset: 66px 34px 26px !important; }
 .mw-egg { width: 50px !important; height: 60px !important; }
+.meadow { height: max(360px, calc(var(--rows) * 92px + 100px)) !important; }
+.mw-in { inset: 70px 20px 34px !important; }
+.mw-in { inset: auto 20px auto !important; top: 50% !important; height: calc(var(--rows) * 92px); transform: translateY(-38%); }

@@ -242,11 +242,10 @@ function nestHTML() {
   }
   const grid = ok.slice().reverse().slice(0, 120);
   // 🌱 łąka jak w Forest: każde jajko z wybranego okresu stoi na pikselowej trawie (stała pozycja dla każdego jajka)
-  const EGI = ['plain', 'green', 'blue', 'purple', 'gold', 'red'], field = list.slice(-300), cols = 6, rows = Math.max(4, Math.ceil(field.length / cols));
+  const EGI = ['plain', 'green', 'blue', 'purple', 'gold', 'red'], field = list.slice(-300), cols = 5, rows = Math.max(1, Math.ceil(field.length / cols));
   const rnd = k => { let h = 2166136261; for (const ch of String(k)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
-  // jajka rozsiane po całej łące (stała, pseudolosowa kolejność pól), a nie stłoczone w górnych rzędach
-  const cellOrder = Array.from({ length: cols * rows }, (_, k) => k).sort((p, q) => rnd('c' + p) - rnd('c' + q));
-  const meadow = `<div class="meadow" style="--rows:${rows}"><div class="mw-in">${field.map((x, i0) => { const i = cellOrder[i0], c = i % cols, r = Math.floor(i / cols), tx = (c + .5 + (rnd(x.id) - .5) * .55) / cols * 100, ty = (r + .55 + (rnd(x.id + 'y') - .5) * .4) / rows * 100;
+  // równa siatka: te same odstępy w poziomie i pionie, ostatni rząd wyśrodkowany
+  const meadow = `<div class="meadow" style="--rows:${rows}"><div class="mw-in">${field.map((x, i) => { const c = i % cols, r = Math.floor(i / cols), inRow = Math.min(cols, field.length - r * cols), tx = (c + .5 + (cols - inRow) / 2) / cols * 100, ty = (r + .5) / rows * 100;
       const ti = Math.max(0, EGG_TIERS.findIndex(t => t.min === x.min));
       return `<button class="mw-egg${x.ok ? '' : ' bad'}" data-act="${x.ok ? 'cr-open' : 'noop'}" data-id="${x.id}" style="left:${tx.toFixed(1)}%;top:${ty.toFixed(1)}%;z-index:${r * 10 + 5};--s:${(.85 + ti * .07).toFixed(2)}" title="${x.min} min${x.ok ? '' : ' · pęknięte'}"><img src="assets/egg8/egg_${EGI[ti]}.webp" alt=""></button>`; }).join('')}
 </div>
