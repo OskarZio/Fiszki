@@ -44,7 +44,7 @@ const STICKERS = [
 // 🔴 ultra rzadkie dropy w każdej skrzynce: mityczna naklejka i mega pula kryształów (po 0,1%)
 // 💎 w skrzynkach jako kryształ 8-bit
 const GEM8 = 'assets/gear8/crystal128.webp';
-const MYTHIC_P = .1, MEGA_GEMS_P = .1, MEGA_GEMS = 10000;
+const MYTHIC_P = .1, MEGA_GEMS_P = .1, MEGA_GEMS = 3000;
 // mityczna naklejka nie wypada ze skrzynki z GIF-ami (tam tylko mega kryształy)
 const mythicP = k => CASES[k]?.gif ? 0 : MYTHIC_P;
 const FREE_STICKERS = ['wave', 'thumb', 'phew'];
@@ -94,7 +94,7 @@ const EFFECTS = [
 const FLIP_MIN_MS = 1500;
 const studyPoints = l => !l.m ? 1 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .1 : 0) : 1;                 // do celu dziennego
 const studyGems = l => !l.m ? 0 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .05 : 0) : ({ ok: 1, close: .6 }[l.v] ?? 0);   // 💎 za samą naukę: wpisana dobrze = 1 💎, prawie = 0,6, źle = nic
-const QUIZ_GEM_CAP = 300;   // max 💎 dziennie z testów ABCD / pisemnych
+const QUIZ_GEM_CAP = 150;   // max 💎 dziennie z testów ABCD / pisemnych
 function earnedCoins() {
   let c = Object.keys(S.ach).reduce((a, id) => a + (typeof achReward === 'function' ? achReward(id) : 30), 0);   // trudne osiągnięcia: 150
   const perDay = {}; let study = 0;
@@ -131,7 +131,7 @@ const rollSticker = (odds, theme) => { const all = stPool(theme), r = rollRarity
 // Poza naklejkami w skrzynce mogą wypaść kryształy (różne kwoty, rzadko „jackpot”) albo darmowe ponowne losowanie
 const CASE_EXTRA = { gems: 20, respin: 7 };   // % szans
 // progi kryształów (pospolite → legendarne); legendarny drop = 1000 💎
-const GEM_PRIZES = { basic: [[20, 50], [50, 30], [150, 17], [1000, 3]], epic: [[60, 48], [150, 30], [400, 17], [1000, 5]], gif: [[40, 50], [100, 30], [250, 16], [1000, 4]] };
+const GEM_PRIZES = { basic: [[20, 50], [50, 30], [150, 17], [500, 3]], epic: [[60, 48], [150, 30], [400, 17], [500, 5]], gif: [[40, 50], [100, 30], [250, 16], [500, 4]] };
 // w zwykłych skrzynkach (nie GIF-owej) może wypaść GIF – tylko legendarny; % szans
 const CASE_GIF = { basic: 1, epic: 2, daily: 1.5 };
 const legendGifReady = () => typeof GIF_CASE !== 'undefined' && GIF_CASE.some(g => g.r === 'legendary');
@@ -211,7 +211,7 @@ ROUTES.shop = () => {
   return { tab: 'train', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/battles">‹</button><h1 class="grow">Sklep</h1>${coinsHTML()}</div>
   <details class="small muted shop-info"><summary>Skąd brać kryształy 💎?</summary>
-    <p><b>✍️ Udowodniona wiedza (najwięcej):</b> wpisana dobra odpowiedź = 1 💎 (prawie dobrze 0,6), 🔥 10 wpisanych dobrze z rzędu = +5 💎, 🌳 karta zapamiętana na 3 tygodnie = +3 💎 (przewijana +1), ukończony zestaw (wpisywanie ×2), testy ABCD / pisemne (do 300 💎 dziennie). Przewijanie bez wpisywania daje mało.</p>
+    <p><b>✍️ Udowodniona wiedza (najwięcej):</b> wpisana dobra odpowiedź = 1 💎 (prawie dobrze 0,6), 🔥 10 wpisanych dobrze z rzędu = +5 💎, 🌳 karta zapamiętana na 3 tygodnie = +3 💎 (przewijana +1), ukończony zestaw (wpisywanie ×2), testy ABCD / pisemne (do 150 💎 dziennie). Przewijanie bez wpisywania daje mało.</p>
     <p>Poza tym: bitwy, osiągnięcia (od 30 💎 za łatwe do 600 💎 za legendarne, platyna 2000 💎), dni z celem dziennym (20 💎), zadania dnia, testy, gry pamięciowe – i skrzynki. 🌞 <b>Codzienna skrzynka</b> (lepsze szanse!) za ukończony zestaw fiszek albo cel dzienny.</p></details>
   ${freeN ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${freeN}</b> darmowe ${plural(freeN, 'skrzynkę', 'skrzynki', 'skrzynek')}: ${freeKinds.map(k => `${crateImg(k, 'inline')} ${CASES[k].name} ×${itemCount('case', k)}`).join(', ')}</span>
     <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}

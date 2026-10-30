@@ -7,12 +7,12 @@
 
 const EGG_GRACE = 10000, EGG_IDLE = 90000, EGG_POMO = 25 * 60000, EGG_BREAK = 5 * 60000, SHIELD_PRICE = 60;
 const EGG_TIERS = [
-  { min: 15, odds: { common: 75, rare: 25 }, gems: 10, color: '#f8fafc', spot: '#cbd5e1' },
-  { min: 25, odds: { common: 55, rare: 33, epic: 10, legendary: 2 }, gems: 20, color: '#dbeafe', spot: '#60a5fa' },
-  { min: 45, odds: { common: 40, rare: 35, epic: 19, legendary: 6 }, gems: 35, color: '#dcfce7', spot: '#22c55e' },
-  { min: 60, odds: { common: 28, rare: 36, epic: 26, legendary: 10 }, gems: 50, color: '#ede9fe', spot: '#8b5cf6' },
-  { min: 90, odds: { common: 15, rare: 35, epic: 33, legendary: 17 }, gems: 100, mythic: 1, color: '#fef3c7', spot: '#f59e0b' },
-  { min: 120, odds: { common: 10, rare: 30, epic: 35, legendary: 25 }, gems: 150, mythic: 2, color: '#fee2e2', spot: '#dc2626' },
+  { min: 15, odds: { common: 75, rare: 25 }, gems: 25, color: '#f8fafc', spot: '#cbd5e1' },
+  { min: 25, odds: { common: 55, rare: 33, epic: 10, legendary: 2 }, gems: 45, color: '#dbeafe', spot: '#60a5fa' },
+  { min: 45, odds: { common: 40, rare: 35, epic: 19, legendary: 6 }, gems: 80, color: '#dcfce7', spot: '#22c55e' },
+  { min: 60, odds: { common: 28, rare: 36, epic: 26, legendary: 10 }, gems: 120, color: '#ede9fe', spot: '#8b5cf6' },
+  { min: 90, odds: { common: 15, rare: 35, epic: 33, legendary: 17 }, gems: 200, mythic: 1, color: '#fef3c7', spot: '#f59e0b' },
+  { min: 120, odds: { common: 10, rare: 30, epic: 35, legendary: 25 }, gems: 300, mythic: 2, color: '#fee2e2', spot: '#dc2626' },
 ];
 const EGG_EXCL = 50, EGG_BONUS_ST = 35;   // % naklejek tylko z inkubatora · % szans na bonusową naklejkę przy wykluciu   // % szans, że wykluje się naklejka dostępna tylko z inkubatora
 const EGG_STUDY_ROUTES = ['study', 'quiz', 'game', 'battle', 'weak', 'walk', 'ptrain', 'show', 'station', 'atlas'];
@@ -131,6 +131,8 @@ function eggSVG(min, prog = 0, broken = false) {
   if (broken) return `<svg class="egg-svg broken" viewBox="0 0 120 160"><g fill="${t.color}" stroke="#94a3b8" stroke-width="2.5">
     <path d="M8 104C8 132 30 152 60 152S112 132 112 104L98 96L86 108L72 94L60 108L47 95L34 108L21 96Z"/><path d="M22 70L32 82L44 70L56 84L66 72" transform="translate(-6 -22) rotate(-24 40 60)" fill="none"/>
     <path d="M60 8C80 8 96 30 104 58L90 66L80 54L68 66L56 54L44 66L33 56L18 64C26 32 42 8 60 8Z" transform="translate(-4 -10) rotate(-16 60 40)"/></g></svg>`;
+  const EGG_IMG = ['plain', 'green', 'blue', 'purple', 'gold', 'red'][Math.max(0, EGG_TIERS.indexOf(t))];
+  return `<span class="egg-svg egg8 st${st}"><img src="assets/egg8/egg_${EGG_IMG}.webp" alt="" draggable="false"><svg class="egg-cracks" viewBox="0 0 120 160"><g fill="none" stroke="#1e1b18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${cracks.slice(0, st).map(d => `<path d="${d}"/>`).join('')}</g></svg></span>`;
   return `<svg class="egg-svg st${st}" viewBox="0 0 120 160"><defs><radialGradient id="eg${min}" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="${t.color}"/><stop offset="1" stop-color="${t.spot}" stop-opacity=".55"/></radialGradient></defs>
     <path d="${egg}" fill="url(#eg${min})" stroke="${t.spot}" stroke-opacity=".6" stroke-width="2"/>
     <g fill="${t.spot}" opacity=".45"><circle cx="42" cy="56" r="6"/><circle cx="80" cy="88" r="8"/><circle cx="50" cy="118" r="5"/><circle cx="86" cy="44" r="4"/></g>

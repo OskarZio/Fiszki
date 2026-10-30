@@ -101,7 +101,7 @@ on('start', () => {
 });
 const COS_BY = Object.fromEntries(COS.map(c => [c.id, c]));
 const cosById = id => COS_BY[id] || null;
-const COS_CASE_PRICE = 350;
+const COS_CASE_PRICE = 400;
 const cosOwned = id => { const c = cosById(id); if (!c) return false; return c.feat ? cosFeatDone(c) || hasItem('cos', id) : hasItem('cos', id); };
 const cosFeatDone = c => { if (!c.feat) return false; if (c.feat.special) return (S.profile.disc || []).length > 0; const [a, b] = c.feat.p(); return a >= b; };
 // 🔒 cudze profile: tylko identyfikatory z katalogu, każdy w swoim slocie

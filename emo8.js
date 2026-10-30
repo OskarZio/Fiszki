@@ -14,6 +14,7 @@ const EMO8 = {
   '😀': 'ui8/r2_0', '😃': 'ui8/r2_0', '😄': 'ui8/r2_0', '😊': 'ui8/r2_0', '🙂': 'ui8/r2_0', '😉': 'ui8/r2_1', '😍': 'ui8/r2_2', '🥰': 'ui8/r2_2', '😂': 'ui8/r2_3', '🤣': 'ui8/r2_3',
   '😎': 'ui8/r2_4', '😘': 'ui8/r2_5', '😮': 'ui8/r2_6', '😲': 'ui8/r2_6', '🤯': 'ui8/r2_6', '😡': 'ui8/r2_7', '😠': 'ui8/r2_7', '😭': 'ui8/r3_0', '😢': 'ui8/r3_0',
   '😴': 'ui8/r3_1', '💤': 'ui8/r3_1', '😁': 'ui8/r3_2', '😅': 'ui8/r3_2', '🤔': 'ui8/r3_3', '😕': 'ui8/r3_3', '😐': 'ui8/r3_4', '😑': 'ui8/r3_4', '🤩': 'ui8/r3_5', '😜': 'ui8/r3_6', '😛': 'ui8/r3_6', '😇': 'ui8/r3_7',
+  '🥚': 'egg8/egg', '🪺': 'egg8/nest', '🐣': 'egg8/egg_green', '☕': 'stickers/px/002',
   '💖': 'px8/e_heartdark', '❤️': 'px8/e_heartbeat', '💗': 'px8/e_heartbeat', '🌠': 'px8/e_shootstar', '🦄': 'px8/e_unicorn', '⚗️': 'px8/b_flasks', '🧰': 'px8/b_chest',
 };
 const EMO8_RE = new RegExp(Object.keys(EMO8).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + '|⟦a:(\\w+):(\\d+)⟧', 'g');

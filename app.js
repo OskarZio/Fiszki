@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '199';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '200';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -559,7 +559,7 @@ function proofGems(s, c, verdict, ivl0) {
 }
 
 // 💎 Ukończony zestaw: im więcej fiszek, tym więcej kryształów; za wpisywanie ×2. Raz dziennie na talię i tryb (żeby nie farmić).
-const SET_GEM = 0.4, SET_TYPE_MUL = 2, SET_MIN = 5, SET_CAP = 250;
+const SET_GEM = 0.25, SET_TYPE_MUL = 2, SET_MIN = 5, SET_CAP = 120;
 function setDoneReward(s) {
   if (!s?.got || s.deckId === 'all' || s.reward) return;
   const day = dayKey(Date.now()); let n = 0; const parts = [];
