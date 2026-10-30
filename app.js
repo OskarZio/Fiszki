@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '192';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '194';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -796,6 +796,7 @@ function viewDeck(id, q) {
       return `<div class="sus-box row nowrap"><span class="grow small">🙈 Poza powtórkami: <b>${sus.length}</b>${kn ? ` · ✓ nauczone ${kn}` : ''}${sus.length - kn ? ` · 🚫 niepotrzebne ${sus.length - kn}` : ''}</span><button class="sm" data-act="sus-restore" data-id="${id}">Przywróć</button></div><div class="spacer"></div>`; })()}
     <button class="block sm${d.done ? ' primary' : ''}" data-act="deck-done" data-id="${id}" data-v="${d.done ? 0 : 1}">${d.done ? '↩️ Talia zdana – przywróć do nauki' : '🎓 Opanowane – zdałem, bez powtórek'}</button><div class="spacer"></div>
     ${examCardHTML(d)}
+    <button class="block deck-link-btn" data-act="deck-link" data-id="${d.id}">🔗 Udostępnij talię linkiem</button>
     ${typeof shareCardHTML === 'function' ? shareCardHTML(d) : ''}
     ${(() => { const bn = notes.filter(n => n.type === 'basic'); if (!bn.length) return ''; const m = deckDirMode(d), ex = bn.find(n => n.front && n.back) || bn[0], sh = t => esc(String(t || '').replace(/\s+/g, ' ').slice(0, 22));
       const lbl = { f: `${sh(ex.front)} → ?`, r: `${sh(ex.back)} → ?`, both: '⇄ obie strony' }[m], nxt = { f: 'odwrotnie', r: 'obie strony', both: 'tylko przód → tył' }[m];

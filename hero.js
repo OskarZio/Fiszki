@@ -303,8 +303,9 @@ const evolveHTML = () => EVOLVE ? `<div class="evolve-ov"><div class="evo-txt">C
 const heroBarHTML = () => { const L = heroLvAt(hero().xp), sp = skPoints();
   return `<div class="card hero-bar row nowrap" data-go="#/hero">${heroSVG('sm')}<div class="grow"><b>${heroFormName()} · poz. ${L.lv}${hero().pr ? ` · ★${hero().pr}` : ''}</b><div class="pbar"><i style="width:${(L.cur / L.need * 100).toFixed(1)}%"></i></div>
     <small class="muted">${sp ? `<b style="color:var(--accent)">${sp} ${plural(sp, 'punkt', 'punkty', 'punktów')} umiejętności do wydania!</b>` : 'postać · drzewko · ekwipunek'}</small></div>${livesHTML()}</div>`; };
-let HERO_TAB = 'char', HERO_PAGE = 0, HERO_UP = false;
+let HERO_EVO = -1, HERO_TAB = 'char', HERO_PAGE = 0, HERO_UP = false;
 ROUTES.hero = () => {
+  if (HERO_EVO < 0) HERO_EVO = heroForm();
   const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)], ld = lineDef();
   const tabs = [['char', '🎭', 'Postać'], ['tree', '🌳', `Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒', 'Ekwipunek'], ['shop', '🔨', 'Kowal']];
   const pane = {
@@ -346,19 +347,24 @@ ROUTES.hero = () => {
   <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow row nowrap" style="margin:0;gap:8px">${heroIcon()} Bohater</h1>${coinsHTML()}</div>
   <div class="card center hero-card hc2 pr-card-${Math.min(6, pr)}">
     <div class="hc-top"><div class="hc-id"><b class="hc-name">${esc(S.profile.nick || 'Bohater')}</b><small><b style="color:var(--accent)">${heroFormName()}</b> · ${PR_TITLES[Math.min(6, pr)]}${pr ? ` · ${'★'.repeat(Math.min(5, pr))}${pr > 5 ? '+' + (pr - 5) : ''}` : ''}</small></div><span class="hc-lv"><small>poziom</small><b>${L.lv}${L.max ? '★' : ''}</b></span></div>
-    <div class="hc-hp"><span class="hc-hpic">${heartPX()}</span><div class="hc-hpbar"><i></i><b>${st.hp} / ${st.hp}</b></div></div>
+    <div class="hc-hp2"><div class="hero-lives">${livesHTML()}</div><small>${st.hp} ❤️ HP w walce</small></div>
     <div class="hc-stage">${heroSVG('lg')}</div>
     ${heroHotbar(h)}
     <div class="hc-xp"><div class="pbar"><i style="width:${L.max ? 100 : (L.cur / L.need * 100).toFixed(1)}%"></i></div><small class="muted">${L.max ? 'Maksymalny poziom – czas na prestiż i ewolucję!' : `${Math.round(L.cur)} / ${Math.round(L.need)} XP do poziomu ${L.lv + 1}`}</small></div>
     ${L.max ? '<button class="primary block prestige-btn" data-act="hero-prestige">🌟 Prestiż i ewolucja</button>' : ''}
     <div class="hc-stats"><span><i>⚔️</i><b>×${st.atk.toFixed(2)}</b><small>atak</small></span><span><i>🎯</i><b>${Math.round(st.crit * 100)}%</b><small>krytyk</small></span><span><i>🛡️</i><b>${Math.round(st.def * 100)}%</b><small>obrona</small></span><span><i>🪽</i><b>${Math.round((st.dodge || 0) * 100)}%</b><small>unik</small></span></div>
     <div class="hero-abil hc-abil"><span><b>${ld.passive[0]}</b><small>${ld.passive[1]}</small></span><span><b>${ld.ult[0]}</b><small>supercios · ${st.ultNeed} dobre odpowiedzi</small></span></div>
-    <div class="hero-lives">${livesHTML()}</div>
-    <div class="evo-chain">${[0, 1, 2, 3].map(i => `<span class="${i <= heroForm() ? 'on' : ''}" title="${line.forms[i]}">${heroSVG('xs', i)}<small>${line.forms[i]}</small></span>`).join('<i>›</i>')}</div></div>
+    <div class="evo-car"><b class="evo-h">Ewolucje</b>
+      <div class="evo-view"><button class="evo-arr" data-act="evo-nav" data-d="-1" ${HERO_EVO <= 0 ? 'disabled' : ''} aria-label="Poprzednia">‹</button>
+        <div class="evo-big${HERO_EVO <= heroForm() ? ' on' : ''}">${heroSVG('lg evo-fig', HERO_EVO)}<b>${line.forms[HERO_EVO]}</b><small>${HERO_EVO <= heroForm() ? (HERO_EVO === heroForm() ? '✅ obecna forma' : '✅ odblokowana') : `🔒 ewolucja ${HERO_EVO + 1} – zdobywaj poziomy i prestiż`}</small></div>
+        <button class="evo-arr" data-act="evo-nav" data-d="1" ${HERO_EVO >= 3 ? 'disabled' : ''} aria-label="Następna">›</button></div>
+      <div class="evo-dots">${[0, 1, 2, 3].map(i => `<i class="${i === HERO_EVO ? 'on' : ''}${i <= heroForm() ? ' got' : ''}" data-act="evo-go" data-i="${i}"></i>`).join('')}</div></div</div></div>
   <div class="seg hero-tabs">${tabs.map(([k, i, l]) => `<button class="${HERO_TAB === k ? 'on' : ''}" data-act="hero-tab" data-k="${k}"><i>${i}</i><span>${l}</span></button>`).join('')}</div>
   ${pane[HERO_TAB] || pane.char}` };
 };
 Object.assign(ACTIONS, {
+  'evo-nav': el => { HERO_EVO = Math.max(0, Math.min(3, HERO_EVO + +el.dataset.d)); render(); },
+  'evo-go': el => { HERO_EVO = +el.dataset.i; render(); },
   'hero-tab': el => { HERO_TAB = el.dataset.k; render(); },
   'hero-eq': el => { const g = GEAR[el.dataset.id], h = hero(); if (!g) return; h.eq[g.slot] = h.eq[g.slot] === el.dataset.id ? undefined : el.dataset.id; h.mod = Date.now(); save(); render(); },
   'hero-sk': el => { const h = hero(); if (skPoints() < 1) return; lineSk(h)[el.dataset.id] = 1; if (pageDone(HERO_PAGE) && HERO_PAGE < 2) { HERO_PAGE++; setTimeout(() => celebrate(`📖 Strona ${PAGE_N[HERO_PAGE]} drzewka odblokowana!`, 'Nowe, mocniejsze gałęzie'), 200); } else if (treeDone() && !HERO_UP) setTimeout(() => celebrate('✨ Całe drzewko ukończone!', 'Teraz ulepszaj węzły: złote → platynowe → holograficzne'), 200); h.mod = Date.now(); S.stats.skills = Object.keys(lineSk(h)).length; if (lineDef().tree.some(([, ns]) => ns.every(n => lineSk(h)[n.id]))) S.stats.skillBranch = 1; save(); toast('🌳 Nowa umiejętność!'); render(); },

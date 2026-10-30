@@ -49,6 +49,18 @@ function importPack(P) {
   go('#/deck/' + d.id);
 }
 let IMPORT_TXT = '', IMPORT_SRC = '';
+// 🔗 talia w linku: pakiet tekstowy skompresowany (deflate) w adresie – działa bez konta i bez serwera; zdjęcia nie wchodzą
+const b64u = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = t => Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+async function packZip(txt) { const cs = new CompressionStream('deflate-raw'); const w = cs.writable.getWriter(); w.write(new TextEncoder().encode(txt)); w.close(); return b64u(new Uint8Array(await new Response(cs.readable).arrayBuffer())); }
+async function packUnzip(z) { const ds = new DecompressionStream('deflate-raw'); const w = ds.writable.getWriter(); w.write(unb64u(z)); w.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer()); }
+function deckPackText(d) {
+  const cl = t => String(t || '').replace(/\s*\|\s*/g, ' / ').replace(/\r?\n/g, '\\n').trim();
+  const ns = S.notes.filter(n => n.deckId === d.id), rev = ns.some(n => n.reverse);
+  return ['#fiszki', `#talia: ${d.name.replace(/^(👥|🏫)\s*/, '')}`, ...(d.subject ? [`#przedmiot: ${d.subject}`] : []), ...(rev ? ['#odwrotne: tak'] : []),
+    ...ns.map(n => n.type === 'cloze' ? cl(n.text) : n.front && n.back ? [cl(n.front), cl(n.back), ...(n.hint ? [cl(n.hint)] : [])].join(' | ') : '').filter(Boolean)].join('\n');
+}
+async function deckLink(d) { return `${location.origin}${location.pathname}#/import?d=${await packZip(deckPackText(d))}`; }
 ROUTES.import = (parts, q) => {
   const f = q.get('f') || '', fv = f + '#' + (q.get('v') || '');   // ?v=… wymusza ponowne pobranie (zaktualizowany pakiet)
   if (f && fv !== IMPORT_SRC && /^assets\/imports\/[\w.-]+\.txt$/.test(f)) {
@@ -56,6 +68,8 @@ ROUTES.import = (parts, q) => {
     fetch(f + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => { IMPORT_TXT = t; render(); })
       .catch(() => toast('Nie udało się pobrać pakietu – spróbuj za 1–2 min (GitHub publikuje plik)', 5000));
   }
+  const dz = q.get('d') || '';
+  if (dz && 'z:' + dz.length + dz.slice(-12) !== IMPORT_SRC) { IMPORT_SRC = 'z:' + dz.length + dz.slice(-12); packUnzip(dz).then(t => { IMPORT_TXT = t; render(); }).catch(() => toast('Ten link do talii jest uszkodzony albo niepełny', 4500)); }
   const P = parsePack(IMPORT_TXT);
   return { tab: 'add', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/add">‹</button><h1 class="grow" style="margin:0">📥 Pakiet fiszek</h1></div>
@@ -72,6 +86,13 @@ ROUTES.import = (parts, q) => {
     <button class="primary block" data-act="pack-import" style="min-height:54px">📥 Dodaj do aplikacji</button></div>` : ''}` };
 };
 Object.assign(ACTIONS, {
+  'deck-link': async el => {
+    const d = deckById(el.dataset.id); if (!d) return;
+    try { const url = await deckLink(d), n = S.notes.filter(x => x.deckId === d.id).length, t = `📚 Talia „${d.name}” (${n} fiszek) – otwórz i dodaj do Fiszek:`;
+      if (navigator.share) { try { await navigator.share({ title: d.name, text: t, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+      await navigator.clipboard.writeText(url); toast('🔗 Skopiowano link do talii', 2500);
+    } catch { toast('Nie udało się przygotować linku', 3000); }
+  },
   'pack-paste': async () => { try { IMPORT_TXT = await navigator.clipboard.readText(); render(); } catch { toast('Wklej ręcznie w pole (przytrzymaj → Wklej)'); } },
   'pack-preview': () => { IMPORT_TXT = $('#pack-in')?.value || ''; render(); },
   'pack-import': () => { IMPORT_TXT = $('#pack-in')?.value || IMPORT_TXT; importPack(parsePack(IMPORT_TXT)); },

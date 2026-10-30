@@ -2785,3 +2785,30 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .rankrow .small.muted { line-height: 1.6; }
 .rankrow .ttl.ttl-l { display: inline-flex; align-items: center; gap: 4px; margin: 0 8px 4px 0 !important; vertical-align: middle; }
 .rankrow + .rankrow { margin-top: 4px; }
+/* 🎰 kafelki w skrzynkach: ciemna karta z poświatą rzadkości, cienka ramka, podpis w plakietce */
+.tile, .cos-tile { position: relative; flex: 0 0 108px !important; height: 128px !important; border-radius: 16px !important; overflow: hidden; padding: 10px 6px 8px !important; gap: 6px !important;
+  background: radial-gradient(70% 55% at 50% 40%, color-mix(in srgb, var(--rc) 45%, transparent), transparent 75%), linear-gradient(180deg, #1c2033, #10131f) !important;
+  border: 2px solid color-mix(in srgb, var(--rc) 70%, transparent) !important; border-bottom-width: 2px !important;
+  box-shadow: 0 6px 18px -8px var(--rc), inset 0 1px 0 rgba(255,255,255,.08) !important; color: #fff !important; justify-content: space-between !important; }
+.tile::after, .cos-tile::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--rc); opacity: .9; }
+.tile > span, .cos-tile .cos-ic, .cos-tile .skinpx { flex: 1; display: grid !important; place-items: center; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+.tile small, .cos-tile small { font-size: 10.5px !important; font-weight: 700; line-height: 1.15; padding: 2px 8px; border-radius: 99px; background: rgba(0,0,0,.45); color: #fff !important; opacity: 1 !important;
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent); }
+.tile.prize-gems, .tile.prize-respin { background: radial-gradient(70% 55% at 50% 40%, color-mix(in srgb, var(--rc) 50%, transparent), transparent 75%), linear-gradient(180deg, #1c2033, #10131f) !important; }
+.tile.prize-gems small { color: #fecaca !important; }
+.tile[style*="#dc2626"], .tile[style*="#f59e0b"] { box-shadow: 0 0 20px -2px var(--rc), inset 0 0 18px -6px var(--rc) !important; }
+.roulette, .cos-spin { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25)) !important; }
+/* 🦸 serca zamiast paska HP, ewolucje w karuzeli ze strzałkami */
+.hc-hp2 { display: grid; justify-items: center; gap: 4px; } .hc-hp2 .hero-lives { margin: 0 !important; } .hc-hp2 small { color: var(--muted); font-size: 12px; }
+.evo-car { display: grid; gap: 10px; padding: 14px 10px 12px; border-radius: 18px; background: rgba(0,0,0,.22); }
+.evo-h { text-align: center; font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+.evo-view { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 6px; }
+.evo-arr { width: 44px; height: 44px; min-height: 0 !important; padding: 0 !important; border-radius: 50%; font-size: 26px; line-height: 1; background: var(--card2); }
+.evo-arr:disabled { opacity: .25; }
+.evo-big { display: grid; justify-items: center; gap: 4px; text-align: center; min-width: 0; }
+.evo-big .hero-fig { width: 132px !important; height: 132px !important; margin: 0 auto; }
+.evo-big:not(.on) .hero-fig { filter: grayscale(1) brightness(.45); }
+.evo-big b { font-size: 17px; } .evo-big small { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.evo-dots { display: flex; justify-content: center; gap: 8px; }
+.evo-dots i { width: 10px; height: 10px; border-radius: 99px; background: var(--line); cursor: pointer; transition: width .2s; } .evo-dots i.got { background: color-mix(in srgb, var(--accent) 55%, var(--line)); } .evo-dots i.on { width: 24px; background: var(--accent); }
+.deck-link-btn { margin: 12px 0; }
