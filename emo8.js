@@ -8,6 +8,12 @@ const EMO8 = {
   '⏱️': 'px8/b_stopwatch', '⏱': 'px8/b_stopwatch', '⏳': 'px8/b_hourglass', '🎓': 'px8/b_gradcap', '🧲': 'px8/b_magnet', '🩹': 'px8/b_medkit',
   '🐉': 'px8/b_dragon', '🐲': 'px8/b_dragon', '☄️': 'px8/b_comet', '🪶': 'px8/b_feather', '🧬': 'px8/b_dna', '⚛️': 'px8/b_atom', '🧠': 'px8/b_brain',
   '💍': 'px8/b_ring', '🏹': 'px8/b_bow', '🪽': 'px8/b_wing', '💥': 'px8/e_nova', '🎉': 'px8/e_popper', '👏': 'px8/e_clap', '🌈': 'px8/e_rainbow',
+  // emotki interfejsu (assets/ui8)
+  '📚': 'ui8/r0_0', '🃏': 'ui8/r0_1', '🏠': 'ui8/r0_2', '👥': 'ui8/r0_3', '📅': 'ui8/r0_4', '🗓️': 'ui8/r0_4', '🗓': 'ui8/r0_4', '✏️': 'ui8/r0_5', '✏': 'ui8/r0_5', '📝': 'ui8/r0_5',
+  '🗑️': 'ui8/r0_6', '🗑': 'ui8/r0_6', '📷': 'ui8/r0_7', '📸': 'ui8/r0_7', '🎁': 'ui8/r1_0', '🏆': 'ui8/r1_1', '🔒': 'ui8/r1_2', '🔐': 'ui8/r1_2', '🎲': 'ui8/r1_3', '🚩': 'ui8/r1_4',
+  '😀': 'ui8/r2_0', '😃': 'ui8/r2_0', '😄': 'ui8/r2_0', '😊': 'ui8/r2_0', '🙂': 'ui8/r2_0', '😉': 'ui8/r2_1', '😍': 'ui8/r2_2', '🥰': 'ui8/r2_2', '😂': 'ui8/r2_3', '🤣': 'ui8/r2_3',
+  '😎': 'ui8/r2_4', '😘': 'ui8/r2_5', '😮': 'ui8/r2_6', '😲': 'ui8/r2_6', '🤯': 'ui8/r2_6', '😡': 'ui8/r2_7', '😠': 'ui8/r2_7', '😭': 'ui8/r3_0', '😢': 'ui8/r3_0',
+  '😴': 'ui8/r3_1', '💤': 'ui8/r3_1', '😁': 'ui8/r3_2', '😅': 'ui8/r3_2', '🤔': 'ui8/r3_3', '😕': 'ui8/r3_3', '😐': 'ui8/r3_4', '😑': 'ui8/r3_4', '🤩': 'ui8/r3_5', '😜': 'ui8/r3_6', '😛': 'ui8/r3_6', '😇': 'ui8/r3_7',
   '💖': 'px8/e_heartdark', '❤️': 'px8/e_heartbeat', '💗': 'px8/e_heartbeat', '🌠': 'px8/e_shootstar', '🦄': 'px8/e_unicorn', '⚗️': 'px8/b_flasks', '🧰': 'px8/b_chest',
 };
 const EMO8_RE = new RegExp(Object.keys(EMO8).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + '|⟦a:(\\w+):(\\d+)⟧', 'g');
