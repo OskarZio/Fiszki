@@ -2740,3 +2740,13 @@ img[src*="/px8/"] { image-rendering: pixelated; object-fit: contain; }
 .skin-btns { display: grid; gap: 8px; margin-top: 10px; }
 .skin-big { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 6px; min-height: 0 !important; }
 .skin-big img { width: 100%; aspect-ratio: 1; object-fit: contain; object-position: center bottom; image-rendering: pixelated; }
+/* skiny: luźniejsza siatka – 3 w rzędzie, większe kafelki, pełne podpisy */
+.skin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 12px !important; }
+.skin-t { padding: 12px 8px 10px !important; gap: 6px !important; border-radius: 16px; }
+.skin-t b { font-size: 13px !important; line-height: 1.2; white-space: nowrap; }
+.skin-t small { font-size: 12px !important; }
+.skin-pic { max-width: 92px; margin: 0 auto; overflow: hidden; }
+.skin-pic.base img { transform: scale(var(--bs, 1)); transform-origin: 50% 100%; }
+.skin-case { margin-top: 16px !important; padding: 14px 16px !important; }
+.skin-case .small { line-height: 1.5; margin-top: 4px; }
+.skin-btns { gap: 10px !important; margin-top: 14px !important; }

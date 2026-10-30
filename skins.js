@@ -59,11 +59,13 @@ on('start', () => setTimeout(skinGrants, 1500));
 on('review', () => { if (Math.random() < .2) skinGrants(); });
 
 // ---------- karta skinów w zakładce „Postać”
+// bazowy sprite zajmuje tylko część kwadratu – powiększamy go tak, żeby był tej samej wielkości co skiny
+const skinBaseScale = (line, f) => { const b = typeof SPRITE_BOX !== 'undefined' && SPRITE_BOX[line]?.[f]; if (!b) return ''; const k = Math.min(94 / (b[2] - b[0]), 94 / (b[3] - b[1]), 3); return `--bs:${k.toFixed(2)}`; };
 function skinCardHTML() {
   const line = heroLine(), f = heroForm(), cur = mySkin(line), free = itemCount('skincase', 'free');
   return `<div class="card skin-card"><div class="row nowrap"><h2 class="grow" style="margin:0">🎨 Skiny – ${esc(CHAR_LINES[line]?.name || '')}</h2></div>
     <p class="small muted" style="margin:6px 0 12px">Każdy skin zmienia wygląd postaci we wszystkich ewolucjach. Widać go w walkach i pojedynkach.</p>
-    <div class="skin-grid"><button class="skin-t${cur ? '' : ' on'}" data-act="skin-eq" data-l="${line}" data-r=""><span class="skin-pic">${heroArt(line, f, hero().g === 'm' ? 'm' : 'w')}</span><b>Podstawowy</b></button>
+    <div class="skin-grid"><button class="skin-t${cur ? '' : ' on'}" data-act="skin-eq" data-l="${line}" data-r=""><span class="skin-pic base" style="${skinBaseScale(line, f)}">${heroArt(line, f, hero().g === 'm' ? 'm' : 'w')}</span><b>Podstawowy</b></button>
     ${SKIN_R.map(r => { const own = skinOwned(line, r); return `<button class="skin-t r-${r}${cur === r ? ' on' : ''}${own ? '' : ' locked'}" style="--rc:${SKIN_COL[r]}" data-act="${own ? 'skin-eq' : 'skin-lock'}" data-l="${line}" data-r="${r}"><span class="skin-pic"><img class="skinpx" src="${skinSrc(line, f, r)}" alt=""></span><b style="color:${SKIN_COL[r]}">${SKIN_NAME[r]}</b>${own ? '' : '<small>🔒</small>'}</button>`; }).join('')}</div>
     <div class="skin-case"><div class="grow"><b>🎨 Skrzynka skinów</b><div class="small muted">${SKIN_R.map(r => `<span style="color:${SKIN_COL[r]}">${SKIN_NAME[r]} ${SKIN_ODDS[r]}%</span>`).join(' · ')}<br>60% na postać, którą grasz · duplikat = 💎 · darmowa za każdą ewolucję</div></div></div>
     <div class="skin-btns">${free ? `<button class="primary" data-act="skin-open" data-free="1">🎁 Otwórz darmową (${free})</button>` : ''}<button class="${free ? '' : 'primary'}" data-act="skin-open">Otwórz za ${SKIN_PRICE} 💎</button></div></div>`;
