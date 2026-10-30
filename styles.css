@@ -2750,3 +2750,8 @@ img[src*="/px8/"] { image-rendering: pixelated; object-fit: contain; }
 .skin-case { margin-top: 16px !important; padding: 14px 16px !important; }
 .skin-case .small { line-height: 1.5; margin-top: 4px; }
 .skin-btns { gap: 10px !important; margin-top: 14px !important; }
+.skin-spin-wrap { width: min(100%, 520px); display: grid; gap: 14px; }
+.skin-spin-t { text-align: center; color: #fff; font-weight: 800; font-size: 20px; }
+.skin-tile { height: 132px !important; gap: 4px !important; }
+.skin-tile .skinpx { width: 84px; height: 84px; object-fit: contain; object-position: center bottom; image-rendering: pixelated; }
+.skin-tile small { color: var(--rc); }

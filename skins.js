@@ -35,6 +35,19 @@ function skinOpen(free) {
   const w = skinRoll(), dup = skinOwned(w.line, w.r);
   if (dup) S.wallet.push({ id: 'skindup-' + uid(), n: SKIN_DUP[w.r], why: 'skin-dup', t: Date.now() }); else addItem('skin', skinKey(w.line, w.r), 1);
   save();
+  // 🎰 animacja: pasek skinów przewija się i zatrzymuje na wygranym
+  const strip = Array.from({ length: 34 }, (_, i) => i === 29 ? w : skinRoll()), f = heroForm();
+  const sp = document.createElement('div'); sp.className = 'cos-ov';
+  sp.innerHTML = `<div class="skin-spin-wrap"><div class="skin-spin-t">🎨 Skrzynka skinów</div><div class="cos-spin"><div class="cos-strip">${strip.map(x => `<div class="cos-tile skin-tile r-${x.r}" style="--rc:${SKIN_COL[x.r]}"><img class="skinpx" src="${skinSrc(x.line, f, x.r)}" alt=""><small>${SKIN_NAME[x.r]}</small></div>`).join('')}</div><i class="cos-mark"></i></div></div>`;
+  document.body.append(sp);
+  const el = sp.querySelector('.cos-strip'), tw = sp.querySelector('.cos-tile')?.offsetWidth || 110;
+  const stop = 29 * (tw + 10) - (sp.querySelector('.cos-spin').offsetWidth / 2 - tw / 2) + (Math.random() * tw * .5 - tw * .25);
+  const anim = typeof cosAnimOn !== 'function' || cosAnimOn(), dur = anim ? 4200 : 300;
+  requestAnimationFrame(() => { el.style.transition = `transform ${dur}ms cubic-bezier(.12,.75,.12,1)`; el.style.transform = `translateX(${-stop}px)`; });
+  if (anim && typeof bossSfx === 'function') { let t = 0; const tick = () => { if (t > dur - 600) return; try { bossSfx('tick'); } catch { /* */ } t += 140 + t / 18; setTimeout(tick, 140 + t / 18); }; tick(); }
+  setTimeout(() => { sp.remove(); skinReveal(w, dup); }, dur + 300);
+}
+function skinReveal(w, dup) {
   const big = w.r === 'legendary' || w.r === 'mythic', name = CHAR_LINES[w.line]?.name || w.line;
   const ov = document.createElement('div'); ov.className = 'cos-ov rev r-' + w.r; ov.style.setProperty('--rc', SKIN_COL[w.r]);
   ov.innerHTML = `<div class="cos-rev card r-${w.r}">${big ? '<i class="cos-rays"></i>' : ''}
