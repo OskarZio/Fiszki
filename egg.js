@@ -11,8 +11,8 @@ const EGG_TIERS = [
   { min: 25, odds: { common: 55, rare: 33, epic: 10, legendary: 2 }, gems: 45, color: '#dbeafe', spot: '#60a5fa' },
   { min: 45, odds: { common: 40, rare: 35, epic: 19, legendary: 6 }, gems: 80, color: '#dcfce7', spot: '#22c55e' },
   { min: 60, odds: { common: 28, rare: 36, epic: 26, legendary: 10 }, gems: 120, color: '#ede9fe', spot: '#8b5cf6' },
-  { min: 90, odds: { common: 15, rare: 35, epic: 33, legendary: 17 }, gems: 200, mythic: 1, color: '#fef3c7', spot: '#f59e0b' },
-  { min: 120, odds: { common: 10, rare: 30, epic: 35, legendary: 25 }, gems: 300, mythic: 2, color: '#fee2e2', spot: '#dc2626' },
+  { min: 90, odds: { common: 15, rare: 35, epic: 33, legendary: 17 }, gems: 300, mythic: 1, color: '#fef3c7', spot: '#f59e0b' },
+  { min: 120, odds: { common: 10, rare: 30, epic: 35, legendary: 25 }, gems: 500, mythic: 2, color: '#fee2e2', spot: '#dc2626' },
 ];
 const EGG_EXCL = 50, EGG_BONUS_ST = 35;   // % naklejek tylko z inkubatora · % szans na bonusową naklejkę przy wykluciu   // % szans, że wykluje się naklejka dostępna tylko z inkubatora
 const EGG_STUDY_ROUTES = ['study', 'quiz', 'game', 'battle', 'weak', 'walk', 'ptrain', 'show', 'station', 'atlas'];
