@@ -45,7 +45,7 @@ new MutationObserver(() => { if (phQueued) return; phQueued = true; requestAnima
   .observe(document.body, { childList: true, subtree: true });
 phDecorate(document.getElementById('tabs'));
 // 💎 → 8-bitowy kryształ w każdym tekście (sklep, ekwipunek, skrzynki, nagłówek); atrybuty i pola formularzy zostają bez zmian
-const GEM8_IMG = '<img class="gem8" src="assets/gear8/gem0.webp" alt="💎" draggable="false">';
+const GEM8_IMG = '<img class="gem8" src="assets/gear8/crystal-sm.webp" alt="💎" draggable="false">';
 function gem8Decorate(root = document.body) {
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.includes('💎') && !n.parentElement?.closest('textarea, input, select, option, script, style, [contenteditable], svg') ? 1 : 3 });
   const hits = []; while (w.nextNode()) hits.push(w.currentNode);
