@@ -2986,3 +2986,15 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .mode-pick button.mt3 { box-shadow: inset 0 0 0 2px #22d3ee, 0 0 12px #22d3ee66 !important; } .mode-pick button.mt3 small { color: #67e8f9; font-weight: 800; }
 .mode-pick button.on.mt1, .mode-pick button.on.mt2, .mode-pick button.on.mt3 { outline: 3px solid var(--accent); outline-offset: 2px; }
 .bnode .medals { margin-top: 2px; }
+/* 🖥️ komputer: aplikacja w wyśrodkowanej kolumnie (jak telefon/tablet), pasek zakładek pod nią, większe ikonki */
+@media (min-width: 820px) {
+  html { background: var(--bg); }
+  body { background: radial-gradient(1200px 700px at 50% -10%, color-mix(in srgb, var(--accent) 14%, var(--bg)), var(--bg) 70%) fixed; }
+  main#view { max-width: 720px !important; width: 720px; margin: 0 auto; padding-left: 24px !important; padding-right: 24px !important; min-height: 100vh;
+    background: color-mix(in srgb, var(--bg) 88%, transparent); box-shadow: 0 0 0 1px var(--line), 0 30px 80px rgba(0,0,0,.35); }
+  #tabs { left: 50%; right: auto; width: 720px; transform: translateX(-50%); border: 1px solid var(--line); border-bottom: 0; border-radius: 18px 18px 0 0; }
+  #tabs a { font-size: 13px; } #tabs a span { font-size: 26px; } #tabs a .emo8, #tabs a img { width: 32px !important; height: 32px !important; }
+  #mode-fab { right: calc(50% - 360px + 16px); }
+  .hubnav a { font-size: 13.5px; } .hubnav a span { font-size: 26px; } .hubnav .emo8 { width: 30px !important; height: 30px !important; }
+  .toast, #toast { max-width: 640px; }
+}
