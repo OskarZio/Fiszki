@@ -483,7 +483,7 @@ function rollFx(B, a, pool, learn = false) {
   const P = pool.length ? pool : [a], strip = Array.from({ length: ROLL_AT + 3 }, (_, i) => i === ROLL_AT ? a : P[Math.random() * P.length | 0]), now = Date.now();
   // kolejka: drugie losowanie startuje po pierwszym
   B.rolls = (B.rolls || []).filter(r => now - r.t < ROLL_MS + 800); const t = B.rolls.length ? B.rolls[B.rolls.length - 1].t + ROLL_MS + 900 : now;
-  B.rolls.push({ a, strip, learn, t }); if (learn && B.learnFx) B.learnFx.t = t + ROLL_MS;
+  B.rolls.push({ a, strip, learn, t }); if (learn && B.learnFx) { B.learnFx.t = t + ROLL_MS + 500; setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, t - now + ROLL_MS + 3200); }
   for (const d of [t - now, t - now + ROLL_MS + 900]) setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, Math.max(0, d) + 20);
 }
 const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t && now - r.t <= ROLL_MS + 800); if (!R) return '';
@@ -598,7 +598,7 @@ function rollLoot(tier) {
 function grantLoot(it, key) {
   if (it.k === 'gear') {
     // duplikat = 🧱 materiał do kuźni (skraca ulepszanie o 1 h); rzadsze dają więcej
-    if (ownsGear(it.id)) { it.dup = true; it.mat = { common: 1, rare: 1, epic: 2, legendary: 3, mythic: 4 }[it.r] || 1; addItem('forgemat', 'mat', it.mat, key); }
+    if (ownsGear(it.id)) { it.dup = true; it.mat = 1; it.matK = MATS?.[it.r] ? it.r : 'common'; addItem('forgemat', it.matK, 1, key); }
     else addItem('gear', it.id, 1, key);
   }
   if (it.k === 'potion') addItem('potion', it.id, it.n, key);
@@ -607,7 +607,7 @@ function grantLoot(it, key) {
   if (it.k === 'boost') addItem('boost', it.id, 1, key);
 }
 const lootIcon = it => it.k === 'gear' ? gearImg(it.id) : it.k === 'potion' ? potionSVG(it.id) : it.k === 'boost' ? `<img class="gear-img" src="${fsrc(BOOSTS[it.id].img)}" alt="">` : it.k === 'egg' ? '<span class="loot-big">👑</span>' : `<img class="gear-img gem8" src="${GEM8}" alt="💎">`;
-const lootHTML = it => `${lootIcon(it)}${it.k === 'gear' ? `<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? (it.mat ? `DUPLIKAT → 🧱 ${it.mat} ${plural(it.mat, 'materiał', 'materiały', 'materiałów')} do kuźni` : it.up ? `DUPLIKAT → ulepszenie +${it.up}` : `DUPLIKAT → +${it.n} 💎`) : RARITY[it.r].name}</small>`
+const lootHTML = it => `${lootIcon(it)}${it.k === 'gear' ? `<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? (it.mat ? `DUPLIKAT → ${typeof MATS !== 'undefined' && MATS[it.matK] ? `${MATS[it.matK].n} (${MATS[it.matK].d})` : 'cegła'} do kuźni` : it.up ? `DUPLIKAT → ulepszenie +${it.up}` : `DUPLIKAT → +${it.n} 💎`) : RARITY[it.r].name}</small>`
   : it.k === 'potion' ? `<b>${POTIONS[it.id].name}${it.n > 1 ? ' ×' + it.n : ''}</b><small>${POTIONS[it.id].desc}</small>` : it.k === 'boost' ? `<b>${BOOSTS[it.id].name}</b><small>30 min</small>`
   : it.k === 'egg' ? '<b>Złote jajo</b><small>do inkubatora</small>' : `<b>+${it.n}</b><small>kryształy</small>`}`;
 const oddsHTML = tier => { const o = TIER_ODDS[Math.max(0, Math.min(4, tier))];
@@ -811,7 +811,7 @@ function fightView() {
     ${fm?.k === 'hit' ? `<b class="dmg me">−${fm.n}</b><i class="claw"></i>` : fm?.k === 'dodge' ? '<b class="dmg me dodge">Unik!</b>' : fm?.k === 'block' ? '<b class="dmg me dodge">Blok!</b>' : ''}
     ${B.coop && typeof coopMatesHTML === 'function' ? coopMatesHTML() : ''}
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 1600 ? `<div class="ult-banner phase-banner">📈 NOWA MOC: ${BOSS_ABIL[B.learnFx.a][1].toUpperCase()}</div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
+    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
     ${rollHTML(B, now)}
     <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}
