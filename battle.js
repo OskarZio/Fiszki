@@ -363,6 +363,18 @@ function receiveSabotage(k) {
 }
 
 // ============================================================ Bot
+// 🧑 „ludzki” bot: czas = reakcja + czytanie pytania + pisanie odpowiedzi (losowo, czasem chwila zawahania),
+// po błędzie zwalnia i myli się częściej (tilt), na fali przyspiesza; pomyłki: literówka, pomylenie z inną kartą albo pusto
+const randn = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+function humanMs(q, a, acc, mood = 0) {
+  const read = 900 + String(q || '').length * 38, type = String(a || '').length * (230 - 90 * acc), react = 600 + Math.random() * 900;
+  const hes = Math.random() < .18 ? 1500 + Math.random() * 3500 : 0;   // „hmm…”
+  return Math.max(1400, (react + read + type + hes) * Math.exp(.25 * randn()) * (1 + .12 * mood));
+}
+function humanWrong(card, cards) {
+  const r = Math.random(), other = cards.filter(c => c.a !== card.a);
+  if (r < .45) return typo(card.a); if (r < .8 && other.length) return other[Math.random() * other.length | 0].a; return '';
+}
 function botAfter(ms, fn) { const t = setTimeout(() => { if (B && B.role === 'bot' && B.phase !== 'end') fn(); }, ms); (B.botTimers = B.botTimers || []).push(t); }
 function botPlay() {
   const { acc, a, b } = B.botP;
@@ -389,12 +401,15 @@ function botPlay() {
 function botNext() {
   const bt = B.bot; if (!bt.queue.length) { B.oppDone = true; B.oppTotalMs = Date.now() - B.learnStart; maybeFinish(); return renderBattle(); }
   const ansLimit = (B.setup.opts?.ansSec || 999) * 1000;
-  const d = Math.min(ansLimit, (bt.a + Math.random() * (bt.b - bt.a)) * 1000 + (bt.frozen || 0)); bt.frozen = 0;
+  const i0 = bt.queue[0], c0 = B.setup.cards[i0], mood = bt.mood || 0;
+  // trudniejsza karta (długa odpowiedź) = dłuższe myślenie; pod presją limitu czasu bot się spieszy
+  const d = Math.min(ansLimit * (.6 + Math.random() * .35), humanMs(c0?.q, c0?.a, bt.acc, mood) + (bt.frozen || 0)); bt.frozen = 0;
   botAfter(d, () => {
     const i = bt.queue.shift(), card = B.setup.cards[i];
-    const ok = Math.random() < botCardChance(bt.acc, B.setup.cards.length, bt.learn, card.a.length);
+    const ok = Math.random() < clamp(botCardChance(bt.acc, B.setup.cards.length, bt.learn, card.a.length) - .06 * Math.max(0, mood) + .03 * Math.max(0, -mood), .05, .97);
+    bt.mood = ok ? Math.max(-3, mood - 1) : Math.min(3, mood + 1);
     B.oppAns = B.oppAns.filter(x => x.i !== i);
-    B.oppAns.push({ i, given: ok ? card.a : typo(card.a), ok, ms: d }); if (ok && B.setup.opts?.live !== false) hitFx('me'); maybeFinish(); if (B.phase === 'end') return;
+    B.oppAns.push({ i, given: ok ? card.a : humanWrong(card, B.setup.cards), ok, ms: d }); if (ok && B.setup.opts?.live !== false) hitFx('me'); maybeFinish(); if (B.phase === 'end') return;
     renderBattle(); botNext();
   });
 }

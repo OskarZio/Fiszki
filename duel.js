@@ -199,8 +199,10 @@ function duelBotTurn() {
     if (D !== d || d.phase !== 'fight' || d.turn !== 'opp') return;
     const opts = ['atk', 'atk', 'power', d.hp.opp < d.max.opp * .4 ? 'heal' : 'atk', d.hp.opp < d.max.opp * .55 ? 'guard' : 'power'].filter(x => d.botPP?.[x] !== 0), k = opts[Math.random() * opts.length | 0], x = duelCard(d);
     d.ask = { k, kind: duelKind(d, k), q: x.q, at: Date.now() }; render();
-    setTimeout(() => { if (D !== d || d.phase !== 'fight') return; const ok = Math.random() < .66, fast = ok && Math.random() < .3, crit = ok && Math.random() < .08, mv = DMOVES[k], acc = ok && duelKind(d, k) === 'type' ? (Math.random() < .55 ? 100 : 62 + Math.round(Math.random() * 33)) : null;
-      duelApply('opp', { k, ok, fast, slow: false, crit, ...(acc && acc < 100 ? { acc } : {}), dmg: ok && mv.dmg ? Math.round(mv.dmg * (acc ? acc / 100 : 1) * (fast ? 1.3 : 1) * (crit ? 1.5 : 1) * duelLvMul(d.opp) * duelStreakMul(d.streak.opp)) : 0, heal: ok && mv.heal ? Math.round(d.max.opp * mv.heal) : 0, q: x.q, a: x.a }); }, 2200 + Math.random() * 3000);
+    const Hb = d.botH = d.botH || { acc: typeof myBattleAccuracy === 'function' ? clamp(myBattleAccuracy() + (Math.random() - .5) * .12, .45, .85) : .66, mood: 0 };
+    const think = typeof humanMs === 'function' ? Math.min((DQ_MS[duelKind(d, k)] || 15000) * .9, humanMs(x.q, duelKind(d, k) === 'type' ? x.a : '', Hb.acc, Hb.mood) * (duelKind(d, k) === 'type' ? 1 : .6)) : 2500;
+    setTimeout(() => { if (D !== d || d.phase !== 'fight') return; const ok = Math.random() < clamp(Hb.acc - .06 * Math.max(0, Hb.mood), .2, .92); Hb.mood = ok ? Math.max(-3, Hb.mood - 1) : Math.min(3, Hb.mood + 1); const _ = 0, fast = ok && think < 3800, crit = ok && Math.random() < .08, mv = DMOVES[k], acc = ok && duelKind(d, k) === 'type' ? (Math.random() < .55 ? 100 : 62 + Math.round(Math.random() * 33)) : null;
+      duelApply('opp', { k, ok, fast, slow: false, crit, ...(acc && acc < 100 ? { acc } : {}), dmg: ok && mv.dmg ? Math.round(mv.dmg * (acc ? acc / 100 : 1) * (fast ? 1.3 : 1) * (crit ? 1.5 : 1) * duelLvMul(d.opp) * duelStreakMul(d.streak.opp)) : 0, heal: ok && mv.heal ? Math.round(d.max.opp * mv.heal) : 0, q: x.q, a: x.a }); }, think);
   }, 1100);
 }
 // ---------- timer pytania
@@ -314,7 +316,9 @@ function duelRound() {
   const x = duelCard(d), type = d.qf === 'type', r = { i: (d.ri || 0) + 1, q: x.q, a: x.a, kind: type ? 'type' : 'abcd', opts: type ? [] : shuffle([x.a, ...duelWrong(d, x, 3)]) }; d.ri = r.i;
   dSend({ t: 'round', ...r }); duelRoundShow(r);
   clearTimeout(d.rT); d.rT = setTimeout(() => duelResolve(r.i), speedMs(r) + 400);
-  if (d.bot) { const ok = Math.random() < .68, ms = (type ? 4000 : 2200) + Math.random() * (type ? 9000 : 5800), sc = ok ? (Math.random() < .5 ? 100 : 62 + Math.round(Math.random() * 33)) : 0;
+  if (d.bot) { const B2 = d.botH = d.botH || { acc: typeof myBattleAccuracy === 'function' ? clamp(myBattleAccuracy() + (Math.random() - .5) * .12, .45, .85) : .66, mood: 0 };
+    const ok = Math.random() < clamp(B2.acc - .06 * Math.max(0, B2.mood), .2, .92), ms = Math.min(speedMs(r) * .95, typeof humanMs === 'function' ? humanMs(r.q, type ? r.a : '', B2.acc, B2.mood) * (type ? 1 : .55) : 4000);
+    const sc = ok ? (Math.random() < .55 ? 100 : 62 + Math.round(Math.random() * 33)) : 0; B2.mood = ok ? Math.max(-3, B2.mood - 1) : Math.min(3, B2.mood + 1);
     setTimeout(() => { if (D === d && d.r?.i === r.i && !d.r.res) duelBuzz('opp', r.i, ok, ms, sc); }, ms); }
 }
 function duelRoundShow(r) {
