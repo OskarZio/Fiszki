@@ -99,10 +99,12 @@ const learnedN = cs => cs.filter(c => c.srs.state !== 'new').length;
 const deckLearned = d => learnedN(S.cards.filter(c => c.deckId === d.id && fightable(c)));
 const learnedAll = () => learnedN(S.cards.filter(mixFightable));
 function deckRec(d) {
-  const r = d.boss = d.boss || {};
+  const key = S.settings?.hardcore ? 'bossHC' : 'boss', r = d[key] = d[key] || {};
   if (!r.ch) { r.ch = {}; for (let i = 0; i < (r.stage || 0); i++) r.ch[i] = 1; }   // stary zapis „etap N” → pierwsze rozdziały pokonane
   return r;
 }
+const HCP = () => S.settings?.hardcore ? 'hc_' : '';
+function hcWipe() { S.hcHero = null; S.decks.forEach(d => { if (d.bossHC) { delete d.bossHC; touch(d); } }); for (const k of Object.keys(S.stats)) if (k.startsWith('hc_')) delete S.stats[k]; S.stats.hcDeaths = (S.stats.hcDeaths || 0) + 1; }
 function bossReset(b) {
   if (b.kind === 'cat') { delete S.stats['cb_' + b.id]; delete S.stats['cbp_' + b.id]; return; }
   const d = deckById(b.id); if (!d) return; const r = deckRec(d), k = masterKey(b);
@@ -112,7 +114,7 @@ function bossReset(b) {
 function bossPrestige(kind, id, i) {
   const b = bossFor(kind, id, i); if (!b || b.stars < 4) return;
   if (!confirm(`Prestiż bossa „${b.name}”?\n\nPuchary zaczynasz od nowa, a boss staje się o 35% silniejszy, z turbo-przeszkadzajkami. Nagrody +25% za każdy prestiż.`)) return;
-  if (kind === 'cat') { S.stats['cbp_' + id] = (S.stats['cbp_' + id] || 0) + 1; S.stats['cb_' + id] = 0; }
+  if (kind === 'cat') { S.stats[HCP() + 'cbp_' + id] = (S.stats[HCP() + 'cbp_' + id] || 0) + 1; S.stats[HCP() + 'cb_' + id] = 0; }
   else { const d = deckById(id), r = deckRec(d); r.noAuto = 1; if (kind === 'ch') { r.chP = r.chP || {}; r.chP[i] = (r.chP[i] || 0) + 1; r.ch[i] = 0; } else { r.finP = (r.finP || 0) + 1; r.fin = 0; } touch(d); }
   S.stats.bossPrestige = (S.stats.bossPrestige || 0) + 1; save(); toast('⭐ Boss wszedł na wyższy poziom prestiżu!'); render();
 }
@@ -131,6 +133,7 @@ function chapterJustLearned(c) {
   if (learnedN(chs[i]) < chs[i].length) return null;
   const k = 'chl_' + d.id + '_' + i; if (S.stats[k]) return null; S.stats[k] = 1; return i;
 }
+const bossChestImg = t => `<img class="crate-img bchest" src="assets/crates/bc_${t >= 5 ? 'fire' : t >= 4 ? 'void' : t >= 2 ? 'holy' : 'nature'}.webp" alt="" draggable="false">`;   // 📦 skrzynie bossów wg poziomu łupu
 const CAT_EMB = ['war', 'book', 'tree', 'holy', 'skull', 'ice', 'paw', 'storm', 'void', 'fire', 'time', 'shadow'];   // 🛡️ herby kategorii
 // ---------- 🐉 definicje bossów
 function bossFor(kind, id, i) {
@@ -150,7 +153,7 @@ function bossFor(kind, id, i) {
   }
   if (kind === 'cat') {
     const t = typeof topicById === 'function' && topicById(id); if (!t) return null;
-    const ds = topicDecks(t, true), cs = S.cards.filter(c => ds.some(d => d.id === c.deckId) && mixFightable(c)), stars = S.stats['cb_' + t.id] || 0, bp = S.stats['cbp_' + t.id] || 0, bo = bossOf(CAT_IDX[hashStr(t.id) % CAT_IDX.length]);
+    const ds = topicDecks(t, true), cs = S.cards.filter(c => ds.some(d => d.id === c.deckId) && mixFightable(c)), stars = S.stats[HCP() + 'cb_' + t.id] || 0, bp = S.stats[HCP() + 'cbp_' + t.id] || 0, bo = bossOf(CAT_IDX[hashStr(t.id) % CAT_IDX.length]);
     return { kind, id, bp, cards: cs.filter(c => c.srs.state !== 'new'), stars, diff: Math.min(4, 1 + stars), ...bo, img: 'assets/bosses/catboss.webp', name: 'Władca kategorii', emblem: CAT_EMB[hashStr(t.id) % CAT_EMB.length], title: `${t.emoji || '📁'} Kategoria „${t.name}” – ${ds.length} talie`,
       ok: learnedN(cs) >= 30 && ds.length >= 2, learned: learnedN(cs), need: 30, lockMsg: 'Kategoria z min. 2 taliami i 30 nauczonymi fiszkami', repeat: false, len: 40, pr };
   }
@@ -160,7 +163,7 @@ function bossFor(kind, id, i) {
   }
   if (kind === 'world') {
     const st = S.stats.worldStage || 0, bo = bossOf(WORLD_IDX[st % WORLD_IDX.length]), cs = S.cards.filter(c => mixFightable(c) && c.srs.state !== 'new');
-    return { kind, id: 'world', cards: cs, stars: st, diff: Math.min(4, 1 + Math.floor(st / 2)), ...bo, title: `🌍 Boss świata · etap ${st + 1} – wszystkie talie`,
+    return { kind, id: 'world', cards: cs, stars: st, diff: Math.min(4, 1 + Math.floor(st / 2)), ...bo, img: 'assets/bosses/world.webp', name: 'Władca świata', title: `🌍 Boss świata · etap ${st + 1} – wszystkie talie`,
       ok: cs.length >= WORLD_REQ, learned: cs.length, need: WORLD_REQ, lockMsg: `Naucz się ${WORLD_REQ} fiszek z dowolnych talii`, repeat: false, len: 50, pr };
   }
   return null;
@@ -676,14 +679,14 @@ function bossEnd(won, why) {
       if (masterKey(b)) { B.medal = masteryUp(b, B.mode); }
       if (b.kind === 'ch') { const d = deckById(b.id), r = deckRec(d); r.ch[b.i] = Math.min(STARS_MAX, (r.ch[b.i] || 0) + 1); r.wins = (r.wins || 0) + 1; touch(d); }
       if (b.kind === 'fin') { const d = deckById(b.id), r = deckRec(d); r.fin = Math.min(STARS_MAX, (r.fin || 0) + 1); touch(d); }
-      if (b.kind === 'cat') S.stats['cb_' + b.id] = (S.stats['cb_' + b.id] || 0) + 1;
+      if (b.kind === 'cat') S.stats[HCP() + 'cb_' + b.id] = (S.stats[HCP() + 'cb_' + b.id] || 0) + 1;
       if (b.kind === 'world') S.stats.worldStage = b.stars + 1;
     }
     S.stats.bossWins = (S.stats.bossWins || 0) + 1; S.stats.bossStageMax = Math.max(S.stats.bossStageMax || 0, b.diff + 1); if (flawless) S.stats.bossFlawless = (S.stats.bossFlawless || 0) + 1;
     B.flawless = flawless; bossSfx('win');
   } else {
     // 💀 hardcore: porażka kasuje puchary, medale i prestiż tego bossa
-    if (why === 'dead' && !B.coop && S.settings.hardcore && ['ch', 'fin', 'cat'].includes(b.kind)) { bossReset(b); B.hcReset = true; }
+    if (why === 'dead' && !B.coop && S.settings.hardcore) { hcWipe(); B.hcReset = true; }
     if (why === 'dead' && !B.coop) { loseLife(); B.lifeLost = true;
       // 📚 lekcja z porażki: rewanż dopiero po powtórzeniu fiszek, na których boss Cię pokonał
       const ids = [...new Set(B.missed)].slice(0, 15); if (ids.length >= 2) { S.stats.lesson = { k: bossKey(b), ids, name: b.name }; B.lesson = ids.length; } }
@@ -804,7 +807,7 @@ ROUTES.boss = parts => {
   ${(() => { const wb = bossFor('weekly'), n = Object.keys(bk()).length;
     return `<div class="card row nowrap weekly-cta" data-act="boss-sel" data-kind="weekly" data-id="weekly" data-i=""><span class="wk-art">${bossArt(wb)}</span><div class="grow"><b>🏆 Boss tygodnia: ${esc(wb.name)}</b><div class="small muted">Ten sam dla wszystkich do niedzieli · Twój rekord: ${weeklyBest().toLocaleString('pl')} obrażeń · ranking znajomych</div></div><span>›</span></div>
     <div class="card row nowrap bestiary-cta" data-go="#/bestiary"><span style="font-size:30px">📖</span><div class="grow"><b>Kronika bossów ${n}/50</b><div class="pbar"><i style="width:${n * 2}%"></i></div></div><span>›</span></div>`; })()}
-  <button class="block hc-toggle${S.settings.hardcore ? ' on' : ''}" data-act="boss-hardcore">${S.settings.hardcore ? '💀 Tryb hardcore: WŁĄCZONY (dotknij, by wyłączyć)' : '💀 Tryb hardcore – trudniej, porażka kasuje postęp bossa, nagrody ×1,5'}</button>
+  <button class="block hc-toggle${S.settings.hardcore ? ' on' : ''}" data-act="boss-hardcore">${S.settings.hardcore ? `💀 Świat hardcore – grasz w nim (rekord śmierci: ${S.stats.hcDeaths || 0}) · dotknij, by wrócić do zwykłego` : '💀 Świat hardcore – osobny bohater, jedna śmierć kasuje cały świat, nagrody ×1,5'}</button>
   <h2 class="bm-h">📚 Twoje talie <small class="muted">rozdziały po ${CH_SIZE} fiszek · finał = cała talia</small></h2>
   ${decks.filter(x => !x.d.done).map(({ d, chs }, k) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars).length;
     return `<details class="card bregion"${k < 2 ? ' open' : ''}><summary class="row nowrap"><b class="grow">${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} ${plural(chs.length, 'rozdział', 'rozdziały', 'rozdziałów')}${fin?.stars ? ' · 👑' : ''}</span></summary>
@@ -894,9 +897,9 @@ function endView() {
     <p class="small">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best} · +${B.xp} XP</p>${badgesHTML(B)}
     <div class="row" style="margin-top:10px"><button class="primary grow" data-act="weekly-start">⚔️ Jeszcze raz</button><button class="grow" data-go="#/rank">🏆 Ranking</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
   const chest = won && B.chest?.n ? (B.chest.open ? `<div class="loot">${B.loot.map((it, i) => `<div class="loot-it roll" style="--d:${i * .35}s;--rc:${RARITY[it.r || 'rare'].color}"><div class="roll-strip" style="--d:${i * .35}s">${Array.from({ length: 14 }, () => `<span>${lootIcon(rollLoot(B.chest.tier))}</span>`).join('')}<span>${lootIcon(it)}</span></div><div class="roll-res" style="--d:${1.6 + i * .35}s">${lootHTML(it)}</div></div>`).join('')}</div>`
-      : `<button class="chest-btn" data-act="boss-chest"><div class="chest closed crate">${crateImg('boss')}</div><b>🎁 Skrzynia ×${B.chest.n} – stuknij, by otworzyć!</b></button>`) + oddsHTML(B.chest.tier) : '';
+      : `<button class="chest-btn" data-act="boss-chest"><div class="chest closed crate">${bossChestImg(B.chest.tier)}</div><b>🎁 Skrzynia ×${B.chest.n} – stuknij, by otworzyć!</b></button>`) + oddsHTML(B.chest.tier) : '';
   const msg = won ? `${B.medal ? `🏅 ${MODES[B.mode].name}: <b>${MASTER_T[B.medal]}</b>! · ` : ''}+${B.gems} 💎 · +${B.xp} XP${B.rep ? ' · metoda opanowana (diament) – mniejsza nagroda' : ''}${B.caught ? ` · 🕵️ przyłapany ${B.caught}×${B.caught >= 2 ? ' (mniejsza skrzynia)' : ''}` : ''}`
-    : B.why === 'cards' ? `Skończyły się fiszki – boss przetrwał. Serce zostaje. +${B.xp} XP` : `${B.hcReset ? '💀 Hardcore: postęp tego bossa skasowany. ' : ''}${B.lifeLost ? '🖤 Tracisz serce. ' : ''}+${B.xp} XP. Ulepsz bohatera, kup mikstury i spróbuj znowu.`;
+    : B.why === 'cards' ? `Skończyły się fiszki – boss przetrwał. Serce zostaje. +${B.xp} XP` : `${B.hcReset ? '💀 Świat hardcore utracony – bohater i bossowie hardcore od zera. Główny profil nietknięty. ' : ''}${B.lifeLost ? '🖤 Tracisz serce. ' : ''}+${B.xp} XP. Ulepsz bohatera, kup mikstury i spróbuj znowu.`;
   return { tab: 'arena', focus: true, html: `
   <div class="card center boss-end ${won ? 'won' : 'lost'}">
     <div class="boss-stage ${won ? 'dead' : 'gloat'}">${bossArt(b)}${won ? '<div class="boss-boom"></div>' : ''}</div>
@@ -949,7 +952,7 @@ Object.assign(ACTIONS, {
   'boss-check': () => bossCheck(),
   'done-beaten': el => { const d = deckById(el.dataset.id); if (!d) return; const r = deckRec(d); if (r.noAuto) delete r.noAuto; else r.noAuto = 1; touch(d); save(); render(); },
   'boss-prestige': el => bossPrestige(el.dataset.kind, el.dataset.id, el.dataset.i === '' ? undefined : +el.dataset.i),
-  'boss-hardcore': () => { const on = !S.settings.hardcore; if (on && !confirm('💀 Tryb hardcore:\n• bossowie +50% silniejsi\n• poziomy postaci rosną 2× wolniej\n• porażka kasuje puchary i medale tego bossa\n• nagrody 💎 ×1,5\n\nWłączyć?')) return; S.settings.hardcore = on; save(); toast(on ? '💀 Hardcore włączony' : 'Hardcore wyłączony'); render(); },
+  'boss-hardcore': () => { const on = !S.settings.hardcore; if (on && !confirm('💀 Świat hardcore (jak w Minecrafcie):\n• osobny bohater od poziomu 1 i osobne puchary bossów\n• bossowie +50% silniejsi, poziomy 2× wolniej\n• jedna śmierć = cały świat hardcore od zera\n• Twój główny profil zostaje nietknięty\n• nagrody 💎 ×1,5\n\nWejść?')) return; S.settings.hardcore = on; save(); toast(on ? '💀 Wchodzisz do świata hardcore' : 'Wracasz do zwykłego świata'); render(); },
   'boss-pick': el => bossPick(+el.dataset.k),
   'boss-next': () => bossNext(),
   'boss-ult': () => useUlt(),

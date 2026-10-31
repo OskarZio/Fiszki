@@ -8,7 +8,8 @@ const hashStr = s => { let h = 2166136261; for (const ch of String(s)) h = Math.
 const HERO_MAX = 20;
 const HERO_DEF = () => ({ xp: 0, sk: {}, eq: {}, forge: {}, look: 1 + (Math.random() * 1e6 | 0), line: 'cat', g: Math.random() < .5 ? 'w' : 'm', pr: 0, boost: {}, mod: 0, lives: { n: 3, t: Date.now() } });
 function hero() {
-  const h = S.hero = S.hero || HERO_DEF();
+  // 💀 hardcore = osobny świat: własny bohater od zera (postać z głównego profilu), śmierć kasuje tylko ten świat
+  const h = S.settings?.hardcore ? (S.hcHero = S.hcHero || { ...HERO_DEF(), line: (S.hero || {}).line || 'cat', g: (S.hero || {}).g || 'w' }) : (S.hero = S.hero || HERO_DEF());
   // migracje: dawne płaskie umiejętności (s1…m4) → drzewka postaci; hełm z pancerza → na głowę
   if (h.sk && Object.keys(h.sk).some(k => /^[stm]\d$/.test(k))) h.sk = {};
   if (h.eq?.a === 'a_helmet') { h.eq.h = 'h_helmet'; delete h.eq.a; }
