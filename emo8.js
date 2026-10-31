@@ -7,6 +7,7 @@ const EMO8 = {
   '👤': 'ui8/h_profile', '📋': 'ui8/h_quests', '🗃️': 'ui8/h_collection', '🗃': 'ui8/h_collection', '🥉': 'cups/bronze', '🥈': 'cups/silver', '🏆': 'cups/diamond', '📁': 'cups/c_book',
   '🔁': 'ui8b/sync', '💡': 'ui8b/bulb', '➕': 'ui8b/plus', '💀': 'ui8b/skull', '🎤': 'ui8b/mic', '📖': 'ui8b/book', '🖼️': 'ui8b/picture', '🖼': 'ui8b/picture', '🗼': 'ui8b/tower', '💬': 'ui8b/chat', '🎨': 'ui8b/palette', '▶️': 'ui8b/play', '▶': 'ui8b/play', '🏫': 'ui8b/school', '✍️': 'ui8b/write', '✍': 'ui8b/write', '🔄': 'ui8b/refresh',
   '🔀': 'dis8/scramble', '⏪': 'dis8/reverse', '💣': 'dis8/bomb',
+  '🧛': 'ui8b/vamp', '💨': 'ui8b/dodge',
   '📈': 'ui8/chart', '🌍': 'ui8/globe', '🌎': 'ui8/globe', '🌏': 'ui8/globe', '🧱': 'mat8/gray', '🐛': 'bugs8/caterpillar', '🐞': 'bugs8/ladybug', '🦋': 'bugs8/butterfly', '🐌': 'bugs8/snail', '🕷️': 'bugs8/spider', '🐝': 'bugs8/bee', '🦊': 'ui8/paw', '🎭': 'ui8/tab_postac', '🌳': 'ui8/tab_drzewko', '🎒': 'ui8/tab_plecak', '🔨': 'ui8/tab_kowal',
   '⚔️': 'px8/b_swords', '⚔': 'px8/b_swords', '🎯': 'px8/b_target', '🛡️': 'px8/b_shield', '🛡': 'px8/b_shield', '🔥': 'px8/b_fire', '⚡': 'px8/b_bolt',
   '👑': 'px8/b_crown2', '🧪': 'px8/b_potion', '⭐': 'px8/e_star', '✨': 'px8/b_sparkle', '💯': 'px8/e_hundred', '🔮': 'px8/b_orb', '📜': 'px8/b_scroll',

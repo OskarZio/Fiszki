@@ -17,7 +17,12 @@ const BLESS = {
   combo: ['🔥', 'Rozpęd', 'seria rośnie 2× szybciej'], guard: ['🔰', 'Tarcza na start', 'każde piętro zaczynasz z 2 blokami'],
   ult: ['⚡', 'Burza', 'supercios ładuje się o 2 odpowiedzi szybciej', 1], phoenix: ['🕊️', 'Feniks wieży', 'raz w wieży wstajesz z 40% ❤️', 1],
   gamble: ['🎲', 'Rzut kością', '50/50: pełne ❤️ albo −30% ❤️', 1], pact: ['💀', 'Pakt krwi', '+30% obrażeń, ale −30% ❤️', 1], gold: ['💰', 'Chciwość', 'od teraz +50% XP i 💎 za piętro'],
+  first: ['🗡️', 'Zasadzka', 'pierwszy cios na każdym piętrze ×2 (każdy poziom +0,5)'], regen: ['🌿', 'Odnowa', 'dobra odpowiedź leczy 2 ❤️'],
+  exec: ['🪓', 'Egzekutor', 'boss < 25% ❤️ → +40% obrażeń'], abcd: ['🎯', 'Snajper', 'ABCD: cios +20%'], type: ['✍️', 'Pióro', 'wpisywanie: cios +25%'],
+  steady: ['🧘', 'Zimna krew', '„Ledwo” nie przerywa serii', 0, 1], cleanse: ['🧹', 'Oczyszczenie', 'boss traci 1 moc wieży', 1],
 };
+// perki się sumują (poziom = ile razy wzięty); jednorazowe (5. pole = 1) nie wracają po wzięciu
+const blessLv = (T, k) => (T.blv || {})[k] || 0;
 const FLOOR_HEAL = .35;   // po każdym piętrze wraca 35% ❤️
 // TW_GK: ta sama wieża, ale z pytaniami z wiedzy ogólnej (gk.js) – osobna wspinaczka i rekord
 let TW_GK = false;
@@ -39,14 +44,14 @@ function towerFloor() {
   const b = towerBoss(T); if (!b.ok) return toast(`Wieża wymaga ${TOWER_REQ} nauczonych fiszek`);
   const hs = heroStats(), u = T.buff; hs.atk *= 1 + (u.dmg || 0); hs.crit = Math.min(.7, hs.crit + (u.crit || 0)); hs.hp += u.hp || 0;
   hs.dodge = Math.min(.5, hs.dodge + (u.dodge || 0)); hs.time *= 1 + (u.time || 0); hs.vamp += u.vamp || 0; hs.thorns += u.thorns || 0;
-  hs.combo *= 1 + (u.combo || 0); hs.ultNeed = Math.max(2, hs.ultNeed - (u.ult || 0)); if (u.phoenix && !T.phoenixUsed) hs.second = true;
+  hs.combo *= 1 + (u.combo || 0); hs.first = Math.max(hs.first, u.first ? 1.5 + .5 * u.first : 1); hs.regen += u.regen || 0; hs.exec += u.exec || 0; hs.abcdM += u.abcdM || 0; hs.typeM += u.typeM || 0; if (u.steady) hs.steady = true; hs.ultNeed = Math.max(2, hs.ultNeed - (u.ult || 0)); if (u.phoenix && !T.phoenixUsed) hs.second = true;
   if (!T.mode) T.mode = TW_GK ? 'abcd' : BOSS_PICK.mode;
   T.abil = Array.isArray(T.abil) ? T.abil.filter(a => BOSS_ABIL[a]) : [];
   let fresh = null; if (T.abil.length < T.floor) { fresh = towerCurse(T.abil); if (fresh) T.abil.push(fresh); }
   b.curses = true;
   const p = bossParams(b, T.mode); p.abil = [...T.abil]; p.hp = Math.round(p.hp * (1 + .06 * T.floor) * (TW_GK ? 1.7 : 1)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
   T.hp = Math.min(T.hp, hs.hp);
-  bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 : 0, mode: T.mode }, p);
+  bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 * u.guard : 0, mode: T.mode }, p);
   if (u.phoenix && !T.phoenixUsed) BOSS.second = true;
   save(); towerIntro(BOSS, fresh);
 }
@@ -70,7 +75,7 @@ function towerEnd(B, won) {
     B.towerHeal = Math.round(B.meMax * FLOOR_HEAL); T.hp = Math.min(B.meMax, Math.round(B.me + B.towerHeal)); T.floor = f + 1;
     S.stats[twBestKey()] = Math.max(towerBest(), f); S.stats.bossWins = (S.stats.bossWins || 0) + 1;
     // 3 do wyboru; rzadkie mają mniejszą szansę, jedno miejsce zawsze dla czegoś leczącego, gdy ❤️ < 50%
-    const pool = shuffle(Object.keys(BLESS).filter(k => !(k === 'phoenix' && T.buff.phoenix) && (!BLESS[k][3] || Math.random() < .35)));
+    const pool = shuffle(Object.keys(BLESS).filter(k => !(k === 'phoenix' && T.buff.phoenix) && !(BLESS[k][4] && blessLv(T, k)) && !(k === 'cleanse' && !(T.abil || []).length) && (!BLESS[k][3] || Math.random() < .35)));
     T.pick = pool.slice(0, 3); if (T.hp < B.meMax / 2 && !T.pick.some(k => k === 'heal' || k === 'maxhp')) T.pick[2] = 'heal';
   } else {
     B.towerLost = { floor: T.floor, ...T.bank }; S.stats[twBestKey()] = Math.max(towerBest(), T.floor - 1); delete h[twKey()];
@@ -83,7 +88,11 @@ function towerBless(k) {
   if (k === 'heal') T.hp = Math.min(mx, T.hp + Math.round(mx * .5));
   if (k === 'dmg') add('dmg', .12); if (k === 'crit') add('crit', .08); if (k === 'dodge') add('dodge', .1); if (k === 'time') add('time', .4);
   if (k === 'maxhp') { add('hp', 25); T.hp += 25; } if (k === 'vamp') add('vamp', .1); if (k === 'thorns') add('thorns', .25); if (k === 'combo') add('combo', 1);
-  if (k === 'guard') u.guard = 1; if (k === 'ult') add('ult', 2); if (k === 'phoenix') u.phoenix = 1;
+  if (k === 'guard') add('guard', 1); if (k === 'first') add('first', 1); if (k === 'regen') add('regen', 2); if (k === 'exec') add('exec', .4);
+  if (k === 'abcd') add('abcdM', .2); if (k === 'type') add('typeM', .25); if (k === 'steady') u.steady = 1;
+  if (k === 'cleanse' && T.abil?.length) { const x = T.abil.splice(Math.random() * T.abil.length | 0, 1)[0]; toast(`🧹 Boss traci moc: ${BOSS_ABIL[x]?.[1] || x}`, 3000); }
+  T.blv = T.blv || {}; T.blv[k] = (T.blv[k] || 0) + 1;
+  if (k === 'guard') u.guard = u.guard; if (k === 'ult') add('ult', 2); if (k === 'phoenix') u.phoenix = 1;
   if (k === 'gamble') { const win = Math.random() < .5; T.hp = win ? mx : Math.max(1, Math.round(T.hp * .7)); toast(win ? '🎲 Wygrana! Pełne ❤️' : '🎲 Pech… −30% ❤️', 3000); }
   if (k === 'pact') { add('dmg', .3); T.hp = Math.max(1, Math.round(T.hp * .7)); }
   if (k === 'gold') add('gold', .5);
@@ -107,7 +116,7 @@ function towerAfterView() {
   return { tab: 'arena', focus: true, html: `<div class="card center boss-end won"><div class="boss-stage dead">${bossArt(B.b)}<div class="boss-boom"></div></div>
     <h2>${TW_GK ? '🧠' : '🗼'} Piętro ${T.floor - 1} zdobyte!</h2><p class="small">+${g.xp} XP, +${g.gems} 💎 · w tej wspinaczce razem <b>+${T.bank.xp} XP, +${T.bank.gems} 💎</b></p>
     <div class="tower-hp">${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}</div><p class="small muted" style="margin:4px 0">❤️ +${B.towerHeal || 0} za ukończone piętro</p>${towerBuffsHTML(T)}
-    ${T.pick ? `<h3>Wybierz błogosławieństwo</h3><div class="bless">${T.pick.map(k => `<button class="${BLESS[k][3] ? 'epic' : ''}" data-act="tower-bless" data-k="${k}">${BLESS[k][3] ? '<em>RZADKIE</em>' : ''}<span>${BLESS[k][0]}</span><b>${BLESS[k][1]}</b><small>${BLESS[k][2]}</small></button>`).join('')}</div>`
+    ${T.pick ? `<h3>Wybierz błogosławieństwo</h3><div class="bless">${T.pick.map(k => `<button class="${BLESS[k][3] ? 'epic' : ''}" data-act="tower-bless" data-k="${k}">${BLESS[k][3] ? '<em>RZADKIE</em>' : ''}<span>${BLESS[k][0]}</span><b>${BLESS[k][1]}${blessLv(T, k) ? ` <i class="lv-badge">Lv ${blessLv(T, k) + 1}</i>` : ''}</b><small>${BLESS[k][2]}</small></button>`).join('')}</div>`
       : `${TW_GK ? '' : towerWeaponHTML(T)}<button class="primary block boss-go" data-act="tower-next" style="margin-top:10px">⚔️ Piętro ${T.floor}${T.floor % TOWER_GUARD === 0 ? ' – strażnik!' : ''}</button>`}</div>` };
 }
 ROUTES.tower = () => { TW_GK = false; const T = tower();

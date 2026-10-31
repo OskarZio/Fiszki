@@ -522,7 +522,7 @@ function rollFx(B, a, pool, learn = false) {
     let k = bag.findIndex(x => x !== strip[i - 1] && !(i === ROLL_AT - 1 && x === a) && !(i === ROLL_AT + 1 && x === a)); if (k < 0) k = 0; strip.push(bag.splice(k, 1)[0] ?? P[0]); }
   // kolejka: drugie losowanie startuje po pierwszym
   B.rolls = (B.rolls || []).filter(r => now - r.t < ROLL_MS + 800); const t = B.rolls.length ? B.rolls[B.rolls.length - 1].t + ROLL_MS + 900 : now;
-  B.rolls.push({ a, strip, learn, t }); B.qAt = Math.max(B.qAt || 0, t + ROLL_MS + 800);   // zegar pytania startuje po losowaniu if (learn && B.learnFx) { B.learnFx.t = t + ROLL_MS + 500; setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, t - now + ROLL_MS + 3200); }
+  B.rolls.push({ a, strip, learn, t }); B.qAt = Math.max(B.qAt || 0, t + ROLL_MS + 800); /* zegar pytania startuje po losowaniu */ if (learn && B.learnFx) { B.learnFx.t = t + ROLL_MS + 500; setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, t - now + ROLL_MS + 3200); }
   for (const d of [t - now, t - now + ROLL_MS + 900]) setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, Math.max(0, d) + 20);
 }
 const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t && now - r.t <= ROLL_MS + 800); if (!R) return '';
