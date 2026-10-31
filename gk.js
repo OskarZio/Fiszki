@@ -200,6 +200,17 @@ const GK_SRS = Object.freeze({ state: 'gk', due: Infinity, lapses: 0, reps: 0 })
 const GK_ALL = (() => { const hand = GK_Q.map((x, i) => ({ k: String(i), lvl: x[0], cat: x[1], q: x[2], a: x[3], w: x.slice(4) })), qs = new Set(hand.map(x => x.q));
   return [...hand, ...(typeof GKD !== 'undefined' ? GKD.filter(x => !qs.has(x.q)) : [])]; })();
 const GK_MAP = new Map(GK_ALL.map(x => [x.k, x]));
+// 🌐 biblioteka z Wikidata (assets/gk/wd.json, CC0) – doczytywana przy starcie, działa też offline (service worker)
+const gkH32 = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return (h >>> 0).toString(36); };
+let GK_WD = 0;
+async function gkLoadWD() {
+  if (GK_WD) return; GK_WD = -1;
+  try { const r = await fetch('assets/gk/wd.json'); if (!r.ok) return; const d = await r.json(), qs = new Set(GK_ALL.map(x => x.q));
+    for (const x of d.q || []) { const [lvl, cat, q, a, ...w] = x; if (qs.has(q) || w.length < 3) continue; const k = 'wd_' + gkH32(q); if (GK_MAP.has(k)) continue;
+      const o = { k, lvl, cat, q, a, w: w.slice(0, 3) }; GK_ALL.push(o); GK_MAP.set(k, o); qs.add(q); GK_WD++; }
+    GK_WD++; } catch { GK_WD = 0; }
+}
+on('start', () => gkLoadWD());
 const gkCard = id => { if (!String(id).startsWith('gk:')) return null; const x = GK_MAP.get(String(id).slice(3)); if (!x) return null;
   return { id, gk: true, deckId: 'gk', lvl: x.lvl, cat: x.cat, q: x.q, a: x.a, w: x.w, srs: GK_SRS }; };
 // 🧠 pamięć zadanych pytań (między wspinaczkami): pytanie wraca dopiero, gdy przerobisz całą pulę danego poziomu
