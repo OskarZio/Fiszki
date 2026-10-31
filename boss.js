@@ -73,6 +73,7 @@ const BOSS_ABIL = { heal: ['💚', 'Regeneracja', 'leczy się'], shield: ['🛡�
 const ABIL_TIER = { shield: 0, heal: 0, ice: 1, bugs: 1, fog: 1, poison: 2, mirror: 2, silence: 3, whirl: 3, eclipse: 3 };
 const DISRUPT = ['fog', 'mirror', 'whirl', 'eclipse'];
 const ABIL_ORDER = ['shield', 'ice', 'heal', 'bugs', 'poison', 'silence', 'rage'];
+const BUG8 = ['ladybug', 'bee', 'caterpillar', 'spider', 'snail', 'worm', 'butterfly', 'firefly'];   // 🐞 8-bitowe robaczki przeszkadzajki
 const BOSS_MOVES = ['Cios zapomnienia', 'Fala prokrastynacji', 'Podchwytliwe pytanie', 'Pustka w głowie', 'Atak terminu', 'Wir notatek'];
 const THINK_S = [0, 25, 18, 14, 11];   // limit namysłu wg trudności (0 = bez limitu)
 const MODES = { abcd: { name: 'ABCD', icon: '🔤', mul: '×0,5', desc: 'wybierasz z 4 odpowiedzi' }, flip: { name: 'Fiszki', icon: '🃏', mul: '×1', desc: 'odkrywasz i oceniasz' },
@@ -213,6 +214,9 @@ function weakCards(b) {
 }
 // karty do ataku: najpierw pomyłki z tej walki, potem „słabe” z historii, na końcu reszta widzianych
 function parryPool(B) {
+  // 🧠 wieża wiedzy: ataki specjalne (podstęp, QTE, cios) dostają ŚWIEŻE pytania z biblioteki – nie powtarzają tych z walki
+  if (B.b.gk && typeof gkPick === 'function') { const T = { floor: B.b.i || 1, used: [...B.ids, ...(B.gkx || [])].map(id => String(id).replace(/^gk:/, '')) }, cs = gkPick(T, 3);
+    B.gkx = [...(B.gkx || []), ...cs.map(c => c.id)]; return cs.map(c => ({ id: c.id, weak: false, c })); }
   const seen = B.ids.slice(0, Math.max(1, B.i)), missed = shuffle([...new Set(B.missed)]), weak = shuffle((B.weakIds || []).filter(id => !missed.includes(id)));
   const all = [...new Set([...missed, ...weak, ...shuffle(seen), ...shuffle([...B.ids])])];
   return all.map(id => ({ id, weak: missed.includes(id) || weak.includes(id), c: bossCardById(id) })).filter(x => x.c);
@@ -237,7 +241,7 @@ const PARRY_KINDS = {
     return false; } },
   tf: { w: 3, min: 0, name: '🎭 Podstęp', make(B, pr) {
     for (const x of parryPool(B).slice(0, 10)) { const v = cardView(x.c); if (!shortTxt(v.ans, 160)) continue;
-      const truth = Math.random() < .5, wrong = !truth && (x.c.gk ? x.c.w[Math.random() * x.c.w.length | 0] : pickDistractors(distractorEntry(x.c), B.poolAll.filter(e => norm(e.a) !== norm(v.ans) && e.a.length <= 160), 1)[0]);
+      const truth = Math.random() < .4, wrong = !truth && (x.c.gk ? x.c.w[Math.random() * x.c.w.length | 0] : pickDistractors(distractorEntry(x.c), B.poolAll.filter(e => norm(e.a) !== norm(v.ans) && e.a.length <= 160), 1)[0]);
       if (!truth && !wrong) continue;
       B.cur = { id: x.id, cm: 'tf', claim: truth ? v.ans : wrong, truth, parry: pr, weak: x.weak, hidden: [] }; return true; }
     return false; } },
@@ -305,7 +309,7 @@ function runeTap(k) {
 const QTE_N = 3, qteMs = B => Math.max(2600, (4300 - 350 * B.b.diff) * B.hs.time);
 function qteCard(B) {
   for (const x of parryPool(B).slice(0, 12)) { const v = cardView(x.c), r = Math.random();
-    if (r < .5 && shortTxt(v.ans, 120)) { const truth = Math.random() < .5, wrong = !truth && (x.c.gk ? x.c.w[Math.random() * x.c.w.length | 0] : pickDistractors(distractorEntry(x.c), B.poolAll.filter(e => norm(e.a) !== norm(v.ans) && e.a.length <= 120), 1)[0]);
+    if (r < .5 && shortTxt(v.ans, 120)) { const truth = Math.random() < .4, wrong = !truth && (x.c.gk ? x.c.w[Math.random() * x.c.w.length | 0] : pickDistractors(distractorEntry(x.c), B.poolAll.filter(e => norm(e.a) !== norm(v.ans) && e.a.length <= 120), 1)[0]);
       if (truth || wrong) return { id: x.id, cm: 'tf', claim: truth ? v.ans : wrong, truth, qte: true, weak: x.weak, hidden: [] }; }
     const opts = abcdOpts(x.c); if (opts) return { id: x.id, cm: 'abcd', opts, qte: true, weak: x.weak, hidden: [] }; }
   return null;
@@ -347,7 +351,7 @@ function presentCard() {
   B.ice = B.pendIce && !free ? { n: B.hs.ice ? 3 : 6, max: B.hs.ice ? 3 : 6 } : null; B.pendIce = false;
   B.cur.dis = B.pendDis && !free && !ver ? B.pendDis : null; if (!ver) B.pendDis = null;
   if (B.cur.dis === 'whirl' && cm !== 'abcd') B.cur.dis = 'fog';   // wir działa tylko na ABCD
-  B.bugs = B.pendBugs && !free ? Array.from({ length: B.pendBugs }, (_, k) => ({ k, x: 8 + Math.random() * 78, y: 10 + Math.random() * 70, img: ['g_bug', 'g_ant', 'g_roach', 'g_ladybug', 'g_worm', 'g_mosq'][Math.random() * 6 | 0], d: (Math.random() * 2).toFixed(2) })) : []; B.pendBugs = 0;
+  B.bugs = B.pendBugs && !free ? Array.from({ length: B.pendBugs }, (_, k) => ({ k, x: 8 + Math.random() * 78, y: 10 + Math.random() * 70, img: BUG8[Math.random() * BUG8.length | 0], d: (Math.random() * 2).toFixed(2) })) : []; B.pendBugs = 0;
   if (ver && !ver.retry) bossSay('verify');
 }
 const bossHpLow = B => B.hp < B.max * .25;
@@ -787,7 +791,7 @@ function fightView() {
       ${cur?.runes ? runesHTML(cur.runes) : ''}
       <div class="bq-in">${cur?.runes ? '' : q}${cur?.hint && !B.shown ? `<div class="hintbox">🔮 ${esc(cur.hint)}</div>` : ''}</div>
       ${B.ice ? `<button class="ice" data-act="boss-ice" style="--crack:${(1 - B.ice.n / B.ice.max).toFixed(2)}"><img src="assets/fluent/g_ice.webp" alt=""><b>❄️ Zamrożone! Stukaj, by rozbić (${B.ice.n})</b></button>` : ''}
-      ${(B.bugs || []).map(g => `<button class="bug" data-act="boss-bug" data-k="${g.k}" style="left:${g.x}%;top:${g.y}%;--d:${g.d}s" aria-label="robak"><img src="assets/fluent/${g.img}.webp" alt=""></button>`).join('')}
+      ${(B.bugs || []).map(g => `<button class="bug" data-act="boss-bug" data-k="${g.k}" style="left:${g.x}%;top:${g.y}%;--d:${g.d}s" aria-label="robak"><img src="${String(g.img).startsWith('g_') ? 'assets/fluent/' + g.img : 'assets/bugs8/' + g.img}.webp" alt=""></button>`).join('')}
     </div>
     ${B.bugs?.length ? `<p class="center small bad" style="margin:0">🐛 Zabij robaczki (${B.bugs.length}), żeby odpowiedzieć!</p>` : ''}
     <div class="bf-ctrl">${ctrl}</div>

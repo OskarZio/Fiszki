@@ -3,7 +3,7 @@
    na pikselowe obrazki (assets/px8, assets/gear8, assets/abil). Do tego tokeny ⟦a:postać:nr⟧ – ikony mocy bohaterów
    (umiejętność bierna, supercios, gałęzie drzewka) z arkusza assets/abil/{postać}{nr}.webp. Pola formularzy i opcje list zostają tekstem. */
 const EMO8 = {
-  '🦊': 'ui8/paw', '🎭': 'ui8/tab_postac', '🌳': 'ui8/tab_drzewko', '🎒': 'ui8/tab_plecak', '🔨': 'ui8/tab_kowal',
+  '🐛': 'bugs8/caterpillar', '🐞': 'bugs8/ladybug', '🦋': 'bugs8/butterfly', '🐌': 'bugs8/snail', '🕷️': 'bugs8/spider', '🐝': 'bugs8/bee', '🦊': 'ui8/paw', '🎭': 'ui8/tab_postac', '🌳': 'ui8/tab_drzewko', '🎒': 'ui8/tab_plecak', '🔨': 'ui8/tab_kowal',
   '⚔️': 'px8/b_swords', '⚔': 'px8/b_swords', '🎯': 'px8/b_target', '🛡️': 'px8/b_shield', '🛡': 'px8/b_shield', '🔥': 'px8/b_fire', '⚡': 'px8/b_bolt',
   '👑': 'px8/b_crown2', '🧪': 'px8/b_potion', '⭐': 'px8/e_star', '✨': 'px8/b_sparkle', '💯': 'px8/e_hundred', '🔮': 'px8/b_orb', '📜': 'px8/b_scroll',
   '⏱️': 'px8/b_stopwatch', '⏱': 'px8/b_stopwatch', '⏳': 'px8/b_hourglass', '🎓': 'px8/b_gradcap', '🧲': 'px8/b_magnet', '🩹': 'px8/b_medkit',
