@@ -2956,3 +2956,16 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .mate-emo .emo8 { width: 32px !important; height: 32px !important; }
 @keyframes emoPop { 0% { transform: translate(-50%, 10px) scale(.4); opacity: 0; } 15% { transform: translate(-50%, 0) scale(1.2); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(-50%, -24px) scale(1); opacity: 0; } }
 .sync-banner { background: linear-gradient(90deg, #22d3ee, #a855f7, #f59e0b) !important; color: #fff !important; }
+/* 🌈 Boska rzadkość (ponad mityczną): tęczowa, animowana obwódka i holograficzny połysk */
+@property --dva { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+.tile.divine, .stk.divine:not(.locked) { border: 3px solid transparent !important; background: linear-gradient(#141826, #141826) padding-box, conic-gradient(from var(--dva), #f472b6, #facc15, #34d399, #38bdf8, #a78bfa, #f472b6) border-box !important;
+  box-shadow: 0 0 22px rgba(232,121,249,.55), 0 0 8px rgba(56,189,248,.5) !important; animation: dvSpin 3s linear infinite; }
+.tile.divine::after { background: linear-gradient(90deg, #f472b6, #facc15, #34d399, #38bdf8, #a78bfa) !important; }
+.tile.divine > span, .stk.divine:not(.locked) > span { filter: drop-shadow(0 0 10px rgba(255,255,255,.55)) drop-shadow(0 0 6px #e879f9) !important; }
+.tile.divine small, .stk.divine:not(.locked) small { background: linear-gradient(90deg, #f472b6, #a855f7, #3b82f6, #22d3ee) !important; color: #fff !important; }
+@keyframes dvSpin { to { --dva: 360deg; } }
+.stfly.divine { filter: drop-shadow(0 0 16px #e879f9) drop-shadow(0 0 8px #38bdf8); }
+@media (prefers-reduced-motion: reduce) { .tile.divine, .stk.divine { animation: none; } }
+/* napisy w kafelkach skrzynek: bez ucinania – do 2 linii */
+.tile small, .cos-tile small { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; text-align: center; border-radius: 10px !important; line-height: 1.15 !important; padding: 3px 7px !important; max-width: 100%; overflow-wrap: anywhere; }
+.stk.divine:not(.locked) small { padding: 2px 8px; border-radius: 99px; }
