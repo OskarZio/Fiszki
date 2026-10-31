@@ -102,6 +102,14 @@ function deckRec(d) {
   if (!r.ch) { r.ch = {}; for (let i = 0; i < (r.stage || 0); i++) r.ch[i] = 1; }   // stary zapis „etap N” → pierwsze rozdziały pokonane
   return r;
 }
+// 🏅 mistrzostwo metod: każdy boss talii osobno dla ABCD / Fiszek / Wpisz / Mix – 1. wygrana brąz, 2. srebro, 3. diament
+const MASTER_T = ['', 'Brąz', 'Srebro', 'Diament'], MASTER_MODES = ['abcd', 'flip', 'type', 'mix'];
+const masterKey = b => b.kind === 'ch' ? 'ch' + b.i : b.kind === 'fin' ? 'fin' : null;
+function mastery(b, mode) { const k = masterKey(b), d = k && deckById(b.id); if (!d) return 0; const m = deckRec(d).m?.[k] || {};
+  if (mode) return m[mode] || 0; return m; }
+function masteryUp(b, mode) { const k = masterKey(b), d = k && deckById(b.id); if (!d) return 0; const r = deckRec(d); r.m = r.m || {}; const m = r.m[k] = r.m[k] || {};
+  m[mode] = Math.min(3, (m[mode] || 0) + 1); touch(d); return m[mode]; }
+const medalsHTML = b => { const m = mastery(b) || {}; return `<span class="medals">${MASTER_MODES.map(k => `<i class="md t${m[k] || 0}" title="${MODES[k].name}: ${MASTER_T[m[k] || 0] || 'nie pokonany'}">${MODES[k].icon}</i>`).join('')}</span>`; };
 // rozdział właśnie nauczony (wywołuje hero.js po nauce nowej fiszki) → numer rozdziału albo null
 function chapterJustLearned(c) {
   const d = deckById(c.deckId); if (!d) return null;
@@ -622,7 +630,7 @@ function bossEnd(won, why) {
   B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); B.why = why; bossSay(won ? 'down' : 'win');
   if (b.kind === 'weekly') return weeklyEnd(B);
   if (won) { bestiaryAdd(b); B.badges = styleBadges(B); }
-  const flawless = won && B.lostHp === 0, total = B.ok + B.bad, acc = total ? B.ok / total : 0, modeR = MODE_REWARD[B.mode] || 1, rep = b.repeat;
+  const flawless = won && B.lostHp === 0, total = B.ok + B.bad, acc = total ? B.ok / total : 0, modeR = MODE_REWARD[B.mode] || 1, rep = masterKey(b) ? mastery(b, B.mode) >= 3 : b.repeat; B.rep = won && rep;
   const kindXP = { ch: 0, fin: 60, cat: 40, world: 50, hydra: 50 }[b.kind] || 0;
   const styleXP = (B.badges || []).reduce((a, x) => a + x[3], 0);
   B.xp = Math.round((B.ok * 2 + B.verOk * 2 + (won ? 40 + 20 * b.diff + kindXP : 5) + styleXP) * modeR * xpMul() * (rep ? .5 : 1)); giveXP(B.xp, 'za walkę');
@@ -637,6 +645,7 @@ function bossEnd(won, why) {
     B.loot.forEach((it, i) => grantLoot(it, `boss-l${i}-${uid()}`));
     if (B.loot.some(x => x.k === 'gear' && ['legendary', 'mythic'].includes(x.r) && !x.dup)) S.stats.lootLegend = 1;
     if (!rep) {
+      if (masterKey(b)) { B.medal = masteryUp(b, B.mode); }
       if (b.kind === 'ch') { const d = deckById(b.id), r = deckRec(d); r.ch[b.i] = Math.min(STARS_MAX, (r.ch[b.i] || 0) + 1); r.wins = (r.wins || 0) + 1; touch(d); }
       if (b.kind === 'fin') { const d = deckById(b.id), r = deckRec(d); r.fin = Math.min(STARS_MAX, (r.fin || 0) + 1); touch(d); }
       if (b.kind === 'cat') S.stats['cb_' + b.id] = (S.stats['cb_' + b.id] || 0) + 1;
@@ -725,7 +734,7 @@ function nodeHTML(b, sel) {
   const on = sel && BOSS_SEL && BOSS_SEL.kind === b.kind && BOSS_SEL.id === b.id && (BOSS_SEL.i ?? null) === (b.i ?? null);
   return `<button class="bnode${b.ok ? '' : ' locked'}${b.stars ? ' beaten' : ''}${b.final ? ' final' : ''}${on ? ' on' : ''}" data-act="boss-sel" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">
     <span class="bn-art">${b.ok || b.stars ? bossArt(b) : '<span class="mq">🔒</span>'}</span><small>${b.kind === 'ch' ? (b.final ? '👑' : `Rozdz. ${b.i + 1}`) : b.final ? '👑 Finał' : ''}</small>
-    ${b.ok ? starsHTML(b.stars) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
+    ${b.ok ? (masterKey(b) ? medalsHTML(b) : starsHTML(b.stars)) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
 }
 function setupSheetHTML() {
   const s = BOSS_SEL; if (!s) return ''; const b = bossFor(s.kind, s.id, s.i); if (!b) return '';
@@ -733,14 +742,14 @@ function setupSheetHTML() {
   const learnIds = b.kind === 'ch' ? b.cards.filter(c => c.srs.state === 'new').map(c => c.id) : [];
   return `<div class="bsheet-ov" data-act="boss-sel-close"></div><div class="bsheet">
     <div class="row nowrap" style="gap:12px">${bossArt(b, 'sheet')}<div class="grow"><b style="font-size:18px">${esc(b.name)}</b><div class="small muted">${esc(b.title)}</div><div class="small">${esc(b.desc)}</div>
-      <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : starsHTML(b.stars)}<span class="small muted">${b.repeat ? 'opanowany – powtórka za mniejszą nagrodę' : `trudność ${b.diff + 1}`}</span></div></div>
+      <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : masterKey(b) ? medalsHTML(b) : starsHTML(b.stars)}<span class="small muted">trudność ${b.diff + 1}</span></div></div>
       <button class="iconbtn" data-act="boss-sel-close">✕</button></div>
     ${b.weak ? `<div class="weak-tag">🎯 Słabość: <b>${WEAK_NAME[b.weak]}</b> – cios ×${String(WEAK_M).replace('.', ',')} · przy 50% i 25% ❤️ boss wpada w szał (fazy)</div>` : ''}
     <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : '<span>⏱️ bez limitu</span>'}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
     ${b.ok && lessonFor(b) ? `<div class="lock-box"><b>📚 Lekcja z porażki</b><small>${esc(b.name)} pokonał Cię na tych fiszkach. Powtórz je (${lessonFor(b).ids.length}) – rewanż odblokuje się od razu.</small></div>
       <button class="primary block" data-act="boss-lesson">📚 Powtórz i wróć do walki</button>`
-    : b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => `<button class="${BOSS_PICK.mode === k ? 'on' : ''}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>cios ${m.mul}</small></button>`).join('')}</div>
-      <p class="small muted center" style="margin:4px 0 8px">${MODES[BOSS_PICK.mode].desc} · nagrody ×${String(MODE_REWARD[BOSS_PICK.mode]).replace('.', ',')}</p>
+    : b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => { const t = masterKey(b) ? mastery(b, k) : 0; return `<button class="${BOSS_PICK.mode === k ? 'on' : ''} mt${t}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>${masterKey(b) ? (MASTER_T[t] || 'brak medalu') : 'cios ' + m.mul}</small></button>`; }).join('')}</div>
+      <p class="small muted center" style="margin:4px 0 8px">${MODES[BOSS_PICK.mode].desc} · nagrody ×${String(MODE_REWARD[BOSS_PICK.mode]).replace('.', ',')}${masterKey(b) ? ` · ${mastery(b, BOSS_PICK.mode) >= 3 ? '💎 diament – mniejsza nagroda' : `wygraj, by zdobyć: <b>${MASTER_T[mastery(b, BOSS_PICK.mode) + 1]}</b>`}` : ''}</p>
       <button class="primary block boss-go" data-act="boss-start" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}" ${lives().n || b.kind === 'weekly' ? '' : 'disabled'}>${lives().n || b.kind === 'weekly' ? '⚔️ Walcz sam' : '🖤 Brak serc'}</button>
       <button class="block" data-go="#/coop">👥 Walcz z kolegą (lobby – Hydra)</button>`
     : `<div class="lock-box"><b>🔒 ${b.lockMsg}</b><div class="pbar"><i style="width:${Math.min(100, b.learned / b.need * 100)}%"></i></div><small class="muted">${b.learned}/${b.need}</small></div>
@@ -844,7 +853,7 @@ function endView() {
     <div class="row" style="margin-top:10px"><button class="primary grow" data-act="weekly-start">⚔️ Jeszcze raz</button><button class="grow" data-go="#/rank">🏆 Ranking</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
   const chest = won && B.chest?.n ? (B.chest.open ? `<div class="loot">${B.loot.map((it, i) => `<div class="loot-it roll" style="--d:${i * .35}s;--rc:${RARITY[it.r || 'rare'].color}"><div class="roll-strip" style="--d:${i * .35}s">${Array.from({ length: 14 }, () => `<span>${lootIcon(rollLoot(B.chest.tier))}</span>`).join('')}<span>${lootIcon(it)}</span></div><div class="roll-res" style="--d:${1.6 + i * .35}s">${lootHTML(it)}</div></div>`).join('')}</div>`
       : `<button class="chest-btn" data-act="boss-chest"><div class="chest closed crate">${crateImg('boss')}</div><b>🎁 Skrzynia ×${B.chest.n} – stuknij, by otworzyć!</b></button>`) + oddsHTML(B.chest.tier) : '';
-  const msg = won ? `+${B.gems} 💎 · +${B.xp} XP${b.repeat ? ' · boss opanowany – mniejsza nagroda' : ''}${B.caught ? ` · 🕵️ przyłapany ${B.caught}×${B.caught >= 2 ? ' (mniejsza skrzynia)' : ''}` : ''}`
+  const msg = won ? `${B.medal ? `🏅 ${MODES[B.mode].name}: <b>${MASTER_T[B.medal]}</b>! · ` : ''}+${B.gems} 💎 · +${B.xp} XP${B.rep ? ' · metoda opanowana (diament) – mniejsza nagroda' : ''}${B.caught ? ` · 🕵️ przyłapany ${B.caught}×${B.caught >= 2 ? ' (mniejsza skrzynia)' : ''}` : ''}`
     : B.why === 'cards' ? `Skończyły się fiszki – boss przetrwał. Serce zostaje. +${B.xp} XP` : `${B.lifeLost ? '🖤 Tracisz serce. ' : ''}+${B.xp} XP. Ulepsz bohatera, kup mikstury i spróbuj znowu.`;
   return { tab: 'arena', focus: true, html: `
   <div class="card center boss-end ${won ? 'won' : 'lost'}">
