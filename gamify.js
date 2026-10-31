@@ -21,11 +21,11 @@ async function squareAvatar(blob, px = 128) {
 // ============================================================ XP i poziomy
 function xpTotal() {
   let xp = 0;
-  for (const l of S.log) xp += l.n ? 3 : l.g > 1 ? 2 : 1;
+  for (const l of S.log) xp += (l.n ? 3 : l.g > 1 ? 2 : 1) * (l.m === 'type' ? (l.v === 'ok' ? 2.5 : 2) : 1);   // ✍️ wpisywanie (trudniejsze) – więcej XP
   for (const g of S.games) xp += Math.round((g.correct || 0) / 2);
   xp += Object.keys(S.ach).length * 25;
   for (const b of S.battles || []) xp += b.won === 1 ? 30 : 10;
-  return xp;
+  return Math.round(xp);
 }
 const levelOf = xp => Math.floor((1 + Math.sqrt(1 + xp / 10)) / 2);   // próg poziomu n: 40·n·(n−1) XP
 const levelStart = n => 40 * n * (n - 1);

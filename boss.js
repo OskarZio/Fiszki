@@ -82,7 +82,7 @@ const BOSS_MOVES = ['Cios zapomnienia', 'Fala prokrastynacji', 'Podchwytliwe pyt
 const THINK_S = [0, 25, 18, 14, 11];   // limit namysłu wg trudności (0 = bez limitu)
 const MODES = { abcd: { name: 'ABCD', icon: '🔤', mul: '×0,5', desc: 'wybierasz z 4 odpowiedzi' }, flip: { name: 'Fiszki', icon: '🃏', mul: '×1', desc: 'odkrywasz i oceniasz' },
   type: { name: 'Wpisz', icon: '⌨️', mul: '×1,5', desc: 'wpisujesz odpowiedź' }, mix: { name: 'Mix', icon: '🔀', mul: 'losowo', desc: 'każda karta w innym trybie' } };
-const MODE_HP = { abcd: .65, flip: 1, type: 1.1, mix: .95 }, MODE_REWARD = { abcd: .6, flip: 1, type: 1.3, mix: 1 };
+const MODE_HP = { abcd: .65, flip: 1, type: 1.1, mix: .95 }, MODE_REWARD = { abcd: .6, flip: 1, type: 1.6, mix: 1.1 };
 
 // ---------- 📚 materiał: rozdziały talii (stałe – nowe fiszki dochodzą na koniec)
 const fightable = c => c.sus !== 'skip' && noteById(c.noteId);

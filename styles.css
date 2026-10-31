@@ -2998,3 +2998,14 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
   .hubnav a { font-size: 13.5px; } .hubnav a span { font-size: 26px; } .hubnav .emo8 { width: 30px !important; height: 30px !important; }
   .toast, #toast { max-width: 640px; }
 }
+/* 👾 8-bit, ale czytelnie: pikselowa czcionka zostaje w tytułach, przyciskach i zakładkach; dłuższy tekst w czytelnym kroju */
+body.px-theme { -webkit-font-smoothing: antialiased; letter-spacing: .35px; line-height: 1.5; font-size: 17px; }
+body.px-theme p, body.px-theme li, body.px-theme small, body.px-theme .small, body.px-theme .muted, body.px-theme .ctext, body.px-theme input, body.px-theme textarea,
+body.px-theme .boss-q .bq-in, body.px-theme .abcd span, body.px-theme .hintbox, body.px-theme .tf-claim, body.px-theme .m-tip span, body.px-theme label small {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; letter-spacing: 0; }
+body.px-theme { --card-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+body.px-theme h1, body.px-theme h2, body.px-theme h3, body.px-theme b, body.px-theme button, body.px-theme #tabs, body.px-theme .hubnav { letter-spacing: .6px; }
+body.px-theme #tabs a, body.px-theme .hubnav a, body.px-theme .sm, body.px-theme .chip, body.px-theme .badge-st, body.px-theme .tile small, body.px-theme .seg button { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important; letter-spacing: 0 !important; font-weight: 700; }
+body.px-theme h1, body.px-theme h2, body.px-theme h3 { font-weight: 500 !important; letter-spacing: 1px; }
+body.px-theme b, body.px-theme strong { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; letter-spacing: 0; }
+body.px-theme h1 b, body.px-theme h2 b, body.px-theme h3 b, body.px-theme button b { font-family: inherit; }

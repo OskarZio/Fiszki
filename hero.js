@@ -288,7 +288,8 @@ function giveXP(n, why) {
 }
 on('review', (c, g, wasNew) => {
   if (typeof BOSS !== 'undefined' && BOSS?.phase === 'fight') return;   // w walce XP liczy walka
-  giveXP((wasNew ? 3 : 1) * xpMul());
+  const hard = typeof SESSION !== 'undefined' && SESSION?.mode === 'type' ? (SESSION.verdict === 'ok' ? 2.5 : 2) : 1;   // ✍️ trudniejsza metoda = więcej XP
+  giveXP((wasNew ? 3 : 1) * hard * xpMul());
   const L = lives(); if (L.n < LIVES_MAX) { L.rev = (L.rev || 0) + 1; if (L.rev >= LIFE_REV) { L.rev = 0; L.n++; toast('❤️ Odzyskane serce za naukę!'); } }
   if (!wasNew) return;
   const d = deckById(c.deckId); if (!d) return;
