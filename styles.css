@@ -3026,3 +3026,17 @@ body.px-theme h1 b, body.px-theme h2 b, body.px-theme h3 b, body.px-theme button
 .meadow.edit .mw-egg { outline: 2px dashed rgba(255,255,255,.45); outline-offset: 2px; border-radius: 10px; } .mw-egg.sel { outline: 3px solid #fde68a !important; transform: translate(-50%, -80%) scale(1.25) !important; }
 .bprest { font-size: 14px !important; line-height: 1.35 !important; white-space: normal !important; padding: 12px 14px !important; min-height: 0 !important; text-align: left; }
 .cupw { margin-right: 6px; }
+/* ✏️ mniej „AI” – ręcznie dobrany, spokojny wygląd: ciepłe neutralne tło (zamiast niebieskawej szarości), pełne kolory zamiast
+   fioletowo‑niebieskich gradientów, cieńsze cienie, mniejsze zaokrąglenia, przyciski z „namacalną” krawędzią, mocniejsza typografia */
+:root { --bg: #f4f1ea; --card: #fffdf8; --card2: #ece7dc; --text: #1f1d1a; --muted: #6f6a60; --line: #e2dccf;
+  --accent: #d9480f; --accent2: #d9480f; --accent-soft: #fde6d8; --shadow: 0 1px 0 rgba(60,40,20,.06), 0 1px 2px rgba(60,40,20,.06); --r: 12px; }
+@media (prefers-color-scheme: dark) { :root { --bg: #15140f; --card: #1f1d17; --card2: #2a2720; --text: #ece7dc; --muted: #a39d90; --line: #353128;
+  --accent: #ff7a3d; --accent2: #ff7a3d; --accent-soft: #3a2418; --shadow: 0 1px 0 rgba(0,0,0,.35); } }
+body { letter-spacing: -.005em; }
+h1 { letter-spacing: -.025em; font-weight: 800; } h2, h3 { letter-spacing: -.015em; }
+button.primary, .btn.primary { background: var(--accent) !important; box-shadow: inset 0 -2px 0 rgba(0,0,0,.18) !important; font-weight: 700; }
+button.primary:active { transform: translateY(1px); box-shadow: none !important; }
+button, .btn { border-radius: 10px; }
+.card { border: 1px solid var(--line); }
+.hubnav { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: var(--bg) !important; border-radius: 0 !important; border-bottom: 1px solid var(--line); }
+#tabs { backdrop-filter: none !important; background: var(--card) !important; }
