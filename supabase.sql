@@ -434,5 +434,25 @@ revoke all on function public.get_deck_link(text) from public;
 grant execute on function public.get_deck_link(text) to anon, authenticated;
 
 -- Wersja skryptu – aplikacja sprawdza ją w Panelu hosta („Aktualizacja bazy”)
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-30b'::text $$;
+-- 🛠️ Flagi funkcji dla CAŁEJ aplikacji: czytają wszyscy, zmienia tylko właściciel (app_admins) przez set_flag
+create table if not exists public.app_flags (k text primary key check (char_length(k) <= 24), off boolean not null default false, t timestamptz not null default now());
+alter table public.app_flags enable row level security;
+drop policy if exists "flags_read" on public.app_flags;
+create policy "flags_read" on public.app_flags for select to anon, authenticated using (true);
+grant select on public.app_flags to anon, authenticated;
+create or replace function public.set_flag(p_k text, p_off boolean) returns boolean language plpgsql security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  insert into public.app_flags (k, off, t) values (left(p_k, 24), p_off, now()) on conflict (k) do update set off = excluded.off, t = now();
+  return true;
+end $$;
+revoke all on function public.set_flag(text, boolean) from public, anon;
+grant execute on function public.set_flag(text, boolean) to authenticated;
+create or replace function public.am_admin() returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.app_admins where user_id = auth.uid());
+$$;
+revoke all on function public.am_admin() from public, anon;
+grant execute on function public.am_admin() to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-31a'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

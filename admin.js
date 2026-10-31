@@ -15,14 +15,29 @@ const FEATURES = {
   calendar: ['📅 Terminarz', ['calendar'], 'plan nauki i terminy'],
   topics: ['📁 Kategorie i notatki', ['topics', 'topic', 'item'], 'kategorie talii, materiały, notatki'],
 };
-const featureOn = k => !(S?.settings?.off || {})[k];
+// 🌍 flagi globalne (Supabase app_flags) – ustawia tylko admin aplikacji, działają u wszystkich; kopia w localStorage na offline
+let FLAGS = (() => { try { return JSON.parse(localStorage.getItem('appFlags') || '{}'); } catch { return {}; } })(), IS_ADMIN = false;
+const featureOn = k => !FLAGS[k];
+async function flagsLoad() {
+  if (typeof SB === 'undefined' || !SB) return;
+  try { const r = await SB.from('app_flags').select('k,off'); if (!r.error && Array.isArray(r.data)) { FLAGS = Object.fromEntries(r.data.filter(x => x.off && FEATURES[x.k]).map(x => [x.k, 1])); try { localStorage.setItem('appFlags', JSON.stringify(FLAGS)); } catch { /* */ } updateTabBadges(); render(); } } catch { /* */ }
+  try { if (typeof cloudOn === 'function' && cloudOn()) { const a = await SB.rpc('am_admin'); IS_ADMIN = a.data === true; if (IS_ADMIN) render(); } } catch { /* */ }
+}
+on('start', () => setTimeout(flagsLoad, 1500));
+setInterval(() => { if (document.visibilityState === 'visible') flagsLoad(); }, 10 * 60000);
+async function setFlag(k, off) {
+  if (!IS_ADMIN) return toast('Tylko admin aplikacji może zmieniać funkcje');
+  try { const r = await SB.rpc('set_flag', { p_k: k, p_off: !!off }); if (r.error) throw r.error; if (off) FLAGS[k] = 1; else delete FLAGS[k];
+    try { localStorage.setItem('appFlags', JSON.stringify(FLAGS)); } catch { /* */ } updateTabBadges(); render(); toast(`${FEATURES[k][0]}: ${off ? 'wyłączone' : 'włączone'} – dla wszystkich`, 2000); }
+  catch (e) { toast(/function|schema/i.test(e.message || '') ? 'Wgraj nowy supabase.sql (Panel hosta)' : 'Nie udało się: ' + (e.message || e)); }
+}
 const ROUTE_FEAT = Object.fromEntries(Object.entries(FEATURES).flatMap(([k, [, rs]]) => rs.map(r => [r, k])));
 const routeOn = r => !ROUTE_FEAT[r] || featureOn(ROUTE_FEAT[r]);
 // trasy wyłączonych funkcji pokazują krótką informację
 for (const [r, k] of Object.entries(ROUTE_FEAT)) {
   const f0 = ROUTES[r]; if (typeof f0 !== 'function') continue;
   ROUTES[r] = (...a) => featureOn(k) ? f0(...a) : { tab: 'home', html: `<div class="card center"><div style="font-size:44px">🧪</div><h2>${FEATURES[k][0]} – wyłączone</h2>
-    <p class="muted">Ta funkcja jest wyłączona w Panelu admina (Ustawienia → 🛠️ Panel admina).</p><button class="primary" data-act="feat-on" data-k="${k}">Włącz z powrotem</button> <button data-go="#/">Start</button></div>` };
+    <p class="muted">Ta funkcja jest chwilowo wyłączona przez administratora aplikacji.</p>${IS_ADMIN ? `<button class="primary" data-act="feat-on" data-k="${k}">Włącz z powrotem</button> ` : ''}<button data-go="#/">Start</button></div>` };
 }
 // pasek sekcji bez wyłączonych pozycji
 const admHub0 = hubNav;
@@ -72,9 +87,10 @@ const RESETS = {
   gems: ['💎 Kryształy', 'saldo kryształów do zera', () => { const n = coins(); if (n) S.wallet.push({ id: uid(), n: -n, why: 'admin-reset', t: Date.now() }); }],
 };
 function adminHTML() {
-  const off = S.settings.off || {};
-  return `<details class="card admin-card"><summary><b>🛠️ Panel admina</b> <span class="small muted">· eksperymenty na tym urządzeniu</span></summary>
-    <p class="small muted">Wyłącz, czego nie potrzebujesz – aplikacja zrobi się prostsza. Dane zostają, w każdej chwili włączysz z powrotem.</p>
+  if (!IS_ADMIN) return '';
+  const off = FLAGS;
+  return `<details class="card admin-card"><summary><b>🛠️ Panel admina</b> <span class="small muted">· cała aplikacja, wszyscy użytkownicy</span></summary>
+    <p class="small muted">Wyłączona funkcja znika <b>u wszystkich</b> (po odświeżeniu aplikacji, najpóźniej po 10 minutach). Dane użytkowników zostają.</p>
     <div class="feat-list">${Object.entries(FEATURES).map(([k, [name, , desc]]) => `<label class="feat"><input type="checkbox" data-feat="${k}" ${off[k] ? '' : 'checked'}><span><b>${name}</b><small>${desc}</small></span></label>`).join('')}</div>
     <div class="row" style="margin-top:8px"><button class="sm" data-act="feat-simple">✨ Tryb prosty: tylko nauka</button><button class="sm ghost" data-act="feat-all">Włącz wszystko</button></div>
     <h3>🎨 Podgląd motywów premium</h3>
@@ -93,8 +109,7 @@ viewMore = function (...a) { return admMore0(...a) + adminHTML(); };
 document.addEventListener('change', e => {
   if (e.target.dataset?.duelq) { S.settings.duelQ = e.target.value; save(); return toast(`🥊 Pytania w pojedynku: ${DUEL_QF[e.target.value]}`, 2000); }
   const k = e.target.dataset?.feat; if (!k) return;
-  S.settings.off = S.settings.off || {}; if (e.target.checked) delete S.settings.off[k]; else S.settings.off[k] = 1; save(); updateTabBadges();
-  toast(`${FEATURES[k][0]}: ${e.target.checked ? 'włączone' : 'wyłączone'}`, 1600);
+  setFlag(k, !e.target.checked);
 });
 // 👀 podgląd motywu premium: tylko w pamięci (nie zapisuje się, nie synchronizuje), pasek u dołu kończy podgląd
 let THEME_PREVIEW = null;
@@ -112,9 +127,9 @@ Object.assign(ACTIONS, {
     THEME_PREVIEW = { id: t.id, bg: t.bg, accent: t.accent, image: t.image || null, ...(t.pixel ? { pixel: true } : {}) }; applyTheme(); themePreviewBar(); render(); toast(`👀 Podgląd: ${t.name}`, 1500); },
   'theme-preview-end': () => { THEME_PREVIEW = null; applyTheme(); themePreviewBar(); render(); },
   'theme-preview-buy': () => { THEME_PREVIEW = null; applyTheme(); themePreviewBar(); go('#/shop'); },
-  'feat-on': el => { if (S.settings.off) delete S.settings.off[el.dataset.k]; save(); render(); },
-  'feat-all': () => { S.settings.off = {}; save(); render(); toast('Wszystkie funkcje włączone'); },
-  'feat-simple': () => { S.settings.off = Object.fromEntries(Object.keys(FEATURES).filter(k => !['methods', 'calendar', 'topics'].includes(k)).map(k => [k, 1])); save(); render(); toast('✨ Tryb prosty: nauka, metody, terminarz i kategorie'); },
+  'feat-on': el => setFlag(el.dataset.k, false),
+  'feat-all': async () => { if (!confirm('Włączyć wszystkie funkcje dla wszystkich?')) return; for (const k of Object.keys(FLAGS)) await setFlag(k, false); },
+  'feat-simple': async () => { if (!confirm('Tryb prosty dla WSZYSTKICH użytkowników (tylko nauka, metody, terminarz, kategorie)?')) return; for (const k of Object.keys(FEATURES).filter(k => !['methods', 'calendar', 'topics'].includes(k))) await setFlag(k, true); },
   'adm-reset': el => {
     const k = el.dataset.k, list = k === 'all' ? Object.keys(RESETS) : [k];
     if (!confirm(`Zresetować: ${list.map(x => RESETS[x][0]).join(', ')}?\n\nTego nie da się cofnąć. Fiszki i nauka zostają.`)) return;
