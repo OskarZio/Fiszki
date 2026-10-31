@@ -23,6 +23,8 @@ const BLESS = {
 };
 // perki się sumują (poziom = ile razy wzięty); jednorazowe (5. pole = 1) nie wracają po wzięciu
 const blessLv = (T, k) => (T.blv || {})[k] || 0;
+const BLESS_IMG = new Set(['first', 'regen', 'exec', 'abcd', 'type', 'steady', 'cleanse', 'thorns', 'combo', 'guard', 'gamble', 'gold']);
+const blessIc = k => BLESS_IMG.has(k) ? `<img class="perk8" src="assets/perk8/${k}.webp" alt="">` : BLESS[k][0];
 const FLOOR_HEAL = .35;   // po każdym piętrze wraca 35% ❤️
 // TW_GK: ta sama wieża, ale z pytaniami z wiedzy ogólnej (gk.js) – osobna wspinaczka i rekord
 let TW_GK = false;
@@ -116,7 +118,7 @@ function towerAfterView() {
   return { tab: 'arena', focus: true, html: `<div class="card center boss-end won"><div class="boss-stage dead">${bossArt(B.b)}<div class="boss-boom"></div></div>
     <h2>${TW_GK ? '🧠' : '🗼'} Piętro ${T.floor - 1} zdobyte!</h2><p class="small">+${g.xp} XP, +${g.gems} 💎 · w tej wspinaczce razem <b>+${T.bank.xp} XP, +${T.bank.gems} 💎</b></p>
     <div class="tower-hp">${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}</div><p class="small muted" style="margin:4px 0">❤️ +${B.towerHeal || 0} za ukończone piętro</p>${towerBuffsHTML(T)}
-    ${T.pick ? `<h3>Wybierz błogosławieństwo</h3><div class="bless">${T.pick.map(k => `<button class="${BLESS[k][3] ? 'epic' : ''}" data-act="tower-bless" data-k="${k}">${BLESS[k][3] ? '<em>RZADKIE</em>' : ''}<span>${BLESS[k][0]}</span><b>${BLESS[k][1]}${blessLv(T, k) ? ` <i class="lv-badge">Lv ${blessLv(T, k) + 1}</i>` : ''}</b><small>${BLESS[k][2]}</small></button>`).join('')}</div>`
+    ${T.pick ? `<h3>Wybierz błogosławieństwo</h3><div class="bless">${T.pick.map(k => `<button class="${BLESS[k][3] ? 'epic' : ''}" data-act="tower-bless" data-k="${k}">${BLESS[k][3] ? '<em>RZADKIE</em>' : ''}<span>${blessIc(k)}</span><b>${BLESS[k][1]}${blessLv(T, k) ? ` <i class="lv-badge">Lv ${blessLv(T, k) + 1}</i>` : ''}</b><small>${BLESS[k][2]}</small></button>`).join('')}</div>`
       : `${TW_GK ? '' : towerWeaponHTML(T)}<button class="primary block boss-go" data-act="tower-next" style="margin-top:10px">⚔️ Piętro ${T.floor}${T.floor % TOWER_GUARD === 0 ? ' – strażnik!' : ''}</button>`}</div>` };
 }
 ROUTES.tower = () => { TW_GK = false; const T = tower();

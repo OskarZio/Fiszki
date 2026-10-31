@@ -158,8 +158,10 @@ function bossFor(kind, id, i) {
       ok: learnedN(cs) >= 30 && ds.length >= 2, learned: learnedN(cs), need: 30, lockMsg: 'Kategoria z min. 2 taliami i 30 nauczonymi fiszkami', repeat: false, len: 40, pr };
   }
   if (kind === 'weekly') {
-    const bo = bossOf(weeklyIdx()), cs = S.cards.filter(c => mixFightable(c) && c.srs.state !== 'new');
-    return { kind, id: 'weekly', cards: cs, stars: 0, diff: 2, ...bo, title: '🏆 Boss tygodnia – liczą się zadane obrażenia', ok: cs.length >= 20, learned: cs.length, need: 20, lockMsg: 'Naucz się 20 fiszek', repeat: false, len: 25, pr };
+    // 🗓️ bijesz fiszkami przerobionymi w tym tygodniu (od poniedziałku)
+    const ws = typeof weekStart === 'function' ? weekStart() : Date.now() - 7 * DAY, wk = new Set(S.log.filter(l => l.t >= ws).map(l => l.c));
+    const bo = bossOf(weeklyIdx()), cs = S.cards.filter(c => wk.has(c.id) && fightable(c));
+    return { kind, id: 'weekly', cards: cs, stars: 0, diff: 2, ...bo, title: '🏆 Boss tygodnia – fiszki przerobione w tym tygodniu', ok: cs.length >= 10, learned: cs.length, need: 10, lockMsg: 'Przerób w tym tygodniu min. 10 fiszek', repeat: false, len: 25, pr };
   }
   if (kind === 'world') {
     const st = S.stats.worldStage || 0, bo = bossOf(WORLD_IDX[st % WORLD_IDX.length]), cs = S.cards.filter(c => mixFightable(c) && c.srs.state !== 'new');
@@ -771,7 +773,7 @@ function nodeHTML(b, sel) {
   const on = sel && BOSS_SEL && BOSS_SEL.kind === b.kind && BOSS_SEL.id === b.id && (BOSS_SEL.i ?? null) === (b.i ?? null);
   return `<button class="bnode${b.ok ? '' : ' locked'}${b.stars ? ' beaten' : ''}${b.final ? ' final' : ''}${on ? ' on' : ''}" data-act="boss-sel" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">
     <span class="bn-art">${b.ok || b.stars ? bossArt(b) : '<span class="mq">🔒</span>'}</span><small>${b.kind === 'ch' ? (b.final ? '👑' : `Rozdz. ${b.i + 1}`) : b.final ? '👑 Finał' : ''}</small>
-    ${b.ok ? (['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) + (masterKey(b) ? medalsHTML(b) : '') : starsHTML(b.stars)) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
+    ${b.ok ? (['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) : starsHTML(b.stars)) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
 }
 function setupSheetHTML() {
   const s = BOSS_SEL; if (!s) return ''; const b = bossFor(s.kind, s.id, s.i); if (!b) return '';
