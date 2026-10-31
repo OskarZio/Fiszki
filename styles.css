@@ -2856,3 +2856,21 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .cos-prev .avf > .avemoji .emo8, .cos-ic-fr .avf > .avemoji .emo8 { width: 82%; height: 82%; vertical-align: 0; margin: 0; }
 .cos-tile .cos-ic-fr { padding: 8px; }
 .cos-tile { grid-template-columns: minmax(0, 1fr); justify-items: center; justify-content: stretch !important; align-content: space-between; }
+/* 🏷️ kategorie jajek: na czym się skupiasz (książka, języki, praca…) */
+.egg-cat-h { display: flex; flex-direction: column; gap: 2px; margin: 16px 0 10px; } .egg-cat-h b { font-size: 15px; } .egg-cat-h small { font-size: 12.5px; }
+.egg-cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.egg-cat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 84px; padding: 10px 6px !important; border-radius: 14px; background: var(--card2); border: 2px solid transparent; text-align: center; }
+.egg-cat span { font-size: 13px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.ec-ic { display: inline-grid; place-items: center; object-fit: contain; image-rendering: pixelated; flex: none; } .egg-cat .ec-ic { width: 36px; height: 36px; font-size: 28px; }
+.egg-cat.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--card)); }
+.egg-cat.add { border: 2px dashed color-mix(in srgb, var(--muted) 55%, transparent); background: transparent; }
+.egg-cat .ec-plus { display: grid; place-items: center; width: 34px; height: 34px; font-size: 26px; line-height: 1; color: var(--accent); }
+.egg-cat-run { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0 2px; font-size: 15px; } .egg-cat-run .ec-ic { width: 28px; height: 28px; }
+.nest-cats { display: grid; gap: 8px; margin: 14px 0; }
+.nest-cat { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px !important; border-radius: 14px; background: var(--card2); border: 2px solid transparent; text-align: left; }
+.nest-cat.on { border-color: var(--accent); }
+.nest-cat .ec-ic { width: 32px; height: 32px; font-size: 24px; }
+.nest-cat .grow { display: grid; gap: 5px; min-width: 0; } .nest-cat b { font-size: 14px; }
+.nest-cat i { display: block; height: 6px; min-width: 6px; border-radius: 99px; background: var(--accent); }
+.nest-cat small { flex: none; font-weight: 700; font-size: 13px; color: var(--muted); }
+.cr-box .ec-ic { width: 20px; height: 20px; vertical-align: -4px; }

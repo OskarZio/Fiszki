@@ -22,7 +22,21 @@ const eggs = () => (S.eggs = S.eggs || []);
 // ---------- trwająca sesja
 const eggRun = () => { try { return JSON.parse(localStorage.getItem('eggRun') || 'null'); } catch { return null; } };
 const eggSave = E => { try { E ? localStorage.setItem('eggRun', JSON.stringify(E)) : localStorage.removeItem('eggRun'); } catch { /* */ } };
-let EGG_LAST = null, EGG_PICK = { min: 25, mode: 'study', pomo: false }, eggInput = Date.now();
+// 🏷️ kategorie skupienia: na czym siedzisz, kiedy jajko rośnie (książka, języki, praca…). Własne kategorie mają id 'u:Nazwa'.
+const EGG_CATS = [
+  { id: 'cards', n: 'Fiszki', ic: '📚', mode: 'study' }, { id: 'book', n: 'Książka', ic: 'assets/cat8/book.webp' },
+  { id: 'school', n: 'Zadania', ic: '✏️' }, { id: 'lang', n: 'Języki', ic: 'assets/cat8/lang.webp' },
+  { id: 'code', n: 'Kodowanie', ic: 'assets/cat8/code.webp' }, { id: 'music', n: 'Muzyka', ic: 'assets/cat8/music.webp' },
+  { id: 'sport', n: 'Sport', ic: 'assets/cat8/sport.webp' }, { id: 'work', n: 'Praca', ic: 'assets/cat8/work.webp' },
+  { id: 'other', n: 'Inne', ic: '✨' },
+];
+const eggUserCats = () => { const set = new Set((S.settings.eggCats || []).filter(n => typeof n === 'string'));
+  for (const x of eggs()) if (typeof x.cat === 'string' && x.cat.startsWith('u:')) set.add(x.cat.slice(2));
+  return [...set].map(n => String(n).slice(0, 20)).filter(Boolean).map(n => ({ id: 'u:' + n, n, ic: '🎯', own: 1 })); };
+const eggCatOf = x => x.cat || (x.mode === 'phone' ? 'other' : 'cards');
+const eggCat = id => EGG_CATS.find(c => c.id === id) || (String(id || '').startsWith('u:') ? { id, n: String(id).slice(2, 22), ic: '🎯', own: 1 } : EGG_CATS[0]);
+const eggCatIc = c => { const src = c.ic.startsWith('assets/') ? c.ic : typeof EMO8 !== 'undefined' && EMO8[c.ic] ? `assets/${EMO8[c.ic]}.webp` : ''; return src ? `<img class="ec-ic" src="${src}" alt="">` : `<span class="ec-ic">${c.ic}</span>`; };
+let EGG_LAST = null, EGG_PICK = { min: 25, mode: 'study', pomo: false, cat: 'cards' }, eggInput = Date.now();
 try { Object.assign(EGG_PICK, JSON.parse(localStorage.getItem('eggPick') || '{}')); } catch { /* */ }
 ['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { eggInput = Date.now(); }, { passive: true, capture: true }));
 
@@ -49,13 +63,13 @@ function eggStart() {
   if (eggRun()) return;
   const golden = EGG_PICK.golden && itemCount('egg', 'boss') > 0;
   if (golden) addItem('egg', 'boss', -1);   // 👑 złote jajo z bossa: stworek co najmniej epicki
-  const E = { id: uid(), min: EGG_PICK.min, mode: EGG_PICK.mode, pomo: EGG_PICK.pomo && EGG_PICK.min >= 45, start: Date.now(), last: Date.now(), prog: 0, pomoN: 0, breakUntil: 0, hiddenAt: 0, saved: 0, golden };
+  const E = { id: uid(), min: EGG_PICK.min, mode: EGG_PICK.mode, cat: eggCat(EGG_PICK.cat).id, pomo: EGG_PICK.pomo && EGG_PICK.min >= 45, start: Date.now(), last: Date.now(), prog: 0, pomoN: 0, breakUntil: 0, hiddenAt: 0, saved: 0, golden };
   eggSave(E); EGG_LAST = null; eggInput = Date.now(); eggWake(E);
-  toast(E.mode === 'phone' ? '📵 Odłóż telefon ekranem w dół – nie wychodź z aplikacji' : '📚 Ucz się – jajko rośnie podczas nauki', 3500);
+  toast(E.mode === 'phone' ? (E.cat === 'book' ? 'Czytaj! Telefon połóż ekranem w dół – nie wychodź z aplikacji' : `${eggCat(E.cat).n}: telefon połóż ekranem w dół – nie wychodź z aplikacji`) : '📚 Ucz się – jajko rośnie podczas nauki', 3500);
   if (E.mode === 'study') go('#/'); else render();
 }
 function eggFinish(E, ok, why) {
-  const now = Date.now(), rec = { id: E.id, t: E.start, end: now, min: E.min, mode: E.mode, ok: ok ? 1 : 0, ms: Math.round(E.prog), ...(why ? { why } : {}) };
+  const now = Date.now(), rec = { id: E.id, t: E.start, end: now, min: E.min, mode: E.mode, cat: E.cat || eggCatOf(E), ok: ok ? 1 : 0, ms: Math.round(E.prog), ...(why ? { why } : {}) };
   if (ok) {
     // 🐣 zawsze unikatowy stworek; czasem dodatkowo naklejka
     const t = eggTier(E.min), seed = newSeed();
@@ -170,13 +184,14 @@ ROUTES.egg = () => {
   if (E) {
     const p = Math.min(1, E.prog / (E.min * 60000));
     return { tab: 'home', focus: E.mode === 'phone', html: `
-    <div class="studybar"><button class="iconbtn" data-go="#/">‹</button><div class="title">🥚 Inkubator · ${E.min} min</div><span class="small muted">🛡️ ${shieldCount()}</span></div>
+    <div class="studybar"><button class="iconbtn" data-go="#/">‹</button><div class="title">🥚 ${esc(eggCat(eggCatOf(E)).n)} · ${E.min} min</div><span class="small muted">🛡️ ${shieldCount()}</span></div>
     <div class="card center egg-run">
       <div class="egg-ring" style="--p:${(p * 100).toFixed(2)}"><div class="egg-wrap${eggGrowing(E) ? ' grow' : ''}${p > .8 ? ' late' : ''}">${eggSVG(E.min, p)}</div></div>
       <div class="egg-time">${eggClock(eggLeft(E))}</div>
+      <div class="egg-cat-run">${eggCatIc(eggCat(eggCatOf(E)))} <b>${esc(eggCat(eggCatOf(E)).n)}</b></div>
       <div class="egg-status small">${eggStatus(E)}</div>
       <div class="egg-break small" ${eggInBreak(E) ? '' : 'hidden'}><button class="sm" data-act="egg-skipbreak">Pomiń przerwę</button></div>
-      ${E.mode === 'study' ? '<button class="primary block" data-go="#/">📚 Ucz się – jajko rośnie podczas nauki</button>' : '<p class="small muted">📵 Odłóż telefon ekranem w dół. Ekran nie zgaśnie – nie blokuj go i nie wychodź z aplikacji.</p>'}
+      ${E.mode === 'study' ? '<button class="primary block" data-go="#/">📚 Ucz się – jajko rośnie podczas nauki</button>' : `<p class="small muted">${E.cat === 'book' ? 'Czytaj książkę, a telefon odłóż ekranem w dół.' : '📵 Odłóż telefon ekranem w dół.'} Ekran nie zgaśnie – nie blokuj go i nie wychodź z aplikacji.</p>`}
       <p class="small muted" style="margin:10px 0 4px">Wyjście z aplikacji na dłużej niż ${EGG_GRACE / 1000} s = jajko pęka 💥${shieldCount() ? ` (🛡️ tarcza uratuje je ${shieldCount()}×)` : ''}.</p>
       <button class="ghost sm" data-act="egg-quit">Poddaj się</button>
     </div>` };
@@ -200,11 +215,14 @@ ROUTES.egg = () => {
     <div class="egg-pick">${EGG_TIERS.map(x => `<button class="${x.min === EGG_PICK.min ? 'on' : ''}" data-act="egg-min" data-m="${x.min}"><span class="mini-egg">${eggSVG(x.min)}</span><b>${x.min >= 60 ? x.min / 60 + ' h' : x.min + ' min'}</b><small>+${x.gems} 💎</small></button>`).join('')}</div>
     <div class="odds center egg-odds">${Object.keys(t.odds).map(r => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${pctFmt(pct(r))}</span>`).join(' ')}${t.mythic ? ` <span style="color:${RARITY.mythic.color};font-weight:700">🔴 Mityczna ${pctFmt(t.mythic)}</span>` : ''}
       <br><small class="muted">Połowa wykluć to naklejki 🥚 dostępne tylko z inkubatora</small></div>
+    <div class="egg-cat-h"><b>Czym się zajmujesz?</b><small class="muted">jajko zapisze się w tej kategorii</small></div>
+    <div class="egg-cats">${[...EGG_CATS, ...eggUserCats()].map(c => `<button class="egg-cat${eggCat(EGG_PICK.cat).id === c.id ? ' on' : ''}" data-act="egg-cat" data-c="${esc(c.id)}">${eggCatIc(c)}<span>${esc(c.n)}</span></button>`).join('')}<button class="egg-cat add" data-act="egg-cat-add"><b class="ec-plus">+</b><span>Własna</span></button></div>
+    ${eggCat(EGG_PICK.cat).own ? `<button class="sm ghost" data-act="egg-cat-del" style="margin:2px 0 8px">Usuń kategorię „${esc(eggCat(EGG_PICK.cat).n)}” z listy</button>` : ''}
     <div class="seg egg-mode"><button class="${EGG_PICK.mode === 'study' ? 'on' : ''}" data-act="egg-mode" data-m="study">📚 Nauka w aplikacji</button><button class="${EGG_PICK.mode === 'phone' ? 'on' : ''}" data-act="egg-mode" data-m="phone">📵 Telefon odłożony</button></div>
-    <p class="small muted" style="margin:6px 0">${EGG_PICK.mode === 'study' ? 'Czas leci tylko, gdy uczysz się w aplikacji (fiszki, testy, gry, bitwy). Liczy się do czasu nauki w rankingu.' : 'Uczysz się z zeszytu albo książki. Telefon leży ekranem w dół, ekran nie gaśnie, czas leci cały czas.'}</p>
+    <p class="small muted" style="margin:6px 0">${EGG_PICK.mode === 'study' ? 'Czas leci tylko, gdy uczysz się w aplikacji (fiszki, testy, gry, bitwy). Liczy się do czasu nauki w rankingu.' : (EGG_PICK.cat === 'book' ? 'Czytasz książkę. ' : 'Uczysz się z zeszytu, książki albo robisz coś poza telefonem. ') + 'Telefon leży ekranem w dół, ekran nie gaśnie, czas leci cały czas.'}</p>
     ${EGG_PICK.min >= 45 ? `<label class="row nowrap small" style="gap:8px;margin:6px 0"><input type="checkbox" data-act="egg-pomo" ${EGG_PICK.pomo ? 'checked' : ''}> ☕ Przerwy pomodoro (co 25 min – 5 min, wtedy można wyjść)</label>` : ''}
     ${itemCount('egg', 'boss') ? `<label class="row nowrap small golden-pick" style="gap:8px;margin:6px 0"><input type="checkbox" data-act="egg-golden" ${EGG_PICK.golden ? 'checked' : ''}> 👑 Użyj złotego jaja z bossa (masz ${itemCount('egg', 'boss')}) – stworek co najmniej epicki</label>` : ''}
-    <button class="primary block" data-act="egg-start" style="min-height:56px;font-size:18px">🥚 Zacznij · ${EGG_PICK.min} min</button>
+    <button class="primary block" data-act="egg-start" style="min-height:56px;font-size:18px">🥚 Zacznij · ${esc(eggCat(EGG_PICK.cat).n)} · ${EGG_PICK.min} min</button>
     <div class="row nowrap small" style="margin-top:10px"><span class="grow">🛡️ Tarcze: <b>${shieldCount()}</b> <span class="muted">(1 darmowa dziennie, ratuje jajko po wyjściu)</span></span><button class="sm" data-act="egg-shield">+1 · ${SHIELD_PRICE} 💎</button></div>
   </div>
   ${nestHTML()}
@@ -212,7 +230,7 @@ ROUTES.egg = () => {
     <p class="small muted" style="margin:6px 0 0">Nie ma ich w skrzynkach – tylko z jajek.</p></div>` };
 };
 // ---------- 🪺 gniazdo: miesiąc / rok / wszystkie
-let NEST = { range: 'month', off: 0 };
+let NEST = { range: 'month', off: 0, cat: '' };
 const NEST_MONTHS = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
 const crMini = x => x.cr ? creatureSVG(x.cr.s, x.cr.r) : x.st && stickerById(x.st) ? stE(stickerById(x.st)) : '🐣';
 function nestRange() {
@@ -222,7 +240,10 @@ function nestRange() {
   return { from: 0, to: Infinity, label: 'Od początku' };
 }
 function nestHTML() {
-  const R = nestRange(), list = eggs().filter(x => x.end >= R.from && x.end < R.to), ok = list.filter(x => x.ok);
+  const R = nestRange(), all = eggs().filter(x => x.end >= R.from && x.end < R.to), list = NEST.cat ? all.filter(x => eggCatOf(x) === NEST.cat) : all, ok = list.filter(x => x.ok);
+  const byCat = {}; for (const x of all) if (x.ok) byCat[eggCatOf(x)] = (byCat[eggCatOf(x)] || 0) + x.min;
+  const catTot = Object.values(byCat).reduce((a, b) => a + b, 0) || 1;
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([id, m]) => { const c = eggCat(id); return `<button class="nest-cat${NEST.cat === id ? ' on' : ''}" data-act="nest-cat" data-c="${esc(id)}">${eggCatIc(c)}<span class="grow"><b>${esc(c.n)}</b><i style="width:${(m / catTot * 100).toFixed(1)}%"></i></span><small>${fmtDur(m * 60000)}</small></button>`; }).join('');
   const mins = ok.reduce((a, x) => a + x.min, 0), rare = ok.filter(x => x.cr && CR_RANK[x.cr.r] >= 3).length;
   const seg = [['month', 'Miesiąc'], ['year', 'Rok'], ['all', 'Wszystkie']].map(([k, l]) => `<button class="${NEST.range === k ? 'on' : ''}" data-act="nest-range" data-k="${k}">${l}</button>`).join('');
   const nav = NEST.range === 'all' ? `<b>${R.label}</b>` : `<button class="iconbtn" data-act="nest-off" data-d="-1" aria-label="Wcześniej">‹</button><b>${R.label}</b><button class="iconbtn" data-act="nest-off" data-d="1" ${NEST.off >= 0 ? 'disabled' : ''} aria-label="Później">›</button>`;
@@ -247,12 +268,13 @@ function nestHTML() {
   // równa siatka: te same odstępy w poziomie i pionie, ostatni rząd wyśrodkowany
   const meadow = `<div class="meadow" style="--rows:${rows}"><div class="mw-in">${field.map((x, i) => { const c = i % cols, r = Math.floor(i / cols), inRow = Math.min(cols, field.length - r * cols), tx = (c + .5 + (cols - inRow) / 2) / cols * 100, ty = (r + .5) / rows * 100;
       const ti = Math.max(0, EGG_TIERS.findIndex(t => t.min === x.min));
-      return `<button class="mw-egg${x.ok ? '' : ' bad'}" data-act="${x.ok ? 'cr-open' : 'noop'}" data-id="${x.id}" style="left:${tx.toFixed(1)}%;top:${ty.toFixed(1)}%;z-index:${r * 10 + 5};--s:${(.85 + ti * .07).toFixed(2)}" title="${x.min} min${x.ok ? '' : ' · pęknięte'}"><img src="assets/egg8/egg_${EGI[ti]}.webp" alt=""></button>`; }).join('')}
+      return `<button class="mw-egg${x.ok ? '' : ' bad'}" data-act="${x.ok ? 'cr-open' : 'noop'}" data-id="${x.id}" style="left:${tx.toFixed(1)}%;top:${ty.toFixed(1)}%;z-index:${r * 10 + 5};--s:${(.85 + ti * .07).toFixed(2)}" title="${esc(eggCat(eggCatOf(x)).n)} · ${x.min} min${x.ok ? '' : ' · pęknięte'}"><img src="assets/egg8/egg_${EGI[ti]}.webp" alt=""></button>`; }).join('')}
 </div>
     ${field.length ? '' : '<p class="mw-empty">Twoja łąka czeka na pierwsze jajko 🥚</p>'}</div>`;
   return `<div class="card nest"><div class="row nowrap"><h2 class="grow" style="margin:0">🪺 Twoje gniazdo</h2></div>
     <div class="seg nest-seg">${seg}</div>
     <div class="nest-nav">${nav}</div>
+    ${cats ? `<div class="nest-cats"><div class="small muted">Czas według kategorii${NEST.cat ? ' · <b>stuknij jeszcze raz, żeby pokazać wszystko</b>' : ' · stuknij, żeby filtrować'}</div>${cats}</div>` : ''}
     <div class="time-kpis">${[['wyklute', ok.length], ['skupienie', fmtDur(mins * 60000)], ['rzadkie+', rare], ['pęknięte', list.length - ok.length]].map(([l, v]) => `<div><b>${v}</b><small>${l}</small></div>`).join('')}</div>
     ${meadow}
     ${body}
@@ -267,7 +289,7 @@ function crOpen(id) {
   ov.innerHTML = `<div class="drops-box center cr-box" style="--rc:${RARITY[c.r].color}"><button class="iconbtn cr-x" data-x="close">✕</button>
     <div class="cr-big">${creatureSVG(c.s, c.r)}</div><b style="font-size:24px">${esc(c.n)} <small class="muted">#${c.no || ''}</small></b>
     <div style="color:${RARITY[c.r].color};font-weight:700">${RARITY[c.r].name} · ${esc(creatureDesc(c.s, c.r))}</div>
-    <p class="small muted" style="margin:4px 0 10px">Wykluty ${new Date(x.end).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })} po ${x.min} min skupienia</p>
+    <p class="small muted" style="margin:4px 0 10px">Wykluty ${new Date(x.end).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })} po ${x.min} min · ${eggCatIc(eggCat(eggCatOf(x)))} ${esc(eggCat(eggCatOf(x)).n)}</p>
     <div class="row"><button class="grow" data-x="rename">✏️ Zmień imię</button><button class="grow primary" data-x="avatar">👤 Ustaw jako awatar</button></div></div>`;
   ov.addEventListener('click', async e => {
     const b = e.target.closest('[data-x]'); if (e.target === ov || b?.dataset.x === 'close') return ov.remove();
@@ -292,10 +314,16 @@ Object.assign(ACTIONS, {
   'egg-mode': el => { EGG_PICK.mode = el.dataset.m; eggPickSave(); render(); },
   'egg-pomo': el => { EGG_PICK.pomo = el.checked; eggPickSave(); },
   'egg-start': () => eggStart(),
+  'egg-cat': el => { const c = eggCat(el.dataset.c); EGG_PICK.cat = c.id; EGG_PICK.mode = c.mode || 'phone'; eggPickSave(); render(); },
+  'egg-cat-add': () => { const n = (prompt('Nazwa kategorii (np. Matma, Rysowanie, Gitara):') || '').replace(/\s+/g, ' ').trim().slice(0, 20); if (!n) return;
+    const L = S.settings.eggCats = (S.settings.eggCats || []).filter(x => x !== n); L.push(n); EGG_PICK.cat = 'u:' + n; EGG_PICK.mode = 'phone'; eggPickSave(); save(); render(); },
+  'egg-cat-del': () => { const c = eggCat(EGG_PICK.cat); if (!c.own) return; S.settings.eggCats = (S.settings.eggCats || []).filter(x => x !== c.n);
+    if (eggs().some(x => x.cat === c.id)) toast('Kategoria zostanie w gnieździe, bo masz w niej jajka'); EGG_PICK.cat = 'cards'; EGG_PICK.mode = 'study'; eggPickSave(); save(); render(); },
+  'nest-cat': el => { NEST.cat = NEST.cat === el.dataset.c ? '' : el.dataset.c; render(); },
   'egg-golden': el => { EGG_PICK.golden = el.checked; eggPickSave(); },
-  'nest-range': el => { NEST = { range: el.dataset.k, off: 0 }; render(); },
+  'nest-range': el => { NEST = { range: el.dataset.k, off: 0, cat: NEST.cat }; render(); },
   'nest-off': el => { NEST.off = Math.min(0, NEST.off + +el.dataset.d); render(); },
-  'nest-month': el => { const now = new Date(); NEST = { range: 'month', off: (+el.dataset.y - now.getFullYear()) * 12 + (+el.dataset.m - now.getMonth()) }; render(); },
+  'nest-month': el => { const now = new Date(); NEST = { range: 'month', off: (+el.dataset.y - now.getFullYear()) * 12 + (+el.dataset.m - now.getMonth()), cat: NEST.cat }; render(); },
   'cr-open': el => crOpen(el.dataset.id),
   'egg-quit': () => { const E = eggRun(); if (E && confirm('Poddać się? Jajko pęknie i nic się nie wykluje.')) eggFinish(E, false, 'quit'); },
   'egg-skipbreak': () => { const E = eggRun(); if (E) { E.breakUntil = 0; eggSave(E); render(); } },
