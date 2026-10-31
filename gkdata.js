@@ -603,6 +603,132 @@ przyspieszać|accelerate|3`.split('\n').map(l => l.split('|'));
     const q2 = `Co znaczy angielskie słowo „${en}”?`; add('enr', +l, 'lan', q2, pl, wrong(q2, pl, same.map(v => v[0])));
   }
 
+  // ---------- 🎤 popkultura: rap, memy, internet, gry, filmy (pisane ręcznie)
+  const POP = `1|Jak nazywa się kot z memów, który ma wiecznie niezadowoloną minę?|Grumpy Cat|Nyan Cat|Keyboard Cat|Longcat
+1|Jaki pies rasy shiba inu stał się symbolem memu „such wow”?|Doge|Cheems|Balltze|Walter
+1|Kot z tęczą zamiast ogona lecący przez kosmos to:|Nyan Cat|Grumpy Cat|Pop Cat|Happy Cat
+1|Jak nazywa się „wkręcanie” kogoś linkiem do teledysku „Never Gonna Give You Up”?|Rickroll|Trolling|Clickbait|Prank call
+1|Kto śpiewa „Never Gonna Give You Up”?|Rick Astley|Rick Ross|Phil Collins|George Michael
+1|Co oznacza w internecie skrót „XD”?|śmiejąca się buźka|zmęczenie|zdziwienie|złość
+1|Co oznacza skrót „IMO”?|moim zdaniem|na pewno|natychmiast|w ogóle
+1|Co oznacza słowo „cringe”?|żenada|odwaga|zachwyt|nuda
+1|Co oznacza „ghosting”?|nagłe zerwanie kontaktu bez słowa|straszenie kogoś|udawanie ducha w grze|kasowanie zdjęć
+1|Jak nazywa się chwytliwy tytuł lub miniaturka, które przesadzają, żeby ktoś kliknął?|clickbait|spoiler|stream|hashtag
+1|Co to jest „spoiler”?|zdradzenie zakończenia filmu lub serialu|reklama w filmie|nagranie zza kulis|błąd w napisach
+1|Gra, w której budujesz z bloków i walczysz z Creeperami, to:|Minecraft|Roblox|Terraria|Fortnite
+1|Jak nazywa się zielony stwór z Minecrafta, który wybucha?|Creeper|Enderman|Zombie|Szkielet
+1|Hydraulik w czerwonej czapce z gier Nintendo to:|Mario|Luigi|Wario|Toad
+1|Jak ma na imię brat Mario w zielonej czapce?|Luigi|Wario|Yoshi|Toad
+1|Żółte stworzonko z Pokémonów, które razi prądem, to:|Pikachu|Charmander|Bulbasaur|Jigglypuff
+1|W jakiej grze „impostor” sabotuje statek kosmiczny?|Among Us|Fortnite|Minecraft|Fall Guys
+1|Gra „battle royale”, w której można budować ściany i tańczyć emotki, to:|Fortnite|PUBG|Apex Legends|Warzone
+1|Kto napisał serię książek o Harrym Potterze?|J.K. Rowling|J.R.R. Tolkien|Suzanne Collins|Rick Riordan
+1|Jak nazywa się szkoła magii, do której chodzi Harry Potter?|Hogwart|Durmstrang|Beauxbatons|Ilvermorny
+1|Jak ma na imię lew, główny bohater „Króla Lwa”?|Simba|Mufasa|Skaza|Nala
+1|Zielony ogr z bajki DreamWorks to:|Shrek|Grinch|Hulk|Yoda
+1|Jak ma na imię osioł, przyjaciel Shreka?|Osioł|Fiona|Kot w Butach|Pinokio
+1|Jak ma na imię kowboj z „Toy Story”?|Chudy|Buzz Astral|Pan Bulwa|Rex
+1|Mały zielony mistrz Jedi z „Gwiezdnych wojen” to:|Yoda|Chewbacca|R2-D2|Jabba
+1|Jak nazywa się słynny czarny złoczyńca w hełmie z „Gwiezdnych wojen”?|Darth Vader|Kylo Ren|Darth Maul|Palpatine
+1|Superbohater, który strzela pajęczyną, to:|Spider-Man|Batman|Superman|Iron Man
+1|Jak naprawdę nazywa się Iron Man?|Tony Stark|Bruce Wayne|Peter Parker|Steve Rogers
+1|Kto jest alter ego Batmana?|Bruce Wayne|Clark Kent|Tony Stark|Bruce Banner
+1|Bajka o gąbce mieszkającej w ananasie pod wodą to:|SpongeBob Kanciastoporty|Gumball|Pora na przygodę|Fineasz i Ferb
+1|Jak ma na imię najlepszy przyjaciel SpongeBoba, różowa rozgwiazda?|Patryk|Skalmar|Pan Krab|Sandy
+1|Platforma z krótkimi pionowymi filmikami i „For You Page” to:|TikTok|LinkedIn|Pinterest|Tumblr
+1|Na jakiej platformie streamuje się najczęściej gry na żywo (fioletowe logo)?|Twitch|Spotify|Pinterest|Snapchat
+1|Jak nazywa się główny bohater gry „The Legend of Zelda”?|Link|Zelda|Ganon|Navi
+1|Jak nazywa się niebieski jeż z gier SEGA?|Sonic|Knuckles|Tails|Shadow
+2|Kto nagrał album „Marmur”?|Taco Hemingway|Sokół|Paktofonika|Białas
+2|Jak nazywa się utwór Maty z 2019 r., od którego zaczęła się jego wielka popularność?|Patointeligencja|Szlugi i kalafiory|Kiss Cam|Lloret de Mar
+2|Kto nagrał album „100 dni do matury”?|Mata|Taco Hemingway|Szpaku|Young Leosia
+2|Kto wspólnie z Taco Hemingwayem nagrał projekt „Taconafide”?|Quebonafide|Mata|Białas|Bedoes
+2|Album „Egzotyka” nagrał:|Quebonafide|Taco Hemingway|Bedoes|Paluch
+2|Legendarna polska grupa hip-hopowa z utworem „Jestem Bogiem” to:|Paktofonika|Kaliber 44|Molesta|Grammatik
+2|Raperka, autorka hitu „Szklanki”, to:|Young Leosia|Bambi|Sanah|Margaret
+2|Polski raper Sokół był członkiem grupy:|WWO|Paktofonika|Kaliber 44|Hemp Gru
+2|Prawdziwe imię i nazwisko Taco Hemingwaya to:|Filip Szcześniak|Michał Matczak|Kuba Grabowski|Tymoteusz Bucki
+2|Mata naprawdę nazywa się:|Michał Matczak|Filip Szcześniak|Kuba Grabowski|Jakub Konopka
+2|Amerykański raper, autor albumu „The Marshall Mathers LP”, to:|Eminem|Jay-Z|Kanye West|50 Cent
+2|Jak brzmi pseudonim, pod którym występuje Marshall Mathers?|Eminem|Dr. Dre|Snoop Dogg|Ice Cube
+2|Raper z Toronto, autor „Hotline Bling”, to:|Drake|The Weeknd|Travis Scott|Post Malone
+2|Kto nagrał „Sicko Mode”?|Travis Scott|Drake|Lil Nas X|Kanye West
+2|Kto nagrał „Old Town Road”?|Lil Nas X|Travis Scott|Lil Wayne|Tyler, the Creator
+2|Raper, który zdobył Nagrodę Pulitzera za album „DAMN.”, to:|Kendrick Lamar|J. Cole|Eminem|Jay-Z
+2|Kto nagrał „Lose Yourself” do filmu „8. Mila”?|Eminem|50 Cent|Dr. Dre|Nas
+2|Raper znany z hitu „Gangsta's Paradise”:|Coolio|Tupac|Snoop Dogg|Ice-T
+2|Tupac i który inny raper byli symbolami „wojny” Wschodu z Zachodem w latach 90.?|The Notorious B.I.G.|Eminem|Jay-Z|Nas
+2|Kto jest autorem utworu „In Da Club”?|50 Cent|Eminem|Dr. Dre|Ja Rule
+2|Mem z psem siedzącym w płonącym pokoju mówi:|This is fine|Such wow|It's over 9000|Stonks
+2|Mem z facetem w garniturze i strzałką rosnącego wykresu to:|Stonks|Doge|Wojak|Chad
+2|Co mówi postać z memu, gdy wszystko wokół płonie?|This is fine|I'm fine|Help me|Not again
+1|Piosenka „Mam tę moc” pochodzi z bajki:|Kraina lodu|Zaplątani|Vaiana|Merida Waleczna
+2|Popularny mem „Ok boomer” wyśmiewa:|starsze pokolenie|graczy|nauczycieli|influencerów
+2|Mem z chłopakiem oglądającym się za inną dziewczyną to:|Distracted Boyfriend|Hide the Pain Harold|Drake Hotline Bling|Two Buttons
+2|Mem z Drakiem, który odpycha jedno, a wskazuje drugie, pochodzi z teledysku:|Hotline Bling|God's Plan|One Dance|In My Feelings
+2|Uśmiechnięty starszy pan z memów, który „ukrywa ból”, to:|Hide the Pain Harold|Bad Luck Brian|Success Kid|Scumbag Steve
+2|Słynny polski „Papaj” to w memach przezwisko:|Jana Pawła II|Lecha Wałęsy|Adama Małysza|Roberta Lewandowskiego
+2|Co oznacza w memach liczba „2137”?|godzinę śmierci Jana Pawła II|numer autobusu|kod do sejfu|rok z „Gwiezdnych wojen”
+2|Kremówki w memach kojarzą się z:|Janem Pawłem II|Adamem Małyszem|Kubą Wojewódzkim|Krzysztofem Ibiszem
+1|Kot z komiksów, który nienawidzi poniedziałków i kocha lasagne, to:|Garfield|Tom|Filemon|Kot w Butach
+2|Jak nazywa się mem „podwójnych standardów” z dwoma przyciskami i spoconym gościem?|Two Buttons|Expanding Brain|Galaxy Brain|Change My Mind
+2|Youtuber, który założył „Ekipę” (i lody Ekipa), to:|Friz|Rezi|Gimper|Multi
+1|Gra o Geralcie z Rivii, łowcy potworów, to:|Wiedźmin|Diablo|Skyrim|Dark Souls
+2|Polskie studio, które stworzyło „Wiedźmina 3” i „Cyberpunka 2077”, to:|CD Projekt Red|Techland|People Can Fly|11 bit studios
+2|Polskie studio, twórca gry „Dying Light”, to:|Techland|CD Projekt Red|Bloober Team|11 bit studios
+2|Polska gra o przetrwaniu cywilów w czasie wojny to:|This War of Mine|Frostpunk|Gothic|Layers of Fear
+2|Jak nazywa się koń Geralta z Rivii?|Płotka|Rosynant|Bucefał|Kasztanka
+2|W „Gwiezdnych wojnach” Darth Vader mówi do Luke'a: „Luke, ja jestem…”|twoim ojcem|twoim bratem|twoim mistrzem|twoim przyjacielem
+2|Jak nazywa się seria filmów o Avengersach – „Avengers: Koniec…”?|gry|świata|wojny|czasu
+2|Który aktor gra Jacka Sparrowa w „Piratach z Karaibów”?|Johnny Depp|Orlando Bloom|Brad Pitt|Leonardo DiCaprio
+2|W którym filmie Leonardo DiCaprio zdobył Oscara (2016)?|Zjawa|Titanic|Incepcja|Wilk z Wall Street
+2|Serial Netflixa o nastolatkach z Hawkins i świecie „Do góry nogami” to:|Stranger Things|Dark|The OA|Riverdale
+2|Serial o koreańskiej, śmiertelnie niebezpiecznej grze w „zielone światło, czerwone światło” to:|Squid Game|Alice in Borderland|Kingdom|Sweet Home
+2|Jak nazywa się córka Gomeza i Morticii, bohaterka serialu Netflixa z 2022 r.?|Wednesday|Enid|Morticia|Pugsley
+2|Serial o rodzinie Simpsonów – jak ma na imię ojciec?|Homer|Bart|Ned|Moe
+2|Co mówi Homer Simpson, gdy coś mu nie wyjdzie?|D'oh!|Ay caramba!|Eat my shorts!|Excellent!
+2|Jak nazywa się bar, do którego chodzi Homer Simpson?|U Moe|Paddy's Pub|Central Perk|MacLaren's
+2|W serialu „Przyjaciele” – jak nazywa się kawiarnia bohaterów?|Central Perk|U Moe|MacLaren's|Monk's Café
+2|Podróżujący kucharz z YouTube i TV, fan Austro-Węgier, bohater wielu memów, to:|Robert Makłowicz|Magda Gessler|Karol Okrasa|Pascal Brodnicki
+2|Kto zaśpiewał hit „Shape of You”?|Ed Sheeran|Shawn Mendes|Harry Styles|Justin Bieber
+2|Kto zaśpiewał „Blinding Lights”?|The Weeknd|Drake|Bruno Mars|Post Malone
+2|Wokalistka, której fani to „Swifties”, to:|Taylor Swift|Billie Eilish|Ariana Grande|Dua Lipa
+2|Polska wokalistka, autorka hitu „Szampan”, to:|Sanah|Daria Zawiałow|Margaret|Doda
+2|Kto zaśpiewał „River” na Eurowizji 2022 dla Polski?|Ochman|Blanka|Michał Szpak|Kasia Moś
+2|Koreański zespół, którego fani to „ARMY”, to:|BTS|BLACKPINK|EXO|TWICE
+2|Kto zaśpiewał „Gangnam Style”?|PSY|BTS|Rain|BIGBANG
+3|Jaki był pierwszy film wrzucony na YouTube (2005)?|Me at the zoo|Charlie bit my finger|Gangnam Style|Evolution of Dance
+3|Jak nazywa się „sygnaturka” MrBeasta, czyli z czego słynie?|ogromne wyzwania i rozdawanie pieniędzy|recenzje gier|tutoriale makijażu|vlogi z podróży
+3|Mem „It's over 9000!” pochodzi z anime:|Dragon Ball Z|Naruto|One Piece|Pokémon
+3|Mem „Wojak” to rysunkowa postać, która wyraża:|smutek i rozczarowanie|radość|złość|strach przed pająkami
+3|Jak nazywa się żaba, która stała się jednym z najpopularniejszych memów internetu?|Pepe|Kermit|Freddie|Froggo
+3|Słowo „sigma” w memach oznacza:|samotnego „wilka”, który chodzi własną drogą|lidera grupy|nowicjusza|przegranego
+3|Co oznacza w slangu „rizz”?|urok, umiejętność podrywania|pieniądze|zmęczenie|kłamstwo
+3|Co oznacza w slangu „NPC”?|osoba zachowująca się jak bezmyślna postać z gry|ktoś bardzo bogaty|najlepszy przyjaciel|nowy pracownik
+3|Jakie słowo zostało Młodzieżowym Słowem Roku 2023 w Polsce?|rel|sigma|bambik|essa
+3|Jakie słowo zostało Młodzieżowym Słowem Roku 2022 w Polsce?|essa|rel|sigma|alternatywka
+3|Jakie słowo zostało Młodzieżowym Słowem Roku 2021?|śpiulkolotek|essa|rel|bambik
+3|Jakie słowo zostało Młodzieżowym Słowem Roku 2024?|sigma|rel|essa|delulu
+3|Co oznacza słowo „rel” w młodzieżowym slangu?|„też tak mam”, utożsamiam się|„nie rozumiem”|„do zobaczenia”|„ale żenada”
+3|Co znaczy w slangu „essa”?|wyraz radości, sukcesu|smutek|ostrzeżenie|przeprosiny
+3|EP Taco Hemingwaya z 2015 r. to:|Umowa o dzieło|Marmur|Szprycer|Pocztówka z WWA, lato '19
+3|Kto nagrał album „Romantic Psycho”?|Quebonafide|Taco Hemingway|Szpaku|Bedoes
+3|Raper i producent Dr. Dre współzałożył markę słuchawek:|Beats|Bose|JBL|Sennheiser
+3|Pierwszy raper, który był nagrodzony Oscarem za piosenkę (2003)? |Eminem|Jay-Z|Kanye West|Common
+3|Album Kanyego Westa z 2010 r. to „My Beautiful Dark Twisted…”|Fantasy|Dream|Story|Life
+3|Kto stworzył Minecrafta?|Markus „Notch” Persson|Gabe Newell|Hideo Kojima|Shigeru Miyamoto
+3|Twórca Mario i Zeldy z Nintendo to:|Shigeru Miyamoto|Hideo Kojima|Satoru Iwata|Gabe Newell
+3|W którym roku ukazał się „Wiedźmin 3: Dziki Gon”?|2015|2013|2017|2011
+3|Najlepiej sprzedająca się gra wideo wszech czasów to:|Minecraft|GTA V|Tetris|Fortnite
+3|Jak nazywa się fikcyjne miasto w „GTA V”?|Los Santos|Vice City|Liberty City|San Fierro
+3|Ile kamieni nieskończoności zbiera Thanos?|6|5|7|4
+3|Jak nazywa się planeta, z której pochodzi Superman?|Krypton|Asgard|Tatooine|Vulcan
+3|Kto wyreżyserował „Oppenheimera” (2023)?|Christopher Nolan|Steven Spielberg|Denis Villeneuve|Martin Scorsese
+3|Kto wyreżyserował film „Barbie” (2023)?|Greta Gerwig|Sofia Coppola|Patty Jenkins|Kathryn Bigelow
+3|Jak nazywano jednoczesną premierę „Barbie” i „Oppenheimera” w 2023 r.?|Barbenheimer|Oppiebarbie|Pinkbomb|Barbiehaus
+3|Jaki zespół śpiewa „Bohemian Rhapsody”?|Queen|The Beatles|ABBA|Led Zeppelin
+3|Polska wokalistka znana jako „Doda” śpiewała wcześniej w zespole:|Virgin|Ich Troje|Feel|Bajm`;
+  for (const line of POP.split('\n')) { const [l, q, a, ...w] = line.split('|'); add('pop', +l, 'pop', q, a, w); }
   // ---------- 🧮 matematyka (generowana)
   const near = (key, a, spread, min = 0) => { const r = rng(h32(key)), s = new Set(); let g = 0;
     while (s.size < 3 && g++ < 200) { const d = (1 + Math.floor(r() * spread)) * (r() < .5 ? -1 : 1); if (a + d >= min && a + d !== a) s.add(a + d); } return [...s]; };

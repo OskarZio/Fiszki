@@ -194,7 +194,7 @@ const GK_Q = [
   [3, 'tec', 'Jak zapisać 255 w systemie szesnastkowym?', 'FF', 'EE', 'F0', '100'],
   [3, 'tec', 'Jakiego portu domyślnie używa HTTPS?', '443', '80', '8080', '21'],
 ];
-const GK_CAT = { geo: '🌍 Geografia', his: '📜 Historia', sci: '🔬 Nauka', art: '🎨 Kultura', spo: '⚽ Sport', nat: '🐾 Przyroda', lan: '🗣️ Język', tec: '💻 Technika' };
+const GK_CAT = { geo: '🌍 Geografia', his: '📜 Historia', sci: '🔬 Nauka', art: '🎨 Kultura', spo: '⚽ Sport', nat: '🐾 Przyroda', lan: '🗣️ Język', tec: '💻 Technika', pop: '🎤 Popkultura' };
 const GK_SRS = Object.freeze({ state: 'gk', due: Infinity, lapses: 0, reps: 0 });
 // 📚 cała pula: pytania pisane ręcznie (klucz = numer) + biblioteka z gkdata.js (klucz z treści); duplikaty treści pomijamy
 const GK_ALL = (() => { const hand = GK_Q.map((x, i) => ({ k: String(i), lvl: x[0], cat: x[1], q: x[2], a: x[3], w: x.slice(4) })), qs = new Set(hand.map(x => x.q));
