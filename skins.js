@@ -12,7 +12,7 @@ const SKIN_LINES = ['cat', 'dog', 'fox', 'rabbit', 'phoenix', 'dragon', 'frog'];
 const hasSkins = line => SKIN_LINES.includes(line);
 const skinKey = (line, r) => `${line}-${r}`;
 const skinOwned = (line, r) => hasItem('skin', skinKey(line, r));
-const skinSrc = (line, f, r) => `assets/skins/${line}-${r}.webp`;
+const skinSrc = (line, f, r) => `assets/skins/${line}-${Math.max(0, Math.min(3, f))}-${r}.webp`;   // każda ewolucja ma własny obrazek skina
 // skin to jeden obrazek dorosłej postaci – we wcześniejszych ewolucjach pomniejszony tak jak zwykły sprite
 const skinScale = (line, f) => { const B = typeof SPRITE_BOX !== 'undefined' && SPRITE_BOX[line]; if (!B?.[f] || !B[3]) return 1; return Math.max(.45, Math.min(1, (B[f][3] - B[f][1]) / (B[3][3] - B[3][1]))); };
 const sSkin = r => SKIN_R.includes(r) ? r : null;
@@ -56,7 +56,7 @@ function skinReveal(w, dup) {
   const ov = document.createElement('div'); ov.className = 'cos-ov rev r-' + w.r; ov.style.setProperty('--rc', SKIN_COL[w.r]);
   ov.innerHTML = `<div class="cos-rev card r-${w.r}">${big ? '<i class="cos-rays"></i>' : ''}
     <small class="cos-rar" style="color:${SKIN_COL[w.r]}">${SKIN_NAME[w.r].toUpperCase()} SKIN · ${esc(name)}</small>
-    <div class="cos-big skin-big one"><img class="skinpx" src="${skinSrc(w.line, 3, w.r)}" alt=""></div>
+    ${(() => { const L = (['cat', 'dog'].includes(w.line) ? [0, 2, 3] : [0, 3]).map(f => skinSrc(w.line, f, w.r)); return `<div class="cos-big skin-big" style="grid-template-columns:repeat(${L.length},1fr)">${L.map(src => `<img class="skinpx" src="${src}" alt="">`).join('')}</div>`; })()}
     <p class="small muted">Nowy wygląd postaci we wszystkich ewolucjach.${dup ? ` Masz już ten skin – <b>+${SKIN_DUP[w.r]} 💎</b>.` : ''}</p>
     <div class="row nowrap">${dup ? '' : `<button class="primary grow" data-act="skin-eq" data-l="${w.line}" data-r="${w.r}" data-close="1">${w.line === heroLine() ? 'Załóż' : 'OK'}</button>`}<button class="grow" data-act="skin-close">${dup ? 'OK' : 'Później'}</button></div></div>`;
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
