@@ -2,7 +2,7 @@
 /* ⌨️ Klawiatura na telefonie (iOS/Android): gdy wysuwa się klawiatura, aplikacja wie, ile miejsca zostało
    (visualViewport), dodaje klasę body.kb-open i zmienną --kb (wysokość klawiatury). Karty się wtedy kurczą,
    dolny pasek i pływające przyciski chowają, a aktywne pole przewija się nad klawiaturę – w każdym ekranie
-   (nauka „Wpisz”, boss, mentor, czat, wyszukiwanie, edycja). */
+   (nauka „Wpisz”, boss, czat, wyszukiwanie, edycja). */
 (function kbWatch() {
   const vv = window.visualViewport; if (!vv) return;
   const isField = el => el && el.matches?.('input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), textarea, [contenteditable="true"]');

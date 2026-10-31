@@ -5,6 +5,7 @@
    Szybko = „super skuteczne!”, źle = „chybił!” i obaj widzą poprawną odpowiedź.
    Host wybiera talię, karty idą do kolegi (tylko tekst, na czas walki). Kanał jak w lobby hydry; jest też trening z botem.
    Oba telefony liczą to samo z tej samej kolejki wiadomości (atakujący wysyła gotowy wynik ruchu). */
+const mShort = (t, n = 40) => { t = String(t || '').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
 // ⚖️ balans: dużo pytań (300 HP ≈ 12–15 trafień), poziom daje umiarkowaną przewagę (do +20% ❤️ i +15% obrażeń),
 // a większą – seria dobrych odpowiedzi (do +30%). Ekwipunek z bossów się nie liczy; za to są przedmioty PvP (max 2 na walkę).
 const DUEL_HP = 300, DUEL_ULT = 3;
