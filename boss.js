@@ -758,7 +758,7 @@ ROUTES.boss = parts => {
   <div class="row nowrap"><h1 class="grow" style="margin:0">⚔️ Przygoda</h1>${coinsHTML()}</div>
   ${heroBarHTML()}
   ${boostChips() || freeBoostReady() ? `<div class="boost-row">${boostChips()}${freeBoostReady() ? '<button class="sm primary" data-act="boost-free">🎁 Darmowy booster</button>' : ''}</div>` : ''}
-  <div class="card row nowrap coop-cta" data-go="#/coop"><img class="gear-img" src="assets/bosses/01.webp" alt=""><div class="grow"><b>👥 Walcz z kolegą – Hydra</b><div class="small muted">Lobby na 2–4 osoby: każdy uczy się swoich fiszek, razem bijecie głowy hydry i reanimujecie się nawzajem</div></div><span>›</span></div>
+  <div class="card row nowrap coop-cta" data-go="#/coop"><img class="gear-img" src="assets/bosses/hydra.webp" alt=""><div class="grow"><b>👥 Walcz z kolegą – Hydra i Wieża duetu</b><div class="small muted">Lobby na 2–4 osoby: bijcie razem głowy hydry albo wspinajcie się we dwoje po wieży – synchro-ciosy i reanimacja</div></div><span>›</span></div>
   ${(() => { const wb = bossFor('weekly'), n = Object.keys(bk()).length;
     return `<div class="card row nowrap weekly-cta" data-act="boss-sel" data-kind="weekly" data-id="weekly" data-i=""><span class="wk-art">${bossArt(wb)}</span><div class="grow"><b>🏆 Boss tygodnia: ${esc(wb.name)}</b><div class="small muted">Ten sam dla wszystkich do niedzieli · Twój rekord: ${weeklyBest().toLocaleString('pl')} obrażeń · ranking znajomych</div></div><span>›</span></div>
     <div class="card row nowrap bestiary-cta" data-go="#/bestiary"><span style="font-size:30px">📖</span><div class="grow"><b>Kronika bossów ${n}/50</b><div class="pbar"><i style="width:${n * 2}%"></i></div></div><span>›</span></div>`; })()}
