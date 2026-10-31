@@ -33,7 +33,8 @@ let emo8Q = false;
 new MutationObserver(() => { if (emo8Q) return; emo8Q = true; requestAnimationFrame(() => { emo8Q = false; emo8Decorate(); }); })
   .observe(document.body, { childList: true, subtree: true, characterData: true });
 // ikony mocy bohaterów: [bierna, supercios, gałąź 1, 2, 3] – numery obrazków z arkusza danej postaci
-const ABIL8 = { cat: [4, 6, 2, 3, 7], frog: [2, 5, 1, 8, 4], dog: [3, 5, 6, 1, 7], owl: [8, 6, 1, 4, 2], hamster: [6, 5, 3, 8, 4], fox: [1, 8, 2, 3, 5], beast: [1, 10, 9, 2, 4] };
+const ABIL8 = { cat: [4, 6, 2, 3, 7], frog: [2, 5, 1, 8, 4], dog: [3, 5, 6, 1, 7], owl: [8, 6, 1, 4, 2], hamster: [6, 5, 3, 8, 4], fox: [1, 8, 2, 3, 5], beast: [1, 10, 9, 2, 4],
+  rabbit: [1, 3, 5, 2, 7], phoenix: [2, 3, 7, 0, 6], dragon: [0, 1, 5, 3, 2] };
 const abTok = (l, i) => `⟦a:${l}:${i}⟧`;
 const stripEmo = s => String(s).replace(/^\S+\s/, '');
 for (const [l, m] of Object.entries(ABIL8)) { const L = LINES[l]; if (!L) continue;

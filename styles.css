@@ -2875,3 +2875,6 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .nest-cat small { flex: none; font-weight: 700; font-size: 13px; color: var(--muted); }
 .cr-box .ec-ic { width: 20px; height: 20px; vertical-align: -4px; }
 .hero-tabs i img.emo8 { width: 30px !important; height: 30px !important; vertical-align: 0 !important; }
+/* 🎨 skiny: jeden obrazek na rzadkość – we wcześniejszych ewolucjach mniejszy */
+.hero-fig .skinpx.skf { transform: scale(var(--sk, 1)); transform-origin: 50% 100%; }
+.skin-big.one { grid-template-columns: 1fr !important; justify-items: center; } .skin-big.one img { width: min(60vw, 220px); }

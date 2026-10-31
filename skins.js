@@ -4,19 +4,21 @@
    – 🎨 Skrzynka skinów (500 💎): 60% szans na postać, którą grasz; duplikat = kryształy,
    – darmowa skrzynka za każdą nową ewolucję postaci (i za start – 1 na powitanie).
    Założony skin widać na bohaterze wszędzie (Bohater, walki, pojedynek – także u przeciwnika). */
-const SKIN_R = ['rare', 'epic', 'legendary', 'mythic'];
-const SKIN_ODDS = { rare: 55, epic: 30, legendary: 12, mythic: 3 }, SKIN_DUP = { rare: 80, epic: 200, legendary: 600, mythic: 2000 }, SKIN_PRICE = 500;
-const SKIN_NAME = { rare: 'Rzadki', epic: 'Epicki', legendary: 'Legendarny', mythic: 'Mityczny' };
-const SKIN_COL = { rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', mythic: '#ef4444' };
-const SKIN_LINES = ['cat', 'frog', 'dog', 'owl', 'hamster', 'fox', 'beast'];   // postacie, które mają już narysowane skiny
+const SKIN_R = ['common', 'rare', 'epic', 'legendary', 'mythic'];
+const SKIN_ODDS = { common: 40, rare: 30, epic: 18, legendary: 9, mythic: 3 }, SKIN_DUP = { common: 40, rare: 80, epic: 200, legendary: 600, mythic: 2000 }, SKIN_PRICE = 500;
+const SKIN_NAME = { common: 'Zwykły', rare: 'Rzadki', epic: 'Epicki', legendary: 'Legendarny', mythic: 'Mityczny' };
+const SKIN_COL = { common: '#94a3b8', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', mythic: '#ef4444' };
+const SKIN_LINES = ['cat', 'dog', 'fox', 'rabbit', 'phoenix', 'dragon', 'frog'];   // postacie, które mają narysowane skiny (jeden obrazek na rzadkość)
 const hasSkins = line => SKIN_LINES.includes(line);
 const skinKey = (line, r) => `${line}-${r}`;
 const skinOwned = (line, r) => hasItem('skin', skinKey(line, r));
-const skinSrc = (line, f, r) => `assets/skins/${line}-${Math.max(0, Math.min(3, f))}-${r}.webp`;
+const skinSrc = (line, f, r) => `assets/skins/${line}-${r}.webp`;
+// skin to jeden obrazek dorosłej postaci – we wcześniejszych ewolucjach pomniejszony tak jak zwykły sprite
+const skinScale = (line, f) => { const B = typeof SPRITE_BOX !== 'undefined' && SPRITE_BOX[line]; if (!B?.[f] || !B[3]) return 1; return Math.max(.45, Math.min(1, (B[f][3] - B[f][1]) / (B[3][3] - B[3][1]))); };
 const sSkin = r => SKIN_R.includes(r) ? r : null;
 // założony skin własnej postaci (tylko posiadany)
 function mySkin(line = heroLine()) { if (!hasSkins(line)) return null; const r = sSkin(hero().skin?.[line]); return r && skinOwned(line, r) ? r : null; }
-const skinImg = (line, f, r) => `<img class="charpx skinpx" src="${skinSrc(line, f, r)}" alt="" draggable="false">`;
+const skinImg = (line, f, r) => `<img class="charpx skinpx skf" style="--sk:${skinScale(line, f).toFixed(2)}" src="${skinSrc(line, f, r)}" alt="" draggable="false">`;
 // figura z podmienionym obrazkiem (bez pozycjonowania sprite'u bazowego – skiny są wyrównane do dołu kwadratu)
 const skinFig = (html, line, f, r) => html.replace(/ s8" style="[^"]*"/, ' skinned"').replace(/<img class="charpx[^>]*>|<svg class="charsvg[\s\S]*?<\/svg>/, skinImg(line, f, r));
 const skHero0 = heroSVG;
@@ -27,7 +29,7 @@ heroSVG = function (cls = '', pr, h) {
 
 // ---------- 🎨 skrzynka skinów
 function skinRoll() {
-  let x = Math.random() * 100, r = 'rare'; for (const k of SKIN_R) { if ((x -= SKIN_ODDS[k]) < 0) { r = k; break; } }
+  let x = Math.random() * 100, r = 'common'; for (const k of SKIN_R) { if ((x -= SKIN_ODDS[k]) < 0) { r = k; break; } }
   const lines = SKIN_LINES.filter(l => CHAR_LINES[l]), line = Math.random() < .6 && hasSkins(heroLine()) ? heroLine() : lines[Math.random() * lines.length | 0];
   return { line, r };
 }
@@ -54,8 +56,8 @@ function skinReveal(w, dup) {
   const ov = document.createElement('div'); ov.className = 'cos-ov rev r-' + w.r; ov.style.setProperty('--rc', SKIN_COL[w.r]);
   ov.innerHTML = `<div class="cos-rev card r-${w.r}">${big ? '<i class="cos-rays"></i>' : ''}
     <small class="cos-rar" style="color:${SKIN_COL[w.r]}">${SKIN_NAME[w.r].toUpperCase()} SKIN · ${esc(name)}</small>
-    <div class="cos-big skin-big">${[0, 1, 2, 3].map(f => `<img class="skinpx" src="${skinSrc(w.line, f, w.r)}" alt="">`).join('')}</div>
-    <p class="small muted">Wygląd we wszystkich 4 ewolucjach.${dup ? ` Masz już ten skin – <b>+${SKIN_DUP[w.r]} 💎</b>.` : ''}</p>
+    <div class="cos-big skin-big one"><img class="skinpx" src="${skinSrc(w.line, 3, w.r)}" alt=""></div>
+    <p class="small muted">Nowy wygląd postaci we wszystkich ewolucjach.${dup ? ` Masz już ten skin – <b>+${SKIN_DUP[w.r]} 💎</b>.` : ''}</p>
     <div class="row nowrap">${dup ? '' : `<button class="primary grow" data-act="skin-eq" data-l="${w.line}" data-r="${w.r}" data-close="1">${w.line === heroLine() ? 'Załóż' : 'OK'}</button>`}<button class="grow" data-act="skin-close">${dup ? 'OK' : 'Później'}</button></div></div>`;
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
   document.body.append(ov);
@@ -63,6 +65,11 @@ function skinReveal(w, dup) {
   if (big && typeof confetti === 'function') confetti(w.r === 'mythic' ? 240 : 140);
   render();
 }
+// 🧹 stare skiny Sowy, Chomika i Stworka wycofane – zwrot 500 💎 za każdy (stałe id, żeby zwrot nie zdublował się na 2 urządzeniach)
+on('start', () => { let n = 0;
+  for (const l of ['owl', 'hamster', 'beast']) for (const r of ['rare', 'epic', 'legendary', 'mythic']) { const k = skinKey(l, r), c = itemCount('skin', k);
+    if (c > 0) { addItem('skin', k, -c, 'skingone-' + k); if (!S.wallet.some(w => w.id === 'skingone-refund-' + k)) { S.wallet.push({ id: 'skingone-refund-' + k, n: SKIN_PRICE, why: 'skin-refund', t: Date.now() }); n += SKIN_PRICE; } } }
+  if (n) { save(); setTimeout(() => toast(`🎨 Stare skiny wycofane – zwrot +${n} 💎`, 4500), 1600); } });
 // darmowe skrzynki: 1 na start + 1 za każdą nową ewolucję postaci
 function skinGrants() {
   const st = S.stats.skinForms = S.stats.skinForms || {}; let n = 0;
