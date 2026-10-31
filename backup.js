@@ -10,7 +10,7 @@ let SNAP_INDEX = [], TRASH = [], persisted = null;
 
 async function snapshot(reason = 'codzienna') {
   const id = 'snap:' + Date.now();
-  await DB.set(id, JSON.stringify({ ...S, settings: { ...S.settings, sync: { ...S.settings.sync, token: '' }, aiKey: '', hostToken: '' } }));
+  await DB.set(id, JSON.stringify({ ...S, settings: { ...S.settings, sync: { ...S.settings.sync, token: '' }, aiKey: '', geminiKey: '', hostToken: '' } }));
   SNAP_INDEX.push({ id, t: Date.now(), reason, cards: S.cards.length, notes: S.notes.length });
   SNAP_INDEX.sort((a, b) => a.t - b.t);
   // zostaw jedną kopię na dzień przez 14 dni + ostatnie 5 kopii „przed operacją”

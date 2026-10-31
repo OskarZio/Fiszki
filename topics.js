@@ -139,7 +139,7 @@ ROUTES.item = parts => {
   </div>
   <div id="editor" class="editor" contenteditable="true" data-placeholder="${it.type === 'note' ? 'Pisz notatki… Zaznacz tekst i użyj zakreślacza albo zrób z niego fiszkę.' : 'Notatki do tego materiału…'}">${sanitizeHtml(it.html || '')}</div>
   <p class="small muted">Zaznacz fragment i stuknij <b>[…]</b> – powstanie fiszka z luką, albo <b>❓</b> – pytanie z odpowiedzią. Zapisuje się samo.</p>
-  ${S.settings.aiKey ? `<button class="block" data-act="note-ai" data-tid="${t.id}" data-id="${it.id}">✨ Zrób fiszki z całej notatki (AI)</button><div class="spacer"></div>` : ''}
+  ${typeof aiReady === 'function' && aiReady() ? `<button class="block" data-act="note-ai" data-tid="${t.id}" data-id="${it.id}">✨ Zrób fiszki z całej notatki (AI)</button><div class="spacer"></div>` : ''}
   <div class="row"><button class="danger" data-act="item-del" data-tid="${t.id}" data-id="${it.id}">Usuń materiał</button></div>` };
 };
 

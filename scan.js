@@ -73,9 +73,34 @@ Zasady:
 - ${count}${opts.extra ? `\n\nDodatkowe polecenia od ucznia: ${opts.extra}` : ''}`;
 }
 
+// 🤖 dostawca AI: Gemini (darmowy klucz z Google AI Studio) albo Claude (płatny); wybrany w Ustawieniach → AI
+const aiProv = () => S.settings.aiProv === 'claude' ? (S.settings.aiKey ? 'claude' : S.settings.geminiKey ? 'gemini' : '') : (S.settings.geminiKey ? 'gemini' : S.settings.aiKey ? 'claude' : '');
+const aiReady = () => !!aiProv();
+const GEMINI_MODEL = 'gemini-2.5-flash';
+// Gemini nie zna additionalProperties w schemacie – usuwamy je
+const gSchema = o => Array.isArray(o) ? o.map(gSchema) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).filter(([k]) => k !== 'additionalProperties').map(([k, v]) => [k, gSchema(v)])) : o;
+async function geminiCall(parts, { json = null, maxTokens = 32000 } = {}) {
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.settings.geminiKey },
+    body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { maxOutputTokens: maxTokens, ...(json ? { responseMimeType: 'application/json', responseSchema: gSchema(json) } : {}) } }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(r.status === 400 && /API key/i.test(j.error?.message || '') ? 'nieprawidłowy klucz Gemini' : r.status === 429 ? 'darmowy limit Gemini na teraz wyczerpany – spróbuj za chwilę' : r.status === 403 ? 'klucz Gemini nie ma dostępu (sprawdź go w AI Studio)' : j.error?.message || 'Gemini chwilowo niedostępne');
+  const c = j.candidates?.[0]; if (!c) throw new Error(j.promptFeedback?.blockReason ? 'Gemini odmówiło przetworzenia tego materiału' : 'pusta odpowiedź Gemini');
+  if (c.finishReason === 'MAX_TOKENS') throw new Error('za dużo materiału naraz – podziel go na mniejsze części');
+  return (c.content?.parts || []).map(p => p.text || '').join('');
+}
+async function aiCardsGemini(files, opts, material) {
+  const parts = files.map(f => ({ inline_data: { mime_type: f.type === 'pdf' ? 'application/pdf' : 'image/jpeg', data: f.data.split(',')[1] } }));
+  if (material) parts.push({ text: 'Materiał do nauki (notatki ucznia):\n\n' + material });
+  parts.push({ text: aiPrompt(opts) });
+  SCAN.busy = '✨ Gemini tworzy fiszki…'; const el = $('#scan-busy'); if (el) el.textContent = SCAN.busy;
+  const cards = JSON.parse(await geminiCall(parts, { json: CARD_SCHEMA })).cards || [];
+  return cards.map(c => ({ type: c.type, front: c.front || '', back: c.back || '', text: c.text || '', hint: c.hint || '', on: true })).filter(c => c.type === 'cloze' ? /\{\{c\d+::/.test(c.text) : c.front.trim() && c.back.trim());
+}
 async function aiCards(files, opts, material = '') {
+  if (aiProv() === 'gemini') return aiCardsGemini(files, opts, material);
   const key = S.settings.aiKey;
-  if (!key) throw new Error('Dodaj klucz API w zakładce Więcej → AI');
+  if (!key) throw new Error('Dodaj klucz AI w Ustawieniach → AI (darmowy Gemini albo Claude)');
   const { default: Anthropic } = await import('./vendor/anthropic-sdk.mjs');
   const client = new Anthropic({ apiKey: key, dangerouslyAllowBrowser: true });
   const content = files.map(f => f.type === 'pdf'
@@ -144,7 +169,7 @@ async function extractText(report) {
 
 // ------------------------------------------------------------ Widok
 function formScan(D) {
-  const hasKey = !!S.settings.aiKey;
+  const hasKey = aiReady();
   const files = SCAN.files.map((f, i) => `<div class="note" style="cursor:default">
       ${f.type === 'image' ? `<img src="${f.data}" alt="">` : '<span style="font-size:32px">📄</span>'}
       <div class="t"><div>${esc(f.name)}</div></div><button class="danger sm" data-act="scan-del" data-i="${i}">✕</button></div>`).join('');
@@ -180,8 +205,8 @@ function formScan(D) {
           <label class="field grow"><span>Ile</span><select data-scanopt="count">${opt('count', 'auto', 'Automatycznie')}${opt('count', '10', '~10')}${opt('count', '20', '~20')}${opt('count', '40', '~40')}</select></label></div>
         <label class="field"><span>Dodatkowe polecenia (opcjonalnie)</span><input data-scanopt="extra" value="${esc(o.extra)}" placeholder="np. tylko nazwy łacińskie mięśni; pomiń przypisy"></label>
         <button class="primary block" data-act="scan-ai">✨ Utwórz fiszki</button>`
-        : `<p class="small muted">AI najlepiej rozumie notatki, tabele i schematy. Wymaga Twojego klucza API Anthropic (płatność za użycie – zwykle grosze za stronę).</p>
-        <button class="block" data-go="#/more">🔑 Dodaj klucz API</button>`}
+        : `<p class="small muted">AI najlepiej rozumie notatki, tabele i schematy. Wystarczy <b>darmowy klucz Gemini</b> od Google (1 minuta, bez karty).</p>
+        <button class="block" data-go="#/more" data-anchor="ai">🆓 Dodaj darmowy klucz AI</button>`}
     </div>
     <div class="card">
       <h3 style="margin-top:0">Bez AI</h3>
@@ -264,16 +289,24 @@ Object.assign(ACTIONS, {
 });
 
 function aiSectionHTML() {
-  const st = S.settings;
-  return `<div class="card"><h2 style="margin-top:0">✨ AI – fiszki ze zdjęć i PDF</h2>
-    <p class="small muted">Żeby AI zamieniało zdjęcia i PDF-y w fiszki, potrzebny jest klucz API Anthropic:</p>
-    <ol class="steps small"><li>Załóż konto na <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> i doładuj kilka dolarów (płacisz tylko za użycie).</li>
+  const st = S.settings, prov = aiProv() || 'gemini';
+  return `<div class="card"><h2 style="margin-top:0">✨ AI – fiszki ze zdjęć, PDF i notatek</h2>
+    <div class="seg ai-prov" style="display:flex">${[['gemini', '🆓 Gemini (darmowe)'], ['claude', '💳 Claude (płatne)']].map(([k, l]) => `<button class="grow${(st.aiProv || 'gemini') === k ? ' on' : ''}" data-act="ai-prov" data-k="${k}">${l}</button>`).join('')}</div>
+    ${(st.aiProv || 'gemini') === 'gemini' ? `
+    <ol class="steps small"><li>Wejdź na <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> i zaloguj się kontem Google.</li>
+      <li>Kliknij <b>„Create API key”</b> – za darmo, bez karty.</li><li>Skopiuj klucz i wklej go poniżej.</li></ol>
+    <label class="field"><span>Klucz Gemini</span><input id="gemini-key" type="password" value="${esc(st.geminiKey || '')}" placeholder="AIza…" autocomplete="off"></label>
+    <p class="small muted">Darmowy limit wystarcza na codzienną naukę jednej osoby. W darmowej wersji Google może używać przesłanych treści do ulepszania swoich modeli – nie wysyłaj danych prywatnych.</p>`
+    : `<ol class="steps small"><li>Załóż konto na <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> i doładuj kilka dolarów (płacisz tylko za użycie).</li>
       <li>W „API Keys” utwórz klucz i wklej go poniżej.</li></ol>
     <label class="field"><span>Klucz API</span><input id="ai-key" type="password" value="${esc(st.aiKey)}" placeholder="sk-ant-…" autocomplete="off"></label>
-    <label class="field"><span>Model</span><select id="ai-model">${AI_MODELS.map(([v, l]) => `<option value="${v}" ${st.aiModel === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-    <p class="small muted">Klucz zostaje tylko na tym urządzeniu (nie jest synchronizowany). Zdjęcia wysyłane są wyłącznie do API Anthropic.</p></div>`;
+    <label class="field"><span>Model</span><select id="ai-model">${AI_MODELS.map(([v, l]) => `<option value="${v}" ${st.aiModel === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`}
+    <p class="small muted" style="margin-bottom:0">${aiReady() ? `✅ AI gotowe: <b>${prov === 'gemini' ? 'Gemini' : 'Claude'}</b>. ` : ''}Klucz zostaje tylko na tym urządzeniu (nie jest synchronizowany).</p></div>`;
 }
 function mountAiSettings() {
+  $('#gemini-key')?.addEventListener('change', e => { S.settings.geminiKey = e.target.value.trim(); save(); render(); });
   $('#ai-key')?.addEventListener('change', e => { S.settings.aiKey = e.target.value.trim(); save(); });
   $('#ai-model')?.addEventListener('change', e => { S.settings.aiModel = e.target.value; save(); });
 }
+
+Object.assign(ACTIONS, { 'ai-prov': el => { S.settings.aiProv = el.dataset.k; save(); render(); } });

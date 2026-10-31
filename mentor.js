@@ -31,19 +31,21 @@ function mentorTips(c) {
 }
 // ✨ skojarzenie od AI – tylko z kluczem ucznia; zapamiętane w fiszce (aiHint), żeby nie pytać drugi raz
 async function mentorAI(c) {
-  const M = MENTOR, n = noteById(c.noteId); if (!M || !n || !S.settings.aiKey || M.ai[c.id] || n.aiHint) return;
+  const M = MENTOR, n = noteById(c.noteId); if (!M || !n || !(typeof aiReady === 'function' && aiReady()) || M.ai[c.id] || n.aiHint) return;
   M.ai[c.id] = { busy: true };
   try {
-    const { default: Anthropic } = await import('./vendor/anthropic-sdk.mjs');
-    const client = new Anthropic({ apiKey: S.settings.aiKey, dangerouslyAllowBrowser: true });
     const v = cardView(c), d = deckById(c.deckId);
     const prompt = `Jesteś życzliwym mentorem nauki. Uczeń uczy się fiszki z talii „${d?.name || 'nauka'}”.\nPytanie: ${stripHtml(v.label || '')}\nOdpowiedź: ${v.ans || stripHtml(v.b || '')}\n\n` +
       'Wymyśl JEDNO krótkie (maks. 2 zdania), obrazowe i zabawne skojarzenie po polsku, które pomoże zapamiętać odpowiedź – najlepiej powiązane z tematem talii, brzmieniem słów albo scenką (mnemotechnika). Nie definiuj odpowiedzi od nowa. Zwróć tylko samo skojarzenie, bez wstępu.';
-    const msg = await client.messages.create({ model: S.settings.aiModel || 'claude-opus-5-5', max_tokens: 400, messages: [{ role: 'user', content: prompt }] });
-    const t = msg.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
-    if (!t || msg.stop_reason === 'refusal') throw new Error('empty');
+    let t;
+    if (aiProv() === 'gemini') t = (await geminiCall([{ text: prompt }], { maxTokens: 1500 })).trim();
+    else { const { default: Anthropic } = await import('./vendor/anthropic-sdk.mjs');
+      const client = new Anthropic({ apiKey: S.settings.aiKey, dangerouslyAllowBrowser: true });
+      const msg = await client.messages.create({ model: S.settings.aiModel || 'claude-opus-5-5', max_tokens: 400, messages: [{ role: 'user', content: prompt }] });
+      if (msg.stop_reason === 'refusal') throw new Error('empty'); t = msg.content.filter(b => b.type === 'text').map(b => b.text).join('').trim(); }
+    if (!t) throw new Error('empty');
     n.aiHint = t; touch(n); save(); M.ai[c.id] = { ok: 1 };
-  } catch (e) { M.ai[c.id] = { err: e.status === 401 ? 'nieprawidłowy klucz API' : e.status === 429 ? 'za dużo zapytań – spróbuj za chwilę' : 'AI chwilowo niedostępne' }; }
+  } catch (e) { M.ai[c.id] = { err: e.status === 401 ? 'nieprawidłowy klucz API' : e.status === 429 ? 'za dużo zapytań – spróbuj za chwilę' : /Gemini|klucz/.test(e.message || '') ? e.message : 'AI chwilowo niedostępne' }; }
   if (MENTOR === M && parseRoute().parts[0] === 'mentor') render();
 }
 
@@ -107,7 +109,7 @@ function mentorTipsHTML(c) {
     : ai?.busy ? '<div class="m-tip ai"><b>✨ Mentor wymyśla skojarzenie…</b></div>' : ai?.err ? `<div class="m-tip ai"><b>✨ AI:</b><span>${esc(ai.err)}</span></div>` : '';
   return `<div class="m-tips">${mine}${aiBox}${tips.map(([i, t, d]) => `<div class="m-tip"><b>${i} ${t}</b><span>${esc(d)}</span></div>`).join('')}
     <button class="sm ghost block" data-act="m-own">✏️ ${n?.hint ? 'Zmień moje skojarzenie' : 'Wymyśl własne skojarzenie – działa najlepiej'}</button>
-    ${S.settings.aiKey ? '' : '<p class="small muted" style="margin:2px 0 0">Z kluczem AI (Więcej → AI) mentor sam wymyśli skojarzenie do każdej fiszki.</p>'}</div>`;
+    ${typeof aiReady === 'function' && aiReady() ? '' : '<p class="small muted" style="margin:2px 0 0">Z darmowym kluczem AI (Ustawienia → AI) mentor sam wymyśli skojarzenie do każdej fiszki.</p>'}</div>`;
 }
 function mentorView() {
   const M = MENTOR, st = M.step, c = st.id && S.cards.find(x => x.id === st.id), v = c ? cardView(c) : null, d = deckById(M.d);
