@@ -30,7 +30,7 @@ function towerBoss(T) {
   if (TW_GK) { const len = Math.min(16, 5 + f), cs = gkPick(T, len);
     return { kind: 'tower', id: 'gtower', i: f, gk: true, weak: null, name: guard ? `${name} – strażnik piętra` : name, desc, img, persona, seed: 777 + f * 131, diff: Math.min(4, Math.floor(f / 3)), stars: 0,
       cards: cs, ok: true, repeat: false, pr: hero().pr || 0, len, title: `🧠 Wieża wiedzy · piętro ${f}${guard ? ' · strażnik' : ''}`, final: guard }; }
-  const cs = S.cards.filter(c => mixFightable(c) && c.srs.state !== 'new');
+  const ds = Array.isArray(T.decks) && T.decks.length ? new Set(T.decks) : null, cs = S.cards.filter(c => (ds ? ds.has(c.deckId) && fightable(c) : mixFightable(c)) && c.srs.state !== 'new');
   return { kind: 'tower', id: 'tower', i: f, name: guard ? `${name} – strażnik piętra` : name, desc, img, persona, seed: 4242 + f * 131, diff: Math.min(4, Math.floor(f / 3)), stars: 0,
     cards: cs, ok: cs.length >= TOWER_REQ, repeat: false, pr: hero().pr || 0, len: Math.min(20, 6 + f), title: `🗼 Wieża · piętro ${f}${guard ? ' · strażnik' : ''}`, final: guard };
 }
@@ -51,9 +51,11 @@ function towerFloor() {
   save(); towerIntro(BOSS, fresh);
 }
 function towerStart() {
+  const twN = () => S.cards.filter(c => (TW_DECKS.length ? TW_DECKS.includes(c.deckId) && fightable(c) : mixFightable(c)) && c.srs.state !== 'new').length;
+  if (!TW_GK && twN() < TOWER_REQ) return toast(`🗼 Wybrane talie mają ${twN()} nauczonych fiszek – potrzeba ${TOWER_REQ}`, 4000);
   if (!TW_GK && learnedAll() < TOWER_REQ) return toast(`🗼 Wieża otwiera się przy ${TOWER_REQ} nauczonych fiszkach (masz ${learnedAll()})`, 4000);
   if (!confirm(TW_GK ? '🧠 Wieża wiedzy – quiz z wiedzy ogólnej.\n\nPiętro za piętrem coraz trudniejsze pytania ABCD: geografia, historia, nauka, kultura, sport… Po piętrze wraca 35% ❤️.\n\nŚmierć albo ucieczka = GAME OVER. Wchodzisz?' : '🗼 Wieża – tryb hardcore.\n\nPiętro za piętrem, coraz trudniej. Po piętrze wraca tylko 35% ❤️. Za każde piętro podwójne XP i 💎.\n\nŚmierć albo ucieczka = GAME OVER – zaczynasz od parteru. Wchodzisz?')) return;
-  const h = hero(); h[twKey()] = { floor: 1, used: [], mode: TW_GK ? 'abcd' : BOSS_PICK.mode, hp: heroStats().hp, bank: { xp: 0, gems: 0 }, buff: {}, seed: Math.random() * 1000 | 0, t: Date.now() }; h.mod = Date.now(); save();
+  const h = hero(); h[twKey()] = { floor: 1, used: [], mode: TW_GK ? 'abcd' : BOSS_PICK.mode, hp: heroStats().hp, bank: { xp: 0, gems: 0 }, buff: {}, decks: TW_GK ? [] : [...TW_DECKS], seed: Math.random() * 1000 | 0, t: Date.now() }; h.mod = Date.now(); save();
   towerFloor();
 }
 function towerEnd(B, won) {
@@ -112,10 +114,11 @@ ROUTES.tower = () => { TW_GK = false; const T = tower();
   return { tab: 'arena', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🗼 Wieża – hardcore</h1>${coinsHTML()}</div>
   <div class="card center"><div style="font-size:64px">🗼</div><p style="margin:4px 0"><b>Ile pięter przetrwasz?</b> Każde piętro to trudniejszy boss, a ❤️ nie odnawia się między walkami.</p>
     <ul class="small" style="text-align:left"><li><b>×2 XP</b> i 💎 dostajesz od razu za każde piętro.</li><li>Po piętrze wraca 35% ❤️ i wybierasz 1 z 3 błogosławieństw.</li><li>Co ${TOWER_GUARD}. piętro – strażnik, mocniejszy boss.</li><li><b>Śmierć albo ucieczka = GAME OVER</b> – od nowa od parteru. Serca zostają.</li></ul>
-    <p class="small muted">Rekord: piętro ${towerBest() || '—'} · walczysz wszystkimi nauczonymi fiszkami (${learnedAll()}/${TOWER_REQ})</p></div>
+    <p class="small muted">Rekord: piętro ${towerBest() || '—'} </p></div>
   ${T ? `<div class="card"><b>W trakcie: piętro ${T.floor}</b><div class="small muted">Zdobyte w tej wspinaczce: +${T.bank.xp} XP, +${T.bank.gems} 💎</div>${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}${towerBuffsHTML(T)}${T.abil?.length ? `<div class="small muted" style="margin-top:10px">Moce bossów w tej wspinaczce (+1 przed każdym piętrem):</div>${curseIconsHTML(T.abil)}` : ''}
     ${towerWeaponHTML(T)}<button class="primary block" data-act="tower-next" style="margin-top:10px">⚔️ Walcz dalej</button></div>`
-    : `<div class="card"><h3 style="margin-top:0">⚔️ Wybierz broń na całą wspinaczkę</h3>${towerModes()}<p class="small muted" style="margin:8px 0 0">Trybu nie zmienisz aż do końca – jak broń w rogaliku.</p></div><button class="primary block boss-go" data-act="tower-start" ${learnedAll() >= TOWER_REQ ? '' : 'disabled'}>🗼 Wejdź do wieży</button>`}` }; };
+    : `<div class="card"><h3 style="margin-top:0">📚 Z jakich talii?</h3><div class="tw-decks">${S.decks.filter(d => deckLearned(d) > 0).map(d => `<label class="tw-deck"><input type="checkbox" data-twdeck="${d.id}" ${TW_DECKS.includes(d.id) ? 'checked' : ''}><span>${esc(d.name)}<small>${deckLearned(d)} nauczonych</small></span></label>`).join('')}</div><p class="small muted" style="margin:6px 0 0">${TW_DECKS.length ? `Wybrane: ${TW_DECKS.length} · ${S.cards.filter(c => TW_DECKS.includes(c.deckId) && fightable(c) && c.srs.state !== 'new').length} fiszek` : 'Nic nie zaznaczone = wszystkie talie (bez zdanych)'} · potrzeba ${TOWER_REQ}</p></div>
+      <div class="card"><h3 style="margin-top:0">⚔️ Wybierz broń na całą wspinaczkę</h3>${towerModes()}<p class="small muted" style="margin:8px 0 0">Trybu nie zmienisz aż do końca – jak broń w rogaliku.</p></div><button class="primary block boss-go" data-act="tower-start" ${learnedAll() >= TOWER_REQ ? '' : 'disabled'}>🗼 Wejdź do wieży</button>`}` }; };
 const twRoute0 = ROUTES.boss;
 ROUTES.boss = (...a) => BOSS?.b?.kind === 'tower' && BOSS.phase !== 'fight' && a[0]?.[1] === 'fight' ? towerAfterView() : twRoute0(...a);
 const twQuit0 = ACTIONS['boss-quit'];
@@ -133,3 +136,6 @@ Object.assign(ACTIONS, {
   'tower-bless': el => towerBless(el.dataset.k),
 });
 HUB_OF.tower = 'arena';
+
+let TW_DECKS = (() => { try { return JSON.parse(localStorage.getItem('twDecks') || '[]'); } catch { return []; } })();
+document.addEventListener('change', e => { const id = e.target.dataset?.twdeck; if (!id) return; TW_DECKS = e.target.checked ? [...new Set([...TW_DECKS, id])] : TW_DECKS.filter(x => x !== id); try { localStorage.setItem('twDecks', JSON.stringify(TW_DECKS)); } catch { /* */ } render(); });

@@ -233,9 +233,13 @@ ROUTES.egg = () => {
     <p class="small muted" style="margin:6px 0 0">Nie ma ich w skrzynkach – tylko z jajek.</p></div>` };
 };
 // ---------- 🪺 gniazdo: miesiąc / rok / wszystkie
+let MW_EDIT = false, MW_SEL = null;
 let NEST = { range: 'month', off: 0, cat: '' };
 const NEST_MONTHS = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
-const crMini = x => x.cr ? creatureSVG(x.cr.s, x.cr.r) : x.st && stickerById(x.st) ? stE(stickerById(x.st)) : '🐣';
+// 🐞 pomocnicy 8-bit: wygląd stworka wg rzadkości (ziarno wybiera wariant)
+const PET8 = { common: ['caterpillar', 'snail'], rare: ['caterpillar', 'snail'], epic: ['ladybug', 'spider'], legendary: ['butterfly', 'dragonfly'], mythic: ['bee', 'firefly', 'mantis', 'beetle'] };
+const petImg = (cr, cls = 'pet8') => { const L = PET8[cr?.r] || PET8.common; return `<img class="${cls}" src="assets/pets8/${L[Math.abs(cr?.s | 0) % L.length]}.webp" alt="" draggable="false">`; };
+const crMini = x => x.cr ? petImg(x.cr) : x.st && stickerById(x.st) ? stE(stickerById(x.st)) : '🐣';
 function nestRange() {
   const now = new Date();
   if (NEST.range === 'month') { const d = new Date(now.getFullYear(), now.getMonth() + NEST.off, 1); return { from: d.getTime(), to: new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime(), label: `${NEST_MONTHS[d.getMonth()]} ${d.getFullYear()}`, d }; }
@@ -266,15 +270,15 @@ function nestHTML() {
   }
   const grid = ok.slice().reverse().slice(0, 120);
   // 🌱 łąka jak w Forest: każde jajko z wybranego okresu stoi na pikselowej trawie (stała pozycja dla każdego jajka)
-  const EGI = ['plain', 'green', 'blue', 'purple', 'gold', 'red'], field = list.slice(-300), cols = 5, rows = Math.max(1, Math.ceil(field.length / cols));
-  const rnd = k => { let h = 2166136261; for (const ch of String(k)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
-  // równa siatka: te same odstępy w poziomie i pionie, ostatni rząd wyśrodkowany
-  const meadow = `<div class="meadow" style="--rows:${rows}"><div class="mw-in">${field.map((x, i) => { const c = i % cols, r = Math.floor(i / cols), inRow = Math.min(cols, field.length - r * cols), tx = (c + .5 + (cols - inRow) / 2) / cols * 100, ty = (r + .5) / rows * 100;
-      const ti = Math.max(0, EGG_TIERS.findIndex(t => t.min === x.min));
-      return `<button class="mw-egg${x.ok ? '' : ' bad'}" data-act="${x.ok ? 'cr-open' : 'noop'}" data-id="${x.id}" style="left:${tx.toFixed(1)}%;top:${ty.toFixed(1)}%;z-index:${r * 10 + 5};--s:${(.85 + ti * .07).toFixed(2)}" title="${esc(eggCat(eggCatOf(x)).n)} · ${x.min} min${x.ok ? '' : ' · pęknięte'}"><img src="assets/egg8/egg_${EGI[ti]}.webp" alt=""></button>`; }).join('')}
+  // 🌱 łąka: tylko wyklute (pęknięte znikają), w równych rzędach; na miejscu jajka stoi wykluty stworek; kolejność da się przestawiać
+  const EGI = ['plain', 'green', 'blue', 'purple', 'gold', 'red'], ord = S.stats.meadow || [], pos = id => { const k = ord.indexOf(id); return k < 0 ? 1e9 : k; };
+  const field = list.filter(x => x.ok).slice(-300).sort((a, b) => pos(a.id) - pos(b.id) || a.end - b.end), cols = 5, rows = Math.max(1, Math.ceil(field.length / cols));
+  const meadow = `<div class="meadow${MW_EDIT ? ' edit' : ''}" style="--rows:${rows}"><div class="mw-in">${field.map((x, i) => { const c = i % cols, r = Math.floor(i / cols), tx = (c + .5) / cols * 100, ty = (r + .5) / rows * 100;
+      const ti = Math.max(0, EGG_TIERS.findIndex(t => t.min === x.min)), pic = x.cr ? petImg(x.cr, 'mw-pet') : `<img src="assets/egg8/egg_${EGI[ti]}.webp" alt="">`;
+      return `<button class="mw-egg${x.cr ? ' cr' : ''}${MW_SEL === x.id ? ' sel' : ''}" data-act="${MW_EDIT ? 'mw-swap' : 'cr-open'}" data-id="${x.id}" style="left:${tx.toFixed(1)}%;top:${ty.toFixed(1)}%;z-index:${r * 10 + 5};--s:${x.cr ? 1.15 : (.85 + ti * .07).toFixed(2)}" title="${esc(x.cr?.n || eggCat(eggCatOf(x)).n)} · ${x.min} min">${pic}</button>`; }).join('')}
 </div>
     ${field.length ? '' : '<p class="mw-empty">Twoja łąka czeka na pierwsze jajko 🥚</p>'}</div>`;
-  return `<div class="card nest"><div class="row nowrap"><h2 class="grow" style="margin:0">🪺 Twoje gniazdo</h2></div>
+  return `<div class="card nest"><div class="row nowrap"><h2 class="grow" style="margin:0">🪺 Twoje gniazdo</h2><button class="sm${MW_EDIT ? ' primary' : ''}" data-act="mw-edit">${MW_EDIT ? '✓ Gotowe' : '↔️ Przestaw'}</button></div>${MW_EDIT ? '<p class="small muted" style="margin:6px 0 0">Stuknij jednego stworka, potem drugiego – zamienią się miejscami.</p>' : ''}
     <div class="seg nest-seg">${seg}</div>
     <div class="nest-nav">${nav}</div>
     ${cats ? `<div class="nest-cats"><div class="small muted">Czas według kategorii${NEST.cat ? ' · <b>stuknij jeszcze raz, żeby pokazać wszystko</b>' : ' · stuknij, żeby filtrować'}</div>${cats}</div>` : ''}
@@ -328,6 +332,10 @@ Object.assign(ACTIONS, {
   'nest-off': el => { NEST.off = Math.min(0, NEST.off + +el.dataset.d); render(); },
   'nest-month': el => { const now = new Date(); NEST = { range: 'month', off: (+el.dataset.y - now.getFullYear()) * 12 + (+el.dataset.m - now.getMonth()), cat: NEST.cat }; render(); },
   'cr-open': el => crOpen(el.dataset.id),
+  'mw-edit': () => { MW_EDIT = !MW_EDIT; MW_SEL = null; render(); },
+  'mw-swap': el => { const id = el.dataset.id; if (!MW_SEL) { MW_SEL = id; return render(); } if (MW_SEL === id) { MW_SEL = null; return render(); }
+    const all = eggs().filter(x => x.ok).sort((a, b) => { const o = S.stats.meadow || []; const p = q => { const k = o.indexOf(q.id); return k < 0 ? 1e9 : k; }; return p(a) - p(b) || a.end - b.end; }).map(x => x.id);
+    const a = all.indexOf(MW_SEL), b = all.indexOf(id); if (a >= 0 && b >= 0) [all[a], all[b]] = [all[b], all[a]]; S.stats.meadow = all; MW_SEL = null; save(); render(); },
   'egg-quit': () => { const E = eggRun(); if (E && confirm('Poddać się? Jajko pęknie i nic się nie wykluje.')) eggFinish(E, false, 'quit'); },
   'egg-skipbreak': () => { const E = eggRun(); if (E) { E.breakUntil = 0; E.brEnd = Date.now(); eggInput = Date.now(); eggSave(E); render(); } },
   'egg-shield': () => { if (spend(SHIELD_PRICE, 'shield')) { addItem('shield', 'shield', 1); toast('🛡️ +1 tarcza'); render(); } },

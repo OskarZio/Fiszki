@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '232';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '233';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1868,7 +1868,7 @@ const ACTIONS = {
   'sess-drop': () => { dropSess(); render(); },
   'end-study': el => { SESSION = null; dropSess(); go(el.dataset.href); },
   'switch-mode': el => { if (SESSION) { const [d, , c] = SESSION.key.split('/'); SESSION.key = `${d}/${el.dataset.href.split('/')[3].split('?')[0]}/${c}`; SESSION.mode = SESSION.key.split('/')[1]; } location.replace(el.dataset.href); },
-  show: () => { SESSION.shown = true; SESSION.spoken = false; render(); },
+  show: () => { const now = Date.now(); if (now - (SESSION.lastTap || 0) < 400) return; SESSION.shown = true; SESSION.shownTapAt = now; SESSION.spoken = false; render(); },
   // obrót karty z animacją (pierwsze stuknięcie = odpowiedź, kolejne = podgląd pytania i z powrotem)
   'flip-card': () => {
     const s = SESSION; if (!s?.card || s.editHint) return;
@@ -1914,7 +1914,7 @@ const ACTIONS = {
     const v = $('#typein').value, c = cardView(SESSION.card);
     SESSION.typed = v; SESSION.verdict = checkAnswer(v, c.ans); SESSION.shown = true; render();
   },
-  grade: el => answer(+el.dataset.g),
+  grade: el => { const s = SESSION, now = Date.now(); if (!s || now - (s.lastTap || 0) < 450 || now - (s.shownTapAt || 0) < 300) return; s.lastTap = now; answer(+el.dataset.g); },
   undo: () => undo(),
 
   'quiz-start-custom': el => { const v = Math.round(+$('#quiz-n').value); if (!(v >= 1)) return toast('Wpisz liczbę pytań'); el.dataset.n = v; ACTIONS['quiz-start'](el); },

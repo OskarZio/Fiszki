@@ -9,7 +9,7 @@ const HERO_MAX = 20;
 const HERO_DEF = () => ({ xp: 0, sk: {}, eq: {}, forge: {}, look: 1 + (Math.random() * 1e6 | 0), line: 'cat', g: Math.random() < .5 ? 'w' : 'm', pr: 0, boost: {}, mod: 0, lives: { n: 3, t: Date.now() } });
 function hero() {
   const h = S.hero = S.hero || HERO_DEF();
-  // migracje: dawne płaskie drzewko (s1…m4) → drzewka postaci; hełm z pancerza → na głowę
+  // migracje: dawne płaskie umiejętności (s1…m4) → drzewka postaci; hełm z pancerza → na głowę
   if (h.sk && Object.keys(h.sk).some(k => /^[stm]\d$/.test(k))) h.sk = {};
   if (h.eq?.a === 'a_helmet') { h.eq.h = 'h_helmet'; delete h.eq.a; }
   S.items.forEach(i => { if (i.kind === 'gear' && i.key === 'a_helmet') i.key = 'h_helmet'; });
@@ -20,7 +20,7 @@ const heroLvAt = xp => { let l = 1; const need = l => Math.round(60 * Math.pow(l
 const heroLv = () => heroLvAt(hero().xp).lv;
 const PR_TITLES = ['Nowicjusz', 'Adept', 'Mistrz', 'Arcymistrz', 'Legenda', 'Mityczny', 'Nieśmiertelny'];
 
-// ---------- 🎭 postacie: umiejętność bierna + supercios + drzewko (3 gałęzie × 4 węzły)
+// ---------- 🎭 postacie: umiejętność bierna + supercios + umiejętności (3 gałęzie × 4 węzły)
 // efekty węzłów (sumują się): dmg %, crit %, hp, def %, dodge %, regen (❤️ za dobrą odp.), second (drugie życie), type/abcd (mnożnik trybu),
 // steady („Ledwo” nie przerywa serii), alch (mikstury), loot (+przedmiot), ultFast (szybszy ult), ultPow %, time % (czas do namysłu),
 // verify % (bonus za sprawdzian), vamp % (leczenie z obrażeń), first (pierwszy cios ×), exec % (boss < 25%), combo % (seria), xp %, gems %, ice (łatwiej rozbić lód), thorns % (odbicie)
@@ -67,7 +67,7 @@ const LINES = {
       ['🛡️ Łuska', [SKN('g5', 'Gruba łuska', '+35 ❤️', 'hp', 35), SKN('g6', 'Pancerz', '−15% obrażeń', 'def', 15), SKN('g7', 'Kolce na ogonie', 'odbija 25% obrażeń', 'thorns', 25), SKN('g8', 'Smocza krew', '12% obrażeń wraca jako ❤️', 'vamp', 12)]],
       ['🔮 Otchłań', [SKN('g9', 'Skarbiec', '+15% 💎 z walk', 'gems', 15), SKN('g10', 'Łup smoka', '+1 przedmiot w skrzyni', 'loot', 1), SKN('g11', 'Gniew otchłani', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('g12', 'Pradawny ogień', 'supercios +50%', 'ultPow', 50)]]] },
 };
-// pozostałe postacie z heroes.js (gdyby doszły nowe) dostają drzewko kota
+// pozostałe postacie z heroes.js (gdyby doszły nowe) dostają umiejętności kota
 const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefined' ? CHARS : {}).map(([k, c]) => [k, { name: c.name, icon: c.icon, forms: c.forms, desc: c.desc, draw: true }])),
   beast: { name: 'Stworek', icon: '🐣', forms: ['Mały stworek', 'Młody stworek', 'Dorosły stworek', 'Stwór z innego wymiaru'], desc: 'Przybysz z innego wymiaru. Nikt nie wie, czego się nauczy.' } };
 // 🎟️ zdobywanie postaci: Kot Wojak za darmo; reszta – kupno za 💎, poziom konta albo skrzynka bohaterów.
@@ -119,7 +119,7 @@ function skVal(eff) {
   return v * heroTierMul(heroLine());
 }
 const hasSk = eff => skVal(eff) > 0;
-// 🌳 punkty drzewka osobno dla każdej postaci: zdobywa je ta postać, którą grasz, gdy bohater awansuje (1 na start)
+// 🌳 punkty umiejętności osobno dla każdej postaci: zdobywa je ta postać, którą grasz, gdy bohater awansuje (1 na start)
 function linePts(l = heroLine()) {
   const h = hero();
   if (!h.spl) h.spl = { [heroLine(h)]: heroLv() + (h.pr || 0) };   // przejście ze wspólnych punktów: dotychczasowe dostaje postać, którą grasz
@@ -234,6 +234,10 @@ on('start', () => {
 });
 const gearImg = (id, cls = '') => { const g = GEAR[id]; return g ? `<img class="gear-img ${cls}" src="${fsrc(g.img)}" alt="${esc(g.name)}" draggable="false">` : ''; };
 const ownsGear = id => hasItem('gear', id);
+// statystyki z poziomem kuźni (broń +6% ataku, hełm +5 ❤️, pancerz +1% obrony i +3 ❤️, talizman +1% krytyka na poziom)
+const gearStatsF = (g, f = 0) => { if (!f) return gearStats(g); const x = { ...g }; if (g.slot === 'w') x.atk = (g.atk || 0) + 6 * f; if (g.slot === 'h') x.hp = (g.hp || 0) + 5 * f;
+  if (g.slot === 'a') { x.def = (g.def || 0) + f; x.hp = (g.hp || 0) + 3 * f; } if (g.slot === 'c') x.crit = (g.crit || 0) + f; return gearStats(x); };
+const lvBadge = (g, f) => f ? `<i class="lv-badge" title="Poziom ${f} (kuźnia) · ${esc(gearStatsF(g, f))}">Lv ${f}</i>` : '';
 const gearStats = g => [g.atk && `⚔️ +${g.atk}%`, g.hp && `❤️ +${g.hp}`, g.def && `🛡️ ${g.def}%`, g.crit && `🎯 +${g.crit}%`, g.dodge && `💨 ${g.dodge}%`, g.desc].filter(Boolean).join(' · ');
 
 // ---------- 🧪 mikstury i power-upy (max 3 użycia na walkę)
@@ -275,16 +279,17 @@ function heroSVG(cls = '', pr, h = hero()) {
 const SLOT_PH = { w: '⚔️', h: '⛑️', a: '🛡️', c: '💍' };
 function heroHotbar(h = hero(), cls = '') {
   return `<div class="mc-bar ${cls}" data-go="#/hero" role="group" aria-label="Ekwipunek">${['w', 'h', 'a', 'c'].map(sl => { const id = h.eq?.[sl], g = id && GEAR[id], f = g ? (h.forge?.[id] || 0) : 0;
-    return `<span class="mc-slot${g ? ' r-' + g.r : ' empty'}" title="${SLOT_NAME[sl]}: ${g ? esc(g.name) + (f ? ' +' + f : '') : 'puste'}">${g ? gearImg(id) : `<b class="mc-ph">${SLOT_PH[sl]}</b>`}${f ? `<i>${f}</i>` : ''}</span>`; }).join('')}</div>`;
+    return `<span class="mc-slot${g ? ' r-' + g.r : ' empty'}" title="${SLOT_NAME[sl]}: ${g ? esc(g.name) + (f ? ` · poziom ${f} · ${gearStatsF(g, f)}` : '') : 'puste'}">${g ? gearImg(id) : `<b class="mc-ph">${SLOT_PH[sl]}</b>`}${f ? `<i>${f}</i>` : ''}</span>`; }).join('')}</div>`;
 }
 
 // ikonka bohatera (sama postać, bez ekwipunku) – zamiast ogólnego 🧙
 const heroIcon = (h = hero()) => { const l = heroLine(h), p = h.pr || 0; return `<span class="hero-ic">${l === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: '' }) : heroArt(l, heroForm(h, p), h.g === 'm' ? 'm' : 'w')}</span>`; };
 // ---------- 📈 doświadczenie: z nauki (nowe fiszki, rozdział, cała talia) i z walk
 function giveXP(n, why) {
+  if (S.settings.hardcore) n *= .5;   // 💀 hardcore: poziomy 2× wolniej
   const before = heroLv(); linePts(); hero().xp += Math.round(n); hero().mod = Date.now(); S.stats.heroLv = heroLv();
   if (heroLv() > before) hero().spl[heroLine()] += heroLv() - before;   // punkty dostaje postać, którą grasz
-  if (heroLv() > before) setTimeout(() => celebrate(`⬆️ Bohater: poziom ${heroLv()}!`, `+1 punkt drzewka dla: ${CHAR_LINES[heroLine()].name}${why ? ' · ' + why : ''}`), 400);
+  if (heroLv() > before) setTimeout(() => celebrate(`⬆️ Bohater: poziom ${heroLv()}!`, `+1 punkt umiejętności dla: ${CHAR_LINES[heroLine()].name}${why ? ' · ' + why : ''}`), 400);
 }
 on('review', (c, g, wasNew) => {
   if (typeof BOSS !== 'undefined' && BOSS?.phase === 'fight') return;   // w walce XP liczy walka
@@ -306,7 +311,7 @@ on('review', (c, g, wasNew) => {
 let EVOLVE = null;
 function heroPrestige() {
   const h = hero(); if (heroLv() < HERO_MAX) return toast(`Prestiż od ${HERO_MAX}. poziomu`);
-  if (!confirm(`Prestiż ${(h.pr || 0) + 1}? Poziom wraca do 1 – a każdy kolejny awans daje nowe punkty drzewka (drzewka i ekwipunek zostają).\n\nStałe bonusy: +5% obrażeń, +10 ❤️, +10% doświadczenia. Bossowie też będą silniejsi.`)) return;
+  if (!confirm(`Prestiż ${(h.pr || 0) + 1}? Poziom wraca do 1 – a każdy kolejny awans daje nowe punkty umiejętności.\n\nStałe bonusy: +5% obrażeń, +10 ❤️, +10% doświadczenia. Bossowie też będą silniejsi.`)) return;
   EVOLVE = { from: h.pr || 0, t: Date.now() };
   h.pr = (h.pr || 0) + 1; h.xp = 0; h.mod = Date.now(); S.stats.prestige = Math.max(S.stats.prestige || 0, h.pr);
   addItem('boost', 'xp2', 1, 'prestige-' + h.pr); save(); render();
@@ -317,22 +322,22 @@ const evolveHTML = () => EVOLVE ? `<div class="evolve-ov"><div class="evo-txt">C
 // ---------- widoki
 const heroBarHTML = () => { const L = heroLvAt(hero().xp), sp = skPoints();
   return `<div class="card hero-bar row nowrap" data-go="#/hero">${heroSVG('sm')}<div class="grow"><b>${heroFormName()} · poz. ${L.lv}${hero().pr ? ` · ★${hero().pr}` : ''}</b><div class="pbar"><i style="width:${(L.cur / L.need * 100).toFixed(1)}%"></i></div>
-    <small class="muted">${sp ? `<b style="color:var(--accent)">${sp} ${plural(sp, 'punkt', 'punkty', 'punktów')} umiejętności do wydania!</b>` : 'postać · drzewko · ekwipunek'}</small></div>${livesHTML()}</div>`; };
+    <small class="muted">${sp ? `<b style="color:var(--accent)">${sp} ${plural(sp, 'punkt', 'punkty', 'punktów')} umiejętności do wydania!</b>` : 'postać · umiejętności · ekwipunek'}</small></div>${livesHTML()}</div>`; };
 let HERO_EVO = -1, HERO_TAB = 'char', HERO_PAGE = 0, HERO_UP = false;
 ROUTES.hero = () => {
   if (HERO_EVO < 0) HERO_EVO = heroForm();
   const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)], ld = lineDef();
-  const tabs = [['char', '🎭', 'Postać'], ['tree', '🌳', `Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒', 'Ekwipunek'], ['shop', '🔨', `Kowal${typeof forgeReadyN === 'function' && forgeReadyN() ? ` (${forgeReadyN()} ✓)` : ''}`]];
+  const tabs = [['char', '🎭', 'Postać'], ['tree', '✨', `Umiejętności${sp ? ` (${sp})` : ''}`], ['eq', '🎒', 'Ekwipunek'], ['shop', '🔨', `Kowal${typeof forgeReadyN === 'function' && forgeReadyN() ? ` (${forgeReadyN()} ✓)` : ''}`]];
   const pane = {
-    char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Kot Wojak jest za darmo. Pozostałe kupisz, wylosujesz w skrzyni bohaterów albo odblokujesz poziomem konta – rzadsze mają mocniejsze umiejętności. Każda postać ma własne drzewko i <b>własne punkty</b>.</p>
-      <div class="card hero-case row nowrap"><span class="hc-ic">${crateImg('hero')}</span><div class="grow"><b>Skrzynka bohaterów</b><div class="small muted">${Object.entries(HERO_CASE.odds).map(([t, p]) => `<span style="color:${HERO_TIER[t][1]}">${HERO_TIER[t][0]} ${p}%</span>`).join(' · ')}<br>Duplikat = +${HERO_CASE.dupPts} pkt drzewka tej postaci</div></div><button class="primary" data-act="hero-case">${HERO_CASE.price} 💎</button></div>
+    char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Kot Wojak jest za darmo. Pozostałe kupisz, wylosujesz w skrzyni bohaterów albo odblokujesz poziomem konta – rzadsze mają mocniejsze umiejętności. Każda postać ma własne umiejętności i <b>własne punkty</b>.</p>
+      <div class="card hero-case row nowrap"><span class="hc-ic">${crateImg('hero')}</span><div class="grow"><b>Skrzynka bohaterów</b><div class="small muted">${Object.entries(HERO_CASE.odds).map(([t, p]) => `<span style="color:${HERO_TIER[t][1]}">${HERO_TIER[t][0]} ${p}%</span>`).join(' · ')}<br>Duplikat = +${HERO_CASE.dupPts} pkt umiejętności tej postaci</div></div><button class="primary" data-act="hero-case">${HERO_CASE.price} 💎</button></div>
       <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k), G = HERO_GET[k] || { t: 'basic' }, own = ownsHero(k), T = HERO_TIER[G.t];
         const lock = own ? '' : `<span class="char-lock">${G.price ? `<i class="char-buy" data-act="hero-buy" data-k="${k}">Kup · ${G.price.toLocaleString('pl')} 💎</i>` : ''}${G.acc ? `<i class="char-acc">🔒 poziom konta ${G.acc} (masz ${accLevel()})</i>` : ''}<i class="char-acc">albo 🎰 skrzynka</i></span>`;
         return `<button class="char${heroLine(h) === k ? ' on' : ''}${own ? '' : ' locked'}" style="--tc:${T[1]}" data-act="${own ? 'hero-line' : 'hero-locked'}" data-k="${k}"><i class="char-tier">${T[0]} · umiejętności ×${String(T[2]).replace('.', ',')}</i><span class="char-cr">${k === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>${(() => { const n = skPoints(k); return n > 0 ? `<i class="char-pts">🌳 ${n} pkt</i>` : ''; })()}
         <small><b>${d.passive[0]}</b> – ${d.passive[1]}</small><small><b>${d.ult[0]}</b> – ${d.ult[1]}</small>${lock}</button>`; }).join('')}</div>
       ${h.line === 'beast' && !isPixelLine('beast') ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>`,
     tree: (() => { const pages = treePages(), pg = Math.min(HERO_PAGE, 2), open = pageOpen(pg), done = treeDone(), tier = lineTier(), up = done && HERO_UP;
-      return `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🌳 Drzewko: ${esc(line.name)}</h2><span class="sp-badge${sp ? ' on' : ''}">${sp} pkt</span></div>
+      return `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">✨ Umiejętności: ${esc(line.name)}</h2><span class="sp-badge${sp ? ' on' : ''}">${sp} pkt</span></div>
       <div class="seg tree-pages">${pages.map((_, p) => `<button class="${pg === p && !up ? 'on' : ''}" data-act="hero-page" data-p="${p}" ${pageOpen(p) ? '' : 'disabled'}>${pageOpen(p) ? '' : '🔒 '}Strona ${PAGE_N[p]}${pageDone(p) ? ' ✓' : ''}</button>`).join('')}
         <button class="${up ? 'on' : ''}" data-act="hero-up" ${done ? '' : 'disabled'} title="Po ukończeniu 3 stron">${done ? '' : '🔒 '}✨ Ulepszanie</button></div>
       <p class="small muted">${up ? 'Każdy węzeł: ✨ złoty → 💠 platynowy → 🌈 holograficzny. Każdy stopień +50% efektu i kosztuje 1 pkt.' : pg === 0 ? `Węzły odblokowują się na poziomach ${SK_REQ_LV.join(', ')}. Ukończ stronę I, żeby otworzyć stronę II.` : `Strona ${PAGE_N[pg]} – mocniejsze gałęzie. ${pg < 2 ? `Ukończ ją, żeby otworzyć stronę ${PAGE_N[pg + 1]}.` : 'Ukończ ją, żeby odblokować ulepszanie węzłów.'}`}
@@ -341,12 +346,12 @@ ROUTES.hero = () => {
           return `<button class="sk got t${t}" data-act="hero-tier" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${TIER_IC[t]} ${n.name}</b><small>${t ? TIERS[t] + ' · ' : ''}efekt ×${(1 + .5 * t).toFixed(1).replace('.', ',')}</small><i>${t >= 3 ? '🌈 max' : `→ ${TIER_IC[t + 1]} ${TIERS[t + 1]}`}</i></button>`; }).join('')}</div>`).join('')}</div>`
       : `<div class="skill-tree${open ? '' : ' locked'}">${pages[pg].map(([bn, nodes]) => `<div class="sk-branch"><div class="sk-head">${bn}</div>${nodes.map((n, i) => { const got = hasNode(n.id), prev = i === 0 || hasNode(nodes[i - 1].id), lvOk = pg > 0 || L.lv >= SK_REQ_LV[i], can = open && !got && prev && lvOk && sp > 0, t = tier[n.id] || 0;
         return `<button class="sk${got ? ' got t' + t : can ? ' can' : ''}" data-act="hero-sk" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${t ? TIER_IC[t] + ' ' : ''}${n.name}</b><small>${n.desc}</small>${got ? '<i>✓</i>' : !lvOk ? `<i>🔒 poz. ${SK_REQ_LV[i]}</i>` : !prev || !open ? '<i>🔒</i>' : ''}</button>`; }).join('<span class="sk-line"></span>')}</div>`).join('')}</div>`}
-      ${Object.keys(lineSk()).length ? '<button class="sm ghost" data-act="hero-sk-reset" style="margin-top:10px">↺ Zresetuj drzewko tej postaci (200 💎, punkty wracają)</button>' : ''}</div>`; })(),
+      ${Object.keys(lineSk()).length ? '<button class="sm ghost" data-act="hero-sk-reset" style="margin-top:10px">↺ Zresetuj umiejętności tej postaci (200 💎, punkty wracają)</button>' : ''}</div>`; })(),
     eq: petCardHTML() + `<div class="card"><h2 style="margin-top:0">🎒 Założone</h2>
-      <div class="eq-slots">${['w', 'h', 'a', 'c'].map(s => { const id = h.eq[s], g = GEAR[id]; return `<div class="eq-slot" style="--rc:${g ? RARITY[g.r].color : '#94a3b8'}"><small>${SLOT_NAME[s]}</small>${g ? `${gearImg(id)}<b>${esc(g.name)}${(h.forge[id] || 0) ? ` +${h.forge[id]}` : ''}</b>` : '<span class="eq-empty">—</span>'}</div>`; }).join('')}</div>
+      <div class="eq-slots">${['w', 'h', 'a', 'c'].map(s => { const id = h.eq[s], g = GEAR[id]; return `<div class="eq-slot" style="--rc:${g ? RARITY[g.r].color : '#94a3b8'}"><small>${SLOT_NAME[s]}</small>${g ? `${gearImg(id)}<b>${esc(g.name)}</b>${lvBadge(g, h.forge[id] || 0)}` : '<span class="eq-empty">—</span>'}</div>`; }).join('')}</div>
       ${['w', 'h', 'a', 'c'].map(s => { const own = Object.keys(GEAR).filter(id => GEAR[id].slot === s && ownsGear(id)); if (!own.length) return '';
         return `<h3>${SLOT_NAME[s]}</h3><div class="gear-grid">${own.map(id => { const g = GEAR[id], on = h.eq[g.slot] === id, f = h.forge[id] || 0;
-          return `<button class="gear r-${g.r}${on ? ' on' : ''}" style="--rc:${RARITY[g.r].color}" data-act="hero-eq" data-id="${id}">${gearImg(id)}<b>${esc(g.name)}${f ? ` +${f}` : ''}</b><small>${RARITY[g.r].name} · ${gearStats(g)}</small><i>${on ? '✓ założone' : 'załóż'}</i></button>`; }).join('')}</div>`; }).join('') || '<p class="small muted">Pokonuj bossów – przedmioty wypadają ze skrzyń. Duplikat ulepsza przedmiot o +1.</p>'}</div>`,
+          return `<button class="gear r-${g.r}${on ? ' on' : ''}" style="--rc:${RARITY[g.r].color}" data-act="hero-eq" data-id="${id}">${gearImg(id)}<b>${esc(g.name)}</b>${lvBadge(g, f)}<small>${RARITY[g.r].name} · ${gearStatsF(g, f)}</small><i>${on ? '✓ założone' : 'załóż'}</i></button>`; }).join('')}</div>`; }).join('') || '<p class="small muted">Pokonuj bossów – przedmioty wypadają ze skrzyń. Duplikat ulepsza przedmiot o +1.</p>'}</div>`,
     shop: `<div class="card"><h2 style="margin-top:0">🔨 Kowal</h2>
       ${typeof forgeHTML === 'function' ? forgeHTML() : ''}
       <h3>🧪 Mikstury i power-upy</h3><div class="shop-grid">${Object.entries(POTIONS).map(([k, p]) => `<button class="shop-it" data-act="hero-buy-pot" data-k="${k}">${potionSVG(k)}<b>${p.name}</b><small>${p.desc} · masz ${potionN(k)}</small><i>${p.price} 💎</i></button>`).join('')}</div>
@@ -382,8 +387,8 @@ Object.assign(ACTIONS, {
   'evo-go': el => { HERO_EVO = +el.dataset.i; render(); },
   'hero-tab': el => { HERO_TAB = el.dataset.k; render(); },
   'hero-eq': el => { const g = GEAR[el.dataset.id], h = hero(); if (!g) return; h.eq[g.slot] = h.eq[g.slot] === el.dataset.id ? undefined : el.dataset.id; h.mod = Date.now(); save(); render(); },
-  'hero-sk': el => { const h = hero(); if (skPoints() < 1) return; lineSk(h)[el.dataset.id] = 1; if (pageDone(HERO_PAGE) && HERO_PAGE < 2) { HERO_PAGE++; setTimeout(() => celebrate(`📖 Strona ${PAGE_N[HERO_PAGE]} drzewka odblokowana!`, 'Nowe, mocniejsze gałęzie'), 200); } else if (treeDone() && !HERO_UP) setTimeout(() => celebrate('✨ Całe drzewko ukończone!', 'Teraz ulepszaj węzły: złote → platynowe → holograficzne'), 200); h.mod = Date.now(); S.stats.skills = Object.keys(lineSk(h)).length; if (lineDef().tree.some(([, ns]) => ns.every(n => lineSk(h)[n.id]))) S.stats.skillBranch = 1; save(); toast('🌳 Nowa umiejętność!'); render(); },
-  'hero-sk-reset': () => { if (!confirm('Zresetować drzewko tej postaci za 200 💎? Wszystkie strony i ulepszenia wrócą jako punkty.')) return; if (!spend(200, 'sk-reset')) return; const h = hero(); h.sk[heroLine()] = {}; lineTier(h); h.skt[heroLine()] = {}; HERO_PAGE = 0; HERO_UP = false; h.mod = Date.now(); save(); render(); },
+  'hero-sk': el => { const h = hero(); if (skPoints() < 1) return; lineSk(h)[el.dataset.id] = 1; if (pageDone(HERO_PAGE) && HERO_PAGE < 2) { HERO_PAGE++; setTimeout(() => celebrate(`📖 Strona ${PAGE_N[HERO_PAGE]} umiejętności odblokowana!`, 'Nowe, mocniejsze gałęzie'), 200); } else if (treeDone() && !HERO_UP) setTimeout(() => celebrate('✨ Wszystkie umiejętności odblokowane!', 'Teraz ulepszaj węzły: złote → platynowe → holograficzne'), 200); h.mod = Date.now(); S.stats.skills = Object.keys(lineSk(h)).length; if (lineDef().tree.some(([, ns]) => ns.every(n => lineSk(h)[n.id]))) S.stats.skillBranch = 1; save(); toast('🌳 Nowa umiejętność!'); render(); },
+  'hero-sk-reset': () => { if (!confirm('Zresetować umiejętności tej postaci za 200 💎? Wszystkie strony i ulepszenia wrócą jako punkty.')) return; if (!spend(200, 'sk-reset')) return; const h = hero(); h.sk[heroLine()] = {}; lineTier(h); h.skt[heroLine()] = {}; HERO_PAGE = 0; HERO_UP = false; h.mod = Date.now(); save(); render(); },
   'hero-page': el => { HERO_PAGE = +el.dataset.p; HERO_UP = false; render(); },
   'hero-up': () => { if (treeDone()) { HERO_UP = true; render(); } },
   'hero-tier': el => { const h = hero(), t = lineTier(h), id = el.dataset.id; if (skPoints() < 1 || (t[id] || 0) >= 3 || !lineSk(h)[id]) return; t[id] = (t[id] || 0) + 1; h.mod = Date.now();
@@ -403,7 +408,7 @@ Object.assign(ACTIONS, {
   'hero-buy-gear': el => { const id = el.dataset.id, g = GEAR[id]; if (!g || ownsGear(id)) return; if (!confirm(`Kupić „${g.name}” (${RARITY[g.r].name}) za ${GEAR_PRICE[g.r]} 💎?`)) return; if (!spend(GEAR_PRICE[g.r], 'gear')) return; addItem('gear', id, 1); toast(`🎒 ${g.name}`); render(); },
 });
 
-// 🎰 skrzynka bohaterów: losuje rzadkość, potem postać tej rzadkości (najpierw te, których nie masz); duplikat = punkty drzewka
+// 🎰 skrzynka bohaterów: losuje rzadkość, potem postać tej rzadkości (najpierw te, których nie masz); duplikat = punkty umiejętności
 function heroCaseOpen() {
   const lines = Object.keys(HERO_GET).filter(k => HERO_GET[k].t !== 'basic');
   if (!confirm(`Otworzyć skrzynkę bohaterów za ${HERO_CASE.price} 💎?`)) return; if (!spend(HERO_CASE.price, 'hero-case')) return;
@@ -418,7 +423,7 @@ function heroReveal(k, dup) {
   document.querySelector('.dmenu-ov')?.remove();
   const ov = document.createElement('div'); ov.className = 'dmenu-ov hero-reveal';
   ov.innerHTML = `<div class="dmenu" style="--tc:${T[1]}"><i class="char-tier">${T[0]}</i><div class="hr-art">${heroArt(k, 0, h.g === 'm' ? 'm' : 'w')}</div><b class="dmenu-t">${esc(CHAR_LINES[k].name)}</b>
-    <small>${dup ? `Duplikat → +${HERO_CASE.dupPts} punkty drzewka dla tej postaci` : `Nowa postać! Umiejętności ×${String(T[2]).replace('.', ',')}`}</small>
+    <small>${dup ? `Duplikat → +${HERO_CASE.dupPts} punkty umiejętności dla tej postaci` : `Nowa postać! Umiejętności ×${String(T[2]).replace('.', ',')}`}</small>
     ${dup ? '' : `<button class="primary" data-act="hero-line" data-k="${k}">Graj tą postacią</button>`}<button class="ghost" data-act="dmenu-close">OK</button></div>`;
   ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-act]')) setTimeout(() => ov.remove()); });
   document.body.append(ov); if (!dup) confetti(['legendary', 'mythic'].includes(HERO_GET[k].t) ? 260 : 140); render();
@@ -431,7 +436,7 @@ function petCardHTML() {
   const list = typeof eggs === 'function' ? eggs().filter(x => x.ok && x.cr) : [], h = hero();
   return `<div class="card"><h2 style="margin-top:0">🐾 Pomocnik w walce</h2>
     ${list.length ? `<p class="small muted" style="margin-top:0">Stworek z inkubatora idzie z Tobą do walki i raz na walkę pomaga. Rzadszy = mocniejszy.</p>
-    <div class="pet-grid">${list.slice(-24).reverse().map(x => `<button class="pet${h.pet === x.id ? ' on' : ''}" style="--rc:${RARITY[x.cr.r].color}" data-act="hero-pet" data-id="${x.id}"><span class="pet-cr">${creatureSVG(x.cr.s, x.cr.r)}</span><b>${esc(x.cr.n)}</b><small>${RARITY[x.cr.r].name} · ${typeof PET_FX !== 'undefined' ? (PET_FX[x.cr.r] || PET_FX.common)[0] : ''}</small></button>`).join('')}</div>`
+    <div class="pet-grid">${list.slice(-24).reverse().map(x => `<button class="pet${h.pet === x.id ? ' on' : ''}" style="--rc:${RARITY[x.cr.r].color}" data-act="hero-pet" data-id="${x.id}"><span class="pet-cr">${petImg(x.cr)}</span><b>${esc(x.cr.n)}</b><small>${RARITY[x.cr.r].name} · ${typeof PET_FX !== 'undefined' ? (PET_FX[x.cr.r] || PET_FX.common)[0] : ''}</small></button>`).join('')}</div>`
     : '<p class="small muted" style="margin:0">Wykluj stworka w 🥚 Inkubatorze (sesja skupienia) – będzie Ci pomagał w walkach.</p><button class="sm" data-go="#/egg" style="margin-top:8px">🥚 Inkubator</button>'}</div>`;
 }
 ACTIONS['hero-pet'] = el => { const h = hero(); h.pet = h.pet === el.dataset.id ? null : el.dataset.id; h.mod = Date.now(); save(); toast(h.pet ? '🐾 Pomocnik wybrany' : 'Bez pomocnika'); render(); };

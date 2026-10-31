@@ -67,18 +67,18 @@ function forgeHTML() {
   const h = hero(), J = forgeJobs(h), slots = forgeSlots(h), now = Date.now(), mats = matCount(), myMats = Object.keys(MATS).filter(k => matCount(k) > 0);
   const own = Object.keys(GEAR).filter(id => ownsGear(id)).sort((a, b) => (h.eq[GEAR[b].slot] === b) - (h.eq[GEAR[a].slot] === a) || (h.forge[b] || 0) - (h.forge[a] || 0));
   const jobHTML = j => { const g = GEAR[j.id], end = forgeEnd(j), dur = FORGE_T[j.to], left = Math.max(0, end - now), tl = forgeTaskLeft(j), T = j.task && FORGE_TASKS[j.task.k], ready = !left && !tl;
-    return `<div class="fj${ready ? ' ready' : ''}" style="--rc:${RARITY[g.r].color}"><div class="fj-top">${gearImg(j.id)}<div class="grow"><b>${esc(g.name)} → +${j.to}</b>
+    return `<div class="fj${ready ? ' ready' : ''}" style="--rc:${RARITY[g.r].color}"><div class="fj-top">${gearImg(j.id)}<div class="grow"><b>${esc(g.name)} → Lv ${j.to}</b>
       <small class="fj-left" data-fend="${end}">${left ? 'zostało ' + fClock(left) : 'czas minął ✓'}</small></div></div>
       <div class="pbar"><i style="width:${(100 * Math.min(1, 1 - left / dur)).toFixed(1)}%"></i></div>
       ${T ? `<div class="fj-task${tl ? '' : ' ok'}">${tl ? '📋' : '✅'} ${T.txt(j.task.n)}${tl ? ` – zostało ${tl}` : ''}</div>` : ''}
-      <div class="fj-btns">${ready ? `<button class="primary" data-act="forge-take" data-id="${j.id}">🎁 Odbierz +${j.to}</button>`
+      <div class="fj-btns">${ready ? `<button class="primary" data-act="forge-take" data-id="${j.id}">🎁 Odbierz Lv ${j.to}</button>`
         : myMats.filter(k => MATS[k].task ? tl : left).map(k => `<button class="mat-btn" data-act="forge-mat" data-id="${j.id}" data-k="${k}">${matImg(k)}<span><b>${MATS[k].d}</b><small>${MATS[k].n} · masz ${matCount(k)}</small></span></button>`).join('')}</div></div>`; };
   const slotsHTML = [0, 1].map(i => i < slots ? (J[i] ? jobHTML(J[i]) : '<div class="fj empty"><b>Wolne stanowisko</b><small>Wybierz przedmiot niżej i stuknij „Ulepsz”.</small></div>')
     : `<div class="fj empty locked"><b>🔒 2. stanowisko</b><small>Dwa ulepszenia naraz.</small><button class="sm" data-act="forge-slot">Odblokuj · ${FORGE_SLOT2} 💎</button></div>`).join('');
   const rows = own.map(id => { const g = GEAR[id], f = h.forge[id] || 0, to = f + 1, busy = J.some(j => j.id === id), on = h.eq[g.slot] === id;
-    return `<div class="fi" style="--rc:${RARITY[g.r].color}"><div class="fi-top">${gearImg(id)}<div class="grow"><b>${esc(g.name)}${f ? ` +${f}` : ''}${on ? ' <small class="fi-on">założone</small>' : ''}</b>
+    return `<div class="fi" style="--rc:${RARITY[g.r].color}"><div class="fi-top">${gearImg(id)}<div class="grow"><b>${esc(g.name)}${f ? ` · Lv ${f}` : ''}${on ? ' <small class="fi-on">założone</small>' : ''}</b>
       <small>${f >= FORGE_MAX ? '🏆 maksymalny poziom' : `+${to}: ${FORGE_BONUS[g.slot](to)} łącznie · ⏳ ${fDur(FORGE_T[to])}${to === 5 || to === 10 ? ' · 📋 + zadanie' : ''}`}</small></div></div>
-      ${f >= FORGE_MAX ? '' : busy ? '<span class="fi-busy">w kuźni</span>' : `<button class="primary" data-act="forge-go" data-id="${id}">Ulepsz do +${to} · ${forgeCost(id, to)} 💎</button>`}</div>`; }).join('');
+      ${f >= FORGE_MAX ? '' : busy ? '<span class="fi-busy">w kuźni</span>' : `<button class="primary" data-act="forge-go" data-id="${id}">Ulepsz do Lv ${to} · ${forgeCost(id, to)} 💎</button>`}</div>`; }).join('');
   return `<div class="forge2"><div class="row nowrap"><b class="grow">🔨 Kuźnia</b><span class="fmat">${matImg('rare')} ${mats}</span></div>
     <p class="small muted" style="margin:6px 0 12px">Ulepszenie trwa – kowal pracuje, a Ty się uczysz. <b>Każda dobra odpowiedź −1 min</b>, wyklute jajko −30 min. Poziomy +5 i +10 wymagają też zadania. Maksimum +${FORGE_MAX}.</p>
     <details class="mat-info"><summary>${matImg('legendary')} Co dają cegły (materiały)?</summary><div class="mat-list">${Object.entries(MATS).map(([k, M]) => `<div>${matImg(k)}<span><b>${M.n}: ${M.d}</b><small>${k === 'ice' ? 'z jajka 90 min' : k === 'void' ? 'z jajka 2 h' : k === 'green' ? 'gdy wykluje się legendarny lub mityczny stworek' : `z duplikatu przedmiotu (${RARITY[k].name.toLowerCase()}) ze skrzyni`} · masz ${matCount(k)}</small></span></div>`).join('')}</div></details>

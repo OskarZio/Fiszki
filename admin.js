@@ -17,7 +17,7 @@ const FEATURES = {
 };
 // 🌍 flagi globalne (Supabase app_flags) – ustawia tylko admin aplikacji, działają u wszystkich; kopia w localStorage na offline
 let FLAGS = (() => { try { return JSON.parse(localStorage.getItem('appFlags') || '{}'); } catch { return {}; } })(), IS_ADMIN = false;
-const featureOn = k => !FLAGS[k];
+const featureOn = k => k !== 'methods' && !FLAGS[k];   // 📖 metody nauki usunięte z aplikacji
 async function flagsLoad() {
   if (typeof SB === 'undefined' || !SB) return;
   try { const r = await SB.from('app_flags').select('k,off'); if (!r.error && Array.isArray(r.data)) { FLAGS = Object.fromEntries(r.data.filter(x => x.off && FEATURES[x.k]).map(x => [x.k, 1])); try { localStorage.setItem('appFlags', JSON.stringify(FLAGS)); } catch { /* */ } updateTabBadges(); render(); } } catch { /* */ }
