@@ -2878,3 +2878,7 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 /* 🎨 skiny: jeden obrazek na rzadkość – we wcześniejszych ewolucjach mniejszy */
 .hero-fig .skinpx.skf { transform: scale(var(--sk, 1)); transform-origin: 50% 100%; }
 .skin-big.one { grid-template-columns: 1fr !important; justify-items: center; } .skin-big.one img { width: min(60vw, 220px); }
+/* ✨ aura prestiżu: mniejsza i delikatniejsza; przy skinie wcale (skiny mają własny blask) */
+.hero-fig .hero-aura { inset: 14% 10% 0 !important; opacity: .55; }
+.pr-4 .hero-aura, .pr-5 .hero-aura, .pr-6 .hero-aura { opacity: .35 !important; filter: blur(14px) !important; }
+.hero-fig.skinned .hero-aura { display: none !important; }
