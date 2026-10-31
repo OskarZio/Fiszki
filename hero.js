@@ -54,6 +54,18 @@ const LINES = {
     tree: [['💢 Furia', [SKN('b1', 'Kły', '+15% obrażeń', 'dmg', 15), SKN('b2', 'Szał', 'seria rośnie +60% szybciej', 'combo', 60), SKN('b3', 'Rozszarpanie', '+12% krytyka', 'crit', 12), SKN('b4', 'Rzeź', 'boss < 25% ❤️ → +70%', 'exec', 70)]],
       ['🪨 Łuska', [SKN('b5', 'Twarda łuska', '+30 ❤️', 'hp', 30), SKN('b6', 'Kolce', 'odbija 25% obrażeń', 'thorns', 25), SKN('b7', 'Krew bestii', '12% obrażeń wraca jako ❤️', 'vamp', 12), SKN('b8', 'Odrodzenie', 'drugie życie raz na walkę', 'second', 1)]],
       ['🌋 Pradawna moc', [SKN('b9', 'Instynkt', '+20% czasu do namysłu', 'time', 20), SKN('b10', 'Łowca', '+1 przedmiot w skrzyni', 'loot', 1), SKN('b11', 'Gniew', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('b12', 'Kataklizm', 'supercios +50%', 'ultPow', 50)]]] },
+  rabbit: { passive: ['⚡ Sprint', '+12% uniku i +10% czasu do namysłu', { dodge: 12, time: 10 }], ult: ['🌠 Księżycowy skok', 'cios ×3 i unika 2 kolejnych ataków'],
+    tree: [['🪶 Zwinność', [SKN('k1', 'Lekkie łapki', '+8% uniku', 'dodge', 8), SKN('k2', 'Hyc!', 'pierwszy cios ×2', 'first', 2), SKN('k3', 'Kicanie', 'seria rośnie +50% szybciej', 'combo', 50), SKN('k4', 'Unik w ostatniej chwili', '+10% uniku', 'dodge', 10)]],
+      ['⏳ Czujność', [SKN('k5', 'Długie uszy', '+30% czasu do namysłu', 'time', 30), SKN('k6', 'Marchewka', 'dobra odpowiedź leczy 3 ❤️', 'regen', 3), SKN('k7', 'Nora', '+20 ❤️', 'hp', 20), SKN('k8', 'Spokojny nos', '„Ledwo” nie przerywa serii', 'steady', 1)]],
+      ['✨ Księżyc', [SKN('k9', 'Blask księżyca', '+12% obrażeń', 'dmg', 12), SKN('k10', 'Szczęśliwa łapka', '+10% krytyka', 'crit', 10), SKN('k11', 'Pełnia', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('k12', 'Księżycowa moc', 'supercios +40%', 'ultPow', 40)]]] },
+  phoenix: { passive: ['🔥 Żar', '+8% krytyka i raz na walkę odradza się z 1 ❤️', { crit: 8, second: 1 }], ult: ['🌈 Odrodzenie z popiołów', 'cios ×3,5 i leczy 40% ❤️'],
+    tree: [['🔥 Płomień', [SKN('n1', 'Gorące pióra', '+12% obrażeń', 'dmg', 12), SKN('n2', 'Iskra', '+10% krytyka', 'crit', 10), SKN('n3', 'Pożoga', 'seria rośnie +50% szybciej', 'combo', 50), SKN('n4', 'Ognisty finał', 'boss < 25% ❤️ → +60%', 'exec', 60)]],
+      ['🛡️ Pióra', [SKN('n5', 'Puch', '+25 ❤️', 'hp', 25), SKN('n6', 'Ciepło gniazda', 'dobra odpowiedź leczy 3 ❤️', 'regen', 3), SKN('n7', 'Twarde skrzydła', '−12% obrażeń', 'def', 12), SKN('n8', 'Parzące pióra', 'odbija 20% obrażeń', 'thorns', 20)]],
+      ['🌈 Odrodzenie', [SKN('n9', 'Popiół', '12% obrażeń wraca jako ❤️', 'vamp', 12), SKN('n10', 'Poranne pianie', '+20% doświadczenia', 'xp', 20), SKN('n11', 'Wieczny ogień', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('n12', 'Słoneczny ptak', 'supercios +50%', 'ultPow', 50)]]] },
+  dragon: { passive: ['🐉 Smocza łuska', '+12% obrażeń i −8% obrażeń', { dmg: 12, def: 8 }], ult: ['💥 Zianie ogniem', 'cios ×5 i zrywa tarczę bossa'],
+    tree: [['🔥 Ogień', [SKN('g1', 'Żar w paszczy', '+15% obrażeń', 'dmg', 15), SKN('g2', 'Smocze oko', '+12% krytyka', 'crit', 12), SKN('g3', 'Atak z powietrza', 'pierwszy cios ×2,5', 'first', 2.5), SKN('g4', 'Spopielenie', 'boss < 25% ❤️ → +60%', 'exec', 60)]],
+      ['🛡️ Łuska', [SKN('g5', 'Gruba łuska', '+35 ❤️', 'hp', 35), SKN('g6', 'Pancerz', '−15% obrażeń', 'def', 15), SKN('g7', 'Kolce na ogonie', 'odbija 25% obrażeń', 'thorns', 25), SKN('g8', 'Smocza krew', '12% obrażeń wraca jako ❤️', 'vamp', 12)]],
+      ['🔮 Otchłań', [SKN('g9', 'Skarbiec', '+15% 💎 z walk', 'gems', 15), SKN('g10', 'Łup smoka', '+1 przedmiot w skrzyni', 'loot', 1), SKN('g11', 'Gniew otchłani', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('g12', 'Pradawny ogień', 'supercios +50%', 'ultPow', 50)]]] },
 };
 // pozostałe postacie z heroes.js (gdyby doszły nowe) dostają drzewko kota
 const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefined' ? CHARS : {}).map(([k, c]) => [k, { name: c.name, icon: c.icon, forms: c.forms, desc: c.desc, draw: true }])),
@@ -62,7 +74,8 @@ const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'unde
 // Droższa (rzadsza) postać = mocniejsze umiejętności (mnożnik umiejętności biernej, drzewka i superciosu).
 const HERO_TIER = { basic: ['Podstawowa', '#64748b', 1], rare: ['Rzadka', '#8b5cf6', 1.15], epic: ['Epicka', '#ec4899', 1.3], legendary: ['Legendarna', '#f59e0b', 1.5], mythic: ['Mityczna', '#dc2626', 1.7] };
 const HERO_GET = { cat: { t: 'basic' }, hamster: { t: 'rare', price: 3000 }, frog: { t: 'rare', price: 5000 }, dog: { t: 'epic', price: 8000 }, owl: { t: 'epic', acc: 12 },
-  fox: { t: 'legendary', price: 15000 }, beast: { t: 'mythic', acc: 20 } };
+  fox: { t: 'legendary', price: 15000 }, beast: { t: 'mythic', acc: 20 },
+  rabbit: { t: 'rare', price: 4000 }, phoenix: { t: 'legendary', price: 18000 }, dragon: { t: 'mythic', price: 30000 } };
 const HERO_CASE = { price: 2000, odds: { rare: 60, epic: 28, legendary: 9, mythic: 3 }, dupPts: 3 };
 let ACC_LV = { t: 0, v: 1 };
 const accLevel = () => { if (Date.now() - ACC_LV.t > 2000) ACC_LV = { t: Date.now(), v: typeof levelOf === 'function' ? levelOf(xpTotal()) : 1 }; return ACC_LV.v; };

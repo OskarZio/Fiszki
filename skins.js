@@ -8,12 +8,14 @@ const SKIN_R = ['rare', 'epic', 'legendary', 'mythic'];
 const SKIN_ODDS = { rare: 55, epic: 30, legendary: 12, mythic: 3 }, SKIN_DUP = { rare: 80, epic: 200, legendary: 600, mythic: 2000 }, SKIN_PRICE = 500;
 const SKIN_NAME = { rare: 'Rzadki', epic: 'Epicki', legendary: 'Legendarny', mythic: 'Mityczny' };
 const SKIN_COL = { rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', mythic: '#ef4444' };
+const SKIN_LINES = ['cat', 'frog', 'dog', 'owl', 'hamster', 'fox', 'beast'];   // postacie, które mają już narysowane skiny
+const hasSkins = line => SKIN_LINES.includes(line);
 const skinKey = (line, r) => `${line}-${r}`;
 const skinOwned = (line, r) => hasItem('skin', skinKey(line, r));
 const skinSrc = (line, f, r) => `assets/skins/${line}-${Math.max(0, Math.min(3, f))}-${r}.webp`;
 const sSkin = r => SKIN_R.includes(r) ? r : null;
 // założony skin własnej postaci (tylko posiadany)
-function mySkin(line = heroLine()) { const r = sSkin(hero().skin?.[line]); return r && skinOwned(line, r) ? r : null; }
+function mySkin(line = heroLine()) { if (!hasSkins(line)) return null; const r = sSkin(hero().skin?.[line]); return r && skinOwned(line, r) ? r : null; }
 const skinImg = (line, f, r) => `<img class="charpx skinpx" src="${skinSrc(line, f, r)}" alt="" draggable="false">`;
 // figura z podmienionym obrazkiem (bez pozycjonowania sprite'u bazowego – skiny są wyrównane do dołu kwadratu)
 const skinFig = (html, line, f, r) => html.replace(/ s8" style="[^"]*"/, ' skinned"').replace(/<img class="charpx[^>]*>|<svg class="charsvg[\s\S]*?<\/svg>/, skinImg(line, f, r));
@@ -26,7 +28,7 @@ heroSVG = function (cls = '', pr, h) {
 // ---------- 🎨 skrzynka skinów
 function skinRoll() {
   let x = Math.random() * 100, r = 'rare'; for (const k of SKIN_R) { if ((x -= SKIN_ODDS[k]) < 0) { r = k; break; } }
-  const lines = Object.keys(CHAR_LINES), line = Math.random() < .6 ? heroLine() : lines[Math.random() * lines.length | 0];
+  const lines = SKIN_LINES.filter(l => CHAR_LINES[l]), line = Math.random() < .6 && hasSkins(heroLine()) ? heroLine() : lines[Math.random() * lines.length | 0];
   return { line, r };
 }
 function skinOpen(free) {
@@ -76,6 +78,7 @@ on('review', () => { if (Math.random() < .2) skinGrants(); });
 const skinBaseScale = (line, f) => { const b = typeof SPRITE_BOX !== 'undefined' && SPRITE_BOX[line]?.[f]; if (!b) return ''; const k = Math.min(94 / (b[2] - b[0]), 94 / (b[3] - b[1]), 3); return `--bs:${k.toFixed(2)}`; };
 function skinCardHTML() {
   const line = heroLine(), f = heroForm(), cur = mySkin(line), free = itemCount('skincase', 'free');
+  if (!hasSkins(line)) return `<div class="card skin-card"><h2 style="margin:0">🎨 Skiny – ${esc(CHAR_LINES[line]?.name || '')}</h2><p class="small muted" style="margin:8px 0 0">Ta postać jest nowa – jej skiny dopiero powstają. Skrzynka skinów działa dla pozostałych postaci.</p></div>`;
   return `<div class="card skin-card"><div class="row nowrap"><h2 class="grow" style="margin:0">🎨 Skiny – ${esc(CHAR_LINES[line]?.name || '')}</h2></div>
     <p class="small muted" style="margin:6px 0 12px">Każdy skin zmienia wygląd postaci we wszystkich ewolucjach. Widać go w walkach i pojedynkach.</p>
     <div class="skin-grid"><button class="skin-t${cur ? '' : ' on'}" data-act="skin-eq" data-l="${line}" data-r=""><span class="skin-pic base" style="${skinBaseScale(line, f)}">${heroArt(line, f, hero().g === 'm' ? 'm' : 'w')}</span><b>Podstawowy</b></button>

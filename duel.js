@@ -212,7 +212,7 @@ setInterval(() => {
   else if (a && el) el.style.width = Math.max(0, 100 - (Date.now() - a.at) / (a.lim || DQ_MS[a.kind]) * 100) + '%';
 }, 200);
 // ---------- widoki
-const duelFig = (p, cls) => p.skin && typeof skinImg === 'function' ? `<div class="hero-fig duel-fig ${cls} ln-${p.line} skinned">${skinImg(p.line, p.form, p.skin)}</div>`
+const duelFig = (p, cls) => p.skin && typeof hasSkins === "function" && hasSkins(p.line) && typeof skinImg === 'function' ? `<div class="hero-fig duel-fig ${cls} ln-${p.line} skinned">${skinImg(p.line, p.form, p.skin)}</div>`
   : `<div class="hero-fig duel-fig ${cls} ln-${p.line}${typeof spriteVars === 'function' ? spriteVars(p.line, p.form) : ''}">${heroArt(p.line, p.form, p.g)}</div>`;
 const duelBox = (p, hp, mine, guard, max = DUEL_HP, fx = '') => `<div class="dbox ${mine ? 'me' : 'op'}"><div class="dbox-h"><b>${typeof nickHTML === 'function' ? nickHTML(p.nick, p.cos, false) : esc(p.nick)}</b><small>Poz. ${p.lv}</small></div>
   <div class="dhp"><span>HP</span><div class="dhp-bar"><i class="${hp / max < .25 ? 'red' : hp / max < .5 ? 'yel' : ''}" style="width:${(hp / max * 100).toFixed(1)}%"></i></div></div>${mine ? `<div class="dhp-n">${hp} / ${max}</div>` : ''}${guard || fx ? `<em>${guard ? '🛡️ garda ' : ''}${fx}</em>` : ''}</div>`;

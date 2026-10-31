@@ -509,6 +509,9 @@ const ULT_FX = {
   hamster: B => { let n = 0; for (let k = 0; k < 4; k++) n += ultHit(.9); B.combo += 3; return `4 ciosy · −${n}`; },
   fox: B => { B.ice = null; B.bugs = []; B.poison = 0; B.silence = 0; B.shield = false; const n = ultHit(4); return `pewny krytyk · −${n}`; },
   beast: B => { const n = ultHit(4.5); B.me = Math.max(1, B.me - 10); return `−10 ❤️ dla Ciebie · −${n}`; },
+  rabbit: B => { const n = ultHit(3); B.guard += 2; return `2 uniki · −${n}`; },
+  phoenix: B => { const n = ultHit(3.5); healMe(B.meMax * .4); return `+40% ❤️ · −${n}`; },
+  dragon: B => { B.shield = false; const n = ultHit(5); return `zerwana tarcza · −${n}`; },
 };
 function ultHit(m) { const B = BOSS; return dealBoss(Math.min(B.max * .35, 10 * B.hs.atk * m * B.hs.ultPow * (B.power > 0 ? 2 : 1)), 'ult'); }
 function useUlt() {
