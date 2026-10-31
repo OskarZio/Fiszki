@@ -2874,3 +2874,4 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .nest-cat i { display: block; height: 6px; min-width: 6px; border-radius: 99px; background: var(--accent); }
 .nest-cat small { flex: none; font-weight: 700; font-size: 13px; color: var(--muted); }
 .cr-box .ec-ic { width: 20px; height: 20px; vertical-align: -4px; }
+.hero-tabs i img.emo8 { width: 30px !important; height: 30px !important; vertical-align: 0 !important; }
