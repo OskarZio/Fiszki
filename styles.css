@@ -2898,3 +2898,19 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .fi .gear-img { width: 42px; height: 42px; flex: none; } .fi .grow { min-width: 0; display: grid; gap: 3px; } .fi b { font-size: 14px; } .fi small { font-size: 12px; color: var(--muted); line-height: 1.35; }
 .fi-on { color: var(--accent) !important; font-weight: 800; } .fi button { flex: none; white-space: nowrap; } .fi-busy { flex: none; font-size: 12px; font-weight: 800; color: #f59e0b; }
 .fi { display: grid !important; gap: 10px; } .fi-top { display: flex; align-items: center; gap: 12px; } .fi button { width: 100%; } .fi-busy { justify-self: start; padding: 4px 0; }
+/* 😈 nowe przeszkadzajki bossów */
+.boss-q.dis-flip .bq-in { transform: rotate(180deg); }
+.boss-q.dis-shake .bq-in { animation: quake .18s linear infinite; } @keyframes quake { 0% { transform: translate(0,0) rotate(0); } 25% { transform: translate(-4px,2px) rotate(-1.5deg); } 50% { transform: translate(3px,-3px) rotate(1deg); } 75% { transform: translate(-2px,-2px) rotate(-.5deg); } 100% { transform: translate(3px,2px) rotate(1.2deg); } }
+.boss-q.dis-tiny .bq-in { transform-origin: 50% 50%; animation: tinyGrow 4.5s cubic-bezier(.5,0,.7,1) forwards; } @keyframes tinyGrow { from { transform: scale(.32); } to { transform: scale(1); } }
+.boss-q.dis-ink { overflow: hidden; }
+.boss-q.dis-ink::before { content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none; animation: inkFade 6s ease-in forwards;
+  background: radial-gradient(circle at 22% 38%, #0b0b14 0 34px, transparent 36px), radial-gradient(circle at 30% 52%, #0b0b14 0 22px, transparent 24px), radial-gradient(circle at 62% 46%, #0b0b14 0 42px, transparent 44px),
+    radial-gradient(circle at 74% 30%, #0b0b14 0 18px, transparent 20px), radial-gradient(circle at 48% 64%, #0b0b14 0 26px, transparent 28px), radial-gradient(circle at 84% 62%, #0b0b14 0 24px, transparent 26px),
+    radial-gradient(circle at 12% 66%, #0b0b14 0 16px, transparent 18px), radial-gradient(circle at 54% 30%, #0b0b14 0 20px, transparent 22px); }
+@keyframes inkFade { 0%, 35% { opacity: 1; } 100% { opacity: .1; } }
+.bf:has(.boss-q.dis-blind) .abcd-grid .abcd { filter: blur(7px); animation: unblind .4s ease-out 2.5s forwards; } @keyframes unblind { to { filter: none; } }
+.boss-q.dis-spot { overflow: hidden; }
+.boss-q.dis-spot::before { content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: radial-gradient(circle, transparent 0 62px, rgba(4,4,10,.97) 92px); background-size: 260% 260%; animation: spotMove 5.5s ease-in-out infinite alternate; }
+@keyframes spotMove { 0% { background-position: 0% 30%; } 33% { background-position: 100% 0%; } 66% { background-position: 20% 100%; } 100% { background-position: 90% 80%; } }
+@media (prefers-reduced-motion: reduce) { .boss-q.dis-shake .bq-in, .boss-q.dis-spot::before { animation: none; } }
+.boss-q .dis-tag { z-index: 6; }
