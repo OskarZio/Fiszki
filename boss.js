@@ -8,7 +8,7 @@
    • Seria lekko zwiększa obrażenia, dobre odpowiedzi ładują supercios postaci. Przegrana = −1 serce.
    • Skrzynia: stukasz, losuje się (widać szanse w %), duplikat ulepsza przedmiot. */
 
-const BOSS_REQ = 15, WORLD_REQ = 40, CH_SIZE = 20, CH_MIN_LAST = 8, STARS_MAX = 3;
+const BOSS_REQ = 15, WORLD_REQ = 40, CH_SIZE = 20, CH_MIN_LAST = 8, STARS_MAX = 4;   // puchary: brąz, srebro, platyna, diament
 // ---------- 🎭 bossowie z charakterem (każdy dokucza po swojemu)
 const BOSS_NAMES = [
   ['Prokrastynator', 'Szepcze: „zrobisz to jutro”.', { start: ['Ej, może jutro? Jutro jest lepsze.', 'Usiądź, odpocznij… nauka nie ucieknie. Ja też nie.'], hit: ['Auć! Kto się uczy przed terminem?!', 'Nie tak szybko, miało być „na ostatnią chwilę”!'], miss: ['Widzisz? Trzeba było odłożyć.', 'Haha, jutro też nie będziesz wiedział!'], attack: ['Fala odkładania!', 'Jeszcze 5 minut… i jeszcze 5…'], low: ['Dobra, dobra… może jednak dziś…'], down: ['Nieee… zrobiłeś to DZIŚ?!'], win: ['Wróć jutro. Albo pojutrze. Albo wcale.'] }],
@@ -69,13 +69,14 @@ const BOSS_ABIL = { heal: ['💚', 'Regeneracja', 'leczy się'], shield: ['🛡�
   bugs: ['🐛', 'Robaczki', 'oblepia odpowiedzi robakami – zabij je, zanim odpowiesz'], poison: ['☠️', 'Trucizna', '−4 ❤️ przez 3 tury'], silence: ['🔇', 'Cisza', 'blokuje mikstury i supercios na 2 tury'], rage: ['😡', 'Szał', 'poniżej połowy ❤️ bije mocniej'],
   fog: ['🌫️', 'Mgła', 'pytanie jest zamglone i powoli się przejaśnia – tracisz czas'], mirror: ['🪞', 'Krzywe zwierciadło', 'pytanie odbite lustrzanie'],
   whirl: ['🌀', 'Wir', 'odpowiedzi ABCD wirują i zmieniają miejsca'], eclipse: ['🌑', 'Zaćmienie', 'pytanie znika po 2,5 s – odpowiadasz z pamięci'],
+  scramble: ['🔀', 'Rozsypanka', 'słowa pytania pomieszane'], reverse: ['⏪', 'Wspak', 'pytanie zapisane od tyłu'], bomb: ['💣', 'Bomba', 'następny cios bossa podwójny'],
   flip: ['🙃', 'Do góry nogami', 'pytanie odwrócone do góry nogami'], shake: ['🌋', 'Trzęsienie ziemi', 'karta trzęsie się jak szalona'],
   tiny: ['🔍', 'Pomniejszenie', 'pytanie maleńkie i powoli rośnie'], ink: ['🦑', 'Atrament', 'plamy atramentu zalewają pytanie i powoli schodzą'],
   blind: ['🙈', 'Zasłona', 'odpowiedzi rozmazane przez 2,5 s'], spot: ['🔦', 'Ciemność', 'widać tylko to, co oświetla wędrująca latarka'],
   weak: ['🥀', 'Osłabienie', 'Twoje ciosy −30% przez 3 tury'], drain: ['🩸', 'Wysysanie', 'boss leczy się Twoimi ciosami przez 3 tury'], haste: ['⏳', 'Pośpiech', 'połowa czasu na 3 pytania'] };
 // przeszkadzajki odblokowują się z poziomem bossa (★): wyższy poziom = więcej i dziwniejszych
 const ABIL_TIER = { shield: 0, heal: 0, ice: 1, bugs: 1, fog: 1, flip: 1, shake: 1, weak: 1, poison: 2, mirror: 2, tiny: 2, ink: 2, blind: 2, drain: 2, haste: 2, silence: 3, whirl: 3, eclipse: 3, spot: 3 };
-const DISRUPT = ['fog', 'mirror', 'whirl', 'eclipse', 'flip', 'shake', 'tiny', 'ink', 'blind', 'spot'];
+const DISRUPT = ['fog', 'mirror', 'whirl', 'eclipse', 'flip', 'shake', 'tiny', 'ink', 'blind', 'spot', 'scramble', 'reverse'];
 const ABIL_ORDER = ['shield', 'ice', 'heal', 'bugs', 'weak', 'poison', 'drain', 'haste', 'silence', 'rage'];
 const BUG8 = ['ladybug', 'bee', 'caterpillar', 'spider', 'snail', 'worm', 'butterfly', 'firefly'];   // 🐞 8-bitowe robaczki przeszkadzajki
 const BOSS_MOVES = ['Cios zapomnienia', 'Fala prokrastynacji', 'Podchwytliwe pytanie', 'Pustka w głowie', 'Atak terminu', 'Wir notatek'];
@@ -109,7 +110,7 @@ function bossReset(b) {
   if (r.m && k) delete r.m[k]; r.noAuto = 1; touch(d);
 }
 function bossPrestige(kind, id, i) {
-  const b = bossFor(kind, id, i); if (!b || b.stars < 3) return;
+  const b = bossFor(kind, id, i); if (!b || b.stars < 4) return;
   if (!confirm(`Prestiż bossa „${b.name}”?\n\nPuchary zaczynasz od nowa, a boss staje się o 35% silniejszy, z turbo-przeszkadzajkami. Nagrody +25% za każdy prestiż.`)) return;
   if (kind === 'cat') { S.stats['cbp_' + id] = (S.stats['cbp_' + id] || 0) + 1; S.stats['cb_' + id] = 0; }
   else { const d = deckById(id), r = deckRec(d); r.noAuto = 1; if (kind === 'ch') { r.chP = r.chP || {}; r.chP[i] = (r.chP[i] || 0) + 1; r.ch[i] = 0; } else { r.finP = (r.finP || 0) + 1; r.fin = 0; } touch(d); }
@@ -167,7 +168,7 @@ function bossFor(kind, id, i) {
 function bossParams(b, mode = BOSS_PICK.mode) {
   const hs = heroStats(), len = Math.min(b.len || 150, b.cards.length), diff = b.diff, big = b.kind !== 'ch';
   // ⚖️ boss rośnie razem z bohaterem: przedmioty pomagają, ale nie „klepią na hita” (wykładnik < 1), plus poziom postaci
-  const lvl = hs.lv || 1, tier = ['ch', 'fin', 'cat'].includes(b.kind) ? Math.min(3, b.stars || 0) : 0, bp = b.bp || 0, hc = S.settings.hardcore ? 1.5 : 1;
+  const lvl = hs.lv || 1, tier = ['ch', 'fin', 'cat'].includes(b.kind) ? Math.min(4, b.stars || 0) : 0, bp = b.bp || 0, hc = S.settings.hardcore ? 1.5 : 1;
   const scale = Math.pow(Math.max(.5, hs.atk), .85) * (1 + .03 * (lvl - 1)) * (1 + .15 * b.pr) * (1 + .18 * tier) * (1 + .35 * bp) * hc;
   // zdolności: tylko z odblokowanych poziomów, każdy boss inny zestaw (ziarno), zawsze coś z najwyższego dostępnego poziomu
   const top = Math.min(3, diff), elig = Object.keys(ABIL_TIER).filter(a => ABIL_TIER[a] <= top).sort((x, y) => (hashStr(b.seed + x) % 97) - (hashStr(b.seed + y) % 97));
@@ -175,15 +176,15 @@ function bossParams(b, mode = BOSS_PICK.mode) {
   const sig = elig[hashStr(String(b.name || b.id) + '#sig') % elig.length];
   const n = Math.max(1, Math.min(9, diff + (big ? 2 : 0) + tier + bp)), fresh = elig.find(a => ABIL_TIER[a] === top);
   // 🏆 każdy puchar i prestiż = mocniejsze przeszkadzajki: trucizna (brąz), wysysanie i osłabienie (srebro), turbo (diament/prestiż)
-  const extra = [...(tier >= 1 ? ['poison'] : []), ...(tier >= 2 ? ['drain', 'weak'] : []), ...(tier >= 3 || bp ? ['silence', 'haste'] : [])];
+  const extra = [...(tier >= 1 ? ['poison'] : []), ...(tier >= 2 ? ['drain', 'weak'] : []), ...(tier >= 3 || bp ? ['silence', 'haste', 'scramble'] : []), ...(tier >= 4 || bp ? ['reverse', 'bomb'] : [])];   // 💀 ciężcy bossowie: własne przeszkadzajki
   const abil = [...new Set([sig, fresh, ...extra, ...elig])].filter(Boolean).slice(0, n + extra.length);
   return { len, hp: Math.round(len * 10 * (.7 + .17 * diff) * (MODE_HP[mode] || 1) * scale * (b.kind === 'weekly' ? 4 : 1)), atk: Math.round((9 + 6 * diff + (big ? 4 : 0)) * (.5 + .5 * hs.hp / 100) * (1 + .12 * b.pr) * (1 + .2 * tier) * (1 + .3 * bp) * hc),
-    every: diff >= 2 || tier >= 2 ? 2 : 3, think: THINK_S[Math.min(4, diff)], abil, turbo: tier >= 3 || bp > 0 };
+    every: diff >= 2 || tier >= 2 ? 2 : 3, think: THINK_S[Math.min(4, diff)], abil, turbo: tier >= 4 || bp > 0 };
 }
 const bossArt = (b, cls = '') => b.img ? `<div class="boss-art world px ${cls}"><img src="${b.img.includes('/') ? b.img : `assets/fluent/${b.img}.webp`}" alt="${esc(b.name)}" draggable="false"></div>`
   : `<div class="boss-art ${cls}">${creatureSVG(b.seed, b.diff >= 3 ? 'mythic' : 'epic', { boss: true, label: b.name })}</div>`;
-const CUP = ['', 'bronze', 'silver', 'diamond'], CUP_N = ['', 'Brąz', 'Srebro', 'Diament'];
-const cupHTML = b => { const t = Math.min(3, b.stars || 0); return `<span class="cupw" title="${t ? 'Puchar: ' + CUP_N[t] : 'Bez pucharu'}${b.bp ? ' · prestiż ' + b.bp : ''}">${t ? `<img class="cup t${t}" src="assets/cups/${CUP[t]}.webp" alt="">` : '<i class="cup0"></i>'}${b.bp ? `<b class="bp">P${b.bp}</b>` : ''}</span>`; };
+const CUP = ['', 'bronze', 'silver', 'platinum', 'diamond'], CUP_N = ['', 'Brąz', 'Srebro', 'Platyna', 'Diament'];
+const cupHTML = b => { const t = Math.min(4, b.stars || 0); return `<span class="cupw" title="${t ? 'Puchar: ' + CUP_N[t] : 'Bez pucharu'}${b.bp ? ' · prestiż ' + b.bp : ''}">${t ? `<img class="cup t${t}" src="assets/cups/${CUP[t]}.webp" alt="">` : '<i class="cup0"></i>'}${b.bp ? `<b class="bp">P${b.bp}</b>` : ''}</span>`; };
 const starsHTML = (n, max = STARS_MAX) => `<span class="bstars">${'★'.repeat(Math.min(n, max))}${'☆'.repeat(Math.max(0, max - n))}</span>`;
 
 // ---------- ⚔️ walka
@@ -399,6 +400,7 @@ function hurtMe(n, label) {
   const B = BOSS; if (B.down) return;
   if (B.guard > 0) { B.guard--; B.fxMe = { k: 'block', t: Date.now() }; B.log.unshift(`🛡️ Zablokowałeś: ${label}`); return; }
   if (Math.random() < B.hs.dodge) { B.fxMe = { k: 'dodge', t: Date.now() }; B.log.unshift(`💨 Unik! ${label} chybia`); return; }
+  if (B.bomb) { n *= 2; B.bomb = 0; label += ' 💣 ×2'; }
   const dmg = Math.round(n * (1 - B.hs.def) * (B.b.abil.includes('rage') && B.hp < B.max / 2 ? 1.4 : 1));
   B.me -= dmg; B.lostHp += dmg; B.fxMe = { k: 'hit', n: dmg, t: Date.now() }; B.log.unshift(`💥 ${label}: −${dmg} ❤️`);
   if (B.hs.thorns && bossAlive(B)) { const r = dealBoss(dmg * B.hs.thorns); if (r) B.log.unshift(`🌵 Odbicie: −${r} dla bossa`); }
@@ -489,6 +491,7 @@ function afterTurn(g, isVer) {
     else if (mv.k === 'bugs') { B.pendBugs = 3 + Math.min(3, B.b.diff); B.log.unshift('🐛 Robaczki nadchodzą!'); bossSay('bugs'); }
     else if (mv.k === 'poison') { B.poison = 3; B.log.unshift('☠️ Trucizna: −4 ❤️ przez 3 tury'); }
     else if (mv.k === 'silence') { B.silence = 2; B.log.unshift('🔇 Cisza: bez mikstur i superciosu przez 2 tury'); }
+    else if (mv.k === 'bomb') { B.bomb = 1; B.log.unshift('💣 Bomba: następny cios bossa podwójny!'); bossSay('attack'); }
     else if (mv.k === 'weak') { B.weak = 3; B.log.unshift('🥀 Osłabienie: Twoje ciosy −30% przez 3 tury'); bossSay('attack'); }
     else if (mv.k === 'drain') { B.drain = 3; B.log.unshift('🩸 Wysysanie: boss leczy się Twoimi ciosami przez 3 tury'); bossSay('attack'); }
     else if (mv.k === 'haste') { B.haste = 3; B.log.unshift('⏳ Pośpiech: połowa czasu na 3 pytania'); bossSay('slow'); }
@@ -773,9 +776,9 @@ function setupSheetHTML() {
   const learnIds = b.kind === 'ch' ? b.cards.filter(c => c.srs.state === 'new').map(c => c.id) : [];
   return `<div class="bsheet-ov" data-act="boss-sel-close"></div><div class="bsheet">
     <div class="row nowrap" style="gap:12px">${bossArt(b, 'sheet')}<div class="grow"><b style="font-size:18px">${esc(b.name)}</b><div class="small muted">${esc(b.title)}</div><div class="small">${esc(b.desc)}</div>
-      <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : ['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) + (masterKey(b) ? medalsHTML(b) : '') : starsHTML(b.stars)}<span class="small muted">trudność ${b.diff + 1}${b.stars ? ` · ${CUP_N[Math.min(3, b.stars)]}: boss silniejszy` : ''}</span></div></div>
+      <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : ['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) + (masterKey(b) ? medalsHTML(b) : '') : starsHTML(b.stars)}<span class="small muted">trudność ${b.diff + 1}${b.stars ? ` · ${CUP_N[Math.min(4, b.stars)]}: boss silniejszy` : ''}</span></div></div>
       <button class="iconbtn" data-act="boss-sel-close">✕</button></div>
-    ${['ch', 'fin', 'cat'].includes(b.kind) && b.stars >= 3 ? `<button class="block bprest" data-act="boss-prestige" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">⭐ Prestiż bossa → P${(b.bp || 0) + 1}: puchary od nowa, boss +35% silniejszy i z turbo-przeszkadzajkami, nagrody +25%</button>` : ''}
+    ${['ch', 'fin', 'cat'].includes(b.kind) && b.stars >= 4 ? `<button class="block bprest" data-act="boss-prestige" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">⭐ Prestiż bossa → P${(b.bp || 0) + 1}: puchary od nowa, boss +35% silniejszy i z turbo-przeszkadzajkami, nagrody +25%</button>` : ''}
     ${b.weak ? `<div class="weak-tag">🎯 Słabość: <b>${WEAK_NAME[b.weak]}</b> – cios ×${String(WEAK_M).replace('.', ',')} · przy 50% i 25% ❤️ boss wpada w szał (fazy)</div>` : ''}
     <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : '<span>⏱️ bez limitu</span>'}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
     ${b.ok && lessonFor(b) ? `<div class="lock-box"><b>📚 Lekcja z porażki</b><small>${esc(b.name)} pokonał Cię na tych fiszkach. Powtórz je (${lessonFor(b).ids.length}) – rewanż odblokuje się od razu.</small></div>
@@ -822,8 +825,13 @@ function fightView() {
   const c = bossCard(), cur = B.cur, v = c ? cardView(c) : { q: '', a: '', ans: '' }, now = Date.now(), fresh = x => x && now - x.t < 900 ? x : null;
   const fx = fresh(B.fx), fm = fresh(B.fxMe), act = fresh(B.bossAct), ultFx = B.ultFx && now - B.ultFx.t < 1400 ? B.ultFx : null, mv = B.move, hs = B.hs;
   const blocked = B.ice || B.bugs?.length, cm = cur?.cm, dis = blocked ? 'disabled' : '';
-  const q = cur?.rev ? `<div class="ctext">${esc(v.ans)}</div><small class="muted">Do czego pasuje ta odpowiedź?</small>` : cm === 'pairs' ? '<div class="ctext">Połącz pytania z odpowiedziami</div><small class="muted">stuknij pytanie, potem odpowiedź · 2 pomyłki = cios</small>'
+  let q = cur?.rev ? `<div class="ctext">${esc(v.ans)}</div><small class="muted">Do czego pasuje ta odpowiedź?</small>` : cm === 'pairs' ? '<div class="ctext">Połącz pytania z odpowiedziami</div><small class="muted">stuknij pytanie, potem odpowiedź · 2 pomyłki = cios</small>'
     : cm === 'tf' ? `${v.q}<div class="tf-claim">${esc(cur.claim)}</div>` : cm === 'flip' && B.shown ? v.a : v.q + (cur?.mask && !B.shown ? `<div class="mask">${esc(cur.mask)}</div>` : '');
+  // 🔀/⏪ przeszkadzajki ciężkich bossów: pytanie z pomieszanymi słowami albo od tyłu (do odkrycia odpowiedzi)
+  if (cur && ['scramble', 'reverse'].includes(cur.dis) && !B.shown && !['pairs', 'runes'].includes(cm)) { const t = (bossCard()?.gk ? bossCard().q : plain(v.q)).replace(/\s+/g, ' ').trim(), w = t.split(' ');
+    const r = rng => { let h = hashStr(String(cur.id) + B.i); return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0) / 4294967296); };
+    const out = cur.dis === 'reverse' ? [...t].reverse().join('') : (() => { const R = r(), a = [...w]; for (let k = a.length - 1; k > 0; k--) { const j = R() * (k + 1) | 0; [a[k], a[j]] = [a[j], a[k]]; } return a.join(' '); })();
+    q = `<div class="ctext">${esc(out)}</div>` + (cm === 'tf' ? `<div class="tf-claim">${esc(cur.claim)}</div>` : ''); }
   const evChest = B.ev?.k === 'chest' ? `<button class="ev-chest" data-act="boss-evchest" aria-label="Złap skrzynkę">${crateImg('grab')}<small>Złap!</small></button>` : '';
   let ctrl = B.down ? `<div class="down-box">💀 Leżysz! ${B.coop ? 'Kolega może Cię reanimować – albo' : ''} odpowiedz dobrze 5×, żeby wstać (${B.selfRev || 0}/5)</div>` : '';
   if (cm === 'abcd') ctrl += `<div class="abcd-grid">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(cur.right ?? v.ans);

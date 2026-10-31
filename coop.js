@@ -36,7 +36,7 @@ function sCoopMsg(m) {
   for (const k of ['hp', 'max', 'n', 'combo', 'seed', 'len']) if (m[k] != null) o[k] = sInt(m[k], 0, 1e6);
   if (m.down != null) o.down = !!m.down; if (m.won != null) o.won = !!m.won;
   if (m.h != null) o.h = sStr(m.h, 40);
-  if (m.tw != null) o.tw = !!m.tw; if (m.fl != null) o.fl = sInt(m.fl, 1, 999, 1); if (m.emo != null) o.emo = sInt(m.emo, 0, DUO_EMO.length - 1); if (m.bon != null) o.bon = DUO_BON[m.bon] ? m.bon : null; if (Array.isArray(m.ab)) o.ab = m.ab.slice(0, 25).filter(a => typeof a === 'string' && BOSS_ABIL[a]);
+  if (m.tw != null) o.tw = !!m.tw; if (m.gq != null) o.gq = !!m.gq; if (m.fl != null) o.fl = sInt(m.fl, 1, 999, 1); if (m.emo != null) o.emo = sInt(m.emo, 0, DUO_EMO.length - 1); if (m.bon != null) o.bon = DUO_BON[m.bon] ? m.bon : null; if (Array.isArray(m.ab)) o.ab = m.ab.slice(0, 25).filter(a => typeof a === 'string' && BOSS_ABIL[a]);
   if (m.sm != null) o.sm = sStr(m.sm, 60); if (m.sn != null) o.sn = sInt(m.sn, 0, 1000);
   if (m.set && typeof m.set === 'object' && Array.isArray(m.set.cards)) o.set = { name: sStr(m.set.name, 60), cards: m.set.cards.slice(0, 260).map(x => ({ n: sStr(x?.n, 64), o: sStr(x?.o, 8), q: sStr(x?.q, 300), a: sStr(x?.a, 300) })).filter(x => x.q && x.a) };
   if (Array.isArray(m.players)) o.players = m.players.slice(0, 4).map(p => ({ id: sStr(p?.id, 40), nick: sStr(p?.nick, 24), line: CHAR_LINES[p?.line] ? p.line : 'cat', g: p?.g === 'm' ? 'm' : 'w', pr: sInt(p?.pr, 0, 99), lv: sInt(p?.lv, 1, 99, 1), atk: sNum(p?.atk, .5, 10, 1), look: sInt(p?.look, 0, 1e7) }));
@@ -76,9 +76,9 @@ function coopMsg(m0) {
   if (m.t === 'full') { toast('Lobby jest pełne'); return coopLeave(); }
   if (m.t === 'lobby' && !C.host && m.players) {
     if (!m.players.some(x => x.id === MY_ID)) return;
-    C.hostId = m.from; C.tower = !!m.tw; C.setInfo = m.sm ? { name: m.sm, n: m.sn || 0 } : null; for (const x of m.players) C.players[x.id] = { ...(C.players[x.id] || {}), ...x, seen: Date.now() }; return render();
+    C.hostId = m.from; C.tower = !!m.tw; C.gq = !!m.gq; C.setInfo = m.sm ? { name: m.sm, n: m.sn || 0 } : null; for (const x of m.players) C.players[x.id] = { ...(C.players[x.id] || {}), ...x, seen: Date.now() }; return render();
   }
-  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) duoPrep(m.fl, m.bon, m.ab); return coopBegin(m.heads, m.seed, m.set); }
+  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); C.gq = !!m.gq; } return coopBegin(m.heads, m.seed, m.set); }
   if (m.t === 'ok' && p) { C.mateOk = { id: m.from, t: Date.now() }; return; }
   if (m.t === 'emo' && p && m.emo != null) { p.emo = { i: m.emo, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
   if (m.t === 'hit' && C.phase === 'fight') { const hd = C.heads.find(x => x.id === m.h); if (hd) { hd.hp = Math.max(0, hd.hp - m.n); syncMyHead(); if (BOSS?.phase === 'fight' && !coopAlive()) return bossEnd(true); softRender(); } return; }
@@ -104,19 +104,20 @@ function coopStartHost() {
   if (COOP_MODE === 'tower') { const fl = C.phase === 'floor' ? C.tw.floor : 1, keys = Object.keys(DUO_BON), bon = fl > 1 ? keys[Math.random() * keys.length | 0] : null;
     for (const h of heads) h.max = Math.round(h.max * .8 * (1 + .2 * (fl - 1)));
     const ab = [...(fl > 1 && C.tw?.abil || [])]; const nx = towerCurse(ab); if (nx) ab.push(nx);
-    tw = { tw: true, fl, ab, ...(bon ? { bon } : {}) }; duoPrep(fl, bon, ab); }
+    tw = { tw: true, fl, ab, ...(bon ? { bon } : {}), ...(COOP_SRC === 'gk' ? { gq: true } : {}) }; duoPrep(fl, bon, ab); C.gq = COOP_SRC === 'gk'; }
   coopSend({ t: 'start', heads, seed, ...(set ? { set } : {}), ...tw }); coopBegin(heads, seed, set);
 }
-const coopSetInfo = () => { const d = COOP_SHARED && deckById(COOP_SRC), tw = COOP_MODE === 'tower' ? { tw: true } : {}; return d ? { ...tw, sm: d.name.replace(/^👥\s*/, '').slice(0, 60), sn: S.cards.filter(c => c.deckId === d.id && fightable(c)).length } : tw; };
+const coopSetInfo = () => { const d = COOP_SHARED && deckById(COOP_SRC), tw = COOP_MODE === 'tower' ? { tw: true, ...(COOP_SRC === 'gk' ? { gq: true } : {}) } : {}; return d ? { ...tw, sm: d.name.replace(/^👥\s*/, '').slice(0, 60), sn: S.cards.filter(c => c.deckId === d.id && fightable(c)).length } : tw; };
 function coopBegin(heads, seed, set) {
   const C = COOP; C.phase = 'fight'; C.heads = heads.map(h => ({ ...h, hp: h.max })); C.rev = {};
   let cs;
-  if (set?.cards?.length) { cs = coopUseSet(set); C.shared = set.name; toast(`🤝 Wspólny zestaw: „${set.name}” – ${cs.length} fiszek`, 3000); }
+  if (C.tw?.on && C.gq && typeof gkPick === 'function') { const T0 = { floor: C.tw.floor * 2, used: C.gkUsed || [] }; cs = gkPick(T0, 30); C.gkUsed = T0.used; C.shared = null; BOSS_PICK.mode = 'abcd'; }
+  else if (set?.cards?.length) { cs = coopUseSet(set); C.shared = set.name; toast(`🤝 Wspólny zestaw: „${set.name}” – ${cs.length} fiszek`, 3000); }
   else { COOP_V = new Map(); C.shared = null; cs = S.cards.filter(c => (COOP_SRC === 'all' ? mixFightable(c) : fightable(c)) && c.srs.state !== 'new' && (COOP_SRC === 'all' || c.deckId === COOP_SRC));
     if (cs.length < 10) { toast('Masz za mało nauczonych fiszek (min. 10) – walczysz tym, co jest', 3500); } }
   const n = Object.keys(C.players).length, diff = Math.min(4, 1 + Math.floor(heroLv() / 6));
   const T = C.tw?.on ? C.tw : null;
-  const b = T ? duoBoss(T.floor, seed, cs.length ? cs : S.cards.filter(fightable)) : { kind: 'hydra', id: 'hydra', name: n > 2 ? `Hydra ${n}-głowa` : 'Hydra', desc: 'Każdy z Was bije swoją głowę.', img: 'assets/bosses/hydra.webp', persona: HYDRA_TALK, diff, stars: 0, cards: cs.length ? cs : S.cards.filter(fightable), ok: true, repeat: false, pr: hero().pr || 0, len: 30, title: `Lobby ${C.code}`, seed };
+  const b = T ? { ...duoBoss(T.floor, seed, cs.length ? cs : S.cards.filter(fightable)), ...(C.gq ? { gk: true } : {}) } : { kind: 'hydra', id: 'hydra', name: n > 2 ? `Hydra ${n}-głowa` : 'Hydra', desc: 'Każdy z Was bije swoją głowę.', img: 'assets/bosses/hydra.webp', persona: HYDRA_TALK, diff, stars: 0, cards: cs.length ? cs : S.cards.filter(fightable), ok: true, repeat: false, pr: hero().pr || 0, len: 30, title: `Lobby ${C.code}`, seed };
   const p = bossParams(b); const mine = C.heads.find(h => h.id === MY_ID); p.hp = mine?.max || p.hp; if (T) { b.curses = true; p.abil = [...(T.abil || [])]; }
   bossBegin(b, { coop: true }, p);
   if (T) duoApply(BOSS, T);
@@ -164,13 +165,13 @@ ROUTES.coop = parts => {
   if (parts[1] && !COOP && /^[A-Z0-9]{6}$/i.test(parts[1])) { COOP_JOIN = parts[1].toUpperCase(); }
   if (BOSS?.coop && BOSS.phase === 'fight') return ROUTES.boss(['boss', 'fight']);
   const C = COOP, deckOpts = S.decks.map(d => `<option value="${d.id}" ${COOP_SRC === d.id ? 'selected' : ''}>${esc(d.name)} (${COOP_SHARED ? S.cards.filter(c => c.deckId === d.id && fightable(c)).length : deckLearned(d)})</option>`).join('');
-  const own = `<select data-coop-src="1" class="grow">${COOP_SHARED ? '<option value="" disabled ' + (deckById(COOP_SRC) ? '' : 'selected') + '>Wybierz talię…</option>' : '<option value="all">Wszystkie nauczone fiszki</option>'}${deckOpts}</select>`;
+  const own = `<select data-coop-src="1" class="grow">${COOP_SHARED ? '<option value="" disabled ' + (deckById(COOP_SRC) ? '' : 'selected') + '>Wybierz talię…</option>' : '<option value="all">Wszystkie nauczone fiszki</option>'}${COOP_MODE === 'tower' && !COOP_SHARED ? `<option value="gk" ${COOP_SRC === 'gk' ? 'selected' : ''}>🧠 Quiz z wiedzy ogólnej (${typeof GK_ALL !== 'undefined' ? GK_ALL.length : 0} pytań)</option>` : ''}${deckOpts}</select>`;
   const canPick = !C || C.host, guestSet = C && !C.host && C.setInfo;
   const src = guestSet ? `<div class="coop-set"><b>🤝 Wspólny zestaw: „${esc(C.setInfo.name)}”</b><small>${C.setInfo.n} fiszek – host wybrał, uczycie się tego samego. Jeśli masz tę talię, postęp zapisze się u Ciebie.</small></div>`
     : `${canPick ? `<div class="seg coop-mode"><button class="${COOP_SHARED ? '' : 'on'}" data-act="coop-shared" data-v="0">👤 Każdy swoje</button><button class="${COOP_SHARED ? 'on' : ''}" data-act="coop-shared" data-v="1">🤝 Wspólny zestaw</button></div>` : ''}
       <div class="row nowrap" style="margin-top:8px">${own}</div>${COOP_SHARED && canPick ? '<p class="small muted" style="margin:6px 0 0">Kolega dostanie te same fiszki na czas walki (i może je potem zapisać u siebie).</p>' : ''}`;
   const gameSeg = canPick ? `<div class="seg duo-seg"><button class="${COOP_MODE === 'hydra' ? 'on' : ''}" data-act="coop-game" data-v="hydra">🐍 Hydra</button><button class="${COOP_MODE === 'tower' ? 'on' : ''}" data-act="coop-game" data-v="tower">🗼 Wieża duetu</button></div>`
-    : C?.tower ? '<div class="coop-set"><b>🗼 Wieża duetu</b><small>Host wybrał wspinaczkę we dwoje.</small></div>' : '';
+    : C?.tower ? `<div class="coop-set"><b>🗼 Wieża duetu${C.gq ? ' · 🧠 quiz' : ''}</b><small>${C.gq ? 'Pytania z biblioteki wiedzy ogólnej (ABCD).' : 'Host wybrał wspinaczkę we dwoje.'}</small></div>` : '';
   if (C?.phase === 'floor') return duoFloorView(C);
   const modes = `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => `<button class="${BOSS_PICK.mode === k ? 'on' : ''}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>cios ${m.mul}</small></button>`).join('')}</div>`;
   if (!C || C.phase === 'end') return { tab: 'arena', html: `
@@ -197,7 +198,7 @@ Object.assign(ACTIONS, {
   'coop-host': () => { coopOpen(roomCode(), true); render(); },
   'coop-join': () => { const code = ($('#coop-code')?.value || '').trim().toUpperCase(); if (!/^[A-Z0-9]{6}$/.test(code)) return toast('Kod ma 6 znaków'); COOP_JOIN = ''; coopOpen(code, false); render(); },
   'coop-start': () => coopStartHost(),
-  'coop-game': el => { COOP_MODE = el.dataset.v === 'tower' ? 'tower' : 'hydra'; if (COOP?.host) coopBeat(); render(); },
+  'coop-game': el => { COOP_MODE = el.dataset.v === 'tower' ? 'tower' : 'hydra'; if (COOP_MODE === 'hydra' && COOP_SRC === 'gk') COOP_SRC = 'all'; if (COOP?.host) coopBeat(); render(); },
   'duo-emo': el => { const i = +el.dataset.i; coopSend({ t: 'emo', emo: i }); toast(`${DUO_EMO[i]} wysłane`, 900); },
   'duo-next': () => coopStartHost(),
   'coop-shared': el => { COOP_SHARED = el.dataset.v === '1'; if (COOP_SHARED && !deckById(COOP_SRC)) COOP_SRC = (S.decks.find(d => S.cards.some(c => c.deckId === d.id)) || {}).id || ''; if (!COOP_SHARED && !deckById(COOP_SRC)) COOP_SRC = 'all'; if (COOP?.host) coopBeat(); render(); },
