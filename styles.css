@@ -2914,3 +2914,17 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 @keyframes spotMove { 0% { background-position: 0% 30%; } 33% { background-position: 100% 0%; } 66% { background-position: 20% 100%; } 100% { background-position: 90% 80%; } }
 @media (prefers-reduced-motion: reduce) { .boss-q.dis-shake .bq-in, .boss-q.dis-spot::before { animation: none; } }
 .boss-q .dis-tag { z-index: 6; }
+/* 🎰 mini losowanie przeszkadzajki */
+.roll-ov { position: absolute; left: 0; right: 0; top: 26%; z-index: 30; display: grid; gap: 10px; padding: 16px 0 14px; background: rgba(8,8,16,.92); border-block: 2px solid #f59e0b; box-shadow: 0 10px 40px rgba(0,0,0,.6); pointer-events: none; animation: rollIn .25s ease-out; }
+.roll-ov.done { animation: rollOut .5s ease-in .3s forwards; }
+@keyframes rollIn { from { opacity: 0; transform: scaleY(.6); } } @keyframes rollOut { to { opacity: 0; transform: scaleY(.7); } }
+.roll-h { text-align: center; font-weight: 800; color: #fde68a; font-size: 15px; letter-spacing: .3px; }
+.roll-win { position: relative; height: 92px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
+.roll-strip2 { position: absolute; top: 0; left: 50%; display: flex; gap: 8px; transform: translateX(calc(-48px - var(--at) * 104px)); animation: rollSpin var(--ms, 1700ms) cubic-bezier(.15,.8,.2,1) both; }
+@keyframes rollSpin { from { transform: translateX(-48px); } to { transform: translateX(calc(-48px - var(--at) * 104px)); } }
+.roll-it { flex: none; width: 96px; height: 92px; display: grid; place-items: center; align-content: center; gap: 4px; border-radius: 14px; background: #1c2033; border: 2px solid #2e3450; text-align: center; padding: 6px 4px; }
+.roll-it i { font-style: normal; font-size: 30px; line-height: 1; } .roll-it i .emo8 { width: 32px !important; height: 32px !important; } .roll-it small { font-size: 10.5px; font-weight: 800; color: #e2e8f0; line-height: 1.15; }
+.roll-ov.done .roll-it.hit { border-color: #f59e0b; box-shadow: 0 0 18px #f59e0b88; background: #3a2a10; }
+.roll-mark { position: absolute; left: 50%; top: 0; bottom: 0; width: 100px; transform: translateX(-50%); border: 3px solid #fde68a; border-radius: 16px; pointer-events: none; }
+.roll-res { text-align: center; font-size: 14px; color: #fff; padding: 0 16px; opacity: 0; } .roll-ov.done .roll-res { opacity: 1; transition: opacity .2s; }
+@media (prefers-reduced-motion: reduce) { .roll-strip2 { animation: none; } }

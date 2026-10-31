@@ -451,7 +451,7 @@ function afterTurn(g, isVer) {
   if (B.timeFree > 0) B.timeFree--;
   // tura bossa: odliczanie do zapowiedzianego ruchu
   if (bossAlive(B) && !B.down && --B.timer <= 0) {
-    const mv = B.move; B.bossAct = { k: mv.k, t: now };
+    const mv = B.move; B.bossAct = { k: mv.k, t: now }; if (mv.k !== 'hit') rollFx(B, mv.k, B.b.abil.filter(a => a !== 'rage'));
     if (mv.k === 'hit') { if (B.down) hurtMe(mv.dmg, mv.name); else B.pendParry = { dmg: mv.dmg, name: mv.name }; bossSay('attack'); }
     else if (mv.k === 'heal') { const h = Math.round(B.max * .08); if (!B.coop) B.hp = Math.min(B.max, B.hp + h); else if (typeof coopHeal === 'function') coopHeal(h); B.log.unshift(`💚 ${B.b.name} leczy się +${h}`); }
     else if (mv.k === 'shield') { B.shield = true; B.log.unshift(`🛡️ ${B.b.name} stawia tarczę`); }
@@ -477,11 +477,24 @@ function afterTurn(g, isVer) {
   if (!B.cur) return bossEnd(false, 'cards');
   bossSfx(g >= 2 ? 'hit' : 'hurt'); render();
 }
+// 🎰 mini losowanie przeszkadzajki: pasek ikon przewija się i staje na wylosowanej (wynik znany wcześniej – to tylko pokaz)
+const ROLL_MS = 1700, ROLL_AT = 11;
+function rollFx(B, a, pool, learn = false) {
+  const P = pool.length ? pool : [a], strip = Array.from({ length: ROLL_AT + 3 }, (_, i) => i === ROLL_AT ? a : P[Math.random() * P.length | 0]), now = Date.now();
+  // kolejka: drugie losowanie startuje po pierwszym
+  B.rolls = (B.rolls || []).filter(r => now - r.t < ROLL_MS + 800); const t = B.rolls.length ? B.rolls[B.rolls.length - 1].t + ROLL_MS + 900 : now;
+  B.rolls.push({ a, strip, learn, t }); if (learn && B.learnFx) B.learnFx.t = t + ROLL_MS;
+  for (const d of [t - now, t - now + ROLL_MS + 900]) setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, Math.max(0, d) + 20);
+}
+const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t && now - r.t <= ROLL_MS + 800); if (!R) return '';
+  return `<div class="roll-ov${now - R.t > ROLL_MS ? ' done' : ''}" style="--at:${ROLL_AT};--ms:${Math.max(0, ROLL_MS - (now - R.t))}ms"><div class="roll-h">${R.learn ? '📈 Boss uczy się nowej mocy…' : '🎰 Losowanie przeszkadzajki…'}</div>
+    <div class="roll-win"><div class="roll-strip2">${R.strip.map((k, i) => `<div class="roll-it${i === ROLL_AT ? ' hit' : ''}"><i>${BOSS_ABIL[k][0]}</i><small>${BOSS_ABIL[k][1]}</small></div>`).join('')}</div><span class="roll-mark"></span></div>
+    <div class="roll-res">${BOSS_ABIL[R.a][0]} <b>${BOSS_ABIL[R.a][1]}</b> – ${BOSS_ABIL[R.a][2]}</div></div>`; };
 // 🗼 w wieży (zwykłej i wiedzy) boss co 4 pytania uczy się nowej, losowej przeszkadzajki – im dłużej walczysz, tym trudniej
 function towerLearn(B) {
   if (B.b.kind !== 'tower' || B.coop || (B.i !== 1 && B.i % 4)) return;
   const pool = Object.keys(BOSS_ABIL).filter(a => !B.b.abil.includes(a) && a !== 'rage'); if (!pool.length) return;
-  const a = pool[Math.random() * pool.length | 0]; B.b.abil.push(a); B.learnFx = { a, t: Date.now() };
+  const a = pool[Math.random() * pool.length | 0]; B.b.abil.push(a); B.learnFx = { a, t: Date.now() }; rollFx(B, a, pool, true);
   B.log.unshift(`📈 ${B.b.name} uczy się: ${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}!`);
 }
 // 🔥 fazy: przy 50% i 25% ❤️ boss wpada w szał – mocniejsze ciosy i nowa zdolność
@@ -788,7 +801,7 @@ function fightView() {
     <div class="bf-top">
       ${B.say?.txt ? `<div class="boss-say" key="${B.say.t}">${esc(B.say.txt)}</div>` : ''}
       <div class="bf-boss">${B.coop && typeof coopHeadsHTML === 'function' ? coopHeadsHTML(fx, act) : `<div class="boss-stage${fx ? ' hit' : ''}${fx?.crit ? ' crit' : ''}${act ? ' attack' : ''}">${bossArt(b)}${B.shield ? '<span class="boss-shield">🛡️</span>' : ''}${fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}${fx.crit ? '!' : ''}</b><i class="slash"></i>` : ''}</div>`}
-        <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : BOSS_ABIL[mv.k][0]} <b>${esc(mv.name)}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
+        <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : '🎰'} <b>${mv.k === 'hit' ? esc(mv.name) : 'Losowanie przeszkadzajki'}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
       ${B.coop ? '' : HP_BAR(B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''))}
       ${B.phaseN ? `<div class="weak-tag">🔥 faza ${B.phaseN + 1}</div>` : ''}
       ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry && !cur?.qte ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
@@ -798,7 +811,8 @@ function fightView() {
     ${fm?.k === 'hit' ? `<b class="dmg me">−${fm.n}</b><i class="claw"></i>` : fm?.k === 'dodge' ? '<b class="dmg me dodge">Unik!</b>' : fm?.k === 'block' ? '<b class="dmg me dodge">Blok!</b>' : ''}
     ${B.coop && typeof coopMatesHTML === 'function' ? coopMatesHTML() : ''}
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.learnFx && now - B.learnFx.t < 1600 ? `<div class="ult-banner phase-banner">📈 NOWA MOC: ${BOSS_ABIL[B.learnFx.a][1].toUpperCase()}</div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
+    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 1600 ? `<div class="ult-banner phase-banner">📈 NOWA MOC: ${BOSS_ABIL[B.learnFx.a][1].toUpperCase()}</div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
+    ${rollHTML(B, now)}
     <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}
       ${cur?.dis && !B.shown ? `<div class="dis-tag">${BOSS_ABIL[cur.dis][0]} ${BOSS_ABIL[cur.dis][1]}</div>` : ''}
