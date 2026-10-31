@@ -492,7 +492,7 @@ const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t &&
     <div class="roll-res">${BOSS_ABIL[R.a][0]} <b>${BOSS_ABIL[R.a][1]}</b> – ${BOSS_ABIL[R.a][2]}</div></div>`; };
 // 🗼 w wieży (zwykłej i wiedzy) boss co 4 pytania uczy się nowej, losowej przeszkadzajki – im dłużej walczysz, tym trudniej
 function towerLearn(B) {
-  if (B.b.kind !== 'tower' || B.coop || (B.i !== 1 && B.i % 4)) return;
+  if ((B.b.kind !== 'tower' && !B.b.duo) || (B.coop && !B.b.duo) || (B.i !== 1 && B.i % 4)) return;
   const pool = Object.keys(BOSS_ABIL).filter(a => !B.b.abil.includes(a) && a !== 'rage'); if (!pool.length) return;
   const a = pool[Math.random() * pool.length | 0]; B.b.abil.push(a); B.learnFx = { a, t: Date.now() }; rollFx(B, a, pool, true);
   B.log.unshift(`📈 ${B.b.name} uczy się: ${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}!`);
@@ -629,10 +629,11 @@ function bossEnd(won, why) {
   const styleXP = (B.badges || []).reduce((a, x) => a + x[3], 0);
   B.xp = Math.round((B.ok * 2 + B.verOk * 2 + (won ? 40 + 20 * b.diff + kindXP : 5) + styleXP) * modeR * xpMul() * (rep ? .5 : 1)); giveXP(B.xp, 'za walkę');
   if (won) {
-    const base = { ch: 10 + 5 * b.diff, fin: 30 + 15 * b.diff, cat: 25 + 10 * b.diff, world: 30 + 10 * b.stars, hydra: 30 + 10 * b.diff }[b.kind] || (b.gk ? 3 : 10);   // wieża wiedzy (quiz): mniej 💎
+    const base = { ch: 10 + 5 * b.diff, fin: 30 + 15 * b.diff, cat: 25 + 10 * b.diff, world: 30 + 10 * b.stars, hydra: 30 + 10 * b.diff, duo: Math.min(40, 6 + 2 * (b.i || 1)) }[b.kind] || (b.gk ? 3 : 10);   // wieża wiedzy (quiz): mniej 💎
     B.gems = Math.round(base * gemMul() * hs.gems * modeR * (rep ? .25 : 1)); S.wallet.push({ id: 'boss-' + uid(), n: B.gems, why: 'boss', t: Date.now() });
     let n = 1 + (b.diff >= 2 ? 1 : 0) + (b.kind !== 'ch' ? 1 : 0) + hs.loot + (flawless ? 1 : 0) + (boostOn('loot2') ? 1 : 0) - (B.caught >= 2 ? 1 : 0);
     if (rep) n = acc >= .8 ? 1 : 0;
+    if (b.duo && !b.final) n = 0;   // wieża duetu: skrzynia tylko u strażnika (co 5. piętro)
     B.chest = { n: Math.max(0, n), tier: b.diff + (b.kind !== 'ch' ? 1 : 0) + Math.floor((hero().pr || 0) / 2), open: false };
     B.loot = Array.from({ length: B.chest.n }, () => rollLoot(B.chest.tier));
     B.loot.forEach((it, i) => grantLoot(it, `boss-l${i}-${uid()}`));
@@ -811,7 +812,7 @@ function fightView() {
     ${fm?.k === 'hit' ? `<b class="dmg me">−${fm.n}</b><i class="claw"></i>` : fm?.k === 'dodge' ? '<b class="dmg me dodge">Unik!</b>' : fm?.k === 'block' ? '<b class="dmg me dodge">Blok!</b>' : ''}
     ${B.coop && typeof coopMatesHTML === 'function' ? coopMatesHTML() : ''}
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
+    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.syncFx && now - B.syncFx < 1400 ? '<div class="ult-banner sync-banner">⚡ SYNCHRO! ⚡</div>' : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
     ${rollHTML(B, now)}
     <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}
@@ -854,7 +855,7 @@ function endView() {
     ${chest}
     ${B.lesson ? `<div class="lock-box" style="margin:8px 0"><b>📚 Lekcja z porażki</b><small>Rewanż odblokuje się, gdy powtórzysz ${B.lesson} ${plural(B.lesson, 'fiszkę', 'fiszki', 'fiszek')}, na których boss Cię pokonał.</small></div><button class="primary block" data-act="boss-lesson">📚 Powtórz teraz</button>` : ''}
     ${B.missed.length && !B.lesson ? `<button class="block" data-act="boss-cram">🔁 ${new Set(B.missed).size === 1 ? 'Powtórz fiszkę, której nie pamiętałeś' : `Powtórz ${new Set(B.missed).size} ${plural(new Set(B.missed).size, 'fiszkę', 'fiszki', 'fiszek')}, których nie pamiętałeś`}</button>` : ''}
-    <div class="row" style="margin-top:10px">${B.coop ? '<button class="primary grow" data-go="#/coop">👥 Lobby</button>' : `<button class="primary grow" data-act="boss-again">${won ? 'Dalej ⚔️' : 'Spróbuj ponownie'}</button>`}<button class="grow" data-act="boss-map">🗺️ Mapa</button><button class="grow" data-go="#/hero">${heroIcon()} Bohater</button></div>
+    <div class="row" style="margin-top:10px">${B.coop ? (b.duo && won ? '<button class="primary grow" data-go="#/coop">🗼 Dalej – następne piętro</button>' : '<button class="primary grow" data-go="#/coop">👥 Lobby</button>') : `<button class="primary grow" data-act="boss-again">${won ? 'Dalej ⚔️' : 'Spróbuj ponownie'}</button>`}<button class="grow" data-act="boss-map">🗺️ Mapa</button><button class="grow" data-go="#/hero">${heroIcon()} Bohater</button></div>
     ${livesHTML()}
   </div>` };
 }
