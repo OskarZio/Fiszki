@@ -196,8 +196,15 @@ const GK_Q = [
 ];
 const GK_CAT = { geo: '🌍 Geografia', his: '📜 Historia', sci: '🔬 Nauka', art: '🎨 Kultura', spo: '⚽ Sport', nat: '🐾 Przyroda', lan: '🗣️ Język', tec: '💻 Technika' };
 const GK_SRS = Object.freeze({ state: 'gk', due: Infinity, lapses: 0, reps: 0 });
-const gkCard = id => { if (!String(id).startsWith('gk:')) return null; const x = GK_Q[+String(id).slice(3)]; if (!x) return null;
-  return { id, gk: true, deckId: 'gk', lvl: x[0], cat: x[1], q: x[2], a: x[3], w: x.slice(4), srs: GK_SRS }; };
+// 📚 cała pula: pytania pisane ręcznie (klucz = numer) + biblioteka z gkdata.js (klucz z treści); duplikaty treści pomijamy
+const GK_ALL = (() => { const hand = GK_Q.map((x, i) => ({ k: String(i), lvl: x[0], cat: x[1], q: x[2], a: x[3], w: x.slice(4) })), qs = new Set(hand.map(x => x.q));
+  return [...hand, ...(typeof GKD !== 'undefined' ? GKD.filter(x => !qs.has(x.q)) : [])]; })();
+const GK_MAP = new Map(GK_ALL.map(x => [x.k, x]));
+const gkCard = id => { if (!String(id).startsWith('gk:')) return null; const x = GK_MAP.get(String(id).slice(3)); if (!x) return null;
+  return { id, gk: true, deckId: 'gk', lvl: x.lvl, cat: x.cat, q: x.q, a: x.a, w: x.w, srs: GK_SRS }; };
+// 🧠 pamięć zadanych pytań (między wspinaczkami): pytanie wraca dopiero, gdy przerobisz całą pulę danego poziomu
+const gkSeen = () => { try { return new Set(JSON.parse(localStorage.getItem('gkSeen') || '[]')); } catch { return new Set(); } };
+const gkSeenSave = set => { try { localStorage.setItem('gkSeen', JSON.stringify([...set])); } catch { /* */ } };
 // widok wirtualnej karty – ten sam kształt co cardView()
 const gkCv0 = cardView;
 cardView = c => c?.gk ? { q: `<div class="gk-cat">${GK_CAT[c.cat] || ''}</div><div class="ctext">${esc(c.q)}</div>`, a: `<div class="ctext">${esc(c.q)}</div><hr><div class="ctext">${esc(c.a)}</div>`,
@@ -205,13 +212,17 @@ cardView = c => c?.gk ? { q: `<div class="gk-cat">${GK_CAT[c.cat] || ''}</div><d
 // pytania na piętro: głównie z poziomu piętra, trochę z innych; w jednej wspinaczce bez powtórek
 function gkPick(T, n) {
   const lv = T.floor <= 3 ? 1 : T.floor <= 7 ? 2 : 3;
-  let free = GK_Q.map((_, i) => i).filter(i => !(T.used || []).includes(i));
-  if (free.length < n) { T.used = []; free = GK_Q.map((_, i) => i); }
-  const main = shuffle(free.filter(i => GK_Q[i][0] === lv)), other = shuffle(free.filter(i => GK_Q[i][0] !== lv && GK_Q[i][0] <= lv + 1));
+  const used = new Set((T.used || []).map(String)), seen = gkSeen();
+  // poziom wyczerpany? zapominamy tylko jego pytania (te z bieżącej wspinaczki dalej się nie powtórzą)
+  for (const l of [lv, Math.min(3, lv + 1)]) if (GK_ALL.filter(x => x.lvl === l && !seen.has(x.k) && !used.has(x.k)).length < n) for (const x of GK_ALL) if (x.lvl === l) seen.delete(x.k);
+  const free = GK_ALL.filter(x => !used.has(x.k) && !seen.has(x.k));
+  // różne kategorie przemieszane: z każdej kategorii najpierw po jednym, potem reszta
+  const main = shuffle(free.filter(x => x.lvl === lv)), other = shuffle(free.filter(x => x.lvl !== lv && x.lvl <= lv + 1));
   const k = Math.min(main.length, Math.ceil(n * .75)), pick = [...main.slice(0, k), ...other].slice(0, n);
   if (pick.length < n) pick.push(...main.slice(k, k + n - pick.length));
-  T.used = [...(T.used || []), ...pick];
-  return shuffle(pick).map(i => gkCard('gk:' + i));
+  T.used = [...used, ...pick.map(x => x.k)];
+  for (const x of pick) seen.add(x.k); gkSeenSave(seen);
+  return shuffle(pick).map(x => gkCard('gk:' + x.k));
 }
 const gkCardHTML = () => { const was = TW_GK; TW_GK = true; const T = tower(), best = towerBest(); TW_GK = was;
   return `<div class="card row nowrap tower-cta gk-cta" data-go="#/gtower"><span class="tower-ic">🧠</span><div class="grow"><b>Wieża wiedzy – quiz</b><div class="small muted">${T ? `W trakcie: piętro ${T.floor}` : `Wiedza ogólna ABCD, piętro za piętrem. Rekord: ${best || '—'}`}</div></div><span>›</span></div>`; };
@@ -219,7 +230,7 @@ ROUTES.gtower = () => { TW_GK = true; const T = tower(), cats = Object.values(GK
   return { tab: 'arena', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🧠 Wieża wiedzy</h1>${coinsHTML()}</div>
   <div class="card center"><div style="font-size:64px">🧠</div><p style="margin:4px 0"><b>Quiz z wiedzy ogólnej</b> – nie potrzebujesz własnych fiszek. Każde piętro to boss i seria pytań ABCD, coraz trudniejszych.</p>
     <div class="boss-tags" style="justify-content:center;margin:8px 0">${cats.map(c => `<span>${c}</span>`).join('')}</div>
-    <ul class="small" style="text-align:left"><li>Piętra 1–3 łatwe, 4–7 średnie, od 8. trudne. ${GK_Q.length} pytań, w jednej wspinaczce bez powtórek.</li><li>Boss atakuje podstępami (prawda/fałsz) i runami – odpowiadaj szybko.</li><li>Po piętrze wraca 35% ❤️ i wybierasz błogosławieństwo. Co ${TOWER_GUARD}. piętro – strażnik.</li><li><b>Śmierć albo ucieczka = GAME OVER.</b> Serca zostają.</li></ul>
+    <ul class="small" style="text-align:left"><li>Piętra 1–3 łatwe, 4–7 średnie, od 8. trudne. ${GK_ALL.length.toLocaleString('pl')} pytań z biblioteki – pytanie wraca dopiero, gdy przerobisz całą pulę.</li><li>Boss atakuje podstępami (prawda/fałsz) i runami – odpowiadaj szybko.</li><li>Po piętrze wraca 35% ❤️ i wybierasz błogosławieństwo. Co ${TOWER_GUARD}. piętro – strażnik.</li><li><b>Śmierć albo ucieczka = GAME OVER.</b> Serca zostają.</li></ul>
     <p class="small muted">Rekord: piętro ${towerBest() || '—'}</p></div>
   ${T ? `<div class="card"><b>W trakcie: piętro ${T.floor}</b><div class="small muted">Zdobyte: +${T.bank.xp} XP, +${T.bank.gems} 💎</div>${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}${towerBuffsHTML(T)}
     <button class="primary block" data-act="tower-next" style="margin-top:10px">⚔️ Walcz dalej</button></div>`
