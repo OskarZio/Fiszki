@@ -105,14 +105,17 @@ function eggPrize(min) {
 function eggTick() {
   const E = eggRun(); if (!E) return eggChip(null);
   const now = Date.now(), dt = Math.min(5000, Math.max(0, now - E.last)); E.last = now;
-  if (E.breakUntil && now >= E.breakUntil) { E.breakUntil = 0; toast('☕ Koniec przerwy – wracamy do skupienia!'); }
+  if (E.breakUntil && now >= E.breakUntil) { E.brEnd = E.breakUntil; E.breakUntil = 0; eggInput = now; eggWake(E); toast('☕ Koniec przerwy – jajko znowu rośnie!'); eggSave(E); if (parseRoute().parts[0] === 'egg') render(); }
   if (eggGrowing(E)) E.prog += dt;
-  if (E.pomo && !E.breakUntil) { const n = Math.floor(E.prog / EGG_POMO); if (n > E.pomoN) { E.pomoN = n; if (eggLeft(E) > EGG_BREAK) { E.breakUntil = now + EGG_BREAK; toast('☕ 25 minut! 5 minut przerwy – możesz wyjść z aplikacji', 4000); } } }
+  if (E.pomo && !E.breakUntil) { const n = Math.floor(E.prog / EGG_POMO); if (n > E.pomoN) { E.pomoN = n; if (eggLeft(E) > EGG_BREAK) { E.breakUntil = now + EGG_BREAK; E.brEnd = E.breakUntil; toast('☕ 25 minut! 5 minut przerwy – możesz wyjść z aplikacji', 4000); } } }
   if (eggLeft(E) <= 0) return eggFinish(E, true);
   eggSave(E); eggChip(E); eggPaint(E);
 }
 function eggBack(E, away) {
-  E.hiddenAt = 0; E.last = Date.now();
+  // wyszedłeś w czasie przerwy – liczy się tylko czas po jej końcu (+1 min zapasu na powrót)
+  const be = E.breakUntil || E.brEnd || 0; if (be && E.hiddenAt && E.hiddenAt < be) away = Date.now() - be - 60000;
+  if (E.breakUntil && Date.now() >= E.breakUntil) { E.brEnd = E.breakUntil; E.breakUntil = 0; }
+  E.hiddenAt = 0; E.last = Date.now(); eggInput = Date.now();
   if (away > EGG_GRACE && !eggInBreak(E)) {
     if (useShield()) { E.saved++; eggSave(E); setTimeout(() => toast(`🛡️ Tarcza uratowała jajko! Zostało tarcz: ${shieldCount()}`, 4500), 300); }
     else return eggFinish(E, false, 'left');
@@ -326,6 +329,6 @@ Object.assign(ACTIONS, {
   'nest-month': el => { const now = new Date(); NEST = { range: 'month', off: (+el.dataset.y - now.getFullYear()) * 12 + (+el.dataset.m - now.getMonth()), cat: NEST.cat }; render(); },
   'cr-open': el => crOpen(el.dataset.id),
   'egg-quit': () => { const E = eggRun(); if (E && confirm('Poddać się? Jajko pęknie i nic się nie wykluje.')) eggFinish(E, false, 'quit'); },
-  'egg-skipbreak': () => { const E = eggRun(); if (E) { E.breakUntil = 0; eggSave(E); render(); } },
+  'egg-skipbreak': () => { const E = eggRun(); if (E) { E.breakUntil = 0; E.brEnd = Date.now(); eggInput = Date.now(); eggSave(E); render(); } },
   'egg-shield': () => { if (spend(SHIELD_PRICE, 'shield')) { addItem('shield', 'shield', 1); toast('🛡️ +1 tarcza'); render(); } },
 });
