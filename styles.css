@@ -2882,3 +2882,19 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 .hero-fig .hero-aura { inset: 14% 10% 0 !important; opacity: .55; }
 .pr-4 .hero-aura, .pr-5 .hero-aura, .pr-6 .hero-aura { opacity: .35 !important; filter: blur(14px) !important; }
 .hero-fig.skinned .hero-aura { display: none !important; }
+/* 🔨 kuźnia z czasem */
+.forge2 { display: grid; gap: 2px; margin-bottom: 8px; } .forge2 > .row b { font-size: 17px; } .fmat { font-weight: 800; padding: 4px 12px; border-radius: 99px; background: var(--card2); }
+.fj-slots { display: grid; gap: 12px; }
+.fj { display: grid; gap: 10px; padding: 14px; border-radius: 16px; background: var(--card2); border: 2px solid color-mix(in srgb, var(--rc, var(--muted)) 55%, transparent); }
+.fj.ready { box-shadow: 0 0 0 3px color-mix(in srgb, #22c55e 45%, transparent); border-color: #22c55e; }
+.fj.empty { border-style: dashed; border-color: color-mix(in srgb, var(--muted) 45%, transparent); text-align: center; gap: 6px; } .fj.empty small { color: var(--muted); } .fj.empty button { justify-self: center; margin-top: 4px; }
+.fj-top { display: flex; align-items: center; gap: 12px; } .fj-top .gear-img { width: 52px; height: 52px; flex: none; } .fj-top b { display: block; font-size: 15px; } .fj-top small { color: var(--muted); font-weight: 700; font-size: 13px; }
+.fj .pbar { margin: 0; height: 10px; background: rgba(0,0,0,.35); } .fj .pbar i { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+.fj.ready .pbar i { background: #22c55e; }
+.fj-task { font-size: 13px; font-weight: 700; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, #f59e0b 14%, transparent); } .fj-task.ok { background: color-mix(in srgb, #22c55e 16%, transparent); }
+.fj-btns { display: grid; } .fj-btns:empty { display: none; }
+.fi-list { display: grid; gap: 10px; }
+.fi { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--card2); border-left: 4px solid var(--rc); }
+.fi .gear-img { width: 42px; height: 42px; flex: none; } .fi .grow { min-width: 0; display: grid; gap: 3px; } .fi b { font-size: 14px; } .fi small { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.fi-on { color: var(--accent) !important; font-weight: 800; } .fi button { flex: none; white-space: nowrap; } .fi-busy { flex: none; font-size: 12px; font-weight: 800; color: #f59e0b; }
+.fi { display: grid !important; gap: 10px; } .fi-top { display: flex; align-items: center; gap: 12px; } .fi button { width: 100%; } .fi-busy { justify-self: start; padding: 4px 0; }

@@ -196,7 +196,7 @@ const GEAR = {
   c_heart: GR('c', 'Płonące serce', 'mythic', 'g_heartfire', { vamp: 15, hp: 30, regen: 2 }, 'mityczne – 15% obrażeń leczy'),
 };
 const GEAR_PRICE = { common: 150, rare: 450, epic: 1200, legendary: 3500, mythic: 9000 };
-const FORGE_MAX = 5;
+const FORGE_MAX = 10;
 // 👾 ikonki 8-bit (assets/px8) zamiast zwykłych dla przedmiotów kowala, mikstur i boosterów – reszta zostaje
 const PX8_OF = { g_bow: 'b_bow', g_swords: 'b_swords', g_orb: 'b_orb', g_volt: 'b_bolt', g_comet2: 'b_comet', g_gradcap: 'b_gradcap', g_crown: 'b_crown2', g_dragonf: 'b_dragon',
   g_shield: 'b_shield', g_ring: 'b_ring', g_gem: 'e_diamond', g_wing: 'b_wing', g_scroll: 'b_scroll', g_hourglass: 'b_hourglass', g_feather: 'b_feather', g_sparkles: 'b_sparkle',
@@ -252,11 +252,12 @@ const potionN = k => itemCount('potion', k);
 function heroStats() {
   const h = hero(), lv = heroLv(), pr = h.pr || 0, eq = Object.values(h.eq).map(id => GEAR[id]).filter(Boolean);
   const g = k => eq.reduce((a, x) => a + (x[k] || 0), 0), w = GEAR[h.eq.w], forge = (w && h.forge[h.eq.w]) || 0;
+  const fl = s => (GEAR[h.eq[s]] && h.forge[h.eq[s]]) || 0, fh = fl('h'), fa = fl('a'), fc = fl('c');   // 🔨 ulepszenia hełmu, pancerza, talizmanu
   const v = k => g(k) + skVal(k);
   return { lv, pr, line: heroLine(h), weapon: w, forge,
-    hp: BOSS_ME_BASE + 4 * (lv - 1) + v('hp') + 10 * pr,
+    hp: BOSS_ME_BASE + 4 * (lv - 1) + v('hp') + 10 * pr + 5 * fh + 3 * fa,
     atk: (1 + .02 * (lv - 1) + g('atk') / 100 + forge * .06 + .05 * pr) * (1 + v('dmg') / 100),
-    crit: Math.min(.6, v('crit') / 100), def: Math.min(.5, v('def') / 100), dodge: Math.min(.4, v('dodge') / 100),
+    crit: Math.min(.6, (v('crit') + fc) / 100), def: Math.min(.5, (v('def') + fa) / 100), dodge: Math.min(.4, v('dodge') / 100),
     regen: v('regen'), second: v('second') > 0, vamp: v('vamp') / 100, thorns: v('thorns') / 100, time: 1 + v('time') / 100,
     typeM: 1.5 + v('type'), abcdM: .5 + v('abcd'), steady: v('steady') > 0, alch: v('alch') > 0, loot: v('loot'),
     ultNeed: Math.max(3, 6 - v('ultFast')), ultPow: (1 + v('ultPow') / 100) * heroTierMul(heroLine()), verify: 1 + v('verify') / 100, first: Math.max(1, v('first')),
@@ -320,7 +321,7 @@ let HERO_EVO = -1, HERO_TAB = 'char', HERO_PAGE = 0, HERO_UP = false;
 ROUTES.hero = () => {
   if (HERO_EVO < 0) HERO_EVO = heroForm();
   const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)], ld = lineDef();
-  const tabs = [['char', '🎭', 'Postać'], ['tree', '🌳', `Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒', 'Ekwipunek'], ['shop', '🔨', 'Kowal']];
+  const tabs = [['char', '🎭', 'Postać'], ['tree', '🌳', `Drzewko${sp ? ` (${sp})` : ''}`], ['eq', '🎒', 'Ekwipunek'], ['shop', '🔨', `Kowal${typeof forgeReadyN === 'function' && forgeReadyN() ? ` (${forgeReadyN()} ✓)` : ''}`]];
   const pane = {
     char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Kot Wojak jest za darmo. Pozostałe kupisz, wylosujesz w skrzyni bohaterów albo odblokujesz poziomem konta – rzadsze mają mocniejsze umiejętności. Każda postać ma własne drzewko i <b>własne punkty</b>.</p>
       <div class="card hero-case row nowrap"><span class="hc-ic">${crateImg('hero')}</span><div class="grow"><b>Skrzynka bohaterów</b><div class="small muted">${Object.entries(HERO_CASE.odds).map(([t, p]) => `<span style="color:${HERO_TIER[t][1]}">${HERO_TIER[t][0]} ${p}%</span>`).join(' · ')}<br>Duplikat = +${HERO_CASE.dupPts} pkt drzewka tej postaci</div></div><button class="primary" data-act="hero-case">${HERO_CASE.price} 💎</button></div>
@@ -346,7 +347,7 @@ ROUTES.hero = () => {
         return `<h3>${SLOT_NAME[s]}</h3><div class="gear-grid">${own.map(id => { const g = GEAR[id], on = h.eq[g.slot] === id, f = h.forge[id] || 0;
           return `<button class="gear r-${g.r}${on ? ' on' : ''}" style="--rc:${RARITY[g.r].color}" data-act="hero-eq" data-id="${id}">${gearImg(id)}<b>${esc(g.name)}${f ? ` +${f}` : ''}</b><small>${RARITY[g.r].name} · ${gearStats(g)}</small><i>${on ? '✓ założone' : 'załóż'}</i></button>`; }).join('')}</div>`; }).join('') || '<p class="small muted">Pokonuj bossów – przedmioty wypadają ze skrzyń. Duplikat ulepsza przedmiot o +1.</p>'}</div>`,
     shop: `<div class="card"><h2 style="margin-top:0">🔨 Kowal</h2>
-      ${st.weapon ? `<div class="row nowrap forge"><span class="grow">Ulepsz <b>${esc(st.weapon.name)}</b> do +${st.forge + 1} (⚔️ +6%)</span><button class="primary sm" data-act="hero-forge" ${st.forge >= FORGE_MAX ? 'disabled' : ''}>${st.forge >= FORGE_MAX ? 'max' : (st.forge + 1) * 150 + ' 💎'}</button></div>` : '<p class="small muted">Załóż broń, żeby ją ulepszać.</p>'}
+      ${typeof forgeHTML === 'function' ? forgeHTML() : ''}
       <h3>🧪 Mikstury i power-upy</h3><div class="shop-grid">${Object.entries(POTIONS).map(([k, p]) => `<button class="shop-it" data-act="hero-buy-pot" data-k="${k}">${potionSVG(k)}<b>${p.name}</b><small>${p.desc} · masz ${potionN(k)}</small><i>${p.price} 💎</i></button>`).join('')}</div>
       <h3>⚔️ Przedmioty</h3><p class="small muted" style="margin-top:0">Legendarne i mityczne są drogie – częściej trafisz je w skrzyniach z trudnych bossów.</p>
       <div class="shop-grid">${Object.entries(GEAR).filter(([id]) => !ownsGear(id)).sort((x, y) => GEAR_PRICE[x[1].r] - GEAR_PRICE[y[1].r]).map(([id, g]) => `<button class="shop-it r-${g.r}" data-act="hero-buy-gear" data-id="${id}" style="--rc:${RARITY[g.r].color}">${gearImg(id)}<b>${esc(g.name)}</b><small>${RARITY[g.r].name} · ${gearStats(g)}</small><i>${GEAR_PRICE[g.r]} 💎</i></button>`).join('')}</div></div>

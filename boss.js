@@ -567,8 +567,8 @@ function rollLoot(tier) {
 }
 function grantLoot(it, key) {
   if (it.k === 'gear') {
-    if (ownsGear(it.id)) { it.dup = true; const h = hero(), f = h.forge[it.id] || 0;
-      if (f < FORGE_MAX) { h.forge[it.id] = f + 1; h.mod = Date.now(); it.up = f + 1; } else { it.n = DUP_GEMS[it.r]; S.wallet.push({ id: key, n: it.n, why: 'loot-dup', t: Date.now() }); } }
+    // duplikat = 🧱 materiał do kuźni (skraca ulepszanie o 1 h); rzadsze dają więcej
+    if (ownsGear(it.id)) { it.dup = true; it.mat = { common: 1, rare: 1, epic: 2, legendary: 3, mythic: 4 }[it.r] || 1; addItem('forgemat', 'mat', it.mat, key); }
     else addItem('gear', it.id, 1, key);
   }
   if (it.k === 'potion') addItem('potion', it.id, it.n, key);
@@ -577,7 +577,7 @@ function grantLoot(it, key) {
   if (it.k === 'boost') addItem('boost', it.id, 1, key);
 }
 const lootIcon = it => it.k === 'gear' ? gearImg(it.id) : it.k === 'potion' ? potionSVG(it.id) : it.k === 'boost' ? `<img class="gear-img" src="${fsrc(BOOSTS[it.id].img)}" alt="">` : it.k === 'egg' ? '<span class="loot-big">👑</span>' : `<img class="gear-img gem8" src="${GEM8}" alt="💎">`;
-const lootHTML = it => `${lootIcon(it)}${it.k === 'gear' ? `<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? (it.up ? `DUPLIKAT → ulepszenie +${it.up}` : `DUPLIKAT → +${it.n} 💎`) : RARITY[it.r].name}</small>`
+const lootHTML = it => `${lootIcon(it)}${it.k === 'gear' ? `<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? (it.mat ? `DUPLIKAT → 🧱 ${it.mat} ${plural(it.mat, 'materiał', 'materiały', 'materiałów')} do kuźni` : it.up ? `DUPLIKAT → ulepszenie +${it.up}` : `DUPLIKAT → +${it.n} 💎`) : RARITY[it.r].name}</small>`
   : it.k === 'potion' ? `<b>${POTIONS[it.id].name}${it.n > 1 ? ' ×' + it.n : ''}</b><small>${POTIONS[it.id].desc}</small>` : it.k === 'boost' ? `<b>${BOOSTS[it.id].name}</b><small>30 min</small>`
   : it.k === 'egg' ? '<b>Złote jajo</b><small>do inkubatora</small>' : `<b>+${it.n}</b><small>kryształy</small>`}`;
 const oddsHTML = tier => { const o = TIER_ODDS[Math.max(0, Math.min(4, tier))];
