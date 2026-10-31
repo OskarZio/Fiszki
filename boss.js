@@ -761,9 +761,13 @@ ROUTES.boss = parts => {
     return `<div class="card row nowrap weekly-cta" data-act="boss-sel" data-kind="weekly" data-id="weekly" data-i=""><span class="wk-art">${bossArt(wb)}</span><div class="grow"><b>🏆 Boss tygodnia: ${esc(wb.name)}</b><div class="small muted">Ten sam dla wszystkich do niedzieli · Twój rekord: ${weeklyBest().toLocaleString('pl')} obrażeń · ranking znajomych</div></div><span>›</span></div>
     <div class="card row nowrap bestiary-cta" data-go="#/bestiary"><span style="font-size:30px">📖</span><div class="grow"><b>Kronika bossów ${n}/50</b><div class="pbar"><i style="width:${n * 2}%"></i></div></div><span>›</span></div>`; })()}
   <h2 class="bm-h">📚 Twoje talie <small class="muted">rozdziały po ${CH_SIZE} fiszek · finał = cała talia</small></h2>
-  ${decks.map(({ d, chs }, k) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars).length;
+  ${decks.filter(x => !x.d.done).map(({ d, chs }, k) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars).length;
     return `<details class="card bregion"${k < 2 ? ' open' : ''}><summary class="row nowrap"><b class="grow">${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} ${plural(chs.length, 'rozdział', 'rozdziały', 'rozdziałów')}${fin?.stars ? ' · 👑' : ''}</span></summary>
       <div class="bpath">${nodes.map(b => nodeHTML(b, true)).join('<i class="mline"></i>')}${fin ? '<i class="mline"></i>' + nodeHTML(fin, true) : ''}</div></details>`; }).join('') || '<p class="muted">Dodaj fiszki do talii – każdy rozdział (20 fiszek) ma swojego bossa.</p>'}
+  ${(() => { const dn = decks.filter(x => x.d.done); if (!dn.length) return '';
+    return `<h2 class="bm-h">🎓 Zdane talie <small class="muted">bossowie dalej czekają – masteruj metody</small></h2>` + dn.map(({ d, chs }) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars).length;
+      return `<details class="card bregion done-region"><summary class="row nowrap"><b class="grow">🎓 ${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} pokonanych</span></summary>
+        <div class="bpath">${nodes.map(b => nodeHTML(b, true)).join('<i class="mline"></i>')}${fin ? '<i class="mline"></i>' + nodeHTML(fin, true) : ''}</div></details>`; }).join(''); })()}
   ${cats.length ? `<h2 class="bm-h">📁 Kategorie <small class="muted">kilka talii naraz</small></h2><div class="card"><div class="bpath">${cats.map(t => nodeHTML(bossFor('cat', t.id), true)).join('')}</div></div>` : ''}
   <h2 class="bm-h">🌍 Boss świata <small class="muted">wszystkie talie</small></h2><div class="card"><div class="bpath">${nodeHTML(w, true)}</div></div>
   <p class="small muted center">Boss skaluje się do siły bohatera. Przegrana zabiera serce ❤️ – wraca co 2 h albo za ${LIFE_REV} powtórek nauki.</p>
