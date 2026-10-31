@@ -56,7 +56,7 @@ function skinReveal(w, dup) {
   const ov = document.createElement('div'); ov.className = 'cos-ov rev r-' + w.r; ov.style.setProperty('--rc', SKIN_COL[w.r]);
   ov.innerHTML = `<div class="cos-rev card r-${w.r}">${big ? '<i class="cos-rays"></i>' : ''}
     <small class="cos-rar" style="color:${SKIN_COL[w.r]}">${SKIN_NAME[w.r].toUpperCase()} SKIN · ${esc(name)}</small>
-    ${(() => { const L = (w.line === 'cat' ? [0, 1, 3] : w.line === 'dog' ? [0, 2, 3] : [0, 3]).map(f => skinSrc(w.line, f, w.r)); return `<div class="cos-big skin-big" style="grid-template-columns:repeat(${L.length},1fr)">${L.map(src => `<img class="skinpx" src="${src}" alt="">`).join('')}</div>`; })()}
+    ${(() => { const L = (['cat', 'dog'].includes(w.line) ? (w.r === 'common' ? [0, w.line === 'cat' ? 1 : 2, 3] : [0, 1, 2, 3]) : [0, 3]).map(f => skinSrc(w.line, f, w.r)); return `<div class="cos-big skin-big" style="grid-template-columns:repeat(${L.length},1fr)">${L.map(src => `<img class="skinpx" src="${src}" alt="">`).join('')}</div>`; })()}
     <p class="small muted">Nowy wygląd postaci we wszystkich ewolucjach.${dup ? ` Masz już ten skin – <b>+${SKIN_DUP[w.r]} 💎</b>.` : ''}</p>
     <div class="row nowrap">${dup ? '' : `<button class="primary grow" data-act="skin-eq" data-l="${w.line}" data-r="${w.r}" data-close="1">${w.line === heroLine() ? 'Załóż' : 'OK'}</button>`}<button class="grow" data-act="skin-close">${dup ? 'OK' : 'Później'}</button></div></div>`;
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
