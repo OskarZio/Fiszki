@@ -36,7 +36,7 @@ function sCoopMsg(m) {
   for (const k of ['hp', 'max', 'n', 'combo', 'seed', 'len']) if (m[k] != null) o[k] = sInt(m[k], 0, 1e6);
   if (m.down != null) o.down = !!m.down; if (m.won != null) o.won = !!m.won;
   if (m.h != null) o.h = sStr(m.h, 40);
-  if (m.tw != null) o.tw = !!m.tw; if (m.fl != null) o.fl = sInt(m.fl, 1, 999, 1); if (m.emo != null) o.emo = sInt(m.emo, 0, DUO_EMO.length - 1); if (m.bon != null) o.bon = DUO_BON[m.bon] ? m.bon : null;
+  if (m.tw != null) o.tw = !!m.tw; if (m.fl != null) o.fl = sInt(m.fl, 1, 999, 1); if (m.emo != null) o.emo = sInt(m.emo, 0, DUO_EMO.length - 1); if (m.bon != null) o.bon = DUO_BON[m.bon] ? m.bon : null; if (Array.isArray(m.ab)) o.ab = m.ab.slice(0, 25).filter(a => typeof a === 'string' && BOSS_ABIL[a]);
   if (m.sm != null) o.sm = sStr(m.sm, 60); if (m.sn != null) o.sn = sInt(m.sn, 0, 1000);
   if (m.set && typeof m.set === 'object' && Array.isArray(m.set.cards)) o.set = { name: sStr(m.set.name, 60), cards: m.set.cards.slice(0, 260).map(x => ({ n: sStr(x?.n, 64), o: sStr(x?.o, 8), q: sStr(x?.q, 300), a: sStr(x?.a, 300) })).filter(x => x.q && x.a) };
   if (Array.isArray(m.players)) o.players = m.players.slice(0, 4).map(p => ({ id: sStr(p?.id, 40), nick: sStr(p?.nick, 24), line: CHAR_LINES[p?.line] ? p.line : 'cat', g: p?.g === 'm' ? 'm' : 'w', pr: sInt(p?.pr, 0, 99), lv: sInt(p?.lv, 1, 99, 1), atk: sNum(p?.atk, .5, 10, 1), look: sInt(p?.look, 0, 1e7) }));
@@ -78,7 +78,7 @@ function coopMsg(m0) {
     if (!m.players.some(x => x.id === MY_ID)) return;
     C.hostId = m.from; C.tower = !!m.tw; C.setInfo = m.sm ? { name: m.sm, n: m.sn || 0 } : null; for (const x of m.players) C.players[x.id] = { ...(C.players[x.id] || {}), ...x, seen: Date.now() }; return render();
   }
-  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) duoPrep(m.fl, m.bon); return coopBegin(m.heads, m.seed, m.set); }
+  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) duoPrep(m.fl, m.bon, m.ab); return coopBegin(m.heads, m.seed, m.set); }
   if (m.t === 'ok' && p) { C.mateOk = { id: m.from, t: Date.now() }; return; }
   if (m.t === 'emo' && p && m.emo != null) { p.emo = { i: m.emo, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
   if (m.t === 'hit' && C.phase === 'fight') { const hd = C.heads.find(x => x.id === m.h); if (hd) { hd.hp = Math.max(0, hd.hp - m.n); syncMyHead(); if (BOSS?.phase === 'fight' && !coopAlive()) return bossEnd(true); softRender(); } return; }
@@ -102,7 +102,9 @@ function coopStartHost() {
   if (COOP_SHARED && (!set || set.cards.length < 4)) return toast('Wybierz talię z co najmniej 4 fiszkami na wspólny zestaw');
   let tw = {};
   if (COOP_MODE === 'tower') { const fl = C.phase === 'floor' ? C.tw.floor : 1, keys = Object.keys(DUO_BON), bon = fl > 1 ? keys[Math.random() * keys.length | 0] : null;
-    for (const h of heads) h.max = Math.round(h.max * .8 * (1 + .2 * (fl - 1))); tw = { tw: true, fl, ...(bon ? { bon } : {}) }; duoPrep(fl, bon); }
+    for (const h of heads) h.max = Math.round(h.max * .8 * (1 + .2 * (fl - 1)));
+    const ab = [...(fl > 1 && C.tw?.abil || [])]; const nx = towerCurse(ab); if (nx) ab.push(nx);
+    tw = { tw: true, fl, ab, ...(bon ? { bon } : {}) }; duoPrep(fl, bon, ab); }
   coopSend({ t: 'start', heads, seed, ...(set ? { set } : {}), ...tw }); coopBegin(heads, seed, set);
 }
 const coopSetInfo = () => { const d = COOP_SHARED && deckById(COOP_SRC), tw = COOP_MODE === 'tower' ? { tw: true } : {}; return d ? { ...tw, sm: d.name.replace(/^👥\s*/, '').slice(0, 60), sn: S.cards.filter(c => c.deckId === d.id && fightable(c)).length } : tw; };
@@ -115,7 +117,7 @@ function coopBegin(heads, seed, set) {
   const n = Object.keys(C.players).length, diff = Math.min(4, 1 + Math.floor(heroLv() / 6));
   const T = C.tw?.on ? C.tw : null;
   const b = T ? duoBoss(T.floor, seed, cs.length ? cs : S.cards.filter(fightable)) : { kind: 'hydra', id: 'hydra', name: n > 2 ? `Hydra ${n}-głowa` : 'Hydra', desc: 'Każdy z Was bije swoją głowę.', img: 'assets/bosses/hydra.webp', persona: HYDRA_TALK, diff, stars: 0, cards: cs.length ? cs : S.cards.filter(fightable), ok: true, repeat: false, pr: hero().pr || 0, len: 30, title: `Lobby ${C.code}`, seed };
-  const p = bossParams(b); const mine = C.heads.find(h => h.id === MY_ID); p.hp = mine?.max || p.hp;
+  const p = bossParams(b); const mine = C.heads.find(h => h.id === MY_ID); p.hp = mine?.max || p.hp; if (T) { b.curses = true; p.abil = [...(T.abil || [])]; }
   bossBegin(b, { coop: true }, p);
   if (T) duoApply(BOSS, T);
   syncMyHead(); coopSync();
@@ -214,11 +216,11 @@ ROUTES.coop = (...a) => { const v = coopRoute0(...a); return !v || v.focus ? v :
 const DUO_EMO = ['👏', '😂', '🔥', '😱', '💪', '🫡'];
 const DUO_BON = { hp: ['❤️', '+20 maks. ❤️ dla drużyny'], dmg: ['⚔️', '+12% obrażeń dla drużyny'], crit: ['🎯', '+6% krytyka dla drużyny'], heal: ['💚', 'pełne leczenie drużyny'], ult: ['⚡', 'supercios naładowany na start'], time: ['⏱️', '+20% czasu do namysłu'] };
 const DUO_INFO = `<ul class="small duo-info"><li>🗼 Piętro za piętrem, coraz silniejsi bossowie – każdy bije swoją tarczę bossa.</li><li>⚡ <b>Synchro</b>: gdy oboje odpowiecie dobrze w ciągu 4 s – dodatkowy wspólny cios!</li>
-  <li>🎁 Po każdym piętrze <b>nagroda drużyny</b> (więcej ❤️, obrażeń, krytyka…) i 35% ❤️ wraca.</li><li>📈 Boss co 4 pytania uczy się nowej przeszkadzajki. 💀 Kolega reanimuje 3 dobrymi odpowiedziami.</li><li>👏 Wysyłaj reakcje koledze w trakcie walki. Przegrana nie zabiera serc.</li></ul>`;
-function duoPrep(fl, bon) {
+  <li>🎁 Po każdym piętrze <b>nagroda drużyny</b> (więcej ❤️, obrażeń, krytyka…) i 35% ❤️ wraca.</li><li>📈 Przed każdym piętrem boss losuje nową przeszkadzajkę – moce się sumują. 💀 Kolega reanimuje 3 dobrymi odpowiedziami.</li><li>👏 Wysyłaj reakcje koledze w trakcie walki. Przegrana nie zabiera serc.</li></ul>`;
+function duoPrep(fl, bon, ab) {
   const C = COOP; if (!C) return;
-  if (!C.tw?.on || fl === 1) C.tw = { on: true, floor: 1, buff: {}, hp: null, best: 0 };
-  C.tw.floor = fl; C.tw.bon = bon || null;
+  if (!C.tw?.on || fl === 1) C.tw = { on: true, floor: 1, buff: {}, hp: null, best: 0, abil: [] };
+  C.tw.floor = fl; C.tw.bon = bon || null; const old = C.tw.abil || []; C.tw.abil = ab || old; C.tw.fresh = (ab || []).find(a => !old.includes(a)) || null;
   if (bon === 'heal') C.tw.hp = null; else if (bon) C.tw.buff[bon] = (C.tw.buff[bon] || 0) + 1;
 }
 function duoBoss(f, seed, cards) {
@@ -232,7 +234,7 @@ function duoApply(B, T) {
   B.me = T.hp == null ? B.meMax : Math.min(B.meMax, Math.round(T.hp + B.meMax * .35));
   if (T.bon === 'ult') B.ult = B.hs.ultNeed;
   if (T.bon) { const [i, d] = DUO_BON[T.bon]; B.log.unshift(`🎁 Nagroda drużyny: ${i} ${d}`); }
-  B.log.unshift(`🗼 Piętro ${T.floor} – razem dacie radę!`); coopSync(); render();
+  B.log.unshift(`🗼 Piętro ${T.floor} – razem dacie radę!`); coopSync(); towerIntro(B, T.fresh); render();
 }
 function duoSynchro(C) {
   const B = BOSS, m = C.mateOk; if (!B || !m || Date.now() - m.t > 4000) return;

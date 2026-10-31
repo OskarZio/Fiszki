@@ -41,10 +41,14 @@ function towerFloor() {
   hs.dodge = Math.min(.5, hs.dodge + (u.dodge || 0)); hs.time *= 1 + (u.time || 0); hs.vamp += u.vamp || 0; hs.thorns += u.thorns || 0;
   hs.combo *= 1 + (u.combo || 0); hs.ultNeed = Math.max(2, hs.ultNeed - (u.ult || 0)); if (u.phoenix && !T.phoenixUsed) hs.second = true;
   if (!T.mode) T.mode = TW_GK ? 'abcd' : BOSS_PICK.mode;
-  const p = bossParams(b, T.mode); p.hp = Math.round(p.hp * (1 + .06 * T.floor) * (TW_GK ? 1.7 : 1)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
+  T.abil = Array.isArray(T.abil) ? T.abil.filter(a => BOSS_ABIL[a]) : [];
+  let fresh = null; if (T.abil.length < T.floor) { fresh = towerCurse(T.abil); if (fresh) T.abil.push(fresh); }
+  b.curses = true;
+  const p = bossParams(b, T.mode); p.abil = [...T.abil]; p.hp = Math.round(p.hp * (1 + .06 * T.floor) * (TW_GK ? 1.7 : 1)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
   T.hp = Math.min(T.hp, hs.hp);
   bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 : 0, mode: T.mode }, p);
   if (u.phoenix && !T.phoenixUsed) BOSS.second = true;
+  save(); towerIntro(BOSS, fresh);
 }
 function towerStart() {
   if (!TW_GK && learnedAll() < TOWER_REQ) return toast(`🗼 Wieża otwiera się przy ${TOWER_REQ} nauczonych fiszkach (masz ${learnedAll()})`, 4000);
@@ -109,7 +113,7 @@ ROUTES.tower = () => { TW_GK = false; const T = tower();
   <div class="card center"><div style="font-size:64px">🗼</div><p style="margin:4px 0"><b>Ile pięter przetrwasz?</b> Każde piętro to trudniejszy boss, a ❤️ nie odnawia się między walkami.</p>
     <ul class="small" style="text-align:left"><li><b>×2 XP</b> i 💎 dostajesz od razu za każde piętro.</li><li>Po piętrze wraca 35% ❤️ i wybierasz 1 z 3 błogosławieństw.</li><li>Co ${TOWER_GUARD}. piętro – strażnik, mocniejszy boss.</li><li><b>Śmierć albo ucieczka = GAME OVER</b> – od nowa od parteru. Serca zostają.</li></ul>
     <p class="small muted">Rekord: piętro ${towerBest() || '—'} · walczysz wszystkimi nauczonymi fiszkami (${learnedAll()}/${TOWER_REQ})</p></div>
-  ${T ? `<div class="card"><b>W trakcie: piętro ${T.floor}</b><div class="small muted">Zdobyte w tej wspinaczce: +${T.bank.xp} XP, +${T.bank.gems} 💎</div>${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}${towerBuffsHTML(T)}
+  ${T ? `<div class="card"><b>W trakcie: piętro ${T.floor}</b><div class="small muted">Zdobyte w tej wspinaczce: +${T.bank.xp} XP, +${T.bank.gems} 💎</div>${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}${towerBuffsHTML(T)}${T.abil?.length ? `<div class="small muted" style="margin-top:10px">Moce bossów w tej wspinaczce (+1 przed każdym piętrem):</div>${curseIconsHTML(T.abil)}` : ''}
     ${towerWeaponHTML(T)}<button class="primary block" data-act="tower-next" style="margin-top:10px">⚔️ Walcz dalej</button></div>`
     : `<div class="card"><h3 style="margin-top:0">⚔️ Wybierz broń na całą wspinaczkę</h3>${towerModes()}<p class="small muted" style="margin:8px 0 0">Trybu nie zmienisz aż do końca – jak broń w rogaliku.</p></div><button class="primary block boss-go" data-act="tower-start" ${learnedAll() >= TOWER_REQ ? '' : 'disabled'}>🗼 Wejdź do wieży</button>`}` }; };
 const twRoute0 = ROUTES.boss;

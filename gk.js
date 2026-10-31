@@ -243,7 +243,7 @@ ROUTES.gtower = () => { TW_GK = true; const T = tower(), cats = Object.values(GK
     <div class="boss-tags" style="justify-content:center;margin:8px 0">${cats.map(c => `<span>${c}</span>`).join('')}</div>
     <ul class="small" style="text-align:left"><li>Piętra 1–3 łatwe, 4–7 średnie, od 8. trudne. ${GK_ALL.length.toLocaleString('pl')} pytań z biblioteki – pytanie wraca dopiero, gdy przerobisz całą pulę.</li><li>Boss atakuje podstępami (prawda/fałsz) i runami – odpowiadaj szybko.</li><li>Po piętrze wraca 35% ❤️ i wybierasz błogosławieństwo. Co ${TOWER_GUARD}. piętro – strażnik.</li><li><b>Śmierć albo ucieczka = GAME OVER.</b> Serca zostają.</li></ul>
     <p class="small muted">Rekord: piętro ${towerBest() || '—'}</p></div>
-  ${T ? `<div class="card"><b>W trakcie: piętro ${T.floor}</b><div class="small muted">Zdobyte: +${T.bank.xp} XP, +${T.bank.gems} 💎</div>${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}${towerBuffsHTML(T)}
+  ${T ? `<div class="card"><b>W trakcie: piętro ${T.floor}</b><div class="small muted">Zdobyte: +${T.bank.xp} XP, +${T.bank.gems} 💎</div>${HP_BAR(T.hp, heroStats().hp + (T.buff.hp || 0), 'me')}${towerBuffsHTML(T)}${T.abil?.length ? `<div class="small muted" style="margin-top:10px">Moce bossów (+1 przed każdym piętrem):</div>${curseIconsHTML(T.abil)}` : ''}
     <button class="primary block" data-act="tower-next" style="margin-top:10px">⚔️ Walcz dalej</button></div>`
     : '<button class="primary block boss-go" data-act="tower-start">🧠 Wejdź do wieży wiedzy</button>'}` }; };
 HUB_OF.gtower = 'arena';

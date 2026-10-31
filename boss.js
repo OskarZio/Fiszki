@@ -465,7 +465,7 @@ function afterTurn(g, isVer) {
     else if (DISRUPT.includes(mv.k)) { B.pendDis = mv.k; B.log.unshift(`${BOSS_ABIL[mv.k][0]} ${BOSS_ABIL[mv.k][1]}: ${BOSS_ABIL[mv.k][2]}`); bossSay('attack'); }
     B.timer = B.b.every; B.move = pickMove(B.b);
   }
-  if (!isVer) { B.i++; rollEvent(B); towerLearn(B); }
+  if (!isVer) { B.i++; rollEvent(B); }
   checkPhase(B);
   B.log = B.log.slice(0, 4);
   if (B.coop && typeof coopSync === 'function') coopSync();
@@ -490,16 +490,14 @@ const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t &&
   return `<div class="roll-ov${now - R.t > ROLL_MS ? ' done' : ''}" style="--at:${ROLL_AT};--ms:${Math.max(0, ROLL_MS - (now - R.t))}ms"><div class="roll-h">${R.learn ? '📈 Boss uczy się nowej mocy…' : '🎰 Losowanie przeszkadzajki…'}</div>
     <div class="roll-win"><div class="roll-strip2">${R.strip.map((k, i) => `<div class="roll-it${i === ROLL_AT ? ' hit' : ''}"><i>${BOSS_ABIL[k][0]}</i><small>${BOSS_ABIL[k][1]}</small></div>`).join('')}</div><span class="roll-mark"></span></div>
     <div class="roll-res">${BOSS_ABIL[R.a][0]} <b>${BOSS_ABIL[R.a][1]}</b> – ${BOSS_ABIL[R.a][2]}</div></div>`; };
-// 🗼 w wieży (zwykłej i wiedzy) boss co 4 pytania uczy się nowej, losowej przeszkadzajki – im dłużej walczysz, tym trudniej
-function towerLearn(B) {
-  if ((B.b.kind !== 'tower' && !B.b.duo) || (B.coop && !B.b.duo) || (B.i !== 1 && B.i % 4)) return;
-  const pool = Object.keys(BOSS_ABIL).filter(a => !B.b.abil.includes(a) && a !== 'rage'); if (!pool.length) return;
-  const a = pool[Math.random() * pool.length | 0]; B.b.abil.push(a); B.learnFx = { a, t: Date.now() }; rollFx(B, a, pool, true);
-  B.log.unshift(`📈 ${B.b.name} uczy się: ${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}!`);
-}
+// 🗼 wieże: przed każdym piętrem boss losuje 1 nową przeszkadzajkę – moce się sumują (piętro 1 = 1 moc, piętro 5 = 5 mocy)
+const TOWER_ABIL_POOL = () => Object.keys(BOSS_ABIL).filter(a => a !== 'rage');
+function towerCurse(list, rnd = Math.random) { const pool = TOWER_ABIL_POOL().filter(a => !list.includes(a)); return pool.length ? pool[rnd() * pool.length | 0] : null; }
+function towerIntro(B, a) { if (!a) return; B.learnFx = { a, t: Date.now() }; rollFx(B, a, TOWER_ABIL_POOL(), true); B.log.unshift(`📈 Nowa moc wieży: ${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}`); }
+const curseIconsHTML = (list, cls = '') => list?.length ? `<div class="curse-row ${cls}">${list.map(a => `<span class="curse-ic" title="${esc(BOSS_ABIL[a][1])} – ${esc(BOSS_ABIL[a][2])}">${BOSS_ABIL[a][0]}</span>`).join('')}</div>` : '';
 // 🔥 fazy: przy 50% i 25% ❤️ boss wpada w szał – mocniejsze ciosy i nowa zdolność
 function checkPhase(B) {
-  if (B.coop || B.b.kind === 'weekly' || !bossAlive(B)) return;
+  if (B.coop || B.b.kind === 'weekly' || B.b.kind === 'tower' || !bossAlive(B)) return;   // wieże: moce rosną między piętrami, nie w fazach
   const f = B.hp / B.max, want = f <= .25 ? 2 : f <= .5 ? 1 : 0; if (want <= B.phaseN) return;
   B.phaseN = want; const b = B.b; b.atk = Math.round(b.atk * 1.25);
   const add = ABIL_ORDER.find(a => !b.abil.includes(a) && a !== 'rage') || 'rage'; if (!b.abil.includes(add)) b.abil.push(add);
@@ -803,7 +801,7 @@ function fightView() {
       ${B.say?.txt ? `<div class="boss-say" key="${B.say.t}">${esc(B.say.txt)}</div>` : ''}
       <div class="bf-boss">${B.coop && typeof coopHeadsHTML === 'function' ? coopHeadsHTML(fx, act) : `<div class="boss-stage${fx ? ' hit' : ''}${fx?.crit ? ' crit' : ''}${act ? ' attack' : ''}">${bossArt(b)}${B.shield ? '<span class="boss-shield">🛡️</span>' : ''}${fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}${fx.crit ? '!' : ''}</b><i class="slash"></i>` : ''}</div>`}
         <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : '🎰'} <b>${mv.k === 'hit' ? esc(mv.name) : 'Losowanie przeszkadzajki'}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
-      ${B.coop ? '' : HP_BAR(B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''))}
+      ${B.coop ? '' : HP_BAR(B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''))}${B.b.curses ? curseIconsHTML(B.b.abil, 'fight') : ''}
       ${B.phaseN ? `<div class="weak-tag">🔥 faza ${B.phaseN + 1}</div>` : ''}
       ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry && !cur?.qte ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
     </div>
