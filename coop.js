@@ -107,7 +107,7 @@ function coopBegin(heads, seed, set) {
   else { COOP_V = new Map(); C.shared = null; cs = S.cards.filter(c => (COOP_SRC === 'all' ? mixFightable(c) : fightable(c)) && c.srs.state !== 'new' && (COOP_SRC === 'all' || c.deckId === COOP_SRC));
     if (cs.length < 10) { toast('Masz za mało nauczonych fiszek (min. 10) – walczysz tym, co jest', 3500); } }
   const n = Object.keys(C.players).length, diff = Math.min(4, 1 + Math.floor(heroLv() / 6));
-  const b = { kind: 'hydra', id: 'hydra', name: n > 2 ? `Hydra ${n}-głowa` : 'Hydra', desc: 'Każdy z Was bije swoją głowę.', img: bossImg(0), persona: HYDRA_TALK, diff, stars: 0, cards: cs.length ? cs : S.cards.filter(fightable), ok: true, repeat: false, pr: hero().pr || 0, len: 30, title: `Lobby ${C.code}`, seed };
+  const b = { kind: 'hydra', id: 'hydra', name: n > 2 ? `Hydra ${n}-głowa` : 'Hydra', desc: 'Każdy z Was bije swoją głowę.', img: 'assets/bosses/hydra.webp', persona: HYDRA_TALK, diff, stars: 0, cards: cs.length ? cs : S.cards.filter(fightable), ok: true, repeat: false, pr: hero().pr || 0, len: 30, title: `Lobby ${C.code}`, seed };
   const p = bossParams(b); const mine = C.heads.find(h => h.id === MY_ID); p.hp = mine?.max || p.hp;
   bossBegin(b, { coop: true }, p);
   syncMyHead(); coopSync();
@@ -141,7 +141,7 @@ const pHero = p => heroSVG('xs', p.pr, { eq: {}, line: p.line, g: p.g, pr: p.pr,
 function coopHeadsHTML(fx, act) {
   const C = COOP; if (!C) return '';
   return `<div class="hydra">${C.heads.map(h => { const p = C.players[h.id], mine = h.id === MY_ID, dead = h.hp <= 0;
-    return `<div class="hhead${mine ? ' mine' : ''}${dead ? ' dead' : ''}${mine && fx ? ' hit' : ''}${act ? ' attack' : ''}"><div class="boss-art world"><img src="assets/bosses/01.webp" alt=""></div>${mine && fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}</b>` : ''}
+    return `<div class="hhead${mine ? ' mine' : ''}${dead ? ' dead' : ''}${mine && fx ? ' hit' : ''}${act ? ' attack' : ''}"><div class="boss-art world"><img src="assets/bosses/hydra.webp" alt=""></div>${mine && fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}</b>` : ''}
       <small>${dead ? '✓ ścięta' : mine ? 'Twoja głowa' : esc(p?.nick || 'kolega')}</small>${HP_BAR(h.hp, h.max, 'boss')}</div>`; }).join('')}</div>`;
 }
 function coopMatesHTML() {
@@ -160,7 +160,7 @@ ROUTES.coop = parts => {
   const modes = `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => `<button class="${BOSS_PICK.mode === k ? 'on' : ''}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>cios ${m.mul}</small></button>`).join('')}</div>`;
   if (!C || C.phase === 'end') return { tab: 'arena', html: `
     <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">👥 Lobby – Hydra</h1></div>
-    <div class="card center"><img src="assets/bosses/01.webp" alt="" style="width:110px;height:110px"><p style="margin:6px 0">Ucz się z kolegą i bijcie razem hydrę. <b>Każdy swoje</b> – Ty anatomię, kolega angielski – albo <b>🤝 wspólny zestaw</b>: wybierasz talię i oboje walczycie tymi samymi fiszkami.</p>
+    <div class="card center"><img src="assets/bosses/hydra.webp" alt="" style="width:110px;height:110px;object-fit:contain"><p style="margin:6px 0">Ucz się z kolegą i bijcie razem hydrę. <b>Każdy swoje</b> – Ty anatomię, kolega angielski – albo <b>🤝 wspólny zestaw</b>: wybierasz talię i oboje walczycie tymi samymi fiszkami.</p>
       <ul class="small" style="text-align:left;margin:0"><li>Każdy ma swoją głowę hydry. Ściąłeś swoją? Pomagasz koledze.</li><li>Ktoś padł? 3 dobre odpowiedzi kolegi go reanimują (albo sam wstanie po 5).</li><li>Przegrana walka w lobby nie zabiera serc.</li></ul></div>
     <div class="card"><h3 style="margin-top:0">Materiał</h3>${src}<h3>Tryb</h3>${modes}</div>
     ${COOP_LASTSET && !S.decks.some(d => d.name.replace(/^👥\s*/, '') === COOP_LASTSET.name) ? `<div class="card coop-set"><b>📥 Ostatni wspólny zestaw: „${esc(COOP_LASTSET.name)}”</b><small>${COOP_LASTSET.cards.length} fiszek z ostatniej walki</small><button class="sm primary" data-act="coop-save-set" style="margin-top:6px">💾 Zapisz u siebie jako talię</button></div>` : ''}

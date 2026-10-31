@@ -227,7 +227,7 @@ if (typeof proofGems === 'function') { const pg0 = proofGems; proofGems = (s, ..
 
 // ---------- ikonki i podglądy przedmiotów
 function cosIconHTML(c) {
-  if (c.t === 'frame') return `<span class="cos-ic"><span class="avf fr-${c.id} r-${c.r}" style="--avs:30px"><span class="avemoji" style="font-size:26px">🦊</span></span></span>`;
+  if (c.t === 'frame') return `<span class="cos-ic cos-ic-fr"><span class="avf fr-${c.id} r-${c.r}" style="--avs:34px">${cosAv0(S.profile, 34)}</span></span>`;
   if (c.img) return `<span class="cos-ic">${cosPic(c)}</span>`;
   if (c.t === 'title') return `<span class="cos-ic">🏷️</span>`;
   if (c.t === 'nick') return `<span class="cos-ic"><b class="nkx nk-${c.id}">Aa</b></span>`;

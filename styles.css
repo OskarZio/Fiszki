@@ -2856,3 +2856,21 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 /* gablota w rankingu: bez przycinania poświaty (holo/złote naklejki nie mają kwadratowej ramki) */
 .rankrow .nickrow > span:last-child { overflow: visible !important; display: inline-flex; gap: 6px; padding: 4px; flex-wrap: wrap; }
 .mini-st.shiny, .mini-st.holo { border-radius: 8px; }
+/* 🦸 ewolucje: każda forma w tej samej skali, wyśrodkowana, z zapasem od góry (nic się nie ucina) */
+.evo-view { padding-top: 10px; }
+.evo-big .hero-fig { overflow: visible; }
+.evo-big .hero-fig.s8 > img { transform: translateX(calc((50 - (var(--x0) + var(--x1)) / 2) * 1%)) scale(clamp(.7, calc(84 / var(--bh)), 1.6)); transform-origin: 50% calc(var(--y1) * 1%); }
+.evo-big .hero-fig.s8 > .hero-aura { inset: -6%; }
+.skin-t b { font-size: 12px !important; letter-spacing: -.1px; }
+/* 🖼️ ramki w Prestiżu: Twoje zdjęcie profilowe w ramce zamiast emotki */
+.cos-ic-fr { width: auto !important; height: auto !important; padding: 4px; }
+.cos-ic-fr .avf { display: inline-grid; place-items: center; }
+.cos-tile .cos-ic-fr .avf { --avs: 52px !important; }
+.cos-tile .cos-ic-fr .avf > * { width: 52px !important; height: 52px !important; font-size: 30px !important; }
+.cos-sc .cos-ic-fr { padding: 0; } .cos-sc .cos-ic-fr .avf > * { width: 18px !important; height: 18px !important; font-size: 15px !important; }
+/* ramka zawsze okrągła: zdjęcie/emoji w kwadracie var(--avs), przycięte do koła */
+.cos-prev .avf > .avimg, .cos-ic-fr .avf > .avimg { width: var(--avs) !important; height: var(--avs) !important; border-radius: 50%; object-fit: cover; display: block; }
+.cos-prev .avf > .avemoji, .cos-ic-fr .avf > .avemoji { width: var(--avs) !important; height: var(--avs) !important; display: grid; place-items: center; border-radius: 50%; overflow: hidden; line-height: 1; }
+.cos-prev .avf > .avemoji .emo8, .cos-ic-fr .avf > .avemoji .emo8 { width: 82%; height: 82%; vertical-align: 0; margin: 0; }
+.cos-tile .cos-ic-fr { padding: 8px; }
+.cos-tile { grid-template-columns: minmax(0, 1fr); justify-items: center; justify-content: stretch !important; align-content: space-between; }
