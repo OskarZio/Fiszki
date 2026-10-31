@@ -410,7 +410,19 @@ const wordHit = (w, list) => list.some(x => x === w
   || (w.length >= 4 && x.length >= 4 && (x.startsWith(w.slice(0, Math.max(4, w.length - 3))) || w.startsWith(x.slice(0, Math.max(4, x.length - 3)))))
   || (w.length >= 5 && lev(w, x) <= (w.length > 8 ? 2 : 1)));
 const NEG = /\b(not|no|never|nie|nigdy|bez)\b/;   // przeczenie zmienia sens: „lean back” ≠ „don't lean back”
+// 🔁 synonimy i zapis liczb: „2” = „dwa”, „XX w.” = „20 wiek”, „np.” = „na przykład” (porównujemy po sprowadzeniu)
+const NUMW = { zero: 0, jeden: 1, jedna: 1, jedno: 1, dwa: 2, dwie: 2, trzy: 3, cztery: 4, piec: 5, szesc: 6, siedem: 7, osiem: 8, dziewiec: 9, dziesiec: 10, jedenascie: 11, dwanascie: 12, dwadziescia: 20, sto: 100, tysiac: 1000,
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12, twenty: 20, hundred: 100 };
+const SYNW = { wiek: 'w', wieku: 'w', np: 'naprzyklad', przykladowo: 'naprzyklad', poniewaz: 'bo', gdyz: 'bo', duzy: 'wielki', duza: 'wielka', maly: 'drobny', mala: 'drobna', szybko: 'predko', zawsze: 'stale', ok: 'okolo', ok_: 'okolo', okolo: 'okolo', km: 'kilometr', kg: 'kilogram', proc: 'procent', '%': 'procent' };
+const ROMN = t => { const m = /^(m{0,3})(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$/i.exec(t); if (!m || !t) return null; const v = { i: 1, v: 5, x: 10, l: 50, c: 100, d: 500, m: 1000 }; let n = 0;
+  for (let i = 0; i < t.length; i++) { const a = v[t[i]], b = v[t[i + 1]] || 0; n += a < b ? -a : a; } return n; };
+const canonW = w => { if (NUMW[w] != null) return String(NUMW[w]); if (SYNW[w]) return SYNW[w]; if (w.length <= 4 && /^[ivxlcdm]+$/.test(w) && w !== 'i') { const r = ROMN(w); if (r) return String(r); } return w; };
+const canon = s => norm(s).split(' ').map(canonW).join(' ');
+const nums = s => (canon(s).match(/\d+/g) || []);
 function meaningMatch(input, correct) {
+  // liczby muszą się zgadzać (data, ilość) – sens bez dobrej liczby to błąd
+  const nc = nums(correct), ni = nums(input); if (nc.length && !nc.every(n => ni.includes(n))) return false;
+  input = canon(input); correct = canon(correct);
   if (NEG.test(norm(input)) !== NEG.test(norm(correct))) return false;
   const want = [...new Set(keyWords(correct))], got = keyWords(input);
   if (!want.length || !got.length) return false;
@@ -431,6 +443,10 @@ function checkAnswer(input, correct, tol = S?.settings?.tolerance || 'normal') {
   const alts = [correct, String(correct).replace(/\([^)]*\)/g, ' '), ...paren, ...String(correct).split(/[\/;|,]| lub | albo /)].map(norm).filter(Boolean);
   if (alts.includes(x)) return 'ok';
   if (tol === 'strict') return 'wrong';
+  // ten sam sens: te same słowa kluczowe w dowolnej kolejności / synonimy / liczby słownie → pełne trafienie
+  const ka = [...new Set(keyWords(canon(correct)))], kb = [...new Set(keyWords(canon(input)))];
+  if (alts.map(a => canon(a)).includes(canon(input))) return 'ok';
+  if (ka.length && ka.length <= 14 && ka.every(w => wordHit(w, kb)) && kb.every(w => wordHit(w, ka)) && NEG.test(norm(input)) === NEG.test(norm(correct)) && nums(correct).every(n => nums(input).includes(n))) return 'ok';
   const f = tol === 'lenient' ? 0.34 : 0.2;
   const close = alts.some(a => lev(x, a) <= Math.max(1, Math.floor(a.length * f)) && NEG.test(a) === NEG.test(x));
   return close || meaningMatch(input, correct) ? 'close' : 'wrong';

@@ -704,7 +704,11 @@ function bossSfx(k) {
   } catch { /* */ }
 }
 // ⏳ limit namysłu: pasek się kurczy, po czasie boss atakuje (bez pełnego przerysowania co tik)
-const thinkMs = B => B.b.think * 1000 * B.hs.time * (B.haste > 0 ? .5 : 1) * (B.cur?.cm === 'type' ? 1.6 : B.cur?.cm === 'abcd' ? .8 : 1);
+// ⏱️ czas na pytanie rośnie z długością odpowiedzi (wpisywanie: ~1 s na 4 znaki; ABCD i fiszki: na czytanie)
+const ansLen = B => { const c = bossCard(); if (!c) return 0; const v = cardView(c); return String(v.ans || '').length + (B.cur?.cm === 'abcd' ? (B.cur.opts || []).join('').length / 3 : 0); };
+const thinkMs = B => { const n = ansLen(B), cm = B.cur?.cm;
+  const m = cm === 'type' ? 1.4 + Math.min(4, n / 22) : cm === 'abcd' ? .8 + Math.min(1.5, n / 120) : 1 + Math.min(2, n / 80);
+  return B.b.think * 1000 * B.hs.time * (B.haste > 0 ? .5 : 1) * m; };
 let THINK_HIDDEN = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) THINK_HIDDEN = Date.now(); else if (BOSS && THINK_HIDDEN) { BOSS.qAt += Date.now() - THINK_HIDDEN; THINK_HIDDEN = 0; } });
 setInterval(() => { const B = BOSS; if (B?.phase === 'fight' && B.cur?.dis === 'whirl' && B.cur.cm === 'abcd' && B.picked == null && !B.ice && !B.bugs?.length && parseRoute().parts[1] === 'fight' && Date.now() - (B.whirlAt || 0) > 1600) { B.whirlAt = Date.now(); B.cur.opts.push(B.cur.opts.shift()); render(); } }, 400);
