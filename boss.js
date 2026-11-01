@@ -536,6 +536,7 @@ function comboFx(B, k) {
 function afterTurn(g, isVer) {
   const B = BOSS, now = Date.now();
   if (B.poison > 0 && !B.down) { B.poison--; hurtMe(4, 'Trucizna'); }
+  if (B.teamRegen > 0 && !B.down && B.me > 0) B.me = Math.min(B.meMax, B.me + B.teamRegen);   // 🌿 regeneracja drużyny
   if (B.silence > 0) B.silence--;
   if (B.weak > 0) B.weak--; if (B.drain > 0) B.drain--; if (B.haste > 0) B.haste--;
   if (B.timeFree > 0) B.timeFree--;
@@ -553,6 +554,7 @@ function afterTurn(g, isVer) {
     else if (mv.k === 'weak') { B.weak = 3; B.log.unshift('🥀 Osłabienie: Twoje ciosy −30% przez 3 tury'); bossSay('attack'); }
     else if (mv.k === 'drain') { B.drain = 3; B.log.unshift('🩸 Wysysanie: boss leczy się Twoimi ciosami przez 3 tury'); bossSay('attack'); }
     else if (mv.k === 'haste') { B.haste = 3; B.log.unshift('⏳ Pośpiech: połowa czasu na 3 pytania'); bossSay('slow'); }
+    else if (DISRUPT.includes(mv.k) && B.cleanse > 0) { B.cleanse--; B.log.unshift(`✨ Odporność drużyny: ${BOSS_ABIL[mv.k][1]} nie działa`); }
     else if (DISRUPT.includes(mv.k)) { comboFx(B, mv.k); if (B.b.turbo) { if (Math.random() < .5) B.pendBugs = 2 + Math.min(3, B.b.diff); else B.pendIce = true; B.log.unshift('⚡ TURBO: podwójna przeszkadzajka!'); } B.pendDis = mv.k; B.log.unshift(`${BOSS_ABIL[mv.k][0]} ${BOSS_ABIL[mv.k][1]}: ${BOSS_ABIL[mv.k][2]}`); bossSay('attack'); }
     B.timer = B.b.every; B.move = pickMove(B.b);
   }
@@ -612,7 +614,13 @@ function rollEvent(B) {
 }
 function grabEvChest() {
   const B = BOSS; if (B?.ev?.k !== 'chest') return; B.ev = null;
-  if (Math.random() < .6) { const ks = Object.keys(POTIONS).filter(k => k !== 'phoenix'), k = ks[Math.random() * ks.length | 0]; addItem('potion', k, 1); B.log.unshift(`📦 Złapane! ${POTIONS[k].name}`); }
+  // 🎁 bardzo rzadko w skrzynce jest prawdziwa skrzynka ze sklepu – szansa rośnie z trudnością i prestiżem bossa (max 20%)
+  const pCase = Math.min(.2, .02 + .02 * (B.b.diff || 0) + .04 * (B.b.bp || 0) + (S.settings.hardcore ? .02 : 0));
+  if (typeof addItem === 'function' && typeof CASES !== 'undefined' && Math.random() < pCase) {
+    const r = Math.random(), pool = r < .08 && CASES.gif ? 'gif' : r < .25 + .05 * (B.b.bp || 0) && CASES.epic ? 'epic' : ['basic', 'cats', 'animals', 'food', 'magic'].filter(k => CASES[k])[Math.random() * 5 | 0] || 'basic';
+    addItem('case', pool, 1); B.log.unshift(`🎁 MEGA ZNALEZISKO: ${CASES[pool].name}!`); S.stats.evCases = (S.stats.evCases || 0) + 1;
+    if (typeof confetti === 'function') confetti(120); toast(`🎁 Rzadki łup: ${CASES[pool].name} – czeka w Kolekcji`, 3500);
+  } else if (Math.random() < .6) { const ks = Object.keys(POTIONS).filter(k => k !== 'phoenix'), k = ks[Math.random() * ks.length | 0]; addItem('potion', k, 1); B.log.unshift(`📦 Złapane! ${POTIONS[k].name}`); }
   else { const n = 15 + 5 * B.b.diff; S.wallet.push({ id: 'evchest-' + uid(), n, why: 'boss-event', t: Date.now() }); B.log.unshift(`📦 Złapane! +${n} 💎`); }
   S.stats.evChests = (S.stats.evChests || 0) + 1; bossSfx('chest'); save(); render();
 }
@@ -928,7 +936,7 @@ function fightView() {
     ${fm?.k === 'hit' ? `<b class="dmg me">−${fm.n}</b><i class="claw"></i>` : fm?.k === 'dodge' ? '<b class="dmg me dodge">Unik!</b>' : fm?.k === 'block' ? '<b class="dmg me dodge">Blok!</b>' : ''}
     ${B.coop && typeof coopMatesHTML === 'function' ? coopMatesHTML() : ''}
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.syncFx && now - B.syncFx < 1400 ? '<div class="ult-banner sync-banner">⚡ SYNCHRO! ⚡</div>' : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
+    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 Faza ${B.phaseFx.n} · szał bossa!</div>` : ''}${B.syncFx && now - B.syncFx < 1400 ? '<div class="ult-banner sync-banner">⚡ SYNCHRO! ⚡</div>' : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
     <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${B.qLock && now < B.qLock ? ' qlock' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
       ${rollHTML(B, now)}
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}

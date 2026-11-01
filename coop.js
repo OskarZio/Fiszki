@@ -230,7 +230,12 @@ ROUTES.coop = (...a) => { const v = coopRoute0(...a); return !v || v.focus ? v :
 // Każde piętro to boss z wieży; każdy bije swoją „tarczę” bossa. Synchro: dobra odpowiedź obu w ciągu 4 s = dodatkowy cios.
 // Po piętrze: 35% ❤️ wraca i drużyna dostaje wspólną nagrodę. Boss co 4 pytania uczy się nowej mocy. Wszyscy padli = koniec.
 const DUO_EMO = ['👏', '😂', '🔥', '😱', '💪', '🫡'];
-const DUO_BON = { hp: ['❤️', '+20 maks. ❤️ dla drużyny'], dmg: ['⚔️', '+12% obrażeń dla drużyny'], crit: ['🎯', '+6% krytyka dla drużyny'], heal: ['💚', 'pełne leczenie drużyny'], ult: ['⚡', 'supercios naładowany na start'], time: ['⏱️', '+20% czasu do namysłu'] };
+const DUO_BON = { hp: ['❤️', 'więcej maks. ❤️'], dmg: ['⚔️', 'mocniejsze ciosy'], crit: ['🎯', 'więcej krytyków'], heal: ['💚', 'pełne leczenie drużyny'], ult: ['⚡', 'supercios naładowany na start'], time: ['⏱️', 'więcej czasu do namysłu'],
+  shield: ['🛡️', 'tarcza drużyny'], regen: ['🌿', 'regeneracja co turę'], sync: ['🤝', 'mocniejsze synchro'], cleanse: ['✨', 'odporność na przeszkadzajki'] };
+// 📈 umiejętności drużyny skalują się z piętrem (im wyżej, tym mocniejsza nagroda) – opis z liczbami na dany moment
+const duoBonVal = (k, f) => ({ hp: 15 + 4 * f, dmg: 10 + f, crit: 5 + Math.floor(f / 2), time: 15 + f, shield: 1 + Math.floor(f / 4), regen: 2 + Math.floor(f / 2), sync: 25 + 3 * f, cleanse: 1 + Math.floor(f / 5) })[k];
+const duoBonTxt = (k, f) => { const v = duoBonVal(k, f); return ({ hp: `+${v} maks. ❤️ dla drużyny`, dmg: `+${v}% obrażeń dla drużyny`, crit: `+${v}% krytyka dla drużyny`, time: `+${v}% czasu do namysłu`,
+  shield: `tarcza blokuje ${v} ${v === 1 ? 'cios' : 'ciosy'} bossa na piętro`, regen: `+${v} ❤️ co turę`, sync: `synchro +${v}% mocniej i 5 s na zgranie`, cleanse: `${v} ${v === 1 ? 'przeszkadzajka' : 'przeszkadzajki'} bossa na piętro nie działa` })[k] || DUO_BON[k][1]; };
 const DUO_INFO = `<ul class="small duo-info"><li>🗼 Piętro za piętrem, coraz silniejsi bossowie – każdy bije swoją tarczę bossa.</li><li>⚡ <b>Synchro</b>: gdy oboje odpowiecie dobrze w ciągu 4 s – dodatkowy wspólny cios!</li>
   <li>🎁 Po każdym piętrze <b>nagroda drużyny</b> (więcej ❤️, obrażeń, krytyka…) i 35% ❤️ wraca.</li><li>📈 Przed każdym piętrem boss losuje nową przeszkadzajkę – moce się sumują. 💀 Kolega reanimuje 3 dobrymi odpowiedziami.</li><li>👏 Wysyłaj reakcje koledze w trakcie walki. Przegrana nie zabiera serc.</li></ul>`;
 function duoPrep(fl, bon, ab) {
@@ -245,22 +250,23 @@ function duoBoss(f, seed, cards) {
     cards, ok: true, repeat: false, pr: hero().pr || 0, len: 30, title: `🗼 Wieża duetu · piętro ${f}${guard ? ' · strażnik' : ''}`, seed, final: guard };
 }
 function duoApply(B, T) {
-  const u = T.buff;
-  B.meMax += 20 * (u.hp || 0); B.hs.atk *= 1 + .12 * (u.dmg || 0); B.hs.crit = Math.min(.7, B.hs.crit + .06 * (u.crit || 0)); B.hs.time *= 1 + .2 * (u.time || 0);
+  const u = T.buff, f = T.floor || 1, V = k => (u[k] || 0) * duoBonVal(k, f);
+  B.meMax += V('hp'); B.hs.atk *= 1 + V('dmg') / 100; B.hs.crit = Math.min(.7, B.hs.crit + V('crit') / 100); B.hs.time *= 1 + V('time') / 100;
+  B.guard = (B.guard || 0) + V('shield'); B.teamRegen = V('regen'); B.syncBoost = V('sync') / 100; B.cleanse = V('cleanse');
   B.me = T.hp == null ? B.meMax : Math.min(B.meMax, Math.round(T.hp + B.meMax * .35));
   if (T.bon === 'ult') B.ult = B.hs.ultNeed;
-  if (T.bon) { const [i, d] = DUO_BON[T.bon]; B.log.unshift(`🎁 Nagroda drużyny: ${i} ${d}`); }
+  if (T.bon) { B.log.unshift(`🎁 Nagroda drużyny: ${DUO_BON[T.bon][0]} ${duoBonTxt(T.bon, T.floor || 1)}`); }
   B.log.unshift(`🗼 Piętro ${T.floor} – razem dacie radę!`); coopSync(); towerIntro(B, T.fresh); render();
 }
 function duoSynchro(C) {
-  const B = BOSS, m = C.mateOk; if (!B || !m || Date.now() - m.t > 4000) return;
-  C.mateOk = null; const mate = C.players[m.id], n = dealBoss(Math.max(8, 9 * B.hs.atk * (1 + .1 * B.b.diff)), 'synchro');
+  const B = BOSS, m = C.mateOk; if (!B || !m || Date.now() - m.t > (B.syncBoost ? 5000 : 4000)) return;
+  C.mateOk = null; const mate = C.players[m.id], n = dealBoss(Math.max(8, 9 * B.hs.atk * (1 + .1 * B.b.diff) * (1 + (B.syncBoost || 0))), 'synchro');
   B.fx = { k: 'boss', n, crit: true, t: Date.now() }; B.syncFx = Date.now(); B.log.unshift(`⚡ SYNCHRO z ${mate?.nick || 'kolegą'}! −${n}`); S.stats.duoSync = (S.stats.duoSync || 0) + 1;
 }
 function duoEnd(won) {
   const C = COOP, T = C.tw;
   S.stats.coopFights = (S.stats.coopFights || 0) + 1;
-  if (won && C.host) { const ks = shuffle(Object.keys(DUO_BON)).slice(0, 3); C.vote = { opts: ks, picks: {} }; setTimeout(() => coopSend({ t: 'vote', vo: ks }), 300); }
+  if (won && C.host) { const tk = C.tw?.buff || {}, last = C.lastVote || [], ks = shuffle(Object.keys(DUO_BON).filter(k => !last.includes(k))).sort((a, b) => (tk[a] || 0) - (tk[b] || 0)).slice(0, 3); C.lastVote = ks; C.vote = { opts: ks, picks: {} }; setTimeout(() => coopSend({ t: 'vote', vo: ks }), 300); }
   if (won) { T.best = T.floor; S.stats.duoBest = Math.max(S.stats.duoBest || 0, T.floor); T.hp = Math.max(1, Math.round(BOSS.me || BOSS.meMax * .25)); T.floor++; C.phase = 'floor'; C.heads = []; }
   else { C.phase = 'end'; T.on = false; S.stats.duoBest = Math.max(S.stats.duoBest || 0, T.floor - 1); }
   save();
@@ -273,7 +279,7 @@ function duoFloorView(C) {
     <div class="card center duo-floor"><div class="duo-fl">Piętro ${T.floor - 1} zdobyte!</div>
       <div class="mates lobby">${ps.map(p => `<div class="mate">${pHero(p)}<b>${esc(p.nick)}${p.id === MY_ID ? ' (Ty)' : ''}</b></div>`).join('')}</div>
       <p class="small muted" style="margin:10px 0 4px">Rekord duetu: piętro ${S.stats.duoBest || 0}. Przed Wami piętro <b>${T.floor}</b>${T.floor % TOWER_GUARD === 0 ? ' – <b>strażnik!</b>' : ''}.</p>
-      ${buffs.length ? `<div class="duo-buffs">${buffs.map(([k, n]) => `<span>${DUO_BON[k][0]} ${DUO_BON[k][1]}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>` : ''}
-      ${C.vote ? `<h3 style="margin:12px 0 4px">🗳️ Głosujcie na nagrodę drużyny</h3><div class="duo-vote">${C.vote.opts.map(k => { const n = Object.values(C.vote.picks).filter(x => x === k).length, mine = C.vote.picks[MY_ID] === k; return `<button class="${mine ? 'on' : ''}" data-act="duo-vote" data-k="${k}"><span>${DUO_BON[k][0]}</span><small>${DUO_BON[k][1]}</small><b>${n ? '✓'.repeat(n) : ''}</b></button>`; }).join('')}</div><p class="small muted">Wygrywa najwięcej głosów (remis = losowo).</p>` : ''}</div>
+      ${buffs.length ? `<div class="duo-buffs">${buffs.map(([k, n]) => `<span>${DUO_BON[k][0]} ${duoBonTxt(k, T.floor)}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>` : ''}
+      ${C.vote ? `<h3 style="margin:12px 0 4px">🗳️ Głosujcie na nagrodę drużyny</h3><div class="duo-vote">${C.vote.opts.map(k => { const n = Object.values(C.vote.picks).filter(x => x === k).length, mine = C.vote.picks[MY_ID] === k; return `<button class="${mine ? 'on' : ''}" data-act="duo-vote" data-k="${k}"><span>${DUO_BON[k][0]}</span><b class="dv-n">${DUO_BON[k][1]}</b><small>${duoBonTxt(k, T.floor)}</small><b>${n ? '✓'.repeat(n) : ''}</b></button>`; }).join('')}</div><p class="small muted">Wygrywa najwięcej głosów (remis = losowo).</p>` : ''}</div>
     ${C.host ? `<button class="primary block boss-go" data-act="duo-next">⚔️ Piętro ${T.floor}</button>` : '<p class="center muted">Host prowadzi na kolejne piętro…</p>'}` };
 }
