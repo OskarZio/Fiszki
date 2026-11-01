@@ -197,9 +197,12 @@ const GK_Q = [
 const GK_CAT = { geo: '🌍 Geografia', his: '📜 Historia', sci: '🔬 Nauka', art: '🎨 Kultura', spo: '⚽ Sport', nat: '🐾 Przyroda', lan: '🗣️ Język', tec: '💻 Technika', pop: '🎤 Popkultura' };
 const GK_SRS = Object.freeze({ state: 'gk', due: Infinity, lapses: 0, reps: 0 });
 // 📚 cała pula: pytania pisane ręcznie (klucz = numer) + biblioteka z gkdata.js (klucz z treści); duplikaty treści pomijamy
-const GK_ALL = (() => { const hand = GK_Q.map((x, i) => ({ k: String(i), lvl: x[0], cat: x[1], q: x[2], a: x[3], w: x.slice(4) })), qs = new Set(hand.map(x => x.q));
-  return [...hand, ...(typeof GKD !== 'undefined' ? GKD.filter(x => !qs.has(x.q)) : [])]; })();
-const GK_MAP = new Map(GK_ALL.map(x => [x.k, x]));
+// ⚡ pula budowana leniwie – dopiero gdy coś jej potrzebuje (start aplikacji nie liczy tysięcy pytań)
+let GK_ALL_ = null, GK_MAP_ = null;
+function gkBuild() { if (GK_ALL_) return; const hand = GK_Q.map((x, i) => ({ k: String(i), lvl: x[0], cat: x[1], q: x[2], a: x[3], w: x.slice(4) })), qs = new Set(hand.map(x => x.q));
+  GK_ALL_ = [...hand, ...(typeof GKD_BUILD === 'function' ? GKD_BUILD().filter(x => !qs.has(x.q)) : [])]; GK_MAP_ = new Map(GK_ALL_.map(x => [x.k, x])); }
+Object.defineProperty(globalThis, 'GK_ALL', { get() { gkBuild(); return GK_ALL_; }, configurable: true });
+Object.defineProperty(globalThis, 'GK_MAP', { get() { gkBuild(); return GK_MAP_; }, configurable: true });
 // 🌐 biblioteka z Wikidata (assets/gk/wd.json, CC0) – doczytywana przy starcie, działa też offline (service worker)
 const gkH32 = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return (h >>> 0).toString(36); };
 let GK_WD = 0;
@@ -210,7 +213,7 @@ async function gkLoadWD() {
       const o = { k, lvl, cat, q, a, w: w.slice(0, 3) }; GK_ALL.push(o); GK_MAP.set(k, o); qs.add(q); GK_WD++; }
     GK_WD++; } catch { GK_WD = 0; }
 }
-on('start', () => gkLoadWD());
+on('start', () => setTimeout(() => (window.requestIdleCallback || setTimeout)(() => gkLoadWD(), { timeout: 4000 }), 4000));   // ⚡ w tle, po starcie
 const gkCard = id => { if (!String(id).startsWith('gk:')) return null; const x = GK_MAP.get(String(id).slice(3)); if (!x) return null;
   return { id, gk: true, deckId: 'gk', lvl: x.lvl, cat: x.cat, q: x.q, a: x.a, w: x.w, srs: GK_SRS }; };
 // 🧠 pamięć zadanych pytań (między wspinaczkami): pytanie wraca dopiero, gdy przerobisz całą pulę danego poziomu

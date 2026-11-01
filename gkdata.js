@@ -3,7 +3,7 @@
    wynalazki, daty, słówka angielskie, województwa, matematyka). Każde pytanie ma stały klucz (z treści), dzięki czemu
    gk.js pamięta, o co już pytał – i nie wraca do niego, dopóki nie przerobisz całej puli danego poziomu.
    Złe odpowiedzi losowane deterministycznie (ziarno = klucz), więc to samo pytanie wygląda zawsze tak samo. */
-const GKD = (() => {
+const GKD_BUILD = () => {   // ⚡ budowana dopiero przy pierwszym użyciu Wieży wiedzy (szybszy start aplikacji)
   const h32 = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return h >>> 0; };
   const rng = seed => { let a = seed || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
   const out = [], seen = new Set();
@@ -758,4 +758,4 @@ przyspieszać|accelerate|3`.split('\n').map(l => l.split('|'));
     ['Ile arów ma 1 hektar?', 100], ['Ile kilogramów ma 1 tona?', 1000], ['Ile milimetrów ma 1 metr?', 1000], ['Ile dni ma 6 tygodni?', 42], ['Ile miesięcy ma 2,5 roku?', 30]];
   for (const [q, v] of U) add('unit', v >= 1000 ? 2 : 1, 'sci', q, v, v === 100 ? [10, 1000, 50] : near(q, v, Math.max(5, Math.round(v * .25)), 1));
   return out;
-})();
+};

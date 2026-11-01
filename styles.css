@@ -3253,3 +3253,12 @@ body.photo-bg .card, body.photo-bg .tile, body.photo-bg .mtile { background: col
 .loot-it.roll { min-height: 150px; }
 /* przycisk prestiżu bossa – tekst w środku przycisku */
 .bprest { display: flex !important; align-items: center; gap: 10px; height: auto !important; max-height: none !important; overflow: visible; }
+/* v292: okienko bossa (i inne wysuwane panele) wjeżdża równo z dołu – bez animacji wejścia ekranu, która je przesuwała w bok */
+#view.enter > .bsheet, #view.enter > .bsheet-ov, #view.enter > .dmenu-ov, #view.enter > [style*="position:fixed"] { animation: none !important; }
+#view.enter > .bsheet { animation: sheetUp2 .26s cubic-bezier(.2,1,.4,1) !important; }
+.bsheet { left: 0 !important; right: 0 !important; margin: 0 auto; transform: none !important; animation: sheetUp2 .26s cubic-bezier(.2,1,.4,1); will-change: transform; }
+.bsheet-ov { animation: fadeIn .18s; }
+@keyframes sheetUp2 { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@media (min-width: 700px) { .bsheet { top: 50% !important; bottom: auto !important; transform: translateY(-50%) !important; animation: none !important; } }
+/* lżejsze animacje wejścia ekranu (mniej pracy dla telefonu) */
+#view.enter > * { animation-duration: .18s !important; } #view.enter > *:nth-child(n+4) { animation: none !important; }
