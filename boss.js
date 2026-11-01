@@ -274,6 +274,7 @@ const pickMove = (b, B = BOSS) => { const ab = b.abil.filter(a => a !== 'rage'),
     if (!hitNow) { if (!B.rotQ?.length) B.rotQ = shuffle([...ab]); k = B.rotQ.shift(); }
     B.lastMv = k;
   } else if (ab.length) { const opts = ['hit', 'hit', ...ab]; k = opts[Math.random() * opts.length | 0]; }
+  if (k === 'scramble' && b.gk) k = 'wind';   // 🧠 quiz: zamiast rozsypanki
   return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: 0 }; };
 const bossCardById = id => S.cards.find(c => c.id === id) || (typeof gkCard === 'function' ? gkCard(id) : null) || (typeof coopVCard === 'function' ? coopVCard(id) : null);
 const bossCard = () => BOSS?.cur && bossCardById(BOSS.cur.id);
@@ -441,6 +442,8 @@ function presentCard() {
   const free = B.timeFree > 0;
   B.ice = B.pendIce && !free ? { n: B.hs.ice ? 3 : 6, max: B.hs.ice ? 3 : 6 } : null; B.pendIce = false;
   B.cur.dis = B.pendDis && !free && !ver ? B.pendDis : null; if (!ver) B.pendDis = null;
+  // 🧠 w quizach (Wieża wiedzy, quiz online) Rozsypanka nie ma sensu – zamiast niej wieje Wichura
+  if (B.cur.dis === 'scramble' && (B.b.gk || bossCard()?.gk)) { B.cur.dis = 'wind'; B.log.unshift('🌪️ Zamiast rozsypanki – Wichura!'); }
   if (['whirl', 'blind'].includes(B.cur.dis) && cm !== 'abcd') B.cur.dis = B.cur.dis === 'whirl' ? 'fog' : 'tiny';   // wir i zasłona działają tylko na ABCD
   B.bugs = B.pendBugs && !free ? Array.from({ length: B.pendBugs }, (_, k) => ({ k, x: 8 + Math.random() * 78, y: 10 + Math.random() * 70, img: BUG8[Math.random() * BUG8.length | 0], d: (Math.random() * 2).toFixed(2) })) : []; B.pendBugs = 0;
   if (ver && !ver.retry) bossSay('verify');
