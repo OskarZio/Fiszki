@@ -324,7 +324,7 @@ const evolveHTML = () => EVOLVE ? `<div class="evolve-ov"><div class="evo-txt">C
 const heroBarHTML = () => { const L = heroLvAt(hero().xp), sp = skPoints();
   return `<div class="card hero-bar row nowrap" data-go="#/hero">${heroSVG('sm')}<div class="grow"><b>${heroFormName()} · poz. ${L.lv}${hero().pr ? ` · ★${hero().pr}` : ''}</b><div class="pbar"><i style="width:${(L.cur / L.need * 100).toFixed(1)}%"></i></div>
     <small class="muted">${sp ? `<b style="color:var(--accent)">${sp} ${plural(sp, 'punkt', 'punkty', 'punktów')} umiejętności do wydania!</b>` : 'postać · umiejętności · ekwipunek'}</small></div>${livesHTML()}</div>`; };
-let HERO_EVO = -1, HERO_TAB = 'char', HERO_PAGE = 0, HERO_UP = false;
+let HERO_SUB = 'forge', HERO_EVO = -1, HERO_TAB = 'char', HERO_PAGE = 0, HERO_UP = false;
 ROUTES.hero = () => {
   if (HERO_EVO < 0) HERO_EVO = heroForm();
   const h = hero(), L = heroLvAt(h.xp), st = heroStats(), sp = skPoints(), pr = h.pr || 0, line = CHAR_LINES[heroLine(h)], ld = lineDef();
@@ -353,8 +353,8 @@ ROUTES.hero = () => {
       ${['w', 'h', 'a', 'c'].map(s => { const own = Object.keys(GEAR).filter(id => GEAR[id].slot === s && ownsGear(id)); if (!own.length) return '';
         return `<h3>${SLOT_NAME[s]}</h3><div class="gear-grid">${own.map(id => { const g = GEAR[id], on = h.eq[g.slot] === id, f = h.forge[id] || 0;
           return `<button class="gear r-${g.r}${on ? ' on' : ''}" style="--rc:${RARITY[g.r].color}" data-act="hero-eq" data-id="${id}">${gearImg(id)}<b>${esc(g.name)}</b>${lvBadge(g, f)}<small>${RARITY[g.r].name} · ${gearStatsF(g, f)}</small><i>${on ? '✓ założone' : 'załóż'}</i></button>`; }).join('')}</div>`; }).join('') || '<p class="small muted">Pokonuj bossów – przedmioty wypadają ze skrzyń. Duplikat ulepsza przedmiot o +1.</p>'}</div>`,
-    shop: `<div class="card"><h2 style="margin-top:0">🔨 Kowal</h2>
-      ${typeof forgeHTML === 'function' ? forgeHTML() : ''}
+    shop: `<div class="seg shop-sub"><button class="${HERO_SUB === 'forge' ? 'on' : ''}" data-act="hero-sub" data-k="forge"><b>🔨 Kuźnia</b><small>ulepszanie przedmiotów</small></button><button class="${HERO_SUB === 'shop' ? 'on' : ''}" data-act="hero-sub" data-k="shop"><b>🛒 Sklep kowala</b><small>mikstury, broń, boostery</small></button></div>
+      ${HERO_SUB === 'forge' ? `<div class="card">${typeof forgeHTML === 'function' ? forgeHTML() : ''}</div>` : `<div class="card"><h2 style="margin-top:0">🛒 Sklep kowala</h2>
       <h3>🧪 Mikstury i power-upy</h3><div class="shop-grid">${Object.entries(POTIONS).map(([k, p]) => `<button class="shop-it" data-act="hero-buy-pot" data-k="${k}">${potionSVG(k)}<b>${p.name}</b><small>${p.desc} · masz ${potionN(k)}</small><i>${p.price} 💎</i></button>`).join('')}</div>
       <h3>⚔️ Przedmioty</h3><p class="small muted" style="margin-top:0">Legendarne i mityczne są drogie – częściej trafisz je w skrzyniach z trudnych bossów.</p>
       <div class="shop-grid">${Object.entries(GEAR).filter(([id]) => !ownsGear(id)).sort((x, y) => GEAR_PRICE[x[1].r] - GEAR_PRICE[y[1].r]).map(([id, g]) => `<button class="shop-it r-${g.r}" data-act="hero-buy-gear" data-id="${id}" style="--rc:${RARITY[g.r].color}">${gearImg(id)}<b>${esc(g.name)}</b><small>${RARITY[g.r].name} · ${gearStats(g)}</small><i>${GEAR_PRICE[g.r]} 💎</i></button>`).join('')}</div></div>
@@ -362,7 +362,7 @@ ROUTES.hero = () => {
       <p class="small muted" style="margin-top:0">Włączasz na 30 minut. W weekend podwójne XP jest za darmo, a co ${FREE_BOOST_DAYS} dni czeka darmowy booster.</p>
       ${freeBoostReady() ? '<button class="primary block" data-act="boost-free">🎁 Odbierz darmowy booster</button>' : ''}
       <div class="shop-grid">${Object.entries(BOOSTS).map(([k, x]) => `<div class="shop-it boost-it${boostOn(k) ? ' on' : ''}"><img class="gear-img" src="${fsrc(x.img)}" alt=""><b>${x.name}</b><small>${x.desc}</small>
-        <div class="boost-btns">${itemCount('boost', k) ? `<button class="sm primary" data-act="boost-on" data-k="${k}">Włącz (${itemCount('boost', k)})</button>` : ''}<button class="sm" data-act="boost-buy" data-k="${k}">${x.price} 💎</button></div></div>`).join('')}</div></div>`,
+        <div class="boost-btns">${itemCount('boost', k) ? `<button class="sm primary" data-act="boost-on" data-k="${k}">Włącz (${itemCount('boost', k)})</button>` : ''}<button class="sm" data-act="boost-buy" data-k="${k}">${x.price} 💎</button></div></div>`).join('')}</div></div>`}`,
   };
   return { tab: 'arena', html: `${evolveHTML()}
   <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow row nowrap" style="margin:0;gap:8px">${heroIcon()} Bohater</h1>${coinsHTML()}</div>
@@ -387,6 +387,7 @@ Object.assign(ACTIONS, {
   'evo-nav': el => { HERO_EVO = Math.max(0, Math.min(3, HERO_EVO + +el.dataset.d)); render(); },
   'evo-go': el => { HERO_EVO = +el.dataset.i; render(); },
   'hero-tab': el => { HERO_TAB = el.dataset.k; render(); },
+  'hero-sub': el => { HERO_SUB = el.dataset.k; render(); },
   'hero-eq': el => { const g = GEAR[el.dataset.id], h = hero(); if (!g) return; h.eq[g.slot] = h.eq[g.slot] === el.dataset.id ? undefined : el.dataset.id; h.mod = Date.now(); save(); render(); },
   'hero-sk': el => { const h = hero(); if (skPoints() < 1) return; lineSk(h)[el.dataset.id] = 1; if (pageDone(HERO_PAGE) && HERO_PAGE < 2) { HERO_PAGE++; setTimeout(() => celebrate(`📖 Strona ${PAGE_N[HERO_PAGE]} umiejętności odblokowana!`, 'Nowe, mocniejsze gałęzie'), 200); } else if (treeDone() && !HERO_UP) setTimeout(() => celebrate('✨ Wszystkie umiejętności odblokowane!', 'Teraz ulepszaj węzły: złote → platynowe → holograficzne'), 200); h.mod = Date.now(); S.stats.skills = Object.keys(lineSk(h)).length; if (lineDef().tree.some(([, ns]) => ns.every(n => lineSk(h)[n.id]))) S.stats.skillBranch = 1; save(); toast('🌳 Nowa umiejętność!'); render(); },
   'hero-sk-reset': () => { if (!confirm('Zresetować umiejętności tej postaci za 200 💎? Wszystkie strony i ulepszenia wrócą jako punkty.')) return; if (!spend(200, 'sk-reset')) return; const h = hero(); h.sk[heroLine()] = {}; lineTier(h); h.skt[heroLine()] = {}; HERO_PAGE = 0; HERO_UP = false; h.mod = Date.now(); save(); render(); },
