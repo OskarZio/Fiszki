@@ -70,9 +70,9 @@ const BOSS_ABIL = { heal: ['💚', 'Regeneracja', 'leczy się'], shield: ['🛡�
   fog: ['🌫️', 'Mgła', 'pytanie jest zamglone i powoli się przejaśnia – tracisz czas'], mirror: ['🪞', 'Krzywe zwierciadło', 'pytanie odbite lustrzanie'],
   whirl: ['🌀', 'Wir', 'odpowiedzi ABCD wirują i zmieniają miejsca'], eclipse: ['🌑', 'Zaćmienie', 'pytanie znika po 2,5 s – odpowiadasz z pamięci'],
   scramble: ['🔀', 'Rozsypanka', 'słowa pytania pomieszane'], wind: ['🌪️', 'Wichura', 'wiatr miota odpowiedziami od boku do boku – trudniej trafić'], reverse: ['⏪', 'Wspak', 'pytanie zapisane od tyłu'], bomb: ['💣', 'Bomba', 'następny cios bossa podwójny'],
-  flip: ['🙃', 'Do góry nogami', 'pytanie odwrócone do góry nogami'], shake: ['🌋', 'Trzęsienie ziemi', 'karta trzęsie się jak szalona'],
-  tiny: ['🔍', 'Pomniejszenie', 'pytanie maleńkie i powoli rośnie'], ink: ['🦑', 'Atrament', 'plamy atramentu zalewają pytanie i powoli schodzą'],
-  blind: ['🙈', 'Zasłona', 'odpowiedzi rozmazane przez 2,5 s'], spot: ['🔦', 'Ciemność', 'widać tylko to, co oświetla wędrująca latarka'],
+  flip: ['🙃', 'Do góry nogami', 'pytanie odwrócone do góry nogami'], shake: ['🌋', 'Trzęsienie ziemi', 'trzęsie kartą, odpowiedziami i Tobą'],
+  tiny: ['🔍', 'Pomniejszenie', 'pytanie maleńkie i powoli rośnie'], ink: ['🦑', 'Atrament', 'atrament zalewa odpowiedzi – zetrzyj go palcem albo kursorem'],
+  blind: ['🙈', 'Zasłona', 'odpowiedzi rozmazane przez 2,5 s'], spot: ['🔦', 'Ciemność', 'ciemno, odpowiedzi rozrzucone – oświetl je latarką (palcem / kursorem)'],
   weak: ['🥀', 'Osłabienie', 'Twoje ciosy −30% przez 3 tury'], drain: ['🩸', 'Wysysanie', 'boss leczy się Twoimi ciosami przez 3 tury'], haste: ['⏳', 'Pośpiech', 'połowa czasu na 3 pytania'] };
 // przeszkadzajki odblokowują się z poziomem bossa (★): wyższy poziom = więcej i dziwniejszych
 const ABIL_TIER = { shield: 0, heal: 0, ice: 1, bugs: 1, fog: 1, flip: 1, shake: 1, weak: 1, poison: 2, mirror: 2, tiny: 2, ink: 2, blind: 2, drain: 2, haste: 2, silence: 3, whirl: 3, eclipse: 3, spot: 3, wind: 2 };
@@ -915,8 +915,9 @@ function fightView() {
     q = `<div class="ctext">${esc(out)}</div>` + (cm === 'tf' ? `<div class="tf-claim">${esc(cur.claim)}</div>` : ''); }
   const evChest = B.ev?.k === 'chest' ? `<button class="ev-chest" data-act="boss-evchest" aria-label="Złap skrzynkę">${crateImg('grab')}<small>Złap!</small></button>` : '';
   let ctrl = B.down ? (B.coop ? '<div class="down-box dead"><b>💀 Nie żyjesz</b><small>Czekasz na reanimację – drużyna podnosi Cię 3 dobrymi odpowiedziami.</small></div>' : `<div class="down-box">💀 Leżysz! Odpowiedz dobrze 5×, żeby wstać (${B.selfRev || 0}/5)</div>`) : '';
-  if (B.down && B.coop) { /* 💀 martwy: czeka na reanimację */ } else if (cm === 'abcd') ctrl += `<div class="abcd-grid">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(cur.right ?? v.ans);
-      return `<button class="abcd${o.length > 70 ? ' long' : ''}${pk ? right ? ' right' : B.picked === k ? ' wrong' : '' : ''}${hid ? ' hid' : ''}" data-act="boss-pick" data-k="${k}" ${pk || hid || blocked ? 'disabled' : ''}><i>${'ABCD'[k]}</i><span>${esc(o)}</span></button>`; }).join('')}</div>
+  if (B.down && B.coop) { /* 💀 martwy: czeka na reanimację */ } else if (cm === 'abcd') ctrl += `<div class="abcd-grid${cur.dis === 'spot' && B.picked == null ? ' dark-arena' : ''}">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(cur.right ?? v.ans);
+      const pos = cur.dis === 'spot' && !pk ? spotPos(cur, k) : '', ink = cur.dis === 'ink' && !pk && !(cur.inkClr || []).includes(k) ? `<span class="ink-blot" data-ink="${k}" style="--io:${(cur.inkO?.[k] ?? 1).toFixed(2)}"><b>🦑 Zmaż atrament</b></span>` : '';
+      return `<button class="abcd${o.length > 70 ? ' long' : ''}${pk ? right ? ' right' : B.picked === k ? ' wrong' : '' : ''}${hid ? ' hid' : ''}" data-act="boss-pick" data-k="${k}" ${pk || hid || blocked ? 'disabled' : ''}${pos}><i>${'ABCD'[k]}</i><span>${esc(o)}</span>${ink}</button>`; }).join('')}</div>
       ${B.picked != null ? '<button class="primary block" data-act="boss-next">Dalej ›</button>' : ''}`;
   else if (cm === 'type' && !B.shown) ctrl += `<div class="row nowrap"><input id="boss-in" class="grow" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" ${dis}><button class="primary" data-act="boss-check" ${dis}>⚔️</button></div>
       <button class="ghost block small" data-act="boss-show" style="margin-top:4px" ${dis}>Nie wiem – pokaż</button>`;
@@ -1125,3 +1126,22 @@ function deathFxHTML(B) {
   return `<div class="death-fx${hc ? ' hc' : ''}" style="--el:${el}s" aria-hidden="true"><i class="df-veil"></i>${hc ? '<i class="df-blood"></i><i class="df-crack"></i>' : ''}
     <div class="df-hero">${typeof heroIcon === 'function' ? heroIcon() : ''}</div><b class="df-txt">${hc ? '💀 Bohater poległ' : 'Poległeś…'}</b><small class="df-sub">${hc ? 'Hardcore nie wybacza' : 'Wstań i spróbuj jeszcze raz'}</small></div>`;
 }
+
+// 🔦 Ciemność (ABCD): odpowiedzi rozrzucone po ciemnej planszy (rogi, boki) – widzisz tylko to, co oświetla latarka pod palcem / kursorem
+const SPOT_SLOTS = [[2, 4], [52, 4], [2, 72], [52, 72], [2, 38], [52, 38]];
+function spotPos(cur, k) { if (!cur.spot) { const sl = shuffle([...SPOT_SLOTS.keys()]); cur.spot = cur.opts.map((_, i) => SPOT_SLOTS[sl[i]]); } const [x, y] = cur.spot[k] || [0, 0]; return ` style="left:${x}%;top:${y}%"`; }
+function spotLamp(e) {
+  const g = document.querySelector('.abcd-grid.dark-arena'); if (!g) return;
+  const t = e.touches?.[0] || e, r = g.getBoundingClientRect(); g.style.setProperty('--mx', (t.clientX - r.left) + 'px'); g.style.setProperty('--my', (t.clientY - r.top) + 'px');
+}
+['pointermove', 'pointerdown', 'touchmove', 'touchstart'].forEach(ev => document.addEventListener(ev, spotLamp, { passive: true }));
+// 🦑 Atrament (ABCD): każda odpowiedź zalana – trzeba ją zetrzeć (pocieraj palcem / kursorem albo stukaj); nie da się kliknąć odpowiedzi przez atrament
+function inkRub(e, amt) {
+  const t = e.touches?.[0] || e, el = (e.target.closest && e.target.closest('.ink-blot')) || (t.clientX != null && document.elementFromPoint(t.clientX, t.clientY)?.closest('.ink-blot'));
+  const B = BOSS, cur = B?.cur; if (!el || !cur) return; const k = +el.dataset.ink; cur.inkO = cur.inkO || {};
+  const o = Math.max(0, (cur.inkO[k] ?? 1) - amt); cur.inkO[k] = o; el.style.setProperty('--io', o.toFixed(2));
+  if (o <= .12) { (cur.inkClr = cur.inkClr || []).push(k); el.remove(); }
+}
+document.addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'mouse') inkRub(e, e.pointerType === 'mouse' ? .025 : .05); }, { passive: true });
+document.addEventListener('touchmove', e => inkRub(e, .05), { passive: true });
+document.addEventListener('click', e => { if (e.target.closest?.('.ink-blot')) { e.stopPropagation(); e.preventDefault(); inkRub(e, .22); } }, true);

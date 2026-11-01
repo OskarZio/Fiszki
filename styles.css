@@ -3477,3 +3477,36 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
     linear-gradient(170deg, transparent 49.7%, rgba(255,255,255,.4) 50%, transparent 50.3%); }
 .death-fx.hc .df-txt { color: #ff4d5e; font-size: 38px; text-shadow: 3px 3px 0 #000; }
 @media (prefers-reduced-motion: reduce) { .death-fx, .death-fx * { animation-duration: .01s !important; } .bf:has(.boss-q.dis-wind) .abcd-grid .abcd { animation: none; } }
+/* ===== v312: przeszkadzajki działają na odpowiedzi i na Twoją postać ===== */
+/* 🔦 Ciemność (ABCD): ciemna plansza, odpowiedzi porozrzucane, latarka pod palcem / kursorem */
+.bf:has(.abcd-grid.dark-arena) .boss-q.dis-spot::before { display: none; }
+.abcd-grid.dark-arena { position: relative; display: block !important; height: 290px; background: #06060c; border-radius: 16px; overflow: hidden; --mx: 50%; --my: 50%; touch-action: none; }
+.abcd-grid.dark-arena .abcd { position: absolute !important; width: 46% !important; min-height: 64px !important; margin: 0 !important; }
+.abcd-grid.dark-arena::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(circle at var(--mx) var(--my), transparent 0 64px, rgba(2,2,6,.6) 84px, rgba(2,2,6,.985) 112px); }
+/* 🦑 Atrament (ABCD): każda odpowiedź zalana – zetrzyj ją */
+.bf:has(.abcd-grid .ink-blot) .boss-q.dis-ink::before { display: none; }
+.abcd { position: relative; }
+.ink-blot { position: absolute; inset: -2px; z-index: 2; border-radius: inherit; display: grid; place-items: center; opacity: var(--io, 1); cursor: grab; touch-action: none;
+  background: radial-gradient(40% 70% at 22% 50%, #0b0b16 0 60%, transparent 62%), radial-gradient(35% 80% at 55% 40%, #10102a 0 60%, transparent 62%), radial-gradient(30% 70% at 82% 60%, #0b0b16 0 60%, transparent 62%), #141428;
+  transition: opacity .12s linear; }
+.ink-blot b { font-size: 12.5px; color: #c7c7e6; font-weight: 700; opacity: .85; pointer-events: none; }
+/* 🌋 Trzęsienie ziemi: trzęsą się też odpowiedzi */
+.bf:has(.boss-q.dis-shake) .abcd-grid .abcd, .bf:has(.boss-q.dis-shake) .bf-ctrl > button { animation: quake .2s linear infinite; }
+.bf:has(.boss-q.dis-shake) .abcd-grid .abcd:nth-child(2n) { animation-duration: .17s; animation-direction: reverse; }
+/* 🧍 Twoja postać reaguje na przeszkadzajki */
+.bf:has(.boss-q.dis-shake) .boss-me .hero-fig { animation: quake .18s linear infinite; }
+.bf:has(.boss-q.dis-ink) .boss-me .hero-fig { filter: drop-shadow(0 0 0 #000) brightness(.55) saturate(.4); }
+.bf:has(.boss-q.dis-ink) .boss-me .hero-fig::after { content: ''; position: absolute; inset: 20% 15% 30% 25%; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #0b0b16 0 45%, transparent 47%), radial-gradient(circle at 70% 65%, #0b0b16 0 30%, transparent 32%); pointer-events: none; }
+.bf:has(.boss-q.dis-spot) .boss-me .hero-fig, .bf:has(.boss-q.dis-eclipse) .boss-me .hero-fig { filter: brightness(.35); }
+.bf:has(.boss-q.dis-fog) .boss-me .hero-fig { filter: blur(2px) opacity(.7); }
+.bf:has(.boss-q.dis-tiny) .boss-me .hero-fig { transform: scale(.55); transform-origin: 50% 90%; transition: transform .4s; }
+.bf:has(.boss-q.dis-flip) .boss-me .hero-fig { transform: rotate(180deg); transition: transform .4s; }
+.bf:has(.boss-q.dis-mirror) .boss-me .hero-fig { transform: scaleX(-1); }
+.bf:has(.boss-q.dis-whirl) .boss-me .hero-fig { animation: heroSpin 1.4s linear infinite; } @keyframes heroSpin { to { transform: rotate(360deg); } }
+.bf:has(.boss-q.dis-blind) .boss-me .hero-fig { filter: blur(3px); }
+.bf:has(.boss-q.dis-scramble) .boss-me .hero-fig, .bf:has(.boss-q.dis-reverse) .boss-me .hero-fig { animation: heroDizzy 1.2s ease-in-out infinite; } @keyframes heroDizzy { 25% { transform: rotate(-10deg) translateX(-3px); } 75% { transform: rotate(10deg) translateX(3px); } }
+.bf .boss-me .hero-fig { position: relative; }
+.bf:has(.boss-q[class*="dis-"]) .boss-me .hero-fig { animation-delay: calc(var(--el, 0s) * -1); }
+@media (prefers-reduced-motion: reduce) { .bf:has(.boss-q[class*="dis-"]) .boss-me .hero-fig, .bf:has(.boss-q.dis-shake) .abcd-grid .abcd { animation: none !important; } }
+.abcd .ink-blot { width: auto !important; height: auto !important; margin: 0 !important; padding: 0 !important; font-style: normal; }
