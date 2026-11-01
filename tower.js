@@ -82,7 +82,7 @@ function towerEnd(B, won) {
     T.ult = B.ult || 0;     B.towerHeal = Math.round(B.meMax * FLOOR_HEAL); T.hp = Math.min(B.meMax, Math.round(B.me + B.towerHeal)); T.floor = f + 1;
     S.stats[twBestKey()] = Math.max(towerBest(), f); S.stats.bossWins = (S.stats.bossWins || 0) + 1;
     // 3 do wyboru; rzadkie mają mniejszą szansę, jedno miejsce zawsze dla czegoś leczącego, gdy ❤️ < 50%
-    const pool = shuffle(Object.keys(BLESS).filter(k => !(k === 'phoenix' && T.buff.phoenix) && !(BLESS[k][4] && blessLv(T, k)) && !(k === 'cleanse' && !(T.abil || []).length) && (!BLESS[k][3] || Math.random() < .35)));
+    const pool = shuffle(Object.keys(BLESS).filter(k => !(k === 'type' && T.mode !== 'type') && !(k === 'abcd' && T.mode !== 'abcd') && !(k === 'phoenix' && T.buff.phoenix) && !(BLESS[k][4] && blessLv(T, k)) && !(k === 'cleanse' && !(T.abil || []).length) && (!BLESS[k][3] || Math.random() < .35)));
     T.pick = pool.slice(0, 3); if (T.hp < B.meMax / 2 && !T.pick.some(k => k === 'heal' || k === 'maxhp')) T.pick[2] = 'heal';
   } else {
     B.towerLost = { floor: T.floor, ...T.bank }; S.stats[twBestKey()] = Math.max(towerBest(), T.floor - 1); delete h[twKey()];

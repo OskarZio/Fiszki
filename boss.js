@@ -483,7 +483,7 @@ function bossAnswer(g, how) {
     B.ok++;
     const modeM = how === 'abcd' ? hs.abcdM : how === 'type' && B.verdict === 'ok' ? hs.typeM : 1;
     const comboM = Math.min(2.2, 1 + .06 * Math.min(15, B.combo) * hs.combo), crit = Math.random() < hs.crit && !fast;
-    const weakHit = B.b.weak && B.b.weak === how, quick = !fast && g >= 3 && (how === 'flip' ? B.revealAt && B.revealAt - B.qAt < 3500 : ms < (how === 'type' ? 8000 : 5000));
+    const weakHit = B.b.weak && B.b.weak === how, quick = !fast && g >= 3 && (how === 'flip' ? B.revealAt && B.revealAt - B.qAt < 3500 : ms < (how === 'type' ? 8000 : 5000) + quickExtra(B));
     if (quick) { B.spd++; B.speedHits++; } else B.spd = 0;
     const tripleM = B.triple ? 3 : 1; B.triple = false;
     let dmg = 10 * hs.atk * modeM * comboM * (g === 2 ? .5 : 1) * (crit ? 2 : 1) * (bossHpLow(B) ? 1 + hs.exec : 1) * (B.power > 0 ? 2 : 1) * (B.ok === 1 ? hs.first : 1) * (fast ? .3 : 1) * (weakHit ? WEAK_M : 1) * (quick ? 1.3 : 1) * tripleM;
@@ -807,6 +807,8 @@ function bossSfx(k) {
 // ⏳ limit namysłu: pasek się kurczy, po czasie boss atakuje (bez pełnego przerysowania co tik)
 // ⏱️ czas na pytanie rośnie z długością odpowiedzi (wpisywanie: ~1 s na 4 znaki; ABCD i fiszki: na czytanie)
 const ansLen = B => { const c = bossCard(); if (!c) return 0; const v = cardView(c); return String(v.ans || '').length + (B.cur?.cm === 'abcd' ? (B.cur.opts || []).join('').length / 3 : 0); };
+// ⏱️ „szybka odpowiedź”: dłuższa odpowiedź / dłuższe opcje ABCD = więcej czasu na przeczytanie (do +8 s)
+const quickExtra = B => Math.min(8000, Math.max(0, ansLen(B) - 20) * (B.cur?.cm === 'abcd' ? 25 : 70));
 const thinkMs = B => { const n = ansLen(B), cm = B.cur?.cm;
   const m = cm === 'type' ? 1.4 + Math.min(4, n / 22) : cm === 'abcd' ? .8 + Math.min(1.5, n / 120) : 1 + Math.min(2, n / 80);
   return B.b.think * 1000 * B.hs.time * (B.haste > 0 ? .5 : 1) * m; };
@@ -1078,7 +1080,7 @@ ROUTES.boss = (...a) => { const v = bossRoute0(...a); return !v || v.focus ? v :
 // 🛠️ strażnik walki: jeśli po losowaniu przeszkadzajki ekran nie odświeżył się sam (pytanie dalej schowane), odśwież go
 setInterval(() => { const B = BOSS; if (!B || B.phase !== 'fight' || document.hidden || parseRoute().parts[1] !== 'fight') return;
   const el = document.querySelector('.bf'); if (!el) return; const now = Date.now();
-  const active = (B.rolls || []).some(r => now - r.t < ROLL_MS + 800) || (B.learnFx && now - B.learnFx.t < 2600);
+  const active = !!((B.rolls || []).some(r => now - r.t < ROLL_MS + 800) || (B.learnFx && now - B.learnFx.t < 2600));   // !! – bez tego strażnik przerysowywał ekran co 0,5 s (mruganie)
   const shown = !!document.querySelector('.roll-ov'), due = (B.rolls || []).some(r => now >= r.t && now - r.t <= ROLL_MS + 800);
   if (el.classList.contains('rolling') !== active || shown !== due) render(); }, 500);
 

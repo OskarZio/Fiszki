@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '307';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '309';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -664,6 +664,7 @@ function render() {
   if (typeof applyPersonal === 'function') applyPersonal();
   document.body.classList.toggle('noanim', !S.settings.anim);
   $('#view').innerHTML = html;
+  if (typeof emo8Decorate === 'function') emo8Decorate($('#view'));   // ⚡ ikony 8-bit od razu, w tej samej klatce – bez mrugania emotek
   { const pth = parts.join('/'); $('#view').classList.toggle('enter', pth !== LAST_VIEW_PATH); LAST_VIEW_PATH = pth; }   // animacja wejścia tylko przy zmianie ekranu
   $$('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
   MOUNT.forEach(fn => fn());

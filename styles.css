@@ -3430,3 +3430,6 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 /* 💠 sklep premium */
 .prem-list { display: flex; flex-direction: column; } .prem-it { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
 .prem-it:first-child { border-top: 0; } .prem-bal { color: #38bdf8 !important; }
+/* 🎲 losowanie kategorii Wieży wiedzy – nakładka na środku ekranu */
+.cat-roll { position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; background: rgba(0,0,0,.55); padding: 16px; }
+.cat-roll .roll-ov { position: relative !important; inset: auto !important; top: auto !important; width: min(520px, 100%); border-radius: 16px; border: 2px solid #f59e0b; background: color-mix(in srgb, var(--card) 96%, #000); padding: 16px 0 14px; display: grid; gap: 10px; }

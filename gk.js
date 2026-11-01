@@ -225,9 +225,24 @@ cardView = c => c?.gk ? { q: `<div class="gk-cat">${GK_CAT[c.cat] || ''}</div><d
   b: `<div class="ctext">${esc(c.a)}</div>`, ans: c.a, hints: [], label: c.q } : gkCv0(c);
 // pytania na piętro: głównie z poziomu piętra, trochę z innych; w jednej wspinaczce bez powtórek
 // 🎲 jedna kategoria na całą wspinaczkę (solo i online) – losowana na starcie, potem pytania tylko z niej
+// 🎰 pokaz losowania kategorii – pasek przewija się i staje na wylosowanej (jak losowanie przeszkadzajki)
+function gkCatRoll(cat) {
+  if (!GK_CAT[cat]) return; document.querySelector('.cat-roll')?.remove();
+  const keys = Object.keys(GK_CAT), AT = 20, strip = []; for (let i = 0; i < AT + 3; i++) strip.push(i === AT ? cat : keys[(i * 5 + (Math.random() * keys.length | 0)) % keys.length]);
+  const others = keys.filter(k => k !== cat);
+  for (let i = 0; i < strip.length; i++) if (i !== AT && (strip[i] === cat && Math.abs(i - AT) <= 2 || (i && strip[i] === strip[i - 1]))) strip[i] = others[(others.indexOf(strip[i - 1]) + 2 + i) % others.length];
+  const split = k => { const v = GK_CAT[k], i = v.indexOf(' '); return [v.slice(0, i), v.slice(i + 1)]; };
+  const ov = document.createElement('div'); ov.className = 'cat-roll';
+  ov.innerHTML = `<div class="roll-ov" style="--at:${AT};--ms:2200ms"><div class="roll-h">🎲 Losowanie kategorii wspinaczki…</div>
+    <div class="roll-win"><div class="roll-strip2">${strip.map((k, i) => { const [ic, n] = split(k); return `<div class="roll-it${i === AT ? ' hit' : ''}"><i>${ic}</i><small>${n}</small></div>`; }).join('')}</div><span class="roll-mark"></span></div>
+    <div class="roll-res">Kategoria: <b>${GK_CAT[cat]}</b> – wszystkie pytania tej wspinaczki</div></div>`;
+  document.body.append(ov); if (typeof emo8Decorate === 'function') emo8Decorate(ov);
+  setTimeout(() => ov.querySelector('.roll-ov')?.classList.add('done'), 2300); setTimeout(() => ov.remove(), 4300);
+  ov.addEventListener('click', () => ov.remove());
+}
 function gkRandCat() { const n = {}; for (const x of GK_ALL) n[x.cat] = (n[x.cat] || 0) + 1; const ok = Object.keys(GK_CAT).filter(k => (n[k] || 0) >= 60); return ok[Math.random() * ok.length | 0] || null; }
 function gkPick(T, n) {
-  if (T.cat === undefined) T.cat = gkRandCat();
+  if (T.cat === undefined) { T.cat = gkRandCat(); if (T.cat) setTimeout(() => gkCatRoll(T.cat), 350); }
   const lv = T.floor <= 3 ? 1 : T.floor <= 7 ? 2 : 3;
   const used = new Set((T.used || []).map(String)), seen = gkSeen();
   // poziom wyczerpany? zapominamy tylko jego pytania (te z bieżącej wspinaczki dalej się nie powtórzą)
