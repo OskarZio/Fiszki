@@ -609,5 +609,26 @@ end $$;
 revoke all on function public.admin_act(text, text, text) from public, anon;
 grant execute on function public.admin_act(text, text, text) to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01c'::text $$;
+-- 🔎 szczegóły jednego gracza dla właściciela (okienko w Panelu hosta)
+create or replace function public.admin_player(p_code text) returns json language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  select id into uid from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  return (select json_build_object(
+    'nick', p.nick, 'code', p.code, 'avatar', p.avatar, 'avatar_img', p.avatar_img, 'stats', p.stats, 'updated', p.updated_at, 'created', u.created_at,
+    'gems', (select coalesce(sum((e->>'n')::numeric), 0) from jsonb_array_elements(coalesce(d.data->'wallet', '[]')) e where jsonb_typeof(e->'n') = 'number'),
+    'wallet_n', jsonb_array_length(coalesce(d.data->'wallet', '[]')),
+    'biggest', (select coalesce(max((e->>'n')::numeric), 0) from jsonb_array_elements(coalesce(d.data->'wallet', '[]')) e where jsonb_typeof(e->'n') = 'number'),
+    'items', (select coalesce(json_object_agg(k, n), '{}') from (select coalesce(e->>'kind', '?') k, count(*) n from jsonb_array_elements(coalesce(d.data->'items', '[]')) e group by 1) x),
+    'reviews', jsonb_array_length(coalesce(d.data->'log', '[]')), 'cards', jsonb_array_length(coalesce(d.data->'cards', '[]')), 'decks', jsonb_array_length(coalesce(d.data->'decks', '[]')),
+    'synced', d.updated_at, 'banned', exists (select 1 from public.econ_bans b where b.user_id = uid), 'clown', public.is_clown(uid),
+    'log', (select coalesce(json_agg(x), '[]') from (select what, t from public.cheat_log where user_id = uid order by t desc limit 10) x),
+    'actions', (select coalesce(json_agg(x), '[]') from (select what, msg, t from public.admin_actions where user_id = uid order by id desc limit 10) x))
+    from public.profiles p left join public.user_data d on d.user_id = p.id left join auth.users u on u.id = p.id where p.id = uid);
+end $$;
+revoke all on function public.admin_player(text) from public, anon;
+grant execute on function public.admin_player(text) to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01d'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

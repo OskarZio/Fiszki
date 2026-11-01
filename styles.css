@@ -3145,3 +3145,8 @@ body.admin-flip #app, body.admin-flip main { transform: rotate(180deg); transiti
 .pl-case-it small { font-size: 12px; line-height: 1.2; color: var(--muted); overflow-wrap: anywhere; }
 .pl-case-it .cos-sc * { font-size: 46px !important; width: auto; height: auto; }
 .pl-case-it .cos-sc img, .pl-case-it .cos-sc .emo8 { width: 60px !important; height: 60px !important; }
+/* v264: okienko danych gracza w Panelu hosta */
+.adm-row { cursor: pointer; padding: 8px 4px; border-radius: 10px; } .adm-row:hover { background: var(--card2); }
+.adm-pop .dmenu { max-height: 88vh; overflow-y: auto; gap: 12px; }
+.adm-data { display: flex; flex-direction: column; gap: 2px; background: var(--card2); border-radius: 14px; padding: 8px 12px; }
+.adm-log { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; }
