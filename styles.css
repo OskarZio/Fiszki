@@ -3190,3 +3190,14 @@ body.focus #hc-fab { display: none; }
 .hc-intro .dmenu, .hc-intro .hi-steps li div { text-align: left; }
 .hc-intro .hi-go { background: #c8102e !important; border-color: #c8102e !important; color: #fff !important; }
 .hi-steps small, .hi-steps b { text-align: left !important; margin-left: 0 !important; }
+/* v274: górny pasek na całą szerokość ekranu (bez wyciętych boków), szkło dopasowane do tła, miękkie przejście w dół */
+.hubnav { background: transparent !important; border-bottom: 0 !important; isolation: isolate; }
+.hubnav::before { content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: -100vw; right: -100vw;
+  background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 60%, transparent); }
+.hubnav::after { content: ''; position: absolute; z-index: -1; left: -100vw; right: -100vw; top: 100%; height: 14px; pointer-events: none;
+  background: linear-gradient(color-mix(in srgb, var(--bg) 55%, transparent), transparent); }
+:root.hc-mode .hubnav { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+:root.hc-mode .hubnav::before { background: color-mix(in srgb, #1c0505 60%, transparent); box-shadow: 0 1px 0 rgba(255, 77, 94, .2); }
+:root.hc-mode .hubnav::after { background: linear-gradient(rgba(28, 5, 5, .5), transparent); }
+html, body { overflow-x: clip; }
