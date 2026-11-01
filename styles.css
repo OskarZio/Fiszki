@@ -3524,3 +3524,10 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .uptok small { display: block; line-height: 1.35; margin-top: 2px; }
 .uptok-box { margin-bottom: 16px; }
 .cr-btns button.primary.gold-btn { background: #ca8a04 !important; border-color: #a16207 !important; box-shadow: 0 4px 0 #854d0e !important; }
+/* v316: losowanie przeszkadzajki – napis nie ucięty u góry, pasek i wynik ułożone od góry, bez pustej dziury */
+.bf .boss-q > .roll-ov { align-content: safe center !important; gap: 10px; padding: 16px 0 14px !important; }
+.bf.rolling .boss-q { min-height: 218px !important; }
+.bf .boss-q > .roll-ov .roll-h { line-height: 1.3; padding: 0 12px; }
+.bf .boss-q > .roll-ov .roll-res { font-size: 13.5px; line-height: 1.35; }
+.bf .boss-q > .roll-ov .roll-res { position: absolute; left: 0; right: 0; top: calc(50% + 70px); }
+.bf.rolling .boss-q { min-height: 236px !important; }
