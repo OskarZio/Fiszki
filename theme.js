@@ -53,6 +53,10 @@ function currentTheme() { return S.settings.theme || { id: 'auto' }; }
 function applyTheme() {
   try { applyAppIcon(); } catch { /* jeszcze brak stanu */ }
   const th = currentTheme(), root = document.documentElement.style;
+  // 🖼️ własne tło (płatne): zdjęcie leży tylko na tym urządzeniu (localStorage), nie w synchronizowanych danych
+  const photo = th.id === 'photo' ? bgPhotoGet() : null;
+  document.body?.classList.toggle('photo-bg', !!photo);
+  if (photo) root.setProperty('--photo', `url("${photo}")`); else root.removeProperty('--photo'); root.setProperty('--photo-dim', String(S.settings.photoDim ?? .45));
   document.body?.classList.toggle('px-theme', th.id === 'pixel' || !!th.pixel);
   // ✨ efekty motywów premium (kolory z definicji motywu – zapisany motyw ich nie trzyma)
   const fx = THEMES.find(x => x.id === th.id)?.fx;
@@ -154,7 +158,11 @@ ROUTES.theme = () => {
     return `<button class="theme${on ? ' on' : ''}${t.fx ? ' th-fx' : ''}" style="${bg}${themeFxVars(t)}" data-act="theme-pick" data-id="${t.id}">
       <span class="dot" style="background:${t.accent}"></span><b style="color:${t.bg && lum(t.bg) < .18 ? '#fff' : '#1b1d29'}">${t.name}</b>
       ${owned ? '' : `<small class="lock">🔒 ${t.price} 💎</small>`}</button>`;
-  }).join('')}</div></div>
+  }).join('')}
+    <button class="theme photo-th${th.id === 'photo' ? ' on' : ''}" style="${bgPhotoGet() ? `background:#111 url('${bgPhotoGet()}') center/cover` : 'background:linear-gradient(135deg,#334155,#0f172a)'}" data-act="photo-theme">
+      <span class="dot" style="background:${th.accent || '#ff7a3d'}"></span><b style="color:#fff;text-shadow:0 1px 3px #000">🖼️ Własne tło</b>
+      ${hasItem('theme', 'photo') ? '' : `<small class="lock">🔒 ${PHOTO_PRICE} 💎</small>`}</button></div>
+    ${th.id === 'photo' ? `<div class="row nowrap" style="gap:8px;margin-top:12px"><button class="grow" data-act="photo-change">🖼️ Zmień zdjęcie</button><button class="grow" data-act="photo-dim">🌓 Przyciemnienie: ${Math.round((S.settings.photoDim ?? .45) * 100)}%</button></div>` : ''}</div>
   <div class="card"><h3 style="margin-top:0">Tło aplikacji</h3><div class="swatches">${sw(BG_SWATCHES, 'bg')}</div>
     <div class="row nowrap"><input type="color" id="bg-pick" value="${th.bg || '#f5f6fb'}" class="cpick"><input id="bg-hex" value="${th.bg || '#f5f6fb'}" placeholder="#RRGGBB" maxlength="7" class="grow" autocapitalize="off"></div></div>
   <div class="card"><h3 style="margin-top:0">Kolor akcentu</h3><div class="swatches">${sw(ACCENT_SWATCHES, 'accent')}</div>
@@ -272,3 +280,29 @@ function drawCharts() {
 }
 window.addEventListener('resize', () => { if ($('#chart-acc')) drawCharts(); });
 Object.assign(ACTIONS, { 'chart-range': el => { CHART_RANGE = +el.dataset.d; render(); } });
+
+// ============================================================ 🖼️ Własne tło (motyw płatny)
+const PHOTO_PRICE = 1000;
+const bgPhotoGet = () => { try { return localStorage.getItem('bgPhoto') || null; } catch { return null; } };
+async function bgPhotoPick() {
+  const f = await pickFile('image/*'); if (!f) return false;
+  try {
+    const img = await createImageBitmap(f), k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    let url = c.toDataURL('image/webp', .8); if (!url.startsWith('data:image/webp')) url = c.toDataURL('image/jpeg', .8);
+    localStorage.setItem('bgPhoto', url); return true;
+  } catch { toast('Nie udało się wczytać zdjęcia (za duże albo nieobsługiwany format)', 4000); return false; }
+}
+Object.assign(ACTIONS, {
+  'photo-theme': async () => {
+    if (!hasItem('theme', 'photo')) {
+      if (!confirm(`🖼️ Własne tło – wgraj dowolne zdjęcie jako tło całej aplikacji.\nKoszt: ${PHOTO_PRICE} 💎 (raz, potem zmieniasz zdjęcie za darmo). Kupić?`)) return;
+      if (!spend(PHOTO_PRICE, 'theme-photo')) return; addItem('theme', 'photo'); if (typeof confetti === 'function') confetti(80);
+    }
+    if (!bgPhotoGet() && !(await bgPhotoPick())) return render();
+    S.settings.theme = { id: 'photo', bg: '#121212', accent: currentTheme().accent && currentTheme().id !== 'auto' ? currentTheme().accent : '#ff7a3d', image: null }; applyTheme(); save(); render();
+  },
+  'photo-change': async () => { if (await bgPhotoPick()) { applyTheme(); render(); toast('Tło zmienione ✓'); } },
+  'photo-dim': () => { const L = [.2, .35, .45, .6, .75], cur = S.settings.photoDim ?? .45; S.settings.photoDim = L[(L.indexOf(cur) + 1) % L.length] ?? .45; applyTheme(); save(); render(); },
+});

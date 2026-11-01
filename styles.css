@@ -3229,3 +3229,9 @@ main > .hubnav { margin-top: 0 !important; padding-top: calc(10px + var(--sat)) 
 .hubnav::before { background: color-mix(in srgb, var(--bg) 12%, transparent) !important; backdrop-filter: blur(24px) saturate(1.6) !important; -webkit-backdrop-filter: blur(24px) saturate(1.6) !important; }
 .hubnav::after { background: transparent !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 :root.hc-mode .hubnav::before { background: color-mix(in srgb, #1c0505 15%, transparent) !important; }
+/* v282: 🖼️ własne tło – zdjęcie na całym ekranie (przyklejone), przyciemnione, karty półprzezroczyste */
+body.photo-bg { background: #0d0d0d !important; }
+body.photo-bg::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(rgba(0,0,0,var(--photo-dim, .45)), rgba(0,0,0,var(--photo-dim, .45))), var(--photo) center / cover no-repeat; }
+body.photo-bg .card, body.photo-bg .tile, body.photo-bg .mtile { background: color-mix(in srgb, var(--card) 80%, transparent) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.theme.photo-th { position: relative; }
