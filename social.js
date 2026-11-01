@@ -182,8 +182,12 @@ ROUTES.chat = parts => {
   onMount(() => {
     markRead(fid); clearTimeout(inboxTimer); inboxTimer = setTimeout(inboxTick, 4000);
     // przewijaj na dół tylko przy otwarciu albo gdy byłeś na dole – czytanie starszych wiadomości nie skacze
-    const box = $('#chat-list'); if (box) { const n = list.length; if (CHAT.atEnd !== false || CHAT.n == null) box.scrollTop = box.scrollHeight; else box.scrollTop = CHAT.top || 0; CHAT.n = n;
-      box.addEventListener('scroll', () => { CHAT.top = box.scrollTop; CHAT.atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 60; }, { passive: true }); }
+    const box = $('#chat-list'); if (box) { CHAT.n = list.length;
+      // trzymaj pozycję względem dołu – obrazki naklejek doczytują się później i zmieniają wysokość (bez skakania)
+      const pin = () => { box.scrollTop = CHAT.atEnd !== false ? box.scrollHeight : box.scrollHeight - (CHAT.fromEnd || box.clientHeight); };
+      pin(); requestAnimationFrame(pin);
+      box.addEventListener('load', () => { if (CHAT.atEnd !== false) pin(); }, true);
+      box.addEventListener('scroll', () => { CHAT.fromEnd = box.scrollHeight - box.scrollTop; CHAT.atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 60; }, { passive: true }); }
     const inp = $('#chat-in'); if (!inp) return;
     inp.value = CHAT.draft;
     inp.addEventListener('input', () => { CHAT.draft = inp.value; });
@@ -191,7 +195,7 @@ ROUTES.chat = parts => {
   });
   const gifts = giftable();
   return { tab: 'home', html: `
-  <div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 36)}</span><h1 class="grow nm" style="font-size:24px">${esc(f.nick || 'Znajomy')}</h1></div>
+  <div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><span class="av" data-act="pl-view-f" data-fid="${f.id}" role="button">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 36)}</span><h1 class="grow nm" style="font-size:24px" data-act="pl-view-f" data-fid="${f.id}" role="button">${esc(f.nick || 'Znajomy')}</h1></div>
   <div class="chat-tools">
     <button class="${CHAT.pick === 'media' ? 'primary' : ''}" data-act="chat-media-pick">😀 GIF</button>
     <button class="${CHAT.pick === 'gift' ? 'primary' : ''}" data-act="chat-pick">🎁 Podaruj</button>
@@ -343,7 +347,7 @@ ROUTES.battles = (...a) => {
   const open = MSGS.filter(m => m.to_id === myId() && challengeOpen(m));
   const card = `<div class="card"><div class="row nowrap"><h3 class="grow" style="margin:0">👥 Znajomi</h3><button class="sm ghost" data-go="#/inbox">💬 Wiadomości${unreadMsgs().length ? ` <span class="unread">${unreadMsgs().length}</span>` : ''}</button></div>
     ${open.map(m => `<div class="banner row nowrap"><span class="grow">⚔️ <b>${esc(friendName(m.from_id))}</b> wyzywa Cię${m.body?.deck ? ` · ${esc(m.body.deck)}` : ''}</span><button class="sm primary" data-act="chat-accept" data-id="${m.id}">Przyjmij</button></div>`).join('')}
-    ${CLOUD_FRIENDS.length ? CLOUD_FRIENDS.map(f => `<div class="rankrow"><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 32)}</span>
+    ${CLOUD_FRIENDS.length ? CLOUD_FRIENDS.map(f => `<div class="rankrow" data-act="pl-view-f" data-fid="${f.id}" role="button"><span class="av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 32)}</span>
         <b class="grow nm">${esc(f.nick || 'Znajomy')}</b><button class="sm" data-go="#/chat/${f.id}">💬</button><button class="sm primary" data-act="bt-challenge-friend" data-fid="${f.id}">⚔️ Wyzwij</button></div>`).join('')
       : '<p class="small muted">Dodaj znajomych w <a href="#/rank">rankingu</a> – potem wyzwiesz ich tutaj jednym kliknięciem.</p>'}
     <p class="small muted" style="margin-bottom:0">Wyzwanie używa zasad z „⚙️ Zasady bitwy” poniżej – znajomy dostanie powiadomienie.</p></div>`;
@@ -351,3 +355,7 @@ ROUTES.battles = (...a) => {
   return { ...r, html: i < 0 ? r.html + card : r.html.slice(0, i) + card + r.html.slice(i) };
 };
 ACTIONS['bt-challenge-friend'] = el => { CHAT = { fid: el.dataset.fid, pick: false, draft: '' }; ACTIONS['chat-challenge'](); };
+
+// 👤 profil znajomego (lista znajomych, nagłówek czatu)
+ACTIONS['pl-view-f'] = el => { const id = el.dataset.fid, r = (typeof rankRows === 'function' ? rankRows() : []).find(x => String(x.id).replace('sb:', '') === String(id));
+  const f = friendById(id); if (r) return playerView(r); if (f) playerView({ nick: f.nick, avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos, ...(f.stats || {}), updated: f.updated_at ? +new Date(f.updated_at) : 0 }); };

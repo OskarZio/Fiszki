@@ -3117,3 +3117,4 @@ img.charpx, .skin-pic img, .char-cr img { object-fit: contain !important; max-wi
 
 /* v253: bez przypadkowego powiększania (double-tap) na iOS */
 html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+.rankrow[data-act], [data-act="pl-view-f"] { cursor: pointer; }
