@@ -6,7 +6,7 @@
    Link można też pokazać jako kod QR (kolega skanuje aparatem).
    Nagrody mają stałe id (synchronizacja ich nie dubluje). Polecający: max REF_MAX nagród; zaproszony: tylko nowe konto (do 3 dni). */
 
-const REF_GEMS_NEW = 500, REF_GEMS = 200, REF_CASE = 'basic', REF_CASE_ACC = 'Skrzynkę nauki', REF_MAX = 10, REF_NEW_DAYS = 3;
+const REF_GEMS_NEW = 500, REF_GEMS = 200, REF_CASE = 'basic', REF_CASE_ACC = 'Skrzynkę zapasów', REF_MAX = 10, REF_NEW_DAYS = 3;
 const refLink = () => SB_PROFILE?.code ? `${location.origin}${location.pathname}?ref=${SB_PROFILE.code}` : '';
 const refRewards = () => S.wallet.filter(w => /^ref-out-/.test(w.id)).length;
 

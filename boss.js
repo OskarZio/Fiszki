@@ -624,7 +624,7 @@ function grabEvChest() {
   // 🎁 bardzo rzadko w skrzynce jest prawdziwa skrzynka ze sklepu – szansa rośnie z trudnością i prestiżem bossa (max 20%)
   const pCase = Math.min(.2, .02 + .02 * (B.b.diff || 0) + .04 * (B.b.bp || 0) + (S.settings.hardcore ? .02 : 0));
   if (typeof addItem === 'function' && typeof CASES !== 'undefined' && Math.random() < pCase) {
-    const r = Math.random(), pool = r < .25 + .05 * (B.b.bp || 0) && CASES.epic ? 'epic' : ['basic', 'cats', 'animals', 'food', 'magic'].filter(k => CASES[k])[Math.random() * 5 | 0] || 'basic';
+    const r = Math.random(), pool = r < .25 + .05 * (B.b.bp || 0) && CASES.epic ? 'epic' : ['basic', 'forge', 'basic', 'forge', 'skin'].filter(k => CASES[k])[Math.random() * 5 | 0] || 'basic';
     addItem('case', pool, 1); B.log.unshift(`🎁 MEGA ZNALEZISKO: ${CASES[pool].name}!`); S.stats.evCases = (S.stats.evCases || 0) + 1;
     if (typeof confetti === 'function') confetti(120); toast(`🎁 Rzadki łup: ${CASES[pool].name} – czeka w Kolekcji`, 3500);
   } else if (Math.random() < .6) { const ks = Object.keys(POTIONS).filter(k => k !== 'phoenix'), k = ks[Math.random() * ks.length | 0]; addItem('potion', k, 1); B.log.unshift(`📦 Złapane! ${POTIONS[k].name}`); }

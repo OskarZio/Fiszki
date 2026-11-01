@@ -14,7 +14,7 @@ const EGG_TIERS = [
   { min: 90, odds: { common: 15, rare: 35, epic: 33, legendary: 17 }, gems: 300, mythic: 1, color: '#fef3c7', spot: '#f59e0b' },
   { min: 120, odds: { common: 10, rare: 30, epic: 35, legendary: 25 }, gems: 500, mythic: 2, color: '#fee2e2', spot: '#dc2626' },
 ];
-const EGG_EXCL = 50, EGG_BONUS_ST = 35;   // % naklejek tylko z inkubatora · % szans na bonusową naklejkę przy wykluciu   // % szans, że wykluje się naklejka dostępna tylko z inkubatora
+const EGG_EXCL = 50, EGG_BONUS_ST = 0;   // naklejki wycofane – jajko daje stworka i kryształy   // % naklejek tylko z inkubatora · % szans na bonusową naklejkę przy wykluciu   // % szans, że wykluje się naklejka dostępna tylko z inkubatora
 const EGG_STUDY_ROUTES = ['study', 'quiz', 'game', 'battle', 'weak', 'walk', 'ptrain', 'show', 'station', 'atlas', 'gk'];
 // ⚔️ walka też jest nauką: boss, wieża, hydra/wieża duetu (online) i pojedynek – jajko rośnie także wtedy
 const eggStudyHere = () => { const [a, b] = parseRoute().parts; return EGG_STUDY_ROUTES.includes(a || '') || (['boss', 'duel', 'coop', 'tower'].includes(a) && b === 'fight'); };
@@ -222,7 +222,7 @@ ROUTES.egg = () => {
     <p class="small muted" style="margin-top:0">Skup się na nauce, a z jajka wykluje się <b>unikatowy stworek</b> – jedyny taki na świecie. <b>Im dłużej, tym rzadszy.</b> Wyjście z aplikacji rozbija jajko 💥</p>
     <div class="egg-pick">${EGG_TIERS.map(x => `<button class="${x.min === EGG_PICK.min ? 'on' : ''}" data-act="egg-min" data-m="${x.min}"><span class="mini-egg">${eggSVG(x.min)}</span><b>${x.min >= 60 ? x.min / 60 + ' h' : x.min + ' min'}</b><small>+${x.gems} 💎</small></button>`).join('')}</div>
     <div class="odds center egg-odds">${Object.keys(t.odds).map(r => `<span style="color:${RARITY[r].color}">● ${RARITY[r].name} ${pctFmt(pct(r))}</span>`).join(' ')}${t.mythic ? ` <span style="color:${RARITY.mythic.color};font-weight:700">🔴 Mityczna ${pctFmt(t.mythic)}</span>` : ''}
-      <br><small class="muted">Połowa wykluć to naklejki 🥚 dostępne tylko z inkubatora</small></div>
+</div>
     <div class="egg-cat-h"><b>Czym się zajmujesz?</b><small class="muted">jajko zapisze się w tej kategorii</small></div>
     <div class="egg-cats">${[...EGG_CATS, ...eggUserCats()].map(c => `<button class="egg-cat${eggCat(EGG_PICK.cat).id === c.id ? ' on' : ''}" data-act="egg-cat" data-c="${esc(c.id)}">${eggCatIc(c)}<span>${esc(c.n)}</span></button>`).join('')}<button class="egg-cat add" data-act="egg-cat-add"><b class="ec-plus">+</b><span>Własna</span></button></div>
     ${eggCat(EGG_PICK.cat).own ? `<button class="sm ghost" data-act="egg-cat-del" style="margin:2px 0 8px">Usuń kategorię „${esc(eggCat(EGG_PICK.cat).n)}” z listy</button>` : ''}
@@ -234,8 +234,7 @@ ROUTES.egg = () => {
     <div class="row nowrap small" style="margin-top:10px"><span class="grow">🛡️ Tarcze: <b>${shieldCount()}</b> <span class="muted">(1 darmowa dziennie, ratuje jajko po wyjściu)</span></span><button class="sm" data-act="egg-shield">+1 · ${SHIELD_PRICE} 💎</button></div>
   </div>
   ${nestHTML()}
-  <div class="card"><h2 style="margin-top:0">🥚 Naklejki z inkubatora</h2><div class="egg-nest excl">${STICKERS.filter(s => s.hatch).map(s => { const have = hasItem('sticker', s.id) || hasItem('shiny', s.id); return `<span class="${have ? '' : 'locked'}" style="--rc:${RARITY[s.r].color}" title="${have ? esc(s.name) : RARITY[s.r].name}">${have ? stE(s) : '❔'}</span>`; }).join('')}</div>
-    <p class="small muted" style="margin:6px 0 0">Nie ma ich w skrzynkach – tylko z jajek.</p></div>` };
+` };
 };
 // ---------- 🪺 gniazdo: miesiąc / rok / wszystkie
 let MW_EDIT = false, MW_SEL = null;
@@ -317,7 +316,7 @@ function eggHomeHTML() {
   if (typeof appMode === 'function' && appMode() !== 'full') return '';   // tryb skupienia: bez jajek
   const E = eggRun();
   if (E) return `<div class="card row nowrap egg-home" data-go="#/egg"><span class="egg-home-ic">${eggSVG(E.min, E.prog / (E.min * 60000))}</span><div class="grow"><b>Jajko się wysiaduje · ${eggClock(eggLeft(E))}</b><div class="small muted">${eggStatus(E)}</div></div><span>›</span></div>`;
-  return `<div class="card row nowrap egg-home" data-go="#/egg"><span class="egg-home-ic">${eggSVG(EGG_PICK.min)}</span><div class="grow"><b>🥚 Inkubator naklejek</b><div class="small muted">Skup się ${EGG_PICK.min} min i wykluj unikatowego stworka. Wyjście z aplikacji rozbija jajko!</div></div><span>›</span></div>`;
+  return `<div class="card row nowrap egg-home" data-go="#/egg"><span class="egg-home-ic">${eggSVG(EGG_PICK.min)}</span><div class="grow"><b>🥚 Inkubator</b><div class="small muted">Skup się ${EGG_PICK.min} min i wykluj unikatowego stworka. Wyjście z aplikacji rozbija jajko!</div></div><span>›</span></div>`;
 }
 const eggHome0 = homeExtrasHTML;
 homeExtrasHTML = function () { return eggHomeHTML() + eggHome0(); };

@@ -129,7 +129,7 @@ async function sendMsg(fid, kind, body) {
   const m = sMsgRow(r.data); if (m && !MSGS.some(x => x.id === m.id)) MSGS.push(m);
   return m;
 }
-const giftable = () => STICKERS.filter(s => itemCount('sticker', s.id) > 0);
+const giftable = () => [];   // podarunki naklejek wycofane razem z albumem
 const challengeOpen = m => m.kind === 'challenge' && Date.now() - Date.parse(m.created_at) < CHALLENGE_TTL && /^[A-Z0-9]{6}$/.test(m.body?.code || '');
 
 // ---------- widoki
@@ -198,18 +198,17 @@ ROUTES.chat = parts => {
   <div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><span class="av" data-act="pl-view-f" data-fid="${f.id}" role="button">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 36)}</span><h1 class="grow nm" style="font-size:24px" data-act="pl-view-f" data-fid="${f.id}" role="button">${esc(f.nick || 'Znajomy')}</h1></div>
   <div class="chat-tools">
     <button class="${CHAT.pick === 'media' ? 'primary' : ''}" data-act="chat-media-pick">😀 Emotki</button>
-    <button class="${CHAT.pick === 'gift' ? 'primary' : ''}" data-act="chat-pick">🎁 Podaruj</button>
     <button data-act="chat-nudge">🔔 Przypomnij</button>
     <button data-act="chat-challenge">⚔️ Wyzwij</button></div>
   ${CHAT.pick === 'media' ? `<div class="card tight chat-media">
     <div class="emo-row">${QUICK_EMO.map(e => `<button data-act="chat-emo" data-e="${e}">${e}</button>`).join('')}</div>
     <b class="small">🃏 Naklejki</b><div class="st-row">${mySt.map(s => `<button class="${fxCls(shinyLv(s.id)).trim()}" data-act="chat-st" data-id="${s.id}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}">${stE(s)}</button>`).join('')}</div>
 </div>` : ''}
-  ${CHAT.pick === 'gift' ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
+  ${CHAT.pick === 'gift' && false ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
     ${gifts.length ? `<div class="gift-pick">${gifts.map(s => `<button data-act="chat-gift" data-id="${s.id}" style="--rc:${RARITY[s.r].color}"><span>${stE(s)}</span><small>${esc(s.name)}</small><em>×${itemCount('sticker', s.id)}</em></button>`).join('')}</div>`
       : '<p class="small">Nie masz jeszcze naklejek do podarowania – zdobądź je w <a href="#/shop">skrzynkach</a>. (Startowe 👋👍😅 nie są do oddania.)</p>'}</div>` : ''}
   <div class="chat-list" id="chat-list">${list.length ? list.map(m => { const mine = m.from_id === me; return `<div class="msg ${mine ? 'me' : 'them'} k-${msgKind(m)}">${msgBodyHTML(m, mine)}<small>${hhmm(m.created_at)}${mine && m.read_at ? ' · ✓✓' : ''}</small></div>`; }).join('')
-    : `<p class="muted small center">Napisz pierwszą wiadomość, podaruj naklejkę albo wyzwij ${esc(f.nick || 'znajomego')} na bitwę 👋</p>`}</div>
+    : `<p class="muted small center">Napisz pierwszą wiadomość, wyślij naklejkę albo wyzwij ${esc(f.nick || 'znajomego')} na bitwę 👋</p>`}</div>
   <div class="chat-input row nowrap"><input id="chat-in" class="grow" maxlength="${MSG_TEXT_MAX}" placeholder="Wiadomość…" autocomplete="off" enterkeyhint="send"><button class="primary" data-act="chat-send">➤</button></div>
   ${notifBtnHTML()}` };
 };

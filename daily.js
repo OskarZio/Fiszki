@@ -4,10 +4,10 @@
    Odebrane dni leżą w S.logins (łączone między urządzeniami po id), nagrody mają id dnia – nic się nie dubluje. */
 
 const LOGIN_WEEKS = [
-  { name: 'Tydzień skrzynek', days: [{ t: 'case', k: 'daily' }, { t: 'gems', n: 20 }, { t: 'sticker', r: 'common' }, { t: 'gems', n: 40 }, { t: 'case', k: 'basic' }, { t: 'gems', n: 60 }, { t: 'case', k: 'epic' }] },
-  { name: 'Tydzień kryształów', days: [{ t: 'gems', n: 15 }, { t: 'gems', n: 25 }, { t: 'case', k: 'daily' }, { t: 'gems', n: 40 }, { t: 'sticker', r: 'rare' }, { t: 'gems', n: 70 }, { t: 'gems', n: 200 }] },
-  { name: 'Tydzień kolekcjonera', days: [{ t: 'sticker', r: 'common' }, { t: 'gems', n: 20 }, { t: 'sticker', r: 'common' }, { t: 'case', k: 'basic' }, { t: 'sticker', r: 'rare' }, { t: 'gems', n: 50 }, { t: 'sticker', r: 'epic' }] },
-  { name: 'Tydzień szczęściarza', days: [{ t: 'gems', n: 20 }, { t: 'case', k: 'daily' }, { t: 'gems', n: 30 }, { t: 'case', k: 'daily' }, { t: 'gems', n: 50 }, { t: 'case', k: 'basic' }, { t: 'sticker', r: 'legendary' }] },
+  { name: 'Tydzień skrzynek', days: [{ t: 'case', k: 'daily' }, { t: 'gems', n: 20 }, { t: 'case', k: 'basic' }, { t: 'gems', n: 40 }, { t: 'case', k: 'basic' }, { t: 'gems', n: 60 }, { t: 'case', k: 'epic' }] },
+  { name: 'Tydzień kryształów', days: [{ t: 'gems', n: 15 }, { t: 'gems', n: 25 }, { t: 'case', k: 'daily' }, { t: 'gems', n: 40 }, { t: 'case', k: 'forge' }, { t: 'gems', n: 70 }, { t: 'gems', n: 200 }] },
+  { name: 'Tydzień kolekcjonera', days: [{ t: 'case', k: 'basic' }, { t: 'gems', n: 20 }, { t: 'case', k: 'basic' }, { t: 'case', k: 'basic' }, { t: 'case', k: 'forge' }, { t: 'gems', n: 50 }, { t: 'case', k: 'epic' }] },
+  { name: 'Tydzień szczęściarza', days: [{ t: 'gems', n: 20 }, { t: 'case', k: 'daily' }, { t: 'gems', n: 30 }, { t: 'case', k: 'daily' }, { t: 'gems', n: 50 }, { t: 'case', k: 'basic' }, { t: 'case', k: 'epic' }] },
 ];
 const dailyOn = () => S.settings.loginRewards !== false && appMode() === 'full';
 const weekNo = () => Math.floor((dayStart() - new Date(2024, 0, 1).getTime()) / (7 * DAY));   // 1.01.2024 to poniedziałek
@@ -24,7 +24,7 @@ function loginState() {
 }
 function rewardInfo(r) {
   if (r.t === 'gems') return { icon: '💎', label: `+${r.n}`, name: `${r.n} kryształów` };
-  if (r.t === 'case') return { icon: typeof crateImg === 'function' ? crateImg(r.k, 'inline') : CASES[r.k]?.icon || '🎁', label: r.k === 'epic' ? 'Mistrza' : r.k === 'basic' ? 'Nauki' : 'Skrzynka', name: CASES[r.k]?.name || 'Skrzynka' };
+  if (r.t === 'case') return { icon: typeof crateImg === 'function' ? crateImg(r.k, 'inline') : CASES[r.k]?.icon || '🎁', label: { epic: 'Bohatera', basic: 'Zapasów', forge: 'Kowala', skin: 'Skinów', daily: 'Codzienna' }[r.k] || 'Skrzynka', name: CASES[r.k]?.name || 'Skrzynka' };
   return { icon: '🃏', label: RARITY[r.r].name, name: `Naklejka: ${RARITY[r.r].name.toLowerCase()}`, color: RARITY[r.r].color };
 }
 function claimLogin() {
