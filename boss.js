@@ -847,8 +847,8 @@ function fightView() {
     const out = cur.dis === 'reverse' ? [...t].reverse().join('') : (() => { const R = r(), a = [...w]; for (let k = a.length - 1; k > 0; k--) { const j = R() * (k + 1) | 0; [a[k], a[j]] = [a[j], a[k]]; } return a.join(' '); })();
     q = `<div class="ctext">${esc(out)}</div>` + (cm === 'tf' ? `<div class="tf-claim">${esc(cur.claim)}</div>` : ''); }
   const evChest = B.ev?.k === 'chest' ? `<button class="ev-chest" data-act="boss-evchest" aria-label="Złap skrzynkę">${crateImg('grab')}<small>Złap!</small></button>` : '';
-  let ctrl = B.down ? `<div class="down-box">💀 Leżysz! ${B.coop ? 'Kolega może Cię reanimować – albo' : ''} odpowiedz dobrze 5×, żeby wstać (${B.selfRev || 0}/5)</div>` : '';
-  if (cm === 'abcd') ctrl += `<div class="abcd-grid">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(cur.right ?? v.ans);
+  let ctrl = B.down ? (B.coop ? '<div class="down-box dead"><b>💀 Nie żyjesz</b><small>Czekasz na reanimację – drużyna podnosi Cię 3 dobrymi odpowiedziami.</small></div>' : `<div class="down-box">💀 Leżysz! Odpowiedz dobrze 5×, żeby wstać (${B.selfRev || 0}/5)</div>`) : '';
+  if (B.down && B.coop) { /* 💀 martwy: czeka na reanimację */ } else if (cm === 'abcd') ctrl += `<div class="abcd-grid">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(cur.right ?? v.ans);
       return `<button class="abcd${o.length > 70 ? ' long' : ''}${pk ? right ? ' right' : B.picked === k ? ' wrong' : '' : ''}${hid ? ' hid' : ''}" data-act="boss-pick" data-k="${k}" ${pk || hid || blocked ? 'disabled' : ''}><i>${'ABCD'[k]}</i><span>${esc(o)}</span></button>`; }).join('')}</div>
       ${B.picked != null ? '<button class="primary block" data-act="boss-next">Dalej ›</button>' : ''}`;
   else if (cm === 'type' && !B.shown) ctrl += `<div class="row nowrap"><input id="boss-in" class="grow" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" ${dis}><button class="primary" data-act="boss-check" ${dis}>⚔️</button></div>

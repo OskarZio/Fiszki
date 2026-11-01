@@ -40,14 +40,16 @@ function sCoopMsg(m) {
   if (m.sm != null) o.sm = sStr(m.sm, 60); if (m.sn != null) o.sn = sInt(m.sn, 0, 1000);
   if (m.set && typeof m.set === 'object' && Array.isArray(m.set.cards)) o.set = { name: sStr(m.set.name, 60), cards: m.set.cards.slice(0, 260).map(x => ({ n: sStr(x?.n, 64), o: sStr(x?.o, 8), q: sStr(x?.q, 300), a: sStr(x?.a, 300) })).filter(x => x.q && x.a) };
   if (Array.isArray(m.players)) o.players = m.players.slice(0, 4).map(p => ({ id: sStr(p?.id, 40), nick: sStr(p?.nick, 24), line: CHAR_LINES[p?.line] ? p.line : 'cat', g: p?.g === 'm' ? 'm' : 'w', pr: sInt(p?.pr, 0, 99), lv: sInt(p?.lv, 1, 99, 1), atk: sNum(p?.atk, .5, 10, 1), look: sInt(p?.look, 0, 1e7) }));
-  if (Array.isArray(m.heads)) o.heads = m.heads.slice(0, 4).map(x => ({ id: sStr(x?.id, 40), max: sInt(x?.max, 50, 100000, 300) }));
+  if (Array.isArray(m.heads)) o.heads = m.heads.slice(0, 4).map(x => ({ id: sStr(x?.id, 40), max: sInt(x?.max, 50, 400000, 300), ...(x?.hp != null ? { hp: sInt(x.hp, 0, 400000) } : {}) }));
+  if (Array.isArray(m.gqi)) o.gqi = m.gqi.slice(0, 40).map(x => sStr(x, 40)); if (Array.isArray(m.vo)) o.vo = m.vo.slice(0, 3).filter(k => DUO_BON[k]); if (m.vk != null) o.vk = DUO_BON[m.vk] ? m.vk : null;
+  if (m.txt != null) o.txt = sStr(m.txt, 80); if (m.st != null) o.st = sStr(m.st, 30);
   return o;
 }
 const coopSend = m => COOP?.ch?.send(m);
 function coopOpen(code, host) {
   COOP?.ch?.close();
   COOP = { code, host, phase: 'lobby', players: { [MY_ID]: { id: MY_ID, ...coopMe(), seen: Date.now() } }, heads: [], rev: {}, ch: null };
-  COOP.ch = channel('fiszki-coop-' + code, coopMsg);
+  COOP.ch = channel('fiszki-coop-' + code, coopMsg); try { localStorage.setItem('coopLast', JSON.stringify({ code, host, t: Date.now() })); } catch { /* */ }
   if (!host) { const hello = () => { if (COOP?.code === code && COOP.phase === 'lobby' && Object.keys(COOP.players).length < 2) { coopSend({ t: 'join', ...coopMe() }); COOP.tries = (COOP.tries || 0) + 1; if (COOP.tries < 8) setTimeout(hello, 2500); } }; hello(); }
   coopBeat();
 }
@@ -73,14 +75,19 @@ function coopMsg(m0) {
     C.players[m.from] = { id: m.from, nick: m.nick, line: m.line, g: m.g, pr: m.pr, lv: m.lv, atk: m.atk, look: m.look, seen: Date.now() };
     coopSend({ t: 'lobby', players: Object.values(C.players).map(({ seen, ...x }) => x), ...coopSetInfo() }); return render();
   }
+  if (m.t === 'join' && C.host && C.phase === 'fight' && p) { p.gone = false; coopSend({ t: 'start', to: m.from, heads: C.heads.map(h => ({ id: h.id, max: h.max, hp: h.hp })), seed: BOSS?.b?.seed || 1, ...(C.tw?.on ? { tw: true, fl: C.tw.floor, ab: C.tw.abil, ...(C.gq ? { gq: true, gqi: C.gqi } : {}) } : {}) }); BOSS?.log.unshift(`🔌 ${p.nick} wraca do walki`); return softRender(); }
+  if (m.t === 'say' && p && m.txt) { (C.chat = C.chat || []).push({ n: p.nick, t: m.txt }); C.chat = C.chat.slice(-6); return softRender(); }
+  if (m.t === 'vote' && !C.host && m.vo) { C.vote = { opts: m.vo, picks: {} }; return render(); }
+  if (m.t === 'pick' && C.vote && m.vk) { C.vote.picks[m.from] = m.vk; return render(); }
   if (m.t === 'full') { toast('Lobby jest pełne'); return coopLeave(); }
   if (m.t === 'lobby' && !C.host && m.players) {
     if (!m.players.some(x => x.id === MY_ID)) return;
     C.hostId = m.from; C.tower = !!m.tw; C.gq = !!m.gq; C.setInfo = m.sm ? { name: m.sm, n: m.sn || 0 } : null; for (const x of m.players) C.players[x.id] = { ...(C.players[x.id] || {}), ...x, seen: Date.now() }; return render();
   }
-  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); C.gq = !!m.gq; } return coopBegin(m.heads, m.seed, m.set); }
+  if (m.t === 'start' && !C.host && (m.from === C.hostId || !C.hostId) && ['lobby', 'floor'].includes(C.phase) && m.heads) { C.hostId = m.from; }
+  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); C.gq = !!m.gq; C.gqi = m.gqi; } return coopBegin(m.heads, m.seed, m.set); }
   if (m.t === 'ok' && p) { C.mateOk = { id: m.from, t: Date.now() }; return; }
-  if (m.t === 'emo' && p && m.emo != null) { p.emo = { i: m.emo, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
+  if (m.t === 'emo' && p && (m.emo != null || m.st)) { p.emo = { i: m.emo, st: m.st, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
   if (m.t === 'hit' && C.phase === 'fight') { const hd = C.heads.find(x => x.id === m.h); if (hd) { hd.hp = Math.max(0, hd.hp - m.n); syncMyHead(); if (BOSS?.phase === 'fight' && !coopAlive()) return bossEnd(true); softRender(); } return; }
   if (m.t === 'heal' && C.phase === 'fight') { const hd = C.heads.find(x => x.id === m.h); if (hd && hd.hp > 0) { hd.hp = Math.min(hd.max, hd.hp + m.n); softRender(); } return; }
   if (m.t === 'state' && p) { Object.assign(p, { hp: m.hp, max: m.max, down: m.down, combo: m.combo }); if (BOSS?.phase === 'fight' && coopLost()) return bossEnd(false, 'dead'); return softRender(); }
@@ -101,17 +108,18 @@ function coopStartHost() {
   const d = COOP_SHARED && deckById(COOP_SRC), set = d ? coopSetPack(d) : null;
   if (COOP_SHARED && (!set || set.cards.length < 4)) return toast('Wybierz talię z co najmniej 4 fiszkami na wspólny zestaw');
   let tw = {};
-  if (COOP_MODE === 'tower') { const fl = C.phase === 'floor' ? C.tw.floor : 1, keys = Object.keys(DUO_BON), bon = fl > 1 ? keys[Math.random() * keys.length | 0] : null;
-    for (const h of heads) h.max = Math.round(h.max * .8 * (1 + .2 * (fl - 1)));
+  if (COOP_MODE === 'tower') { const fl = C.phase === 'floor' ? C.tw.floor : 1, keys = Object.keys(DUO_BON), bon = fl > 1 ? duoVoteWinner(C) || keys[Math.random() * keys.length | 0] : null;
+    const tot = heads.reduce((a, h) => a + h.max, 0); heads.splice(0, heads.length, { id: 'boss', max: Math.round(tot * .9 * (1 + .2 * (fl - 1))) });   // 🐉 jeden wspólny boss z dużym ❤️
     const ab = [...(fl > 1 && C.tw?.abil || [])]; const nx = towerCurse(ab); if (nx) ab.push(nx);
-    tw = { tw: true, fl, ab, ...(bon ? { bon } : {}), ...(COOP_SRC === 'gk' ? { gq: true } : {}) }; duoPrep(fl, bon, ab); C.gq = COOP_SRC === 'gk'; }
+    let gqi; if (COOP_SRC === 'gk' && typeof gkPick === 'function') { const T0 = { floor: fl * 2, used: C.gkUsed || [] }; gqi = gkPick(T0, 30).map(c => String(c.id).slice(3)); C.gkUsed = T0.used; }
+    tw = { tw: true, fl, ab, ...(bon ? { bon } : {}), ...(gqi ? { gq: true, gqi } : {}) }; duoPrep(fl, bon, ab); C.gq = COOP_SRC === 'gk'; C.gqi = gqi; }
   coopSend({ t: 'start', heads, seed, ...(set ? { set } : {}), ...tw }); coopBegin(heads, seed, set);
 }
 const coopSetInfo = () => { const d = COOP_SHARED && deckById(COOP_SRC), tw = COOP_MODE === 'tower' ? { tw: true, ...(COOP_SRC === 'gk' ? { gq: true } : {}) } : {}; return d ? { ...tw, sm: d.name.replace(/^👥\s*/, '').slice(0, 60), sn: S.cards.filter(c => c.deckId === d.id && fightable(c)).length } : tw; };
 function coopBegin(heads, seed, set) {
-  const C = COOP; C.phase = 'fight'; C.heads = heads.map(h => ({ ...h, hp: h.max })); C.rev = {};
+  const C = COOP; C.phase = 'fight'; C.heads = heads.map(h => ({ ...h, hp: h.hp ?? h.max })); C.rev = {};
   let cs;
-  if (C.tw?.on && C.gq && typeof gkPick === 'function') { const T0 = { floor: C.tw.floor * 2, used: C.gkUsed || [] }; cs = gkPick(T0, 30); C.gkUsed = T0.used; C.shared = null; BOSS_PICK.mode = 'abcd'; }
+  if (C.tw?.on && C.gq && C.gqi?.length) { cs = C.gqi.map(k => gkCard('gk:' + k)).filter(Boolean); C.shared = null; BOSS_PICK.mode = 'abcd'; }   // 🧠 wspólny quiz: te same pytania u obu
   else if (set?.cards?.length) { cs = coopUseSet(set); C.shared = set.name; toast(`🤝 Wspólny zestaw: „${set.name}” – ${cs.length} fiszek`, 3000); }
   else { COOP_V = new Map(); C.shared = null; cs = S.cards.filter(c => (COOP_SRC === 'all' ? mixFightable(c) : fightable(c)) && c.srs.state !== 'new' && (COOP_SRC === 'all' || c.deckId === COOP_SRC));
     if (cs.length < 10) { toast('Masz za mało nauczonych fiszek (min. 10) – walczysz tym, co jest', 3500); } }
@@ -123,7 +131,7 @@ function coopBegin(heads, seed, set) {
   if (T) duoApply(BOSS, T);
   syncMyHead(); coopSync();
 }
-const myHead = () => COOP?.heads.find(h => h.id === MY_ID);
+const myHead = () => COOP?.heads.find(h => h.id === MY_ID) || COOP?.heads.find(h => h.id === 'boss');
 function syncMyHead() { const B = BOSS, h = myHead(); if (B?.coop && h) { B.hp = h.hp; B.max = h.max; } }
 // Twój cios: we własną głowę, a gdy już ścięta – w najsłabszą żywą
 function coopHit(n) {
@@ -158,8 +166,10 @@ function coopHeadsHTML(fx, act) {
 }
 function coopMatesHTML() {
   const ms = coopMates(); if (!ms.length) return '';
-  return `<div class="mates">${ms.map(p => `<div class="mate${p.down ? ' down' : ''}">${p.emo && Date.now() - p.emo.t < 2500 ? `<span class="mate-emo">${DUO_EMO[p.emo.i]}</span>` : ''}${pHero(p)}<b>${esc(p.nick)}</b>${p.max ? HP_BAR(p.hp || 0, p.max, 'me') : ''}${p.down ? `<small>💀 leży · reanimuj: ${(COOP.rev[p.id] || 0)}/3</small>` : p.combo >= 2 ? `<small>🔥 ${p.combo}</small>` : ''}</div>`).join('')}</div>
-    <div class="emo-bar">${DUO_EMO.map((e, i) => `<button data-act="duo-emo" data-i="${i}" aria-label="reakcja">${e}</button>`).join('')}</div>`;
+  return `<div class="mates">${ms.map(p => `<div class="mate${p.down ? ' down' : ''}">${p.emo && Date.now() - p.emo.t < 2500 ? `<span class="mate-emo">${p.emo.st && stickerById(p.emo.st) ? stE(stickerById(p.emo.st)) : DUO_EMO[p.emo.i] || ''}</span>` : ''}${pHero(p)}<b>${esc(p.nick)}</b>${p.max ? HP_BAR(p.hp || 0, p.max, 'me') : ''}${p.down ? `<small>💀 leży · reanimuj: ${(COOP.rev[p.id] || 0)}/3</small>` : p.combo >= 2 ? `<small>🔥 ${p.combo}</small>` : ''}</div>`).join('')}</div>
+    <div class="emo-bar">${(typeof ownedStickers === 'function' ? ownedStickers() : []).slice(0, 7).map(id => stickerById(id)).filter(Boolean).map(st => `<button data-act="duo-st" data-id="${st.id}" aria-label="naklejka">${stE(st)}</button>`).join('') || '<small class="muted">Zdobądź naklejki, by je wysyłać</small>'}</div>
+    <div class="mini-chat">${(COOP.chat || []).map(x => `<div><b>${esc(x.n)}:</b> ${esc(x.t)}</div>`).join('')}</div>
+    <div class="row nowrap mini-chat-in"><input id="coop-say" class="grow" maxlength="80" placeholder="Napisz do drużyny…" autocomplete="off"><button class="sm" data-act="duo-say">Wyślij</button></div>`;
 }
 ROUTES.coop = parts => {
   if (parts[1] && !COOP && /^[A-Z0-9]{6}$/i.test(parts[1])) { COOP_JOIN = parts[1].toUpperCase(); }
@@ -180,6 +190,7 @@ ROUTES.coop = parts => {
       <ul class="small" style="text-align:left;margin:0"><li>Każdy ma swoją głowę hydry. Ściąłeś swoją? Pomagasz koledze.</li><li>Ktoś padł? 3 dobre odpowiedzi kolegi go reanimują (albo sam wstanie po 5).</li><li>Przegrana walka w lobby nie zabiera serc.</li></ul></div>
     <div class="card"><h3 style="margin-top:0">Gra</h3>${gameSeg}${COOP_MODE === 'tower' ? DUO_INFO : ''}<h3>Materiał</h3>${src}<h3>Tryb</h3>${modes}</div>
     ${COOP_LASTSET && !S.decks.some(d => d.name.replace(/^👥\s*/, '') === COOP_LASTSET.name) ? `<div class="card coop-set"><b>📥 Ostatni wspólny zestaw: „${esc(COOP_LASTSET.name)}”</b><small>${COOP_LASTSET.cards.length} fiszek z ostatniej walki</small><button class="sm primary" data-act="coop-save-set" style="margin-top:6px">💾 Zapisz u siebie jako talię</button></div>` : ''}
+    ${(() => { try { const L = JSON.parse(localStorage.getItem('coopLast') || 'null'); return L && !L.host && Date.now() - L.t < 3 * 3600e3 ? `<button class="block primary" data-act="coop-resume" data-code="${esc(L.code)}" style="margin-bottom:10px">🔌 Wróć do walki ${esc(L.code)}</button>` : ''; } catch { return ''; } })()}
     <div class="card"><button class="primary block" data-act="coop-host">➕ Stwórz lobby</button>
       <div class="row nowrap" style="margin-top:10px"><input id="coop-code" class="grow" maxlength="6" placeholder="Kod lobby, np. K7P2QX" value="${esc(COOP_JOIN)}" autocapitalize="characters" autocomplete="off"><button data-act="coop-join">Dołącz</button></div>
       ${!window.BATTLE_LOCAL && !(typeof SB !== 'undefined' && SB) ? '<p class="small muted">Lobby działa przez internet (ten sam przekaźnik co bitwy).</p>' : ''}</div>` };
@@ -201,6 +212,10 @@ Object.assign(ACTIONS, {
   'coop-game': el => { COOP_MODE = el.dataset.v === 'tower' ? 'tower' : 'hydra'; if (COOP_MODE === 'hydra' && COOP_SRC === 'gk') COOP_SRC = 'all'; if (COOP?.host) coopBeat(); render(); },
   'duo-emo': el => { const i = +el.dataset.i; coopSend({ t: 'emo', emo: i }); toast(`${DUO_EMO[i]} wysłane`, 900); },
   'duo-next': () => coopStartHost(),
+  'duo-st': el => { coopSend({ t: 'emo', st: el.dataset.id }); toast('Naklejka wysłana', 800); },
+  'duo-say': () => { const i = $('#coop-say'), t = (i?.value || '').trim().slice(0, 80); if (!t) return; coopSend({ t: 'say', txt: t }); (COOP.chat = COOP.chat || []).push({ n: 'Ty', t }); COOP.chat = COOP.chat.slice(-6); i.value = ''; softRender(); },
+  'duo-vote': el => { const C = COOP; if (!C?.vote) return; C.vote.picks[MY_ID] = el.dataset.k; coopSend({ t: 'pick', vk: el.dataset.k }); render(); },
+  'coop-resume': el => { coopOpen(el.dataset.code, false); render(); },
   'coop-shared': el => { COOP_SHARED = el.dataset.v === '1'; if (COOP_SHARED && !deckById(COOP_SRC)) COOP_SRC = (S.decks.find(d => S.cards.some(c => c.deckId === d.id)) || {}).id || ''; if (!COOP_SHARED && !deckById(COOP_SRC)) COOP_SRC = 'all'; if (COOP?.host) coopBeat(); render(); },
   'coop-save-set': () => { const L = COOP_LASTSET; if (!L) return; importPack({ deck: L.name, subject: '', reverse: false, items: L.cards.filter(x => x.o !== 'r').map(x => ({ front: x.q, back: x.a, hint: '' })), bad: 0 }); COOP_LASTSET = null; },
   'coop-leave': () => { coopLeave(); go('#/coop'); render(); },
@@ -245,10 +260,12 @@ function duoSynchro(C) {
 function duoEnd(won) {
   const C = COOP, T = C.tw;
   S.stats.coopFights = (S.stats.coopFights || 0) + 1;
+  if (won && C.host) { const ks = shuffle(Object.keys(DUO_BON)).slice(0, 3); C.vote = { opts: ks, picks: {} }; setTimeout(() => coopSend({ t: 'vote', vo: ks }), 300); }
   if (won) { T.best = T.floor; S.stats.duoBest = Math.max(S.stats.duoBest || 0, T.floor); T.hp = Math.max(1, Math.round(BOSS.me || BOSS.meMax * .25)); T.floor++; C.phase = 'floor'; C.heads = []; }
   else { C.phase = 'end'; T.on = false; S.stats.duoBest = Math.max(S.stats.duoBest || 0, T.floor - 1); }
   save();
 }
+const duoVoteWinner = C => { const P = Object.values(C.vote?.picks || {}); if (!P.length) return null; const n = {}; for (const k of P) n[k] = (n[k] || 0) + 1; const top = Math.max(...Object.values(n)), best = Object.keys(n).filter(k => n[k] === top); return best[Math.random() * best.length | 0]; };
 function duoFloorView(C) {
   const T = C.tw, ps = Object.values(C.players).filter(p => !p.gone), buffs = Object.entries(T.buff).filter(([, n]) => n);
   return { tab: 'arena', html: `
@@ -257,6 +274,6 @@ function duoFloorView(C) {
       <div class="mates lobby">${ps.map(p => `<div class="mate">${pHero(p)}<b>${esc(p.nick)}${p.id === MY_ID ? ' (Ty)' : ''}</b></div>`).join('')}</div>
       <p class="small muted" style="margin:10px 0 4px">Rekord duetu: piętro ${S.stats.duoBest || 0}. Przed Wami piętro <b>${T.floor}</b>${T.floor % TOWER_GUARD === 0 ? ' – <b>strażnik!</b>' : ''}.</p>
       ${buffs.length ? `<div class="duo-buffs">${buffs.map(([k, n]) => `<span>${DUO_BON[k][0]} ${DUO_BON[k][1]}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>` : ''}
-      <p class="small" style="margin:8px 0 0">🎁 Na starcie piętra wylosuje się nowa nagroda drużyny.</p></div>
+      ${C.vote ? `<h3 style="margin:12px 0 4px">🗳️ Głosujcie na nagrodę drużyny</h3><div class="duo-vote">${C.vote.opts.map(k => { const n = Object.values(C.vote.picks).filter(x => x === k).length, mine = C.vote.picks[MY_ID] === k; return `<button class="${mine ? 'on' : ''}" data-act="duo-vote" data-k="${k}"><span>${DUO_BON[k][0]}</span><small>${DUO_BON[k][1]}</small><b>${n ? '✓'.repeat(n) : ''}</b></button>`; }).join('')}</div><p class="small muted">Wygrywa najwięcej głosów (remis = losowo).</p>` : ''}</div>
     ${C.host ? `<button class="primary block boss-go" data-act="duo-next">⚔️ Piętro ${T.floor}</button>` : '<p class="center muted">Host prowadzi na kolejne piętro…</p>'}` };
 }

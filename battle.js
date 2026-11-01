@@ -9,7 +9,8 @@
 
 const RELAY = 'https://ntfy.sh';
 const LOBBY = 'fiszki-lobby-v1';
-const MY_ID = uid() + uid();
+// stałe id urządzenia – po odświeżeniu wracasz do tej samej walki online
+const MY_ID = (() => { try { let v = localStorage.getItem('myId'); if (!v) { v = uid() + uid(); localStorage.setItem('myId', v); } return v; } catch { return uid() + uid(); } })();
 let B = null;            // bieżąca bitwa
 // Bot: [nazwa, bazowa skuteczność (null = dopasowany do Ciebie), czas odpowiedzi w s]
 const BOT_LEVELS = [['Dopasowany', null, [3, 8]], ['Łatwy', .4, [5, 11]], ['Średni', .58, [4, 9]], ['Trudny', .74, [3, 7]], ['Ekspert', .88, [2, 5]]];
