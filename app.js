@@ -2135,6 +2135,9 @@ async function init() {
   if (typeof applyTheme === 'function') applyTheme();
   render();
   updateBadge();
+  // 🛡️ anty-oszustwo po stronie aplikacji (to samo co serwer): dopisane kryształy > 20 000 i przedmioty > 500 szt. są usuwane
+  { const nW = S.wallet.length, nI = S.items.length; S.wallet = S.wallet.filter(w => Number.isFinite(w?.n) && w.n <= 20000); S.items = S.items.filter(i => Number.isFinite(i?.q) && Math.abs(i.q) <= 500);
+    if (S.wallet.length !== nW || S.items.length !== nI) save(); }
   emit('start');
   if (S.settings.autoSync && S.settings.sync.token) syncNow(false);
   document.addEventListener('visibilitychange', () => {

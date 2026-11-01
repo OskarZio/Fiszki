@@ -6,7 +6,8 @@
 
 const HOST_HASH = 'c445ae5875d6a31cad713ed08ef1597bb31c4a818192671d1bc6774d80424209';   // SHA-256 kodu hosta
 const sha256 = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))].map(b => b.toString(16).padStart(2, '0')).join('');
-const hostUnlocked = () => { try { return localStorage.getItem('hostOK') === HOST_HASH; } catch { return false; } };
+// 🔒 kod sam nie wystarczy (da się go obejść w przeglądarce) – panel otwiera się tylko kontu właściciela potwierdzonemu przez serwer
+const hostUnlocked = () => { try { return localStorage.getItem('hostOK') === HOST_HASH && typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true; } catch { return false; } };
 function hostRepo() {
   if (S.settings.hostRepo) return S.settings.hostRepo;
   if (location.hostname.endsWith('.github.io')) { const o = location.hostname.split('.')[0], r = location.pathname.split('/')[1]; return `${o}/${r || o + '.github.io'}`; }
@@ -81,7 +82,7 @@ async function hostStatsLoad() {
     const c = await SB.rpc('claim_admin'); if (c.error) throw c.error;
     if (c.data !== true) { HOST_ST = { err: 'Statystyki widzi tylko konto właściciela aplikacji.' }; return render(); }
     const r = await SB.rpc('host_stats'); if (r.error) throw r.error;
-    HOST_ST = { d: r.data, t: Date.now() };
+    const a = await SB.rpc('admin_audit'); HOST_ST = { d: r.data, audit: a.error ? null : a.data, t: Date.now() };
   } catch (e) { HOST_ST = { err: /function|schema cache|does not exist/i.test(e.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy niżej), żeby zobaczyć statystyki.' : 'Błąd: ' + (e.message || e) }; }
   render();
 }
@@ -92,12 +93,14 @@ function hostStatsHTML() {
     ${!H || H.loading ? '<p class="small muted">Ładuję…</p>' : H.err ? `<p class="small muted">${esc(H.err)}</p>` : `
     <h4>👥 Konta</h4><div class="time-kpis">${tile(d.users, 'wszystkie')}${tile(d.new_today, 'nowe dziś')}${tile(d.new_7d, 'nowe 7 dni')}${tile(d.active_today, 'aktywne dziś')}</div>
     <h4>🔗 Linki do talii</h4><div class="time-kpis">${tile(d.links, 'udostępnione')}${tile(d.link_opens, 'otwarcia')}${tile(d.link_opens_today, 'otwarte dziś')}${tile(d.active_7d, 'aktywne 7 dni')}</div>
+    ${H.audit ? `<h4>🛡️ Najbogatsi gracze</h4><div class="small">${(H.audit.rich || []).map(x => `<div class="row nowrap" style="justify-content:space-between"><span>${esc(x.nick || '?')} <span class="muted">${esc(x.code || '')}</span></span><b>${n(x.gems)} 💎 · ${n(x.items)} przedm.</b></div>`).join('') || '—'}</div>
+      <h4>🚨 Wykryte próby oszustwa</h4><div class="small">${(H.audit.cheats || []).map(x => `<div>${esc(x.nick || '?')}: ${esc(x.what)} <span class="muted">${new Date(x.t).toLocaleString('pl-PL')}</span></div>`).join('') || 'brak'}</div>` : ''}
     ${(d.top_links || []).length ? `<div class="small" style="margin-top:10px">${d.top_links.map(x => `<div class="row nowrap" style="justify-content:space-between"><span>${esc(x.name)}</span><b>${n(x.opens)}×</b></div>`).join('')}</div>` : ''}
     <p class="small muted" style="margin:10px 0 0">Same liczby – bez e-maili i nazw użytkowników. Odświeżone ${new Date(H.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}.</p>`}</div>`;
 }
 ROUTES.host = () => {
   const back = `<div class="row nowrap"><button class="iconbtn" data-go="#/more">‹</button><h1 class="grow">🔑 Panel hosta</h1></div>`;
-  if (!hostUnlocked()) return { tab: 'more', html: back + `<div class="card"><p class="small muted" style="margin-top:0">Panel dla właściciela aplikacji – ustawianie GIF-ów dla wszystkich użytkowników.</p>
+  if (!hostUnlocked()) return { tab: 'more', html: back + `<div class="card"><p class="small muted" style="margin-top:0">Panel tylko dla właściciela aplikacji. Musisz być <b>zalogowany na koncie właściciela</b> (dopisanym w bazie) i podać kod.${typeof IS_ADMIN !== 'undefined' && !IS_ADMIN ? ' <b>To konto nie jest kontem właściciela.</b>' : ''}</p>
       <div class="row nowrap"><input id="host-code" class="grow" type="password" placeholder="Kod hosta" autocomplete="off" autocapitalize="off"><button class="primary" data-act="host-unlock">Odblokuj</button></div></div>` };
   const st = S.settings;
   if (!HOST_ST) hostStatsLoad();

@@ -398,13 +398,11 @@ drop policy if exists "adm_read" on public.app_admins;
 create policy "adm_read" on public.app_admins for select to authenticated using (user_id = auth.uid());
 alter table public.deck_links add column if not exists opens int not null default 0;
 alter table public.deck_links add column if not exists opened_at timestamptz;
-create or replace function public.claim_admin() returns boolean language plpgsql security definer set search_path = '' as $$
-begin
-  if auth.uid() is null then return false; end if;
-  if exists (select 1 from public.app_admins where user_id = auth.uid()) then return true; end if;
-  if exists (select 1 from public.app_admins) then return false; end if;
-  insert into public.app_admins values (auth.uid()); return true;
-end $$;
+-- 🔒 nikt nie może „odebrać” uprawnień z aplikacji – właściciela dopisuje się ręcznie w SQL Editorze:
+--    insert into public.app_admins select id from auth.users where email = 'TWOJ@EMAIL';
+create or replace function public.claim_admin() returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.app_admins where user_id = auth.uid());
+$$;
 revoke all on function public.claim_admin() from public, anon;
 grant execute on function public.claim_admin() to authenticated;
 create or replace function public.host_stats() returns json language plpgsql stable security definer set search_path = '' as $$
@@ -454,5 +452,54 @@ $$;
 revoke all on function public.am_admin() from public, anon;
 grant execute on function public.am_admin() to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-10-31a'::text $$;
+-- 🛡️ Anty-oszustwo: serwer odrzuca nierealne wartości w profilu (ranking) i wycina z zapisu gry
+-- „dopisane” kryształy i przedmioty (pojedyncza nagroda > 20 000 💎, przedmiot > 500 sztuk, sztuczne pola).
+create or replace function public.profile_guard() returns trigger language plpgsql set search_path = '' as $$
+declare st jsonb := coalesce(new.stats, '{}'::jsonb);
+begin
+  if (st->>'elo') ~ '^-?[0-9.]+$' and (st->>'elo')::numeric > 3000 then st := jsonb_set(st, '{elo}', '3000'); end if;
+  if (st->>'level') ~ '^-?[0-9.]+$' and (st->>'level')::numeric > 300 then st := jsonb_set(st, '{level}', '300'); end if;
+  if (st->>'weekMin') ~ '^-?[0-9.]+$' and (st->>'weekMin')::numeric > 10080 then st := jsonb_set(st, '{weekMin}', '10080'); end if;
+  if (st->>'xp') ~ '^-?[0-9.]+$' and (st->>'xp')::numeric > 5000000 then st := jsonb_set(st, '{xp}', '5000000'); end if;
+  if length(coalesce(new.avatar_img, '')) > 70000 then new.avatar_img := null; end if;
+  new.nick := left(coalesce(new.nick, ''), 24); new.stats := st; new.updated_at := now();
+  return new;
+end $$;
+drop trigger if exists profile_guard on public.profiles;
+create trigger profile_guard before insert or update on public.profiles for each row execute function public.profile_guard();
+
+create table if not exists public.cheat_log (id bigserial primary key, user_id uuid, t timestamptz not null default now(), what text);
+alter table public.cheat_log enable row level security;
+create or replace function public.data_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+declare w jsonb; it jsonb; bad int;
+begin
+  w := coalesce(new.data->'wallet', '[]'::jsonb); it := coalesce(new.data->'items', '[]'::jsonb);
+  select count(*) into bad from jsonb_array_elements(w) e where jsonb_typeof(e->'n') <> 'number' or (e->>'n')::numeric > 20000;
+  if bad > 0 then
+    insert into public.cheat_log(user_id, what) values (new.user_id, 'wallet: ' || bad || ' wpisów > 20000 lub błędnych');
+    new.data := jsonb_set(new.data, '{wallet}', coalesce((select jsonb_agg(e) from jsonb_array_elements(w) e where jsonb_typeof(e->'n') = 'number' and (e->>'n')::numeric <= 20000), '[]'::jsonb));
+  end if;
+  select count(*) into bad from jsonb_array_elements(it) e where jsonb_typeof(e->'q') <> 'number' or abs((e->>'q')::numeric) > 500;
+  if bad > 0 then
+    insert into public.cheat_log(user_id, what) values (new.user_id, 'items: ' || bad || ' przedmiotów > 500 szt.');
+    new.data := jsonb_set(new.data, '{items}', coalesce((select jsonb_agg(e) from jsonb_array_elements(it) e where jsonb_typeof(e->'q') = 'number' and abs((e->>'q')::numeric) <= 500), '[]'::jsonb));
+  end if;
+  return new;
+end $$;
+drop trigger if exists data_guard on public.user_data;
+create trigger data_guard before insert or update on public.user_data for each row execute function public.data_guard();
+
+-- 🔎 audyt dla właściciela (Panel hosta): najbogatsi gracze i ostatnie wykryte próby
+create or replace function public.admin_audit() returns json language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  return json_build_object(
+    'rich', (select coalesce(json_agg(x), '[]') from (select p.nick, p.code, (select coalesce(sum((e->>'n')::numeric), 0) from jsonb_array_elements(coalesce(d.data->'wallet', '[]')) e where jsonb_typeof(e->'n') = 'number') as gems,
+        jsonb_array_length(coalesce(d.data->'items', '[]')) as items, d.updated_at from public.user_data d join public.profiles p on p.id = d.user_id order by 3 desc nulls last limit 15) x),
+    'cheats', (select coalesce(json_agg(x), '[]') from (select p.nick, c.what, c.t from public.cheat_log c left join public.profiles p on p.id = c.user_id order by c.t desc limit 30) x));
+end $$;
+revoke all on function public.admin_audit() from public, anon;
+grant execute on function public.admin_audit() to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01a'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
