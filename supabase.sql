@@ -901,5 +901,45 @@ revoke all on function public.admin_ban(text, boolean, text) from public, anon;
 grant execute on function public.admin_ban(text, boolean, text) to authenticated;
 drop function if exists public.admin_backup(uuid);
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01i'::text $$;
+-- 👻 cienia nie da się zdjąć samemu: gracz nie ma dostępu do kar (tabele bez polityk, funkcje tylko dla właściciela),
+-- nie dostaje o nim żadnej informacji, a usunięcie konta i założenie nowego na ten sam mail od razu przywraca cień (i blokadę)
+create table if not exists public.marked_emails (h text primary key, shadow boolean not null default false, ban boolean not null default false, t timestamptz not null default now());
+alter table public.marked_emails enable row level security;
+create or replace function public.email_hash(uid uuid) returns text language sql stable security definer set search_path = '' as $$
+  select encode(extensions.digest(lower(trim(email)), 'sha256'), 'hex') from auth.users where id = uid $$;
+revoke all on function public.email_hash(uuid) from public, anon, authenticated;
+create or replace function public.delete_my_account() returns void language plpgsql security definer set search_path = '' as $$
+declare sh boolean; bn boolean;
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  sh := public.is_shadow(auth.uid()); bn := exists (select 1 from public.econ_bans where user_id = auth.uid());
+  if sh or bn then
+    insert into public.marked_emails(h, shadow, ban) values (public.email_hash(auth.uid()), sh, bn)
+      on conflict (h) do update set shadow = public.marked_emails.shadow or excluded.shadow, ban = public.marked_emails.ban or excluded.ban, t = now();
+  end if;
+  delete from auth.users where id = auth.uid();
+end $$;
+revoke all on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;
+create or replace function public.profile_mark_new() returns trigger language plpgsql security definer set search_path = '' as $$
+declare m record;
+begin
+  select * into m from public.marked_emails where h = public.email_hash(new.id);
+  if found then
+    if m.shadow and not public.is_shadow(new.id) then insert into public.admin_actions(user_id, what) values (new.id, 'shadow'); end if;
+    if m.ban then insert into public.econ_bans(user_id, why) values (new.id, 'ten sam mail') on conflict (user_id) do nothing; end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists profile_mark_new on public.profiles;
+create trigger profile_mark_new after insert on public.profiles for each row execute function public.profile_mark_new();
+create or replace function public.profile_guard_admin() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.nick := regexp_replace(coalesce(new.nick, ''), '^🤡 ', '');
+  if public.is_clown(new.id) then new.nick := left('🤡 ' || new.nick, 24); end if;
+  if public.is_shadow(new.id) then new.stats := coalesce(new.stats, '{}'::jsonb) - 'showcase' - 'cos'; end if;
+  return new;
+end $$;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01j'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
