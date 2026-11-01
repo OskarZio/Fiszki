@@ -263,7 +263,13 @@ function bossBegin(b, extra = {}, p0 = null) {
   presentCard(); bossSay('start');
   go('#/boss/fight'); render();
 }
-const pickMove = b => { const opts = ['hit', 'hit', ...b.abil.filter(a => a !== 'rage')], k = opts[Math.random() * opts.length | 0], atk = b.atk;
+// 🔁 boss używa WSZYSTKICH swoich mocy po kolei (potasowana kolejka), przeplatając je ciosami – nie losuje w kółko jednej
+const pickMove = (b, B = BOSS) => { const ab = b.abil.filter(a => a !== 'rage'), atk = b.atk; let k = 'hit';
+  if (ab.length && B && B.b === b) {
+    const hitNow = B.lastMv && B.lastMv !== 'hit' ? Math.random() < .55 : Math.random() < .2;   // po mocy zwykle cios, po ciosie zwykle moc
+    if (!hitNow) { if (!B.rotQ?.length) B.rotQ = shuffle([...ab]); k = B.rotQ.shift(); }
+    B.lastMv = k;
+  } else if (ab.length) { const opts = ['hit', 'hit', ...ab]; k = opts[Math.random() * opts.length | 0]; }
   return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: 0 }; };
 const bossCardById = id => S.cards.find(c => c.id === id) || (typeof gkCard === 'function' ? gkCard(id) : null) || (typeof coopVCard === 'function' ? coopVCard(id) : null);
 const bossCard = () => BOSS?.cur && bossCardById(BOSS.cur.id);
@@ -519,6 +525,14 @@ function verifyResult(c, ok) {
   }
   afterTurn(ok ? 3 : 1, true);
 }
+// ⚡ łączenie: silniejszy boss (≥3 moce albo trudność ≥2) do przeszkadzajki często dorzuca efekt – truciznę, osłabienie, wysysanie albo pośpiech
+const COMBO_FX = { poison: B => { B.poison = Math.max(B.poison || 0, 2); return '☠️ trucizna'; }, weak: B => { B.weak = Math.max(B.weak || 0, 2); return '🥀 osłabienie'; },
+  drain: B => { B.drain = Math.max(B.drain || 0, 2); return '🩸 wysysanie'; }, haste: B => { B.haste = Math.max(B.haste || 0, 2); return '⏳ pośpiech'; } };
+function comboFx(B, k) {
+  const b = B.b, strong = b.abil.length >= 3 || b.diff >= 2; if (!strong || Math.random() > (b.diff >= 3 ? .65 : .45)) return;
+  const own = Object.keys(COMBO_FX).filter(x => b.abil.includes(x)), pool = own.length ? own : b.diff >= 3 ? ['poison', 'weak'] : ['poison'];
+  const fx = COMBO_FX[pool[Math.random() * pool.length | 0]](B); B.log.unshift(`⚡ COMBO: ${BOSS_ABIL[k][0]} ${BOSS_ABIL[k][1]} + ${fx}!`); bossSay('attack');
+}
 function afterTurn(g, isVer) {
   const B = BOSS, now = Date.now();
   if (B.poison > 0 && !B.down) { B.poison--; hurtMe(4, 'Trucizna'); }
@@ -539,7 +553,7 @@ function afterTurn(g, isVer) {
     else if (mv.k === 'weak') { B.weak = 3; B.log.unshift('🥀 Osłabienie: Twoje ciosy −30% przez 3 tury'); bossSay('attack'); }
     else if (mv.k === 'drain') { B.drain = 3; B.log.unshift('🩸 Wysysanie: boss leczy się Twoimi ciosami przez 3 tury'); bossSay('attack'); }
     else if (mv.k === 'haste') { B.haste = 3; B.log.unshift('⏳ Pośpiech: połowa czasu na 3 pytania'); bossSay('slow'); }
-    else if (DISRUPT.includes(mv.k)) { if (B.b.turbo) { if (Math.random() < .5) B.pendBugs = 2 + Math.min(3, B.b.diff); else B.pendIce = true; B.log.unshift('⚡ TURBO: podwójna przeszkadzajka!'); } B.pendDis = mv.k; B.log.unshift(`${BOSS_ABIL[mv.k][0]} ${BOSS_ABIL[mv.k][1]}: ${BOSS_ABIL[mv.k][2]}`); bossSay('attack'); }
+    else if (DISRUPT.includes(mv.k)) { comboFx(B, mv.k); if (B.b.turbo) { if (Math.random() < .5) B.pendBugs = 2 + Math.min(3, B.b.diff); else B.pendIce = true; B.log.unshift('⚡ TURBO: podwójna przeszkadzajka!'); } B.pendDis = mv.k; B.log.unshift(`${BOSS_ABIL[mv.k][0]} ${BOSS_ABIL[mv.k][1]}: ${BOSS_ABIL[mv.k][2]}`); bossSay('attack'); }
     B.timer = B.b.every; B.move = pickMove(B.b);
   }
   if (!isVer) { B.i++; rollEvent(B); }

@@ -91,7 +91,7 @@ function eggFinish(E, ok, why) {
     setTimeout(() => { celebrate(`🐣 Wykluł się ${c.n}!`, `${RARITY[c.r].name} stworek #${c.no} · +${rec.gems} 💎${rec.st ? ' · bonus: naklejka ' + stickerById(rec.st)?.e : ''}`); confetti(big ? 240 : 120);
       if (typeof CASE_SFX !== 'undefined') try { CASE_SFX.reveal(c.r === 'mythic' ? 'legendary' : c.r); } catch { /* */ } }, parseRoute().parts[0] === 'egg' ? 1800 : 0);
   }
-  else toast(why === 'left' ? '💥 Jajko pękło – wyszedłeś z aplikacji' : '💥 Jajko porzucone', 4000);
+  else toast(why === 'left' ? '🥚 Jajko pękło – wyszedłeś z aplikacji' : '💥 Jajko porzucone', 4000);
   if (typeof checkAchievements === 'function') checkAchievements();
   if (parseRoute().parts[0] === 'egg' || !ok) go('#/egg'); else { render(); toast('🐣 Jajko się wykluło! Zobacz w Inkubatorze', 4000); }
 }
@@ -217,7 +217,7 @@ ROUTES.egg = () => {
       <p class="small muted">+${last.gems} 💎 · ${last.min} min skupienia${ls ? ` · bonus: ${stE(ls)} ${esc(ls.name)}` : ''}</p>`
     : last.ok && ls ? `<div class="egg-hatch"><span style="--rc:${RARITY[ls.r].color}">${stE(ls)}</span></div><b style="font-size:20px">${esc(ls.name)}</b>
       <div style="color:${RARITY[ls.r].color};font-weight:700">${RARITY[ls.r].name}${ls.hatch ? ' · 🥚 tylko z inkubatora' : ''}</div><p class="small muted">+${last.gems} 💎 · ${last.min} min skupienia. Naklejka jest w albumie.</p>`
-      : `<div class="egg-wrap">${eggSVG(last.min, 0, true)}</div><b>Jajko pękło 💥</b><p class="small muted">${last.why === 'left' ? 'Wyszedłeś z aplikacji na dłużej niż ' + EGG_GRACE / 1000 + ' s.' : 'Sesja przerwana.'} Następnym razem się uda!</p>`}</div>` : ''}
+      : `<div class="egg-wrap egg-broken"><img src="assets/e8/eggbroken.webp" alt="" draggable="false"></div><div class="egg-fail"><b>Jajko pękło</b><span>${last.min} min · stworek uciekł</span></div><p class="small muted">${last.why === 'left' ? 'Wyszedłeś z aplikacji na dłużej niż ' + EGG_GRACE / 1000 + ' s.' : 'Sesja przerwana.'} Następnym razem się uda!</p>`}</div>` : ''}
   <div class="card">
     <p class="small muted" style="margin-top:0">Skup się na nauce, a z jajka wykluje się <b>unikatowy stworek</b> – jedyny taki na świecie. <b>Im dłużej, tym rzadszy.</b> Wyjście z aplikacji rozbija jajko 💥</p>
     <div class="egg-pick">${EGG_TIERS.map(x => `<button class="${x.min === EGG_PICK.min ? 'on' : ''}" data-act="egg-min" data-m="${x.min}"><span class="mini-egg">${eggSVG(x.min)}</span><b>${x.min >= 60 ? x.min / 60 + ' h' : x.min + ' min'}</b><small>+${x.gems} 💎</small></button>`).join('')}</div>
