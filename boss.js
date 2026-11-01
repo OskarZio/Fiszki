@@ -210,6 +210,26 @@ const HC_TALK = {
   attack: ['W tym trybie bolę mocniej!', 'Hardcore = podwójny ból!'], meLow: ['Jeszcze jeden cios i cały postęp przepada!', 'Słyszysz? To Twój bohater zaczyna od poziomu 1…'],
   low: ['Nie… nie w hardcore… nie ze mną!', 'Jeśli wygrasz, przyznam: masz charakter.'], crit: ['Krytyk w hardcore?! Kim Ty jesteś?!']
 };
+// 💀 instrukcja przed wejściem w hardcore (zamiast systemowego okienka) + „nie pokazuj ponownie”
+function hcIntro() {
+  document.querySelector('.hc-intro')?.remove(); const ov = document.createElement('div'); ov.className = 'dmenu-ov hc-intro';
+  const step = (ic, t, d) => `<li><span class="hi-ic">${ic}</span><div><b>${t}</b><small>${d}</small></div></li>`;
+  ov.innerHTML = `<div class="dmenu" role="dialog"><div class="hi-top"><img src="assets/ui8b/skull.webp" alt=""><div><b>Tryb hardcore</b><small>Jak to działa – w 5 krokach</small></div></div>
+    <ol class="hi-steps">
+      ${step('🧑', 'Nowa postać od zera', 'Startujesz z bohaterem na poziomie 1, z pustym ekwipunkiem i osobnymi kryształami.')}
+      ${step('🐉', 'Silniejsi bossowie', 'Każdy boss jest o 50% mocniejszy, a poziomy rosną 2× wolniej.')}
+      ${step('💀', 'Jedno życie', 'Jedna przegrana walka kasuje cały postęp w hardcore – zaczynasz od nowa.')}
+      ${step('💎', 'Większe nagrody', 'Za wygrane dostajesz ×1,5 kryształów i osobne puchary hardcore.')}
+      ${step('🛡️', 'Główny profil jest bezpieczny', 'Twój zwykły bohater i przedmioty czekają nietknięte. Wyjdziesz w każdej chwili okrągłym przyciskiem z boku.')}
+    </ol>
+    <label class="hi-skip"><input type="checkbox" id="hi-skip"><span>Nie pokazuj ponownie</span></label>
+    <div class="row nowrap" style="gap:10px"><button class="grow ghost" data-x="1">Anuluj</button><button class="grow primary hi-go">Wchodzę</button></div></div>`;
+  ov.addEventListener('click', e => {
+    if (e.target === ov || e.target.closest('[data-x]')) return ov.remove();
+    if (e.target.closest('.hi-go')) { if ($('#hi-skip')?.checked) { S.stats.hcIntroSkip = 1; save(); } ov.remove(); ACTIONS['boss-hardcore']({ dataset: { go1: 1 } }); }
+  });
+  document.body.append(ov);
+}
 const bossLines = k => S.settings?.hardcore && HC_TALK[k] && Math.random() < .65 ? HC_TALK[k] : null;
 function bossSay(k) {
   const B = BOSS; if (!B) return;
@@ -977,7 +997,7 @@ Object.assign(ACTIONS, {
   'boss-check': () => bossCheck(),
   'done-beaten': el => { const d = deckById(el.dataset.id); if (!d) return; const r = deckRec(d); if (r.noAuto) delete r.noAuto; else r.noAuto = 1; touch(d); save(); render(); },
   'boss-prestige': el => bossPrestige(el.dataset.kind, el.dataset.id, el.dataset.i === '' ? undefined : +el.dataset.i),
-  'boss-hardcore': () => { const on = !S.settings.hardcore; if (on && !confirm('💀 Tryb hardcore:\n• osobny bohater od poziomu 1 i osobne puchary bossów\n• bossowie +50% silniejsi, poziomy 2× wolniej\n• jedna śmierć = cały hardcore od zera\n• Twój główny profil zostaje nietknięty\n• nagrody 💎 ×1,5\n\nWejść?')) return; hcSwap();   // 💀 osobne kryształy i przedmioty gry (ekwipunek, mikstury, boostery, cegły)
+  'boss-hardcore': el => { const on = !S.settings.hardcore; if (on && !S.stats.hcIntroSkip && !el?.dataset?.go1) return hcIntro(); hcSwap();   // 💀 osobne kryształy i przedmioty gry (ekwipunek, mikstury, boostery, cegły)
     S.settings.hardcore = on; save(); toast(on ? '💀 Wchodzisz w tryb hardcore' : 'Wracasz do zwykłej gry'); render(); },
   'boss-pick': el => bossPick(+el.dataset.k),
   'boss-next': () => bossNext(),
