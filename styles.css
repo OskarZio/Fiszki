@@ -3087,3 +3087,4 @@ input[type=range]::-moz-range-progress { height: 8px; border-radius: 99px; backg
 .hc-cta .grow, .hc-banner .grow { display: grid; gap: 3px; } .hc-cta small, .hc-banner small { color: var(--muted); line-height: 1.35; }
 .hc-banner { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 10px 0; border-radius: 12px; background: #3b0d0d; border: 2px solid #dc2626; color: #fecaca; }
 .hc-banner b { color: #fff; letter-spacing: 1px; } .hc-banner small { color: #fca5a5 !important; }
+.cr-big .cr-pet, .hatch-cr .cr-pet { width: 160px; height: 160px; } .cr-big { display: grid; place-items: center; }

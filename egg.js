@@ -206,7 +206,7 @@ ROUTES.egg = () => {
   const last = EGG_LAST, ls = last?.st && stickerById(last.st), lc = last?.cr;
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow" style="margin:0">🥚 Inkubator</h1>${coinsHTML()}</div>
-  ${last ? `<div class="card center egg-result ${last.ok ? 'ok' : 'bad'}">${last.ok && lc ? `<div class="hatch-stage${last.anim ? ' play' : ''}" style="--rc:${RARITY[lc.r].color}"><div class="hatch-rays"></div><div class="hatch-egg">${eggSVG(last.min, 1)}</div><div class="hatch-cr" data-act="cr-open" data-id="${last.id}">${creatureSVG(lc.s, lc.r)}</div></div>
+  ${last ? `<div class="card center egg-result ${last.ok ? 'ok' : 'bad'}">${last.ok && lc ? `<div class="hatch-stage${last.anim ? ' play' : ''}" style="--rc:${RARITY[lc.r].color}"><div class="hatch-rays"></div><div class="hatch-egg">${eggSVG(last.min, 1)}</div><div class="hatch-cr" data-act="cr-open" data-id="${last.id}">${petImg(lc, 'pet8 cr-pet')}</div></div>
       <b style="font-size:22px">${esc(lc.n)} <small class="muted">#${lc.no}</small></b>
       <div style="color:${RARITY[lc.r].color};font-weight:700">${RARITY[lc.r].name} stworek · jedyny taki na świecie</div>
       <p class="small muted">+${last.gems} 💎 · ${last.min} min skupienia${ls ? ` · bonus: ${stE(ls)} ${esc(ls.name)}` : ''}</p>`
@@ -239,6 +239,8 @@ const NEST_MONTHS = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec
 // 🐞 pomocnicy 8-bit: wygląd stworka wg rzadkości (ziarno wybiera wariant)
 const PET8 = { common: ['caterpillar', 'snail'], rare: ['caterpillar', 'snail'], epic: ['ladybug', 'spider'], legendary: ['butterfly', 'dragonfly'], mythic: ['bee', 'firefly', 'mantis', 'beetle'] };
 const petImg = (cr, cls = 'pet8') => { const L = PET8[cr?.r] || PET8.common; return `<img class="${cls}" src="assets/pets8/${L[Math.abs(cr?.s | 0) % L.length]}.webp" alt="" draggable="false">`; };
+const petSrc = cr => { const L = PET8[cr?.r] || PET8.common; return `assets/pets8/${L[Math.abs(cr?.s | 0) % L.length]}.webp`; };
+const petPNG = cr => new Promise((res, rej) => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#2a2720'; x.fillRect(0, 0, 128, 128); x.imageSmoothingEnabled = false; x.drawImage(im, 8, 8, 112, 112); res(c.toDataURL('image/jpeg', .85)); }; im.onerror = rej; im.src = petSrc(cr); });
 const crMini = x => x.cr ? petImg(x.cr) : x.st && stickerById(x.st) ? stE(stickerById(x.st)) : '🐣';
 function nestRange() {
   const now = new Date();
@@ -294,14 +296,14 @@ function crOpen(id) {
   const c = x.cr; document.querySelector('.cr-ov')?.remove();
   const ov = document.createElement('div'); ov.className = 'drops-ov cr-ov';
   ov.innerHTML = `<div class="drops-box center cr-box" style="--rc:${RARITY[c.r].color}"><button class="iconbtn cr-x" data-x="close">✕</button>
-    <div class="cr-big">${creatureSVG(c.s, c.r)}</div><b style="font-size:24px">${esc(c.n)} <small class="muted">#${c.no || ''}</small></b>
-    <div style="color:${RARITY[c.r].color};font-weight:700">${RARITY[c.r].name} · ${esc(creatureDesc(c.s, c.r))}</div>
+    <div class="cr-big">${petImg(c, 'pet8 cr-pet')}</div><b style="font-size:24px">${esc(c.n)} <small class="muted">#${c.no || ''}</small></b>
+    <div style="color:${RARITY[c.r].color};font-weight:700">${RARITY[c.r].name} pomocnik</div>
     <p class="small muted" style="margin:4px 0 10px">Wykluty ${new Date(x.end).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })} po ${x.min} min · ${eggCatIc(eggCat(eggCatOf(x)))} ${esc(eggCat(eggCatOf(x)).n)}</p>
     <div class="row"><button class="grow" data-x="rename">✏️ Zmień imię</button><button class="grow primary" data-x="avatar">👤 Ustaw jako awatar</button></div></div>`;
   ov.addEventListener('click', async e => {
     const b = e.target.closest('[data-x]'); if (e.target === ov || b?.dataset.x === 'close') return ov.remove();
     if (b?.dataset.x === 'rename') { const n = (prompt('Nowe imię stworka:', c.n) || '').trim().slice(0, 20); if (n) { c.n = n; save(); ov.remove(); render(); crOpen(id); } }
-    if (b?.dataset.x === 'avatar') { try { S.profile.avatarImg = await creaturePNG(c.s, c.r, 128); S.profile.mod = S.profile.imgMod = Date.now(); save(); toast(`👤 ${c.n} jest teraz Twoim awatarem`); if (typeof publishCloudProfile === 'function' && typeof cloudOn === 'function' && cloudOn()) publishCloudProfile().catch(() => {}); ov.remove(); render(); } catch { toast('Nie udało się ustawić awatara'); } }
+    if (b?.dataset.x === 'avatar') { try { S.profile.avatarImg = await petPNG(c); S.profile.mod = S.profile.imgMod = Date.now(); save(); toast(`👤 ${c.n} jest teraz Twoim awatarem`); if (typeof publishCloudProfile === 'function' && typeof cloudOn === 'function' && cloudOn()) publishCloudProfile().catch(() => {}); ov.remove(); render(); } catch { toast('Nie udało się ustawić awatara'); } }
   });
   document.body.append(ov);
 }
