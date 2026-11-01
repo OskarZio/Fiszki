@@ -573,7 +573,8 @@ const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t &&
 // 🗼 wieże: przed każdym piętrem boss losuje 1 nową przeszkadzajkę – moce się sumują (piętro 1 = 1 moc, piętro 5 = 5 mocy)
 const TOWER_ABIL_POOL = () => Object.keys(BOSS_ABIL).filter(a => a !== 'rage');
 function towerCurse(list, rnd = Math.random) { const pool = TOWER_ABIL_POOL().filter(a => !list.includes(a)); return pool.length ? pool[rnd() * pool.length | 0] : null; }
-function towerIntro(B, a) { if (!a) return; B.learnFx = { a, t: Date.now() }; rollFx(B, a, TOWER_ABIL_POOL(), true); B.log.unshift(`📈 Nowa moc wieży: ${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}`); }
+function towerIntro(B, a) { if (!a) return; B.learnFx = { a, t: Date.now() }; rollFx(B, a, TOWER_ABIL_POOL(), true);
+  if (a !== 'rage' && BOSS_ABIL[a]) { B.move = { k: a, name: BOSS_ABIL[a][1], dmg: 0 }; B.timer = Math.min(B.timer || 2, 2); }   /* 📈 nowo wylosowanej mocy boss używa od razu (w 2. turze) */ B.log.unshift(`📈 Nowa moc wieży: ${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}`); }
 const curseIconsHTML = (list, cls = '') => list?.length ? `<div class="curse-row ${cls}">${list.map(a => `<span class="curse-ic" title="${esc(BOSS_ABIL[a][1])} – ${esc(BOSS_ABIL[a][2])}">${BOSS_ABIL[a][0]}</span>`).join('')}</div>` : '';
 // 🔥 fazy: przy 50% i 25% ❤️ boss wpada w szał – mocniejsze ciosy i nowa zdolność
 function checkPhase(B) {
@@ -684,7 +685,7 @@ function grantLoot(it, key) {
   if (it.k === 'egg') addItem('egg', 'boss', 1, key);
   if (it.k === 'boost') addItem('boost', it.id, 1, key);
 }
-const lootIcon = it => it.k === 'gear' ? gearImg(it.id) : it.k === 'potion' ? potionSVG(it.id) : it.k === 'boost' ? `<img class="gear-img" src="${fsrc(BOOSTS[it.id].img)}" alt="">` : it.k === 'egg' ? '<span class="loot-big">👑</span>' : `<img class="gear-img gem8" src="${GEM8}" alt="💎">`;
+const lootIcon = it => it.k === 'gear' ? gearImg(it.id) : it.k === 'potion' ? potionSVG(it.id) : it.k === 'boost' ? `<img class="gear-img" src="${fsrc(BOOSTS[it.id].img)}" alt="">` : it.k === 'egg' ? '<span class="loot-big">👑</span>' : `<img class="gear-img gem8" src="assets/${typeof EMO8 !== 'undefined' && EMO8['🪙'] ? EMO8['🪙'] : 'e8/coin'}.webp" alt="🪙">`;
 const lootHTML = it => `${lootIcon(it)}${it.k === 'gear' ? `<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? (it.mat ? `DUPLIKAT → ${typeof MATS !== 'undefined' && MATS[it.matK] ? `${MATS[it.matK].n} (${MATS[it.matK].d})` : 'cegła'} do kuźni` : it.up ? `DUPLIKAT → ulepszenie +${it.up}` : `DUPLIKAT → +${it.n} 💎`) : RARITY[it.r].name}</small>`
   : it.k === 'potion' ? `<b>${POTIONS[it.id].name}${it.n > 1 ? ' ×' + it.n : ''}</b><small>${POTIONS[it.id].desc}</small>` : it.k === 'boost' ? `<b>${BOOSTS[it.id].name}</b><small>30 min</small>`
   : it.k === 'egg' ? '<b>Złote jajo</b><small>do inkubatora</small>' : `<b>+${it.n} 🪙</b><small>złoto</small>`}`;
@@ -939,7 +940,7 @@ function endView() {
     <h2>🏆 Boss tygodnia: ${esc(b.name)}</h2><div class="weekly-score">${B.weeklyScore.toLocaleString('pl')}</div><p class="small muted" style="margin-top:0">zadanych obrażeń${B.weeklyRecord ? ' · <b>🏅 nowy rekord tygodnia!</b>' : ` · rekord: ${weeklyBest().toLocaleString('pl')}`}</p>
     <p class="small">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best} · +${B.xp} XP</p>${badgesHTML(B)}
     <div class="row" style="margin-top:10px"><button class="primary grow" data-act="weekly-start">⚔️ Jeszcze raz</button><button class="grow" data-go="#/rank">🏆 Ranking</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
-  const chest = won && B.chest?.n ? (B.chest.open ? `<div class="loot">${B.loot.map((it, i) => `<div class="loot-it roll" style="--d:${i * .35}s;--rc:${RARITY[it.r || 'rare'].color}"><div class="roll-strip" style="--d:${i * .35}s">${Array.from({ length: 14 }, () => `<span>${lootIcon(rollLoot(B.chest.tier))}</span>`).join('')}<span>${lootIcon(it)}</span></div><div class="roll-res" style="--d:${1.6 + i * .35}s">${lootHTML(it)}</div></div>`).join('')}</div>`
+  const chest = won && B.chest?.n ? (B.chest.open ? Date.now() - (B.chest.openT || 0) > 2600 + B.loot.length * 350 ? `<div class="loot">${B.loot.map(it => `<div class="loot-it done" style="--rc:${RARITY[it.r || 'rare'].color}">${lootHTML(it)}</div>`).join('')}</div>` : `<div class="loot">${B.loot.map((it, i) => `<div class="loot-it roll" style="--d:${i * .35}s;--rc:${RARITY[it.r || 'rare'].color}"><div class="roll-strip" style="--d:${i * .35}s">${Array.from({ length: 14 }, () => `<span>${lootIcon(rollLoot(B.chest.tier))}</span>`).join('')}<span>${lootIcon(it)}</span></div><div class="roll-res" style="--d:${1.6 + i * .35}s">${lootHTML(it)}</div></div>`).join('')}</div>`
       : `<button class="chest-btn" data-act="boss-chest"><div class="chest closed crate">${bossChestImg(B.chest.tier)}</div><b>🎁 Skrzynia ×${B.chest.n} – stuknij, by otworzyć!</b></button>`) + oddsHTML(B.chest.tier) : '';
   const msg = won ? `${B.medal ? `🏅 ${MODES[B.mode].name}: <b>${MASTER_T[B.medal]}</b>! · ` : ''}+${B.gems} 🪙 · +${B.xp} XP${B.rep ? ' · metoda opanowana (diament) – mniejsza nagroda' : ''}${B.caught ? ` · 🕵️ przyłapany ${B.caught}×${B.caught >= 2 ? ' (mniejsza skrzynia)' : ''}` : ''}`
     : B.why === 'cards' ? `Skończyły się fiszki – boss przetrwał. Serce zostaje. +${B.xp} XP` : `${B.hcReset ? '💀 Świat hardcore utracony – bohater i bossowie hardcore od zera. Główny profil nietknięty. ' : ''}${B.lifeLost ? '🖤 Tracisz serce. ' : ''}+${B.xp} XP. Ulepsz bohatera, kup mikstury i spróbuj znowu.`;
@@ -1010,7 +1011,7 @@ Object.assign(ACTIONS, {
   'boss-pot': el => usePotion(el.dataset.k),
   'boss-ice': () => { const B = BOSS; if (!B?.ice) return; B.ice.n--; bossSfx('tick'); if (B.ice.n <= 0) { B.ice = null; B.log.unshift('🧊 Lód rozbity!'); } render(); },
   'boss-bug': el => { const B = BOSS; if (!B) return; B.bugs = B.bugs.filter(g => g.k !== +el.dataset.k); bossSfx('tick'); render(); },
-  'boss-chest': () => { const B = BOSS; if (!B?.chest || B.chest.open) return; B.chest.open = true; bossSfx('chest'); render(); setTimeout(() => { if (B.loot.some(x => ['legendary', 'mythic'].includes(x.r))) confetti(160); }, 1800 + B.loot.length * 350); },
+  'boss-chest': () => { const B = BOSS; if (!B?.chest || B.chest.open) return; B.chest.open = true; B.chest.openT = Date.now(); bossSfx('chest'); render(); setTimeout(() => { if (BOSS === B) render(); }, 2700 + B.loot.length * 350); setTimeout(() => { if (B.loot.some(x => ['legendary', 'mythic'].includes(x.r))) confetti(160); }, 1800 + B.loot.length * 350); },
   'boss-quit': () => { if (!confirm(BOSS?.coop ? 'Opuścić walkę? Kolega walczy dalej sam.' : 'Uciec z walki? Serce zostaje, odpowiedzi do tej pory są zapisane, ale bez nagród.')) return; if (BOSS?.coop && typeof coopLeave === 'function') coopLeave(); BOSS = null; go('#/boss'); },
   'boss-again': () => { const b = BOSS?.b; BOSS = null; if (!b) return go('#/boss'); const nb = bossFor(b.kind, b.id, b.i); BOSS_SEL = nb ? { kind: b.kind, id: b.id, i: b.i ?? null } : null; go('#/boss'); render(); },
   'boss-map': () => { BOSS = null; go('#/boss'); },
@@ -1036,3 +1037,10 @@ ROUTES.boss = (...a) => { const v = bossRoute0(...a); return !v || v.focus ? v :
 // 🖐️ bez „przeklikiwania”: drugi szybki dotyk (< 0,45 s) po odpowiedzi albo po nowym pytaniu jest ignorowany
 { let lastTap = 0; for (const k of ['boss-pick', 'boss-tf', 'boss-next', 'boss-self', 'boss-grade', 'boss-show', 'boss-check', 'boss-g']) { const f0 = ACTIONS[k]; if (!f0) continue;
   ACTIONS[k] = (...a) => { const now = Date.now(); if (k !== 'boss-next' && bossBlocked()) return; if (now - lastTap < 450 || (BOSS && k !== 'boss-next' && (now - (BOSS.qAt || 0) < 350 || now < (BOSS.qLock || 0)))) return; lastTap = now; return f0(...a); }; } }
+
+// 🛠️ strażnik walki: jeśli po losowaniu przeszkadzajki ekran nie odświeżył się sam (pytanie dalej schowane), odśwież go
+setInterval(() => { const B = BOSS; if (!B || B.phase !== 'fight' || document.hidden || parseRoute().parts[1] !== 'fight') return;
+  const el = document.querySelector('.bf'); if (!el) return; const now = Date.now();
+  const active = (B.rolls || []).some(r => now - r.t < ROLL_MS + 800) || (B.learnFx && now - B.learnFx.t < 2600);
+  const shown = !!document.querySelector('.roll-ov'), due = (B.rolls || []).some(r => now >= r.t && now - r.t <= ROLL_MS + 800);
+  if (el.classList.contains('rolling') !== active || shown !== due) render(); }, 500);
