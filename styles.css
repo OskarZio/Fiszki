@@ -3409,3 +3409,6 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 @keyframes usSpark { 0% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(180deg); } }
 .bf .ult-banner { z-index: 46; }
 @media (prefers-reduced-motion: reduce) { .ult-show, .bf:has(.ult-show) { animation: none; } .ult-show { display: none; } }
+/* v303: odstęp pod nagłówkiem z walutami */
+.row.nowrap:has(> .coins-pair) { margin-bottom: 14px; }
+.row.nowrap:has(> .coins-pair) + .col-seg, .row.nowrap:has(> .coins-pair) + .seg { margin-top: 4px; }
