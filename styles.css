@@ -3433,3 +3433,11 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 /* 🎲 losowanie kategorii Wieży wiedzy – nakładka na środku ekranu */
 .cat-roll { position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; background: rgba(0,0,0,.55); padding: 16px; }
 .cat-roll .roll-ov { position: relative !important; inset: auto !important; top: auto !important; width: min(520px, 100%); border-radius: 16px; border: 2px solid #f59e0b; background: color-mix(in srgb, var(--card) 96%, #000); padding: 16px 0 14px; display: grid; gap: 10px; }
+/* v310: bez migania – animacje przeszkadzajek kontynuują od miejsca, w którym były (odświeżenie ekranu ich nie restartuje) */
+.bf .boss-q[class*="dis-"] .bq-in, .bf .boss-q[class*="dis-"]::before { animation-delay: calc(var(--el, 0s) * -1) !important; }
+.bf .boss-q.dis-eclipse .bq-in { animation-delay: var(--eclipse, 2500ms) !important; }
+.bf:has(.boss-q.dis-blind) .abcd-grid .abcd { animation-delay: calc(2.5s - var(--el, 0s)) !important; }
+.bf .boss-q.qte { animation: none !important; }
+/* łagodniejsze: wstrząs przy trafieniu krótszy i słabszy, bez mrugania przy kliknięciach */
+.boss-q.shake, .shake-screen { animation-duration: .3s !important; }
+.bug:active, .ice:active { transform: none !important; filter: brightness(1.08); }
