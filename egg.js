@@ -180,7 +180,10 @@ function eggChip(E) {
   const want = bar || document.body;
   if (el.parentNode !== want) { if (bar) bar.insertBefore(el, bar.lastElementChild); else document.body.append(el); }
   el.className = (bar ? 'in-bar' : 'floating') + (eggGrowing(E) ? ' grow' : '');
-  el.innerHTML = `🥚 ${eggClock(eggLeft(E))}${eggGrowing(E) ? '' : eggInBreak(E) ? ' ☕' : ' ⏸'}`;
+  // ⚡ co sekundę zmieniamy tylko zegar – ikony (8-bit) zostają, więc nic nie miga
+  const st = eggGrowing(E) ? '' : eggInBreak(E) ? '☕' : '⏸';
+  if (el.dataset.st !== st || !el.querySelector('.ec-t')) { el.dataset.st = st; el.innerHTML = `<span class="ec-i">🥚</span><b class="ec-t"></b>${st ? `<span class="ec-i">${st}</span>` : ''}`; }
+  const t = el.querySelector('.ec-t'), clk = eggClock(eggLeft(E)); if (t.textContent !== clk) t.textContent = clk;
 }
 
 // ---------- widok

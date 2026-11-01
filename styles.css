@@ -3337,3 +3337,9 @@ button .hero-ic img.charpx, h1 .hero-ic img.charpx { transform: scale(1.55) !imp
 /* v295: bez pustego pola na dole – zapas tylko na dolne menu (+ trochę więcej, gdy jest pływający przycisk) */
 body:not(.focus) main { padding-bottom: 16px !important; }   /* body ma już zapas na dolne menu */
 body:not(.focus):has(#mode-fab, #hc-fab, #gc-fab) main { padding-bottom: 64px !important; }
+/* v296: losowanie przeszkadzajki w miejscu pytania – nie zasłania bossa, paska życia, bohatera ani napisów */
+.bf .boss-q { position: relative; }
+.bf .boss-q > .roll-ov { visibility: visible; position: absolute; inset: 0; top: 0 !important; display: grid; align-content: center; gap: 8px; padding: 10px 0; border-radius: inherit;
+  background: color-mix(in srgb, var(--card) 96%, #000); border: 2px solid #f59e0b; box-shadow: none; z-index: 30; }
+.bf.rolling .boss-q { min-height: 176px !important; overflow: hidden; }
+.bf.rolling .boss-q > :not(.roll-ov) { visibility: hidden; }
