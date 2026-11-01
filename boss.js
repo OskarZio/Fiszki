@@ -685,6 +685,8 @@ function grantLoot(it, key) {
   if (it.k === 'egg') addItem('egg', 'boss', 1, key);
   if (it.k === 'boost') addItem('boost', it.id, 1, key);
 }
+// 🎰 losowanie łupów ze skrzyni bossa: poziomy pasek dla każdego przedmiotu po kolei, zwalnia i staje na wylosowanym
+const LROLL_MS = 2300, LROLL_GAP = .9;
 const lootIcon = it => it.k === 'gear' ? gearImg(it.id) : it.k === 'potion' ? potionSVG(it.id) : it.k === 'boost' ? `<img class="gear-img" src="${fsrc(BOOSTS[it.id].img)}" alt="">` : it.k === 'egg' ? '<span class="loot-big">👑</span>' : `<img class="gear-img gem8" src="assets/${typeof EMO8 !== 'undefined' && EMO8['🪙'] ? EMO8['🪙'] : 'e8/coin'}.webp" alt="🪙">`;
 const lootHTML = it => `${lootIcon(it)}${it.k === 'gear' ? `<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? (it.mat ? `DUPLIKAT → ${typeof MATS !== 'undefined' && MATS[it.matK] ? `${MATS[it.matK].n} (${MATS[it.matK].d})` : 'cegła'} do kuźni` : it.up ? `DUPLIKAT → ulepszenie +${it.up}` : `DUPLIKAT → +${it.n} 💎`) : RARITY[it.r].name}</small>`
   : it.k === 'potion' ? `<b>${POTIONS[it.id].name}${it.n > 1 ? ' ×' + it.n : ''}</b><small>${POTIONS[it.id].desc}</small>` : it.k === 'boost' ? `<b>${BOOSTS[it.id].name}</b><small>30 min</small>`
@@ -940,10 +942,13 @@ function endView() {
     <h2>🏆 Boss tygodnia: ${esc(b.name)}</h2><div class="weekly-score">${B.weeklyScore.toLocaleString('pl')}</div><p class="small muted" style="margin-top:0">zadanych obrażeń${B.weeklyRecord ? ' · <b>🏅 nowy rekord tygodnia!</b>' : ` · rekord: ${weeklyBest().toLocaleString('pl')}`}</p>
     <p class="small">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best} · +${B.xp} XP</p>${badgesHTML(B)}
     <div class="row" style="margin-top:10px"><button class="primary grow" data-act="weekly-start">⚔️ Jeszcze raz</button><button class="grow" data-go="#/rank">🏆 Ranking</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
-  const chest = won && B.chest?.n ? (B.chest.open ? Date.now() - (B.chest.openT || 0) > 2600 + B.loot.length * 350 ? `<div class="loot">${B.loot.map(it => `<div class="loot-it done" style="--rc:${RARITY[it.r || 'rare'].color}">${lootHTML(it)}</div>`).join('')}</div>` : `<div class="loot">${B.loot.map((it, i) => `<div class="loot-it roll" style="--d:${i * .35}s;--rc:${RARITY[it.r || 'rare'].color}"><div class="roll-strip" style="--d:${i * .35}s">${Array.from({ length: 14 }, () => `<span>${lootIcon(rollLoot(B.chest.tier))}</span>`).join('')}<span>${lootIcon(it)}</span></div><div class="roll-res" style="--d:${1.6 + i * .35}s">${lootHTML(it)}</div></div>`).join('')}</div>`
+  const chest = won && B.chest?.n ? (B.chest.open ? Date.now() - (B.chest.openT || 0) > LROLL_MS + (B.loot.length - 1) * LROLL_GAP * 1000 + 400 ? `<div class="loot">${B.loot.map(it => `<div class="loot-it done" style="--rc:${RARITY[it.r || 'rare'].color}">${lootHTML(it)}</div>`).join('')}</div>` : `<div class="lrolls">${B.loot.map((it, i) => { const at = 24, el = (Date.now() - (B.chest.openT || Date.now())) / 1000;   /* odświeżenie ekranu nie restartuje losowania – animacja startuje od miejsca, w którym była */
+      B.chest.tiles = B.chest.tiles || []; const tiles = B.chest.tiles[i] = B.chest.tiles[i] || Array.from({ length: at + 4 }, (_, k) => k === at ? it : rollLoot(B.chest.tier));
+      return `<div class="lroll" style="--d:${(i * LROLL_GAP - el).toFixed(2)}s;--rc:${RARITY[it.r || 'rare'].color}"><div class="lroll-win"><div class="lroll-strip" style="--at:${at}">${tiles.map(t => `<span class="lr-t" style="--tc:${RARITY[t.r || 'rare'].color}">${lootIcon(t)}</span>`).join('')}</div><i class="lroll-mark"></i></div>
+        <div class="lroll-res">${lootHTML(it)}<em class="lr-rar">${RARITY[it.r || 'rare'].name}</em></div></div>`; }).join('')}</div>`
       : `<button class="chest-btn" data-act="boss-chest"><div class="chest closed crate">${bossChestImg(B.chest.tier)}</div><b>🎁 Skrzynia ×${B.chest.n} – stuknij, by otworzyć!</b></button>`) + oddsHTML(B.chest.tier) : '';
   const msg = won ? `${B.medal ? `🏅 ${MODES[B.mode].name}: <b>${MASTER_T[B.medal]}</b>! · ` : ''}+${B.gems} 🪙 · +${B.xp} XP${B.rep ? ' · metoda opanowana (diament) – mniejsza nagroda' : ''}${B.caught ? ` · 🕵️ przyłapany ${B.caught}×${B.caught >= 2 ? ' (mniejsza skrzynia)' : ''}` : ''}`
-    : B.why === 'cards' ? `Skończyły się fiszki – boss przetrwał. Serce zostaje. +${B.xp} XP` : `${B.hcReset ? '💀 Świat hardcore utracony – bohater i bossowie hardcore od zera. Główny profil nietknięty. ' : ''}${B.lifeLost ? '🖤 Tracisz serce. ' : ''}+${B.xp} XP. Ulepsz bohatera, kup mikstury i spróbuj znowu.`;
+    : B.why === 'cards' ? `Skończyły się fiszki – boss przetrwał. Serce zostaje. +${B.xp} XP` : `${B.hcReset ? '💀 Świat hardcore utracony – bohater i bossowie hardcore od zera. Główny profil nietknięty. ' : ''}${B.fled ? '🏃 Uciekłeś z walki – liczy się jak porażka. ' : ''}${B.lifeLost ? '🖤 Tracisz serce. ' : ''}+${B.xp} XP. Ulepsz bohatera, kup mikstury i spróbuj znowu.`;
   return { tab: 'arena', focus: true, html: `
   <div class="card center boss-end ${won ? 'won' : 'lost'}">
     <div class="boss-stage ${won ? 'dead' : 'gloat'}">${bossArt(b)}${won ? '<div class="boss-boom"></div>' : ''}</div>
@@ -1011,8 +1016,14 @@ Object.assign(ACTIONS, {
   'boss-pot': el => usePotion(el.dataset.k),
   'boss-ice': () => { const B = BOSS; if (!B?.ice) return; B.ice.n--; bossSfx('tick'); if (B.ice.n <= 0) { B.ice = null; B.log.unshift('🧊 Lód rozbity!'); } render(); },
   'boss-bug': el => { const B = BOSS; if (!B) return; B.bugs = B.bugs.filter(g => g.k !== +el.dataset.k); bossSfx('tick'); render(); },
-  'boss-chest': () => { const B = BOSS; if (!B?.chest || B.chest.open) return; B.chest.open = true; B.chest.openT = Date.now(); bossSfx('chest'); render(); setTimeout(() => { if (BOSS === B) render(); }, 2700 + B.loot.length * 350); setTimeout(() => { if (B.loot.some(x => ['legendary', 'mythic'].includes(x.r))) confetti(160); }, 1800 + B.loot.length * 350); },
-  'boss-quit': () => { if (!confirm(BOSS?.coop ? 'Opuścić walkę? Kolega walczy dalej sam.' : 'Uciec z walki? Serce zostaje, odpowiedzi do tej pory są zapisane, ale bez nagród.')) return; if (BOSS?.coop && typeof coopLeave === 'function') coopLeave(); BOSS = null; go('#/boss'); },
+  'boss-chest': () => { const B = BOSS; if (!B?.chest || B.chest.open) return; B.chest.open = true; B.chest.openT = Date.now(); bossSfx('chest'); render(); setTimeout(() => { if (BOSS === B) render(); }, LROLL_MS + (B.loot.length - 1) * LROLL_GAP * 1000 + 500); setTimeout(() => { if (B.loot.some(x => ['legendary', 'mythic'].includes(x.r))) confetti(160); }, LROLL_MS + (B.loot.length - 1) * LROLL_GAP * 1000); },
+  'boss-quit': () => { const B = BOSS; if (!B) return go('#/boss');
+    // 🏃 ucieczka po rozpoczęciu walki = porażka: tracisz serce (w wieży koniec biegu, w hardcore jak śmierć); przed pierwszą odpowiedzią – za darmo
+    const started = (B.i || 0) > 0 || B.me < B.meMax || B.hp < B.max, cost = started && !B.coop && B.b.kind !== 'weekly';
+    if (!confirm(B.coop ? 'Opuścić walkę? Kolega walczy dalej sam.' : cost ? `🏃 Uciec z walki?\nUcieczka liczy się jak porażka: tracisz 🖤 serce${B.tower ? ', a bieg w wieży się kończy' : ''}${S.settings.hardcore ? ' – w hardcore to śmierć bohatera' : ''}. Odpowiedzi do tej pory są zapisane.` : 'Wyjść z walki? Nie odpowiedziałeś jeszcze na nic – wychodzisz bez kary.')) return;
+    if (B.coop && typeof coopLeave === 'function') coopLeave();
+    if (cost && B.phase === 'fight') { B.fled = true; B.me = 0; return bossEnd(false, 'dead'); }
+    BOSS = null; go('#/boss'); },
   'boss-again': () => { const b = BOSS?.b; BOSS = null; if (!b) return go('#/boss'); const nb = bossFor(b.kind, b.id, b.i); BOSS_SEL = nb ? { kind: b.kind, id: b.id, i: b.i ?? null } : null; go('#/boss'); render(); },
   'boss-map': () => { BOSS = null; go('#/boss'); },
   'boss-lesson': () => { const L = S.stats.lesson; if (!L) return; BOSS = null; BOSS_SEL = null; SESSION = null; LESSON_RUN = true; go(`#/study/all/flip?cram=list&ids=${L.ids.join(',')}`); },
