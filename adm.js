@@ -24,7 +24,7 @@ async function hostStatsLoad() {
     const c = await SB.rpc('claim_admin'); if (c.error) throw c.error;
     if (c.data !== true) { HOST_ST = { err: 'Statystyki widzi tylko konto właściciela aplikacji.' }; return render(); }
     const r = await SB.rpc('host_stats'); if (r.error) throw r.error;
-    const a = await SB.rpc('admin_audit'); HOST_ST = { d: r.data, audit: a.error ? null : a.data, t: Date.now() };
+    const a = await SB.rpc('admin_audit'), lv = await SB.rpc('admin_levels'); HOST_ST = { d: r.data, audit: a.error ? null : a.data, levels: lv.error ? null : lv.data, t: Date.now() };
   } catch (e) { HOST_ST = { err: /function|schema cache|does not exist/i.test(e.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy niżej), żeby zobaczyć statystyki.' : 'Błąd: ' + (e.message || e) }; }
   render();
 }
@@ -42,6 +42,9 @@ function admStatsHTML() {
         <div class="adm-btns">${[['wallet', '💸 Zabierz kryształy i złoto'], ['items', '🎒 Zabierz przedmioty'], ['stickers', '🃏 Zabierz naklejki'], ['all', '🧹 Zabierz wszystko'],
           ['shadow', '👻 Cień (myśli, że ma)'], ['unshadow', '👻 Zdejmij cień'], ['clown', '🤡 Zrób klauna'], ['unclown', '🙂 Zdejmij klauna'], ['flip', '🙃 Ekran do góry nogami'], ['msg', '💬 Wyślij wiadomość'], ['restore', '♻️ Przywróć wszystko']].map(([k, l]) => `<button class="sm${['wallet', 'items', 'stickers', 'all'].includes(k) ? ' danger' : ''}" data-act="host-act" data-k="${k}">${l}</button>`).join('')}</div>
         <p class="small muted">Stuknij gracza na liście wyżej, żeby zobaczyć jego dane i ukarać go w okienku. Zabrane rzeczy znikają też na jego telefonie przy najbliższej synchronizacji – nie da się ich odzyskać. Klaun = 🤡 przed nickiem w rankingu i czacie. ♻️ Przywróć = oddaje wszystko sprzed pierwszej kary (kopia robi się automatycznie) i zdejmuje cień oraz blokadę. 👻 Cień = gracz dalej widzi u siebie wszystko, ale w chmurze tego nie ma: inni nie widzą jego gabloty i prestiżu, a na innym urządzeniu (albo po reinstalacji) ma pusto.</p></div>
+      <h4>📈 Podejrzane poziomy</h4><div class="small">${H.levels == null ? '<span class="muted">Wgraj nowy supabase.sql, żeby zobaczyć tę listę.</span>' : (H.levels || []).map(x => `<div class="row nowrap adm-row" data-act="adm-player" data-code="${esc(x.code || '')}" role="button" style="justify-content:space-between;align-items:flex-start"><span>${esc(x.nick || '?')} <span class="muted">${esc(x.code || '')}</span></span>
+        <span class="muted" style="text-align:right">poz. ${esc(String(x.level ?? '?'))} · z danych ${n(x.est)} XP · ${n(x.reviews)} powt.${x.max_day > 1500 ? ` · ⚠️ ${n(x.max_day)} powt. jednego dnia` : ''}${x.hero_xp > 20 * x.est + 2000 ? ` · ⚠️ bohater ${n(x.hero_xp)} XP` : ''}</span></div>`).join('') || '✅ nikt nie podbija poziomu'}</div>
+      <p class="small muted">Poziom i XP w profilu są liczone na serwerze z prawdziwych powtórek, gier, osiągnięć i bitew – dopisany poziom jest automatycznie przycinany.</p>
       <h4>🚨 Wykryte próby oszustwa</h4><div class="small">${(H.audit.cheats || []).map(x => `<div>${esc(x.nick || '?')}: ${esc(x.what)} <span class="muted">${new Date(x.t).toLocaleString('pl-PL')}</span></div>`).join('') || 'brak'}</div>` : ''}
     ${(d.top_links || []).length ? `<div class="small" style="margin-top:10px">${d.top_links.map(x => `<div class="row nowrap" style="justify-content:space-between"><span>${esc(x.name)}</span><b>${n(x.opens)}×</b></div>`).join('')}</div>` : ''}
     <p class="small muted" style="margin:10px 0 0">Same liczby – bez e-maili i nazw użytkowników. Odświeżone ${new Date(H.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}.</p>`}</div>`;

@@ -941,5 +941,49 @@ begin
   return new;
 end $$;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01j'::text $$;
+-- 📈 sztuczny poziom: XP konta liczymy na serwerze z prawdziwych danych (powtórki, gry, osiągnięcia, bitwy) –
+-- profil nie może pokazać więcej (poziom i XP są przycinane), a próby trafiają do dziennika
+create or replace function public.xp_est(d jsonb) returns numeric language sql immutable set search_path = '' as $$
+  select coalesce((select sum((case when (e->>'n') is not null and e->>'n' not in ('0', 'false') then 3 when (e->>'g') ~ '^[0-9]+$' and (e->>'g')::int > 1 then 2 else 1 end)
+           * (case when e->>'m' = 'type' then 2.5 else 1 end)) from jsonb_array_elements(coalesce(d->'log', '[]')) e), 0)
+    + coalesce((select sum(case when (e->>'correct') ~ '^[0-9.]+$' then (e->>'correct')::numeric / 2 else 0 end) from jsonb_array_elements(coalesce(d->'games', '[]')) e), 0)
+    + 25 * coalesce((select count(*) from jsonb_object_keys(case when jsonb_typeof(d->'ach') = 'object' then d->'ach' else '{}'::jsonb end)), 0)
+    + coalesce((select sum(case when e->>'won' = '1' then 30 else 10 end) from jsonb_array_elements(coalesce(d->'battles', '[]')) e), 0) $$;
+create or replace function public.max_day_reviews(d jsonb) returns int language sql immutable set search_path = '' as $$
+  select coalesce(max(n), 0)::int from (select count(*) n from jsonb_array_elements(coalesce(d->'log', '[]')) e
+    where (e->>'t') ~ '^[0-9]+$' group by ((e->>'t')::bigint / 86400000)) x $$;
+create or replace function public.profile_xp_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+declare d jsonb; est numeric; xp numeric; lv int;
+begin
+  select data into d from public.user_data where user_id = new.id; if d is null then return new; end if;
+  est := public.xp_est(d);
+  xp := case when (new.stats->>'xp') ~ '^[0-9.]+$' then (new.stats->>'xp')::numeric else 0 end;
+  if xp > est * 1.2 + 1500 then   -- zapas na powtórki z ostatnich minut, które jeszcze się nie zsynchronizowały
+    lv := floor((1 + sqrt(1 + est / 10)) / 2);
+    new.stats := coalesce(new.stats, '{}'::jsonb) || jsonb_build_object('xp', round(est), 'level', lv);
+    if xp > est * 1.5 + 3000 and not exists (select 1 from public.cheat_log where user_id = new.id and what like 'poziom:%' and t > now() - interval '1 day') then
+      insert into public.cheat_log(user_id, what) values (new.id, 'poziom: profil ' || round(xp) || ' XP, z danych ' || round(est) || ' XP – przycięto do poz. ' || lv);
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists profile_xp_guard on public.profiles;
+create trigger profile_xp_guard before insert or update on public.profiles for each row execute function public.profile_xp_guard();
+-- lista podejrzanych poziomów dla właściciela
+create or replace function public.admin_levels() returns json language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  return (select coalesce(json_agg(x order by x.score desc), '[]') from (
+    select p.nick, p.code, (p.stats->>'level') as level, round(public.xp_est(d.data)) as est, jsonb_array_length(coalesce(d.data->'log', '[]')) as reviews,
+      public.max_day_reviews(d.data) as max_day, case when (d.data->'hero'->>'xp') ~ '^[0-9.]+$' then round((d.data->'hero'->>'xp')::numeric) else 0 end as hero_xp,
+      (case when public.max_day_reviews(d.data) > 1500 then 2 else 0 end)
+      + (case when (d.data->'hero'->>'xp') ~ '^[0-9.]+$' and (d.data->'hero'->>'xp')::numeric > 20 * public.xp_est(d.data) + 2000 then 2 else 0 end)
+      + (case when exists (select 1 from public.cheat_log c where c.user_id = d.user_id and c.what like 'poziom:%') then 3 else 0 end)
+      + (case when exists (select 1 from jsonb_array_elements(coalesce(d.data->'log', '[]')) e where (e->>'t') ~ '^[0-9]+$' and (e->>'t')::bigint > extract(epoch from now()) * 1000 + 86400000) then 2 else 0 end) as score
+    from public.user_data d join public.profiles p on p.id = d.user_id) x where x.score > 0 limit 30);
+end $$;
+revoke all on function public.admin_levels() from public, anon;
+grant execute on function public.admin_levels() to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01k'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
