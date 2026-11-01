@@ -3216,3 +3216,12 @@ body:not(.focus) main { padding-bottom: calc(var(--tabs-h, 64px) + 96px + env(sa
 .card > h2:first-child, .card > h3:first-child { margin-top: 0; }
 .row + .row { margin-top: 8px; }
 .seg.rank-tabs { flex-wrap: wrap; overflow: visible; gap: 4px; } .seg.rank-tabs button { flex: 1 1 auto; white-space: nowrap; }
+/* v280: górny pasek – bez szczeliny nad paskiem i bez twardej ciemnej belki (lekkie szkło, miękko znika w dół) */
+main:has(> .hubnav) { padding-top: 0 !important; }
+main > .hubnav { margin-top: 0 !important; padding-top: calc(10px + var(--sat)) !important; }
+.hubnav::before { background: color-mix(in srgb, var(--bg) 45%, transparent) !important; box-shadow: none !important;
+  backdrop-filter: blur(22px) saturate(1.5) !important; -webkit-backdrop-filter: blur(22px) saturate(1.5) !important; }
+.hubnav::after { height: 18px; background: linear-gradient(color-mix(in srgb, var(--bg) 35%, transparent), transparent) !important;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
+:root.hc-mode .hubnav::before { background: color-mix(in srgb, #1c0505 50%, transparent) !important; }
+@media (min-width: 700px) { main > .hubnav { padding-top: calc(14px + var(--sat)) !important; } }
