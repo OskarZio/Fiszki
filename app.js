@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '283';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '284';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1778,6 +1778,17 @@ async function gistText(f) {
   const r = await fetch(f.raw_url); if (!r.ok) throw new Error('pobieranie pliku ' + r.status); return r.text();
 }
 function exportData() { const { settings, ...rest } = S; return { ...rest, exportedAt: Date.now() }; }
+// 🔁 po karze kopie (lokalne, z pliku, z historii) nie oddają zabranych kryształów i przedmiotów – tylko właściciel może je przywrócić
+const econLocked = () => (S.stats?.econLock || 0) > (S.stats?.econFree || 0);
+function econGuard(R, keepAll) {
+  if (!econLocked() || !R) return R;
+  for (const k of ['wallet', 'items', 'hcWallet', 'hcItems']) {
+    const mine = new Set((S[k] || []).map(x => x.id));
+    R[k] = keepAll ? (S[k] || []).slice() : (R[k] || []).filter(x => mine.has(x.id) || (x.t || 0) > (S.stats.econLockT || 0));
+  }
+  if (R.stats) for (const k of ['adminAck', 'econLock', 'econLockT', 'econFree']) R.stats[k] = Math.max(R.stats[k] || 0, S.stats[k] || 0);
+  return R;
+}
 function adminOpFx(o) {
   const T = { wallet: ['💸', 'Twoje kryształy i złoto zostały zabrane.'], items: ['🎒', 'Twoje przedmioty zostały zabrane.'], stickers: ['🃏', 'Twoje naklejki zostały zabrane.'], all: ['🧹', 'Wszystkie Twoje kryształy, złoto i przedmioty zostały zabrane.'],
     clown: ['🤡', 'Od teraz w rankingu wszyscy widzą Cię jako klauna.'], restore: ['♻️', 'Twoje kryształy, złoto i przedmioty zostały przywrócone.'], msg: ['💬', ''], flip: ['🙃', 'Ups… coś się przewróciło.'] }[o.what];
@@ -1799,9 +1810,12 @@ function mergeState(R) {
     if (o.what === 'all') { S.items = []; S.hcItems = []; }
     if (o.what === 'stickers') S.items = (S.items || []).filter(i => i.kind !== 'sticker');
     if (['items', 'stickers', 'all'].includes(o.what) && S.profile?.showcase) S.profile.showcase = [];
+    if (['wallet', 'items', 'stickers', 'all'].includes(o.what)) { S.stats.econLock = Math.max(S.stats.econLock || 0, +o.id); S.stats.econLockT = Date.now(); }
+    if (o.what === 'restore') S.stats.econFree = Math.max(S.stats.econFree || 0, +o.id);
     S.stats.adminAck = Math.max(S.stats.adminAck || 0, +o.id);
     setTimeout(() => adminOpFx(o), 800);
   }
+  if (!R.adminOps?.length) econGuard(R, false);
   // 💀 portfel i przedmioty świata hardcore są osobne – kopia z innego urządzenia mogła być akurat w drugim świecie
   if (!!R.settings?.hardcore !== !!S.settings?.hardcore) { [R.wallet, R.hcWallet] = [R.hcWallet || [], R.wallet || []]; { const K = ['gear', 'potion', 'boost', 'forgemat', 'egg'], it = R.items || []; [R.items, R.hcItems] = [[...it.filter(i => !K.includes(i?.kind)), ...(R.hcItems || [])], it.filter(i => K.includes(i?.kind))]; } }
   const tomb = { ...S.tomb };
@@ -2101,7 +2115,7 @@ const ACTIONS = {
     const f = await pickFile('.json,application/json'); if (!f) return;
     if (typeof snapshot === 'function') await snapshot('przed importem');
     try {
-      const j = JSON.parse(await f.text()); if (j.app !== 'fiszki') throw new Error('to nie jest kopia Fiszek');
+      const j = JSON.parse(await f.text()); if (j.app !== 'fiszki') throw new Error('to nie jest kopia Fiszek'); if (econLocked()) { econGuard(j.data, true); toast('Kryształy i przedmioty z kopii nie zostały wczytane (zablokowane przez twórcę aplikacji)', 4500); }
       for (const [id, d] of Object.entries(j.images || {})) { if (!okId(id) || !okImgData(d)) continue; IMG[id] = d; await DB.set('img:' + id, d); }
       mergeState(j.data); save(); render(); toast('Zaimportowano ✓');
     } catch (e) { toast('Błąd importu: ' + e.message, 4000); }

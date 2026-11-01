@@ -107,6 +107,7 @@ async function loadCloudVersions() {
 }
 async function replaceState(data, label) {
   await snapshot('przed przywróceniem');
+  if (typeof econLocked === 'function' && econLocked()) { econGuard(data, true); toast('Kryształy i przedmioty zostają obecne – kopia ich nie przywraca (blokada od twórcy aplikacji)', 4500); }
   const keepSettings = S.settings;
   S = { ...blankState(), ...data, settings: keepSettings };
   for (const [k, v] of Object.entries(extraState())) if (S[k] == null) S[k] = v;

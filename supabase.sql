@@ -825,5 +825,81 @@ alter default privileges in schema public revoke all on tables from anon;
 alter default privileges in schema public revoke all on sequences from anon;
 grant select on public.app_flags to anon;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01h'::text $$;
+-- 🔁 zabrane rzeczy nie wracają z kopii (lokalnej, z pliku, z historii): kopia przed karą zapisuje TYLKO zabrane rzeczy,
+-- a każdy zapis gracza jest z nich czyszczony, dopóki właściciel ich nie przywróci (♻️)
+create or replace function public.admin_backup(uid uuid, p_what text default 'all') returns void language sql security definer set search_path = '' as $$
+  insert into public.admin_backups(user_id, data)
+  select uid, jsonb_build_object(
+    'wallet', case when p_what in ('wallet', 'all') then coalesce(d.data->'wallet', '[]') else '[]' end,
+    'hcWallet', case when p_what in ('wallet', 'all') then coalesce(d.data->'hcWallet', '[]') else '[]' end,
+    'items', case when p_what = 'all' then coalesce(d.data->'items', '[]')
+      when p_what = 'items' then coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d.data->'items', '[]')) e where coalesce(e->>'kind', '') <> 'sticker'), '[]')
+      when p_what = 'stickers' then coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d.data->'items', '[]')) e where e->>'kind' = 'sticker'), '[]') else '[]' end,
+    'hcItems', case when p_what in ('items', 'all') then coalesce(d.data->'hcItems', '[]') else '[]' end)
+  from public.user_data d where d.user_id = uid $$;
+revoke all on function public.admin_backup(uuid, text) from public, anon, authenticated;
+create or replace function public.strip_taken(d jsonb, uid uuid) returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare k text;
+begin
+  if not exists (select 1 from public.admin_backups where user_id = uid) then return d; end if;
+  foreach k in array array['wallet', 'items', 'hcWallet', 'hcItems'] loop
+    d := jsonb_set(d, array[k], coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d->k, '[]')) e
+      where not exists (select 1 from public.admin_backups b, jsonb_array_elements(coalesce(b.data->k, '[]')) x where b.user_id = uid and x->>'id' = e->>'id')), '[]'::jsonb));
+  end loop;
+  return d;
+end $$;
+revoke all on function public.strip_taken(jsonb, uuid) from public, anon, authenticated;
+create or replace function public.data_guard_admin() returns trigger language plpgsql security definer set search_path = '' as $$
+begin new.data := public.strip_taken(public.apply_admin_actions(new.data, new.user_id), new.user_id); return new; end $$;
+create or replace function public.admin_act(p_code text, p_what text, p_msg text default null, p_pass text default null) returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid; nk text; b jsonb;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  perform public.admin_pass_ok(p_pass);
+  if p_what not in ('wallet', 'items', 'stickers', 'all', 'clown', 'unclown', 'msg', 'flip', 'shadow', 'unshadow', 'restore') then raise exception 'bad action'; end if;
+  select id, nick into uid, nk from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  if p_what in ('wallet', 'items', 'stickers', 'all') then perform public.admin_backup(uid, p_what); end if;
+  if p_what = 'shadow' then perform public.admin_backup(uid, 'all'); end if;
+  if p_what = 'restore' then
+    if not exists (select 1 from public.admin_backups where user_id = uid) then raise exception 'no backup'; end if;
+    delete from public.econ_bans where user_id = uid;
+    insert into public.admin_actions(user_id, what) values (uid, 'unshadow');
+  end if;
+  insert into public.admin_actions(user_id, what, msg) values (uid, p_what, left(p_msg, 300));
+  if p_what in ('wallet', 'items', 'stickers', 'all', 'shadow', 'restore') then insert into public.cheat_log(user_id, what) values (uid, 'właściciel: ' || p_what); end if;
+  if p_what = 'restore' then
+    -- wszystkie kopie razem (każda kara zapisała to, co zabrała); najpierw zdejmujemy kopie, potem oddajemy rzeczy
+    select jsonb_build_object(
+      'wallet', coalesce((select jsonb_agg(distinct x) from public.admin_backups bb, jsonb_array_elements(coalesce(bb.data->'wallet', '[]')) x where bb.user_id = uid), '[]'),
+      'items', coalesce((select jsonb_agg(distinct x) from public.admin_backups bb, jsonb_array_elements(coalesce(bb.data->'items', '[]')) x where bb.user_id = uid), '[]'),
+      'hcWallet', coalesce((select jsonb_agg(distinct x) from public.admin_backups bb, jsonb_array_elements(coalesce(bb.data->'hcWallet', '[]')) x where bb.user_id = uid), '[]'),
+      'hcItems', coalesce((select jsonb_agg(distinct x) from public.admin_backups bb, jsonb_array_elements(coalesce(bb.data->'hcItems', '[]')) x where bb.user_id = uid), '[]')) into b;
+    delete from public.admin_backups where user_id = uid;
+    update public.user_data set data = data || jsonb_build_object('wallet', public.jarr_union(data->'wallet', b->'wallet'), 'items', public.jarr_union(data->'items', b->'items'),
+      'hcWallet', public.jarr_union(data->'hcWallet', b->'hcWallet'), 'hcItems', public.jarr_union(data->'hcItems', b->'hcItems')) where user_id = uid;
+  else update public.user_data set data = data where user_id = uid; end if;
+  update public.profiles set nick = nick where id = uid;
+  return nk;
+end $$;
+revoke all on function public.admin_act(text, text, text, text) from public, anon;
+grant execute on function public.admin_act(text, text, text, text) to authenticated;
+create or replace function public.admin_ban(p_code text, p_on boolean, p_pass text default null) returns boolean language plpgsql security definer set search_path = '' as $$
+declare uid uuid;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  perform public.admin_pass_ok(p_pass);
+  select id into uid from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  if p_on then
+    perform public.admin_backup(uid, 'all');
+    insert into public.econ_bans(user_id, why) values (uid, 'admin') on conflict (user_id) do nothing;
+    insert into public.cheat_log(user_id, what) values (uid, 'zablokowano ekonomię (właściciel)');
+  else delete from public.econ_bans where user_id = uid; end if;
+  update public.user_data set data = data where user_id = uid;
+  return p_on;
+end $$;
+revoke all on function public.admin_ban(text, boolean, text) from public, anon;
+grant execute on function public.admin_ban(text, boolean, text) to authenticated;
+drop function if exists public.admin_backup(uuid);
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01i'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
