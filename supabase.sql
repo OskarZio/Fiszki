@@ -741,5 +741,81 @@ end $$;
 revoke all on function public.admin_ban(text, boolean, text) from public, anon;
 grant execute on function public.admin_ban(text, boolean, text) to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01f'::text $$;
+-- ♻️ kopia przed karą + przywracanie wszystkiego (kryształy, złoto, przedmioty, naklejki; zdejmuje też cień i blokadę)
+create table if not exists public.admin_backups (id bigserial primary key, user_id uuid not null references auth.users on delete cascade, t timestamptz not null default now(), data jsonb not null);
+alter table public.admin_backups enable row level security;
+create or replace function public.admin_backup(uid uuid) returns void language sql security definer set search_path = '' as $$
+  insert into public.admin_backups(user_id, data)
+  select uid, jsonb_build_object('wallet', coalesce(d.data->'wallet', '[]'), 'items', coalesce(d.data->'items', '[]'), 'hcWallet', coalesce(d.data->'hcWallet', '[]'), 'hcItems', coalesce(d.data->'hcItems', '[]'))
+  from public.user_data d where d.user_id = uid
+    and (jsonb_array_length(coalesce(d.data->'wallet', '[]')) + jsonb_array_length(coalesce(d.data->'items', '[]'))) > 0 $$;
+revoke all on function public.admin_backup(uuid) from public, anon, authenticated;
+create or replace function public.jarr_union(a jsonb, b jsonb) returns jsonb language sql immutable set search_path = '' as $$
+  select coalesce(a, '[]'::jsonb) || coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(b, '[]'::jsonb)) e
+    where not exists (select 1 from jsonb_array_elements(coalesce(a, '[]'::jsonb)) x where x->>'id' = e->>'id')), '[]'::jsonb) $$;
+create or replace function public.apply_admin_actions(d jsonb, uid uuid) returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare ack bigint; a record; ops jsonb := '[]'::jsonb; lastr bigint;
+begin
+  ack := case when (d->'stats'->>'adminAck') ~ '^[0-9]+$' then (d->'stats'->>'adminAck')::bigint else 0 end;
+  select coalesce(max(id), 0) into lastr from public.admin_actions where user_id = uid and what = 'restore';
+  for a in select id, what, msg from public.admin_actions where user_id = uid and id > ack and what not in ('shadow', 'unshadow') order by id loop
+    ops := ops || jsonb_build_object('id', a.id, 'what', case when a.id < lastr and a.what in ('wallet', 'items', 'stickers', 'all') then 'void' else a.what end, 'msg', a.msg);
+    continue when a.id < lastr;   -- kara cofnięta przez późniejsze przywrócenie
+    if a.what in ('wallet', 'all') then d := d || jsonb_build_object('wallet', '[]'::jsonb, 'hcWallet', '[]'::jsonb); end if;
+    if a.what in ('items', 'all') then
+      d := jsonb_set(d, '{items}', coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d->'items', '[]')) e where e->>'kind' = 'sticker' and a.what = 'items'), '[]'::jsonb));
+      d := d || jsonb_build_object('hcItems', '[]'::jsonb);
+    end if;
+    if a.what = 'stickers' then
+      d := jsonb_set(d, '{items}', coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d->'items', '[]')) e where coalesce(e->>'kind', '') <> 'sticker'), '[]'::jsonb));
+    end if;
+  end loop;
+  if public.is_shadow(uid) then d := d || jsonb_build_object('wallet', '[]'::jsonb, 'items', '[]'::jsonb, 'hcWallet', '[]'::jsonb, 'hcItems', '[]'::jsonb); end if;
+  return case when jsonb_array_length(ops) > 0 then d || jsonb_build_object('adminOps', ops) else d - 'adminOps' end;
+end $$;
+revoke all on function public.apply_admin_actions(jsonb, uuid) from public, anon, authenticated;
+create or replace function public.admin_act(p_code text, p_what text, p_msg text default null, p_pass text default null) returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid; nk text; b jsonb;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  perform public.admin_pass_ok(p_pass);
+  if p_what not in ('wallet', 'items', 'stickers', 'all', 'clown', 'unclown', 'msg', 'flip', 'shadow', 'unshadow', 'restore') then raise exception 'bad action'; end if;
+  select id, nick into uid, nk from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  if p_what in ('wallet', 'items', 'stickers', 'all', 'shadow') then perform public.admin_backup(uid); end if;
+  if p_what = 'restore' then
+    select data into b from public.admin_backups where user_id = uid order by id asc limit 1;   -- najstarsza kopia = stan sprzed pierwszej kary
+    if b is null then raise exception 'no backup'; end if;
+    delete from public.econ_bans where user_id = uid;
+    insert into public.admin_actions(user_id, what) values (uid, 'unshadow');
+  end if;
+  insert into public.admin_actions(user_id, what, msg) values (uid, p_what, left(p_msg, 300));
+  if p_what in ('wallet', 'items', 'stickers', 'all', 'shadow', 'restore') then insert into public.cheat_log(user_id, what) values (uid, 'właściciel: ' || p_what); end if;
+  if p_what = 'restore' then
+    update public.user_data set data = data || jsonb_build_object('wallet', public.jarr_union(data->'wallet', b->'wallet'), 'items', public.jarr_union(data->'items', b->'items'),
+      'hcWallet', public.jarr_union(data->'hcWallet', b->'hcWallet'), 'hcItems', public.jarr_union(data->'hcItems', b->'hcItems')) where user_id = uid;
+    delete from public.admin_backups where user_id = uid;
+  else update public.user_data set data = data where user_id = uid; end if;
+  update public.profiles set nick = nick where id = uid;
+  return nk;
+end $$;
+revoke all on function public.admin_act(text, text, text, text) from public, anon;
+grant execute on function public.admin_act(text, text, text, text) to authenticated;
+create or replace function public.admin_ban(p_code text, p_on boolean, p_pass text default null) returns boolean language plpgsql security definer set search_path = '' as $$
+declare uid uuid;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  perform public.admin_pass_ok(p_pass);
+  select id into uid from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  if p_on then
+    perform public.admin_backup(uid);
+    insert into public.econ_bans(user_id, why) values (uid, 'admin') on conflict (user_id) do nothing;
+    insert into public.cheat_log(user_id, what) values (uid, 'zablokowano ekonomię (właściciel)');
+  else delete from public.econ_bans where user_id = uid; end if;
+  update public.user_data set data = data where user_id = uid;
+  return p_on;
+end $$;
+revoke all on function public.admin_ban(text, boolean, text) from public, anon;
+grant execute on function public.admin_ban(text, boolean, text) to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01g'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
