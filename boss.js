@@ -792,7 +792,7 @@ function nodeHTML(b, sel) {
   const on = sel && BOSS_SEL && BOSS_SEL.kind === b.kind && BOSS_SEL.id === b.id && (BOSS_SEL.i ?? null) === (b.i ?? null);
   return `<button class="bnode${b.ok ? '' : ' locked'}${b.stars ? ' beaten' : ''}${b.final ? ' final' : ''}${on ? ' on' : ''}" data-act="boss-sel" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">
     <span class="bn-art">${b.ok || b.stars ? bossArt(b) : '<span class="mq">🔒</span>'}</span><small>${b.kind === 'ch' ? (b.final ? '👑' : `Rozdz. ${b.i + 1}`) : b.final ? '👑 Finał' : ''}</small>
-    ${b.ok ? (['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) : starsHTML(b.stars)) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
+    ${b.ok ? (['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) : b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : starsHTML(b.stars)) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
 }
 function setupSheetHTML() {
   const s = BOSS_SEL; if (!s) return ''; const b = bossFor(s.kind, s.id, s.i); if (!b) return '';
