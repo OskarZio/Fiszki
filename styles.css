@@ -3334,3 +3334,6 @@ button:has(> .hero-ic) { display: inline-flex; align-items: center; justify-cont
 button .hero-ic, h1 .hero-ic { overflow: hidden; border-radius: 8px; }
 button .hero-ic { width: 28px !important; height: 28px !important; min-width: 28px; margin-right: 6px; }
 button .hero-ic img.charpx, h1 .hero-ic img.charpx { transform: scale(1.55) !important; transform-origin: 50% 96% !important; }
+/* v295: bez pustego pola na dole – zapas tylko na dolne menu (+ trochę więcej, gdy jest pływający przycisk) */
+body:not(.focus) main { padding-bottom: 16px !important; }   /* body ma już zapas na dolne menu */
+body:not(.focus):has(#mode-fab, #hc-fab, #gc-fab) main { padding-bottom: 64px !important; }
