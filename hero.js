@@ -44,7 +44,7 @@ const LINES = {
       ['🪶 Lot', [SKN('o5', 'Ciche skrzydła', '+10% uniku', 'dodge', 10), SKN('o6', 'Bystre oko', '+12% krytyka', 'crit', 12), SKN('o7', 'Wysoki lot', '+25% czasu do namysłu', 'time', 25), SKN('o8', 'Pióra', 'lód pęka 2× szybciej', 'ice', 1)]],
       ['🔮 Mądrość', [SKN('o9', 'Test ABCD', 'ABCD: cios ×0,7 zamiast ×0,5', 'abcd', .2), SKN('o10', 'Spokój nocy', '„Ledwo” nie przerywa serii', 'steady', 1), SKN('o11', 'Olśnienie', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('o12', 'Sowa mędrczyni', 'supercios +50%', 'ultPow', 50)]]] },
   hamster: { passive: ['🌰 Chomikowanie', '+20% doświadczenia', { xp: 20 }], ult: ['🎡 Kołowrotek', '4 szybkie ciosy (razem ×3,6) i seria +3'],
-    tree: [['🌻 Zapasy', [SKN('h1', 'Pełne policzki', '+20 ❤️', 'hp', 20), SKN('h2', 'Ziarenko', '+10% 💎 z walk', 'gems', 10), SKN('h3', 'Spiżarnia', '+1 przedmiot w skrzyni', 'loot', 1), SKN('h4', 'Skarbiec', '+20% 💎 z walk', 'gems', 20)]],
+    tree: [['🌻 Zapasy', [SKN('h1', 'Pełne policzki', '+20 ❤️', 'hp', 20), SKN('h2', 'Ziarenko', '+10% 🪙 z walk', 'gems', 10), SKN('h3', 'Spiżarnia', '+1 przedmiot w skrzyni', 'loot', 1), SKN('h4', 'Skarbiec', '+20% 🪙 z walk', 'gems', 20)]],
       ['🏃 Bieg', [SKN('h5', 'Truchcik', 'seria rośnie +50% szybciej', 'combo', 50), SKN('h6', 'Rozpęd', '+12% obrażeń', 'dmg', 12), SKN('h7', 'Zwinne łapki', '+8% uniku', 'dodge', 8), SKN('h8', 'Turbo', 'pierwszy cios ×2,5', 'first', 2.5)]],
       ['🧪 Alchemia', [SKN('h9', 'Kieszonkowiec', 'mikstury mocniejsze, +1 użycie', 'alch', 1), SKN('h10', 'Przekąska', 'dobra odpowiedź leczy 2 ❤️', 'regen', 2), SKN('h11', 'Chomiczy zapał', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('h12', 'Wielki kołowrotek', 'supercios +50%', 'ultPow', 50)]]] },
   fox: { passive: ['🦊 Przebiegłość', '+8% krytyka', { crit: 8 }], ult: ['🔥 Lisi spryt', 'pewny krytyk ×4, usuwa przeszkadzajki i truciznę'],
@@ -66,12 +66,12 @@ const LINES = {
   dragon: { passive: ['🐉 Smocza łuska', '+12% obrażeń i −8% obrażeń', { dmg: 12, def: 8 }], ult: ['💥 Zianie ogniem', 'cios ×5 i zrywa tarczę bossa'],
     tree: [['🔥 Ogień', [SKN('g1', 'Żar w paszczy', '+15% obrażeń', 'dmg', 15), SKN('g2', 'Smocze oko', '+12% krytyka', 'crit', 12), SKN('g3', 'Atak z powietrza', 'pierwszy cios ×2,5', 'first', 2.5), SKN('g4', 'Spopielenie', 'boss < 25% ❤️ → +60%', 'exec', 60)]],
       ['🛡️ Łuska', [SKN('g5', 'Gruba łuska', '+35 ❤️', 'hp', 35), SKN('g6', 'Pancerz', '−15% obrażeń', 'def', 15), SKN('g7', 'Kolce na ogonie', 'odbija 25% obrażeń', 'thorns', 25), SKN('g8', 'Smocza krew', '12% obrażeń wraca jako ❤️', 'vamp', 12)]],
-      ['🔮 Otchłań', [SKN('g9', 'Skarbiec', '+15% 💎 z walk', 'gems', 15), SKN('g10', 'Łup smoka', '+1 przedmiot w skrzyni', 'loot', 1), SKN('g11', 'Gniew otchłani', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('g12', 'Pradawny ogień', 'supercios +50%', 'ultPow', 50)]]] },
+      ['🔮 Otchłań', [SKN('g9', 'Skarbiec', '+15% 🪙 z walk', 'gems', 15), SKN('g10', 'Łup smoka', '+1 przedmiot w skrzyni', 'loot', 1), SKN('g11', 'Gniew otchłani', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('g12', 'Pradawny ogień', 'supercios +50%', 'ultPow', 50)]]] },
 };
 // pozostałe postacie z heroes.js (gdyby doszły nowe) dostają umiejętności kota
 const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefined' ? CHARS : {}).map(([k, c]) => [k, { name: c.name, icon: c.icon, forms: c.forms, desc: c.desc, draw: true }])),
   beast: { name: 'Stworek', icon: '🐣', forms: ['Mały stworek', 'Młody stworek', 'Dorosły stworek', 'Stwór z innego wymiaru'], desc: 'Przybysz z innego wymiaru. Nikt nie wie, czego się nauczy.' } };
-// 🎟️ zdobywanie postaci: Kot Wojak za darmo; reszta – kupno za 💎, poziom konta albo skrzynka bohaterów.
+// 🎟️ zdobywanie postaci: Kot Wojak za darmo; reszta – kupno za 🪙, poziom konta albo skrzynka bohaterów.
 // Droższa (rzadsza) postać = mocniejsze umiejętności (mnożnik umiejętności biernej, drzewka i superciosu).
 const HERO_TIER = { basic: ['Podstawowa', '#64748b', 1], rare: ['Rzadka', '#8b5cf6', 1.15], epic: ['Epicka', '#ec4899', 1.3], legendary: ['Legendarna', '#f59e0b', 1.5], mythic: ['Mityczna', '#dc2626', 1.7] };
 const HERO_GET = { cat: { t: 'basic' }, hamster: { t: 'rare', price: 3000 }, frog: { t: 'rare', price: 5000 }, dog: { t: 'epic', price: 8000 }, owl: { t: 'epic', acc: 12 },
@@ -97,7 +97,7 @@ const EFF_ALT = { second: ['hp', 20], steady: ['combo', 30], alch: ['gems', 10],
 const EFF_DESC = { dmg: v => `+${v}% obrażeń`, crit: v => `+${v}% krytyka`, hp: v => `+${v} ❤️`, def: v => `−${v}% obrażeń`, dodge: v => `+${v}% uniku`, regen: v => `dobra odpowiedź leczy ${v} ❤️`,
   type: v => `wpisywanie: cios +${Math.round(v * 100)}%`, abcd: v => `ABCD: cios +${Math.round(v * 100)}%`, loot: v => `+${v} przedmiot w skrzyni`, ultPow: v => `supercios +${v}%`, time: v => `+${v}% czasu do namysłu`,
   verify: v => `sprawdzian: bonus +${v}%`, vamp: v => `${v}% obrażeń wraca jako ❤️`, first: v => `pierwszy cios ×${v}`, exec: v => `boss < 25% ❤️ → +${v}%`, combo: v => `seria rośnie +${v}% szybciej`,
-  xp: v => `+${v}% doświadczenia`, gems: v => `+${v}% 💎 z walk`, thorns: v => `odbija ${v}% obrażeń` };
+  xp: v => `+${v}% doświadczenia`, gems: v => `+${v}% 🪙 z walk`, thorns: v => `odbija ${v}% obrażeń` };
 const roundV = (eff, v) => ['type', 'abcd'].includes(eff) ? Math.round(v * 100) / 100 : eff === 'first' ? Math.round(v * 4) / 4 : Math.max(1, Math.round(v));
 const PAGES_CACHE = {};
 function treePages(l = heroLine()) {
@@ -131,7 +131,7 @@ const skSpent = (l = heroLine()) => Object.keys(lineSk(hero(), l)).length + Obje
 const skPoints = (l = heroLine()) => linePts(l) - skSpent(l);
 
 // ---------- ⏱️ boostery: 30 min; w weekend „Podwójne XP” za darmo, co 3 dni darmowy booster do odebrania
-const BOOSTS = { xp2: { name: 'Podwójne XP', desc: 'doświadczenie bohatera ×2', img: 'b_star', price: 150 }, gems2: { name: 'Podwójne kryształy', desc: '💎 z bossów i łupów ×2', img: 'b_gstar', price: 200 }, loot2: { name: 'Szczęście łupieżcy', desc: '+1 przedmiot w każdej skrzyni', img: 'b_swords', price: 200 } };
+const BOOSTS = { xp2: { name: 'Podwójne XP', desc: 'doświadczenie bohatera ×2', img: 'b_star', price: 150 }, gems2: { name: 'Podwójne kryształy', desc: '🪙 z bossów i łupów ×2', img: 'b_gstar', price: 200 }, loot2: { name: 'Szczęście łupieżcy', desc: '+1 przedmiot w każdej skrzyni', img: 'b_swords', price: 200 } };
 const BOOST_MS = 30 * 60000;
 const isWeekend = () => [0, 6].includes(new Date().getDay());
 const boostOn = k => (k === 'xp2' && isWeekend()) || (hero().boost?.[k] || 0) > Date.now();
@@ -231,7 +231,7 @@ on('start', () => {
   const h = hero(); let n = 0;
   for (const [id, g] of GEAR_GONE) { const k = itemCount('gear', id); if (k > 0) { addItem('gear', id, -k, 'geargone-' + id); n += Math.round((GEAR_PRICE[g.r] || 200) / 2); }
     for (const sl of ['w', 'h', 'a', 'c']) if (h.eq?.[sl] === id) delete h.eq[sl]; if (h.forge?.[id]) delete h.forge[id]; }
-  if (n) { h.mod = Date.now(); S.wallet.push({ id: 'geargone-' + uid(), n, why: 'gear-refund', t: Date.now() }); save(); setTimeout(() => toast(`⚔️ Część przedmiotów wycofana – zwrot +${n} 💎`, 4500), 1800); }
+  if (n) { h.mod = Date.now(); S.wallet.push({ id: 'geargone-' + uid(), n, why: 'gear-refund', t: Date.now() }); save(); setTimeout(() => toast(`⚔️ Część przedmiotów wycofana – zwrot +${n} 🪙`, 4500), 1800); }
 });
 const gearImg = (id, cls = '') => { const g = GEAR[id]; return g ? `<img class="gear-img ${cls}" src="${fsrc(g.img)}" alt="${esc(g.name)}" draggable="false">` : ''; };
 const ownsGear = id => hasItem('gear', id);
@@ -303,7 +303,7 @@ on('review', (c, g, wasNew) => {
   const key = 'deckdone-' + d.id;
   if (!left && !S.wallet.some(w => w.id === key) && S.cards.filter(x => x.deckId === d.id).length >= 10) {
     S.wallet.push({ id: key, n: 50, why: 'deck-done', t: Date.now() }); giveXP(200 * xpMul());
-    setTimeout(() => celebrate(`📚 Cała talia „${d.name}” nauczona!`, '+200 XP bohatera · +50 💎 · finałowy boss czeka'), 600);
+    setTimeout(() => celebrate(`📚 Cała talia „${d.name}” nauczona!`, '+200 XP bohatera · +50 🪙 · finałowy boss czeka'), 600);
   } else if (typeof chapterJustLearned === 'function') { const ch = chapterJustLearned(c); if (ch != null) { giveXP(40 * xpMul()); toast(`🔓 Rozdział ${ch + 1} nauczony – boss odblokowany! +40 XP`, 3500); } }
   save();
 });
@@ -331,9 +331,9 @@ ROUTES.hero = () => {
   const tabs = [['char', '🎭', 'Postać'], ['tree', '✨', `Umiejętności${sp ? ` (${sp})` : ''}`], ['eq', '🎒', 'Ekwipunek'], ['shop', '🔨', `Kowal${typeof forgeReadyN === 'function' && forgeReadyN() ? ` (${forgeReadyN()} ✓)` : ''}`]];
   const pane = {
     char: `<div class="card"><h2 style="margin-top:0">🎭 Wybierz postać</h2><p class="small muted" style="margin-top:0">Kot Wojak jest za darmo. Pozostałe kupisz, wylosujesz w skrzyni bohaterów albo odblokujesz poziomem konta – rzadsze mają mocniejsze umiejętności. Każda postać ma własne umiejętności i <b>własne punkty</b>.</p>
-      <div class="card hero-case row nowrap"><span class="hc-ic">${crateImg('hero')}</span><div class="grow"><b>Skrzynka bohaterów</b><div class="small muted">${Object.entries(HERO_CASE.odds).map(([t, p]) => `<span style="color:${HERO_TIER[t][1]}">${HERO_TIER[t][0]} ${p}%</span>`).join(' · ')}<br>Duplikat = +${HERO_CASE.dupPts} pkt umiejętności tej postaci</div></div><button class="primary" data-act="hero-case">${HERO_CASE.price} 💎</button></div>
+      <div class="card hero-case row nowrap"><span class="hc-ic">${crateImg('hero')}</span><div class="grow"><b>Skrzynka bohaterów</b><div class="small muted">${Object.entries(HERO_CASE.odds).map(([t, p]) => `<span style="color:${HERO_TIER[t][1]}">${HERO_TIER[t][0]} ${p}%</span>`).join(' · ')}<br>Duplikat = +${HERO_CASE.dupPts} pkt umiejętności tej postaci</div></div><button class="primary" data-act="hero-case">${HERO_CASE.price} 🪙</button></div>
       <div class="char-grid">${Object.entries(CHAR_LINES).map(([k, l]) => { const d = lineDef(k), G = HERO_GET[k] || { t: 'basic' }, own = ownsHero(k), T = HERO_TIER[G.t];
-        const lock = own ? '' : `<span class="char-lock">${G.price ? `<i class="char-buy" data-act="hero-buy" data-k="${k}">Kup · ${G.price.toLocaleString('pl')} 💎</i>` : ''}${G.acc ? `<i class="char-acc">🔒 poziom konta ${G.acc} (masz ${accLevel()})</i>` : ''}<i class="char-acc">albo 🎰 skrzynka</i></span>`;
+        const lock = own ? '' : `<span class="char-lock">${G.price ? `<i class="char-buy" data-act="hero-buy" data-k="${k}">Kup · ${G.price.toLocaleString('pl')} 🪙</i>` : ''}${G.acc ? `<i class="char-acc">🔒 poziom konta ${G.acc} (masz ${accLevel()})</i>` : ''}<i class="char-acc">albo 🎰 skrzynka</i></span>`;
         return `<button class="char${heroLine(h) === k ? ' on' : ''}${own ? '' : ' locked'}" style="--tc:${T[1]}" data-act="${own ? 'hero-line' : 'hero-locked'}" data-k="${k}"><i class="char-tier">${T[0]} · umiejętności ×${String(T[2]).replace('.', ',')}</i><span class="char-cr">${k === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, 'rare') : heroArt(k, Math.min(3, pr), h.g === 'm' ? 'm' : 'w')}</span><b>${l.name}</b>${(() => { const n = skPoints(k); return n > 0 ? `<i class="char-pts">🌳 ${n} pkt</i>` : ''; })()}
         <small><b>${d.passive[0]}</b> – ${d.passive[1]}</small><small><b>${d.ult[0]}</b> – ${d.ult[1]}</small>${lock}</button>`; }).join('')}</div>
       ${h.line === 'beast' && !isPixelLine('beast') ? '<button class="sm ghost" data-act="hero-look">🎲 Wylosuj innego stworka</button>' : ''}</div>`,
@@ -347,22 +347,22 @@ ROUTES.hero = () => {
           return `<button class="sk got t${t}" data-act="hero-tier" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${TIER_IC[t]} ${n.name}</b><small>${t ? TIERS[t] + ' · ' : ''}efekt ×${(1 + .5 * t).toFixed(1).replace('.', ',')}</small><i>${t >= 3 ? '🌈 max' : `→ ${TIER_IC[t + 1]} ${TIERS[t + 1]}`}</i></button>`; }).join('')}</div>`).join('')}</div>`
       : `<div class="skill-tree${open ? '' : ' locked'}">${pages[pg].map(([bn, nodes]) => `<div class="sk-branch"><div class="sk-head">${bn}</div>${nodes.map((n, i) => { const got = hasNode(n.id), prev = i === 0 || hasNode(nodes[i - 1].id), lvOk = pg > 0 || L.lv >= SK_REQ_LV[i], can = open && !got && prev && lvOk && sp > 0, t = tier[n.id] || 0;
         return `<button class="sk${got ? ' got t' + t : can ? ' can' : ''}" data-act="hero-sk" data-id="${n.id}" ${can ? '' : 'disabled'}><b>${t ? TIER_IC[t] + ' ' : ''}${n.name}</b><small>${n.desc}</small>${got ? '<i>✓</i>' : !lvOk ? `<i>🔒 poz. ${SK_REQ_LV[i]}</i>` : !prev || !open ? '<i>🔒</i>' : ''}</button>`; }).join('<span class="sk-line"></span>')}</div>`).join('')}</div>`}
-      ${Object.keys(lineSk()).length ? '<button class="sm ghost" data-act="hero-sk-reset" style="margin-top:10px">↺ Zresetuj umiejętności tej postaci (200 💎, punkty wracają)</button>' : ''}</div>`; })(),
+      ${Object.keys(lineSk()).length ? '<button class="sm ghost" data-act="hero-sk-reset" style="margin-top:10px">↺ Zresetuj umiejętności tej postaci (200 🪙, punkty wracają)</button>' : ''}</div>`; })(),
     eq: petCardHTML() + `<div class="card"><h2 style="margin-top:0">🎒 Założone</h2>
       <div class="eq-slots">${['w', 'h', 'a', 'c'].map(s => { const id = h.eq[s], g = GEAR[id]; return `<div class="eq-slot" style="--rc:${g ? RARITY[g.r].color : '#94a3b8'}"><small>${SLOT_NAME[s]}</small>${g ? `${gearImg(id)}<b>${esc(g.name)}</b>${lvBadge(g, h.forge[id] || 0)}` : '<span class="eq-empty">—</span>'}</div>`; }).join('')}</div>
       ${['w', 'h', 'a', 'c'].map(s => { const own = Object.keys(GEAR).filter(id => GEAR[id].slot === s && ownsGear(id)); if (!own.length) return '';
         return `<h3>${SLOT_NAME[s]}</h3><div class="gear-grid">${own.map(id => { const g = GEAR[id], on = h.eq[g.slot] === id, f = h.forge[id] || 0;
           return `<button class="gear r-${g.r}${on ? ' on' : ''}" style="--rc:${RARITY[g.r].color}" data-act="hero-eq" data-id="${id}">${gearImg(id)}<b>${esc(g.name)}</b>${lvBadge(g, f)}<small>${RARITY[g.r].name} · ${gearStatsF(g, f)}</small><i>${on ? '✓ założone' : 'załóż'}</i></button>`; }).join('')}</div>`; }).join('') || '<p class="small muted">Pokonuj bossów – przedmioty wypadają ze skrzyń. Duplikat ulepsza przedmiot o +1.</p>'}</div>`,
     shop: `<div class="seg shop-sub"><button class="${HERO_SUB === 'forge' ? 'on' : ''}" data-act="hero-sub" data-k="forge"><b>🔨 Kuźnia</b><small>ulepszanie przedmiotów</small></button><button class="${HERO_SUB === 'shop' ? 'on' : ''}" data-act="hero-sub" data-k="shop"><b>🛒 Sklep kowala</b><small>mikstury, broń, boostery</small></button></div>
-      ${HERO_SUB === 'forge' ? `<div class="card">${typeof forgeHTML === 'function' ? forgeHTML() : ''}</div>` : `<div class="card"><h2 style="margin-top:0">🛒 Sklep kowala</h2>
-      <h3>🧪 Mikstury i power-upy</h3><div class="shop-grid">${Object.entries(POTIONS).map(([k, p]) => `<button class="shop-it" data-act="hero-buy-pot" data-k="${k}">${potionSVG(k)}<b>${p.name}</b><small>${p.desc} · masz ${potionN(k)}</small><i>${p.price} 💎</i></button>`).join('')}</div>
+      ${HERO_SUB === 'forge' ? `<div class="card">${typeof forgeHTML === 'function' ? forgeHTML() : ''}</div>` : `${typeof weaponCaseHTML === 'function' ? weaponCaseHTML() : ''}<div class="card"><h2 style="margin-top:0">🛒 Sklep kowala</h2>
+      <h3>🧪 Mikstury i power-upy</h3><div class="shop-grid">${Object.entries(POTIONS).map(([k, p]) => `<button class="shop-it" data-act="hero-buy-pot" data-k="${k}">${potionSVG(k)}<b>${p.name}</b><small>${p.desc} · masz ${potionN(k)}</small><i>${p.price} 🪙</i></button>`).join('')}</div>
       <h3>⚔️ Przedmioty</h3><p class="small muted" style="margin-top:0">Legendarne i mityczne są drogie – częściej trafisz je w skrzyniach z trudnych bossów.</p>
-      <div class="shop-grid">${Object.entries(GEAR).filter(([id]) => !ownsGear(id)).sort((x, y) => GEAR_PRICE[x[1].r] - GEAR_PRICE[y[1].r]).map(([id, g]) => `<button class="shop-it r-${g.r}" data-act="hero-buy-gear" data-id="${id}" style="--rc:${RARITY[g.r].color}">${gearImg(id)}<b>${esc(g.name)}</b><small>${RARITY[g.r].name} · ${gearStats(g)}</small><i>${GEAR_PRICE[g.r]} 💎</i></button>`).join('')}</div></div>
+      <div class="shop-grid">${Object.entries(GEAR).filter(([id]) => !ownsGear(id)).sort((x, y) => GEAR_PRICE[x[1].r] - GEAR_PRICE[y[1].r]).map(([id, g]) => `<button class="shop-it r-${g.r}" data-act="hero-buy-gear" data-id="${id}" style="--rc:${RARITY[g.r].color}">${gearImg(id)}<b>${esc(g.name)}</b><small>${RARITY[g.r].name} · ${gearStats(g)}</small><i>${GEAR_PRICE[g.r]} 🪙</i></button>`).join('')}</div></div>
       <div class="card"><h2 style="margin-top:0">⏱️ Boostery</h2>${boostChips() ? `<div class="boost-row">${boostChips()}</div>` : ''}
       <p class="small muted" style="margin-top:0">Włączasz na 30 minut. W weekend podwójne XP jest za darmo, a co ${FREE_BOOST_DAYS} dni czeka darmowy booster.</p>
       ${freeBoostReady() ? '<button class="primary block" data-act="boost-free">🎁 Odbierz darmowy booster</button>' : ''}
       <div class="shop-grid">${Object.entries(BOOSTS).map(([k, x]) => `<div class="shop-it boost-it${boostOn(k) ? ' on' : ''}"><img class="gear-img" src="${fsrc(x.img)}" alt=""><b>${x.name}</b><small>${x.desc}</small>
-        <div class="boost-btns">${itemCount('boost', k) ? `<button class="sm primary" data-act="boost-on" data-k="${k}">Włącz (${itemCount('boost', k)})</button>` : ''}<button class="sm" data-act="boost-buy" data-k="${k}">${x.price} 💎</button></div></div>`).join('')}</div></div>`}`,
+        <div class="boost-btns">${itemCount('boost', k) ? `<button class="sm primary" data-act="boost-on" data-k="${k}">Włącz (${itemCount('boost', k)})</button>` : ''}<button class="sm" data-act="boost-buy" data-k="${k}">${x.price} 🪙</button></div></div>`).join('')}</div></div>`}`,
   };
   return { tab: 'arena', html: `${evolveHTML()}
   <div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow row nowrap" style="margin:0;gap:8px">${heroIcon()} Bohater</h1>${coinsHTML()}</div>
@@ -390,14 +390,14 @@ Object.assign(ACTIONS, {
   'hero-sub': el => { HERO_SUB = el.dataset.k; render(); },
   'hero-eq': el => { const g = GEAR[el.dataset.id], h = hero(); if (!g) return; h.eq[g.slot] = h.eq[g.slot] === el.dataset.id ? undefined : el.dataset.id; h.mod = Date.now(); save(); render(); },
   'hero-sk': el => { const h = hero(); if (skPoints() < 1) return; lineSk(h)[el.dataset.id] = 1; if (pageDone(HERO_PAGE) && HERO_PAGE < 2) { HERO_PAGE++; setTimeout(() => celebrate(`📖 Strona ${PAGE_N[HERO_PAGE]} umiejętności odblokowana!`, 'Nowe, mocniejsze gałęzie'), 200); } else if (treeDone() && !HERO_UP) setTimeout(() => celebrate('✨ Wszystkie umiejętności odblokowane!', 'Teraz ulepszaj węzły: złote → platynowe → holograficzne'), 200); h.mod = Date.now(); S.stats.skills = Object.keys(lineSk(h)).length; if (lineDef().tree.some(([, ns]) => ns.every(n => lineSk(h)[n.id]))) S.stats.skillBranch = 1; save(); toast('🌳 Nowa umiejętność!'); render(); },
-  'hero-sk-reset': () => { if (!confirm('Zresetować umiejętności tej postaci za 200 💎? Wszystkie strony i ulepszenia wrócą jako punkty.')) return; if (!spend(200, 'sk-reset')) return; const h = hero(); h.sk[heroLine()] = {}; lineTier(h); h.skt[heroLine()] = {}; HERO_PAGE = 0; HERO_UP = false; h.mod = Date.now(); save(); render(); },
+  'hero-sk-reset': () => { if (!confirm('Zresetować umiejętności tej postaci za 200 🪙? Wszystkie strony i ulepszenia wrócą jako punkty.')) return; if (!spend(200, 'sk-reset')) return; const h = hero(); h.sk[heroLine()] = {}; lineTier(h); h.skt[heroLine()] = {}; HERO_PAGE = 0; HERO_UP = false; h.mod = Date.now(); save(); render(); },
   'hero-page': el => { HERO_PAGE = +el.dataset.p; HERO_UP = false; render(); },
   'hero-up': () => { if (treeDone()) { HERO_UP = true; render(); } },
   'hero-tier': el => { const h = hero(), t = lineTier(h), id = el.dataset.id; if (skPoints() < 1 || (t[id] || 0) >= 3 || !lineSk(h)[id]) return; t[id] = (t[id] || 0) + 1; h.mod = Date.now();
     if (Object.values(t).filter(x => x >= 3).length >= 36) S.stats.treeHolo = 1; save(); toast(`${TIER_IC[t[id]]} ${TIERS[t[id]]} węzeł!`); render(); },
   'hero-look': () => { const h = hero(); h.look = 1 + (Math.random() * 1e6 | 0); h.mod = Date.now(); save(); render(); },
-  'hero-locked': el => { const G = HERO_GET[el.dataset.k]; toast(G.price ? `🔒 Ta postać kosztuje ${G.price.toLocaleString('pl')} 💎 – albo wylosuj ją w skrzyni bohaterów` : `🔒 Odblokujesz ją na ${G.acc}. poziomie konta (masz ${accLevel()}) – albo w skrzyni bohaterów`, 3500); },
-  'hero-buy': el => { const k = el.dataset.k, G = HERO_GET[k]; if (!G?.price || ownsHero(k)) return; if (!confirm(`Kupić postać „${CHAR_LINES[k].name}” (${HERO_TIER[G.t][0]}) za ${G.price.toLocaleString('pl')} 💎?`)) return; if (!spend(G.price, 'hero')) return; addItem('hero', k, 1); heroReveal(k, false); },
+  'hero-locked': el => { const G = HERO_GET[el.dataset.k]; toast(G.price ? `🔒 Ta postać kosztuje ${G.price.toLocaleString('pl')} 🪙 – albo wylosuj ją w skrzyni bohaterów` : `🔒 Odblokujesz ją na ${G.acc}. poziomie konta (masz ${accLevel()}) – albo w skrzyni bohaterów`, 3500); },
+  'hero-buy': el => { const k = el.dataset.k, G = HERO_GET[k]; if (!G?.price || ownsHero(k)) return; if (!confirm(`Kupić postać „${CHAR_LINES[k].name}” (${HERO_TIER[G.t][0]}) za ${G.price.toLocaleString('pl')} 🪙?`)) return; if (!spend(G.price, 'hero')) return; addItem('hero', k, 1); heroReveal(k, false); },
   'hero-case': () => heroCaseOpen(),
   'hero-line': el => { const h = hero(); if (!ownsHero(el.dataset.k)) return; HERO_PAGE = 0; HERO_UP = false; h.line = el.dataset.k; h.mod = Date.now(); save(); render(); },
   'hero-g': el => { const h = hero(); h.g = el.dataset.g; h.mod = Date.now(); save(); render(); },
@@ -407,13 +407,13 @@ Object.assign(ACTIONS, {
   'boost-buy': el => { const k = el.dataset.k; if (!spend(BOOSTS[k].price, 'boost')) return; addItem('boost', k, 1); toast(`⏱️ ${BOOSTS[k].name} w ekwipunku – włącz, kiedy chcesz`); render(); },
   'hero-forge': () => { const h = hero(), w = h.eq.w, f = h.forge[w] || 0; if (!w || f >= FORGE_MAX) return; if (!spend((f + 1) * 150, 'forge')) return; h.forge[w] = f + 1; h.mod = Date.now(); save(); toast(`🔨 ${GEAR[w].name} +${f + 1}`); render(); },
   'hero-buy-pot': el => { const p = POTIONS[el.dataset.k]; if (!spend(p.price, 'potion')) return; addItem('potion', el.dataset.k, 1); toast(`🧪 ${p.name} w ekwipunku`); render(); },
-  'hero-buy-gear': el => { const id = el.dataset.id, g = GEAR[id]; if (!g || ownsGear(id)) return; if (!confirm(`Kupić „${g.name}” (${RARITY[g.r].name}) za ${GEAR_PRICE[g.r]} 💎?`)) return; if (!spend(GEAR_PRICE[g.r], 'gear')) return; addItem('gear', id, 1); toast(`🎒 ${g.name}`); render(); },
+  'hero-buy-gear': el => { const id = el.dataset.id, g = GEAR[id]; if (!g || ownsGear(id)) return; if (!confirm(`Kupić „${g.name}” (${RARITY[g.r].name}) za ${GEAR_PRICE[g.r]} 🪙?`)) return; if (!spend(GEAR_PRICE[g.r], 'gear')) return; addItem('gear', id, 1); toast(`🎒 ${g.name}`); render(); },
 });
 
 // 🎰 skrzynka bohaterów: losuje rzadkość, potem postać tej rzadkości (najpierw te, których nie masz); duplikat = punkty umiejętności
 function heroCaseOpen() {
   const lines = Object.keys(HERO_GET).filter(k => HERO_GET[k].t !== 'basic');
-  if (!confirm(`Otworzyć skrzynkę bohaterów za ${HERO_CASE.price} 💎?`)) return; if (!spend(HERO_CASE.price, 'hero-case')) return;
+  if (!confirm(`Otworzyć skrzynkę bohaterów za ${HERO_CASE.price} 🪙?`)) return; if (!spend(HERO_CASE.price, 'hero-case')) return;
   let r = Math.random() * 100, t = 'rare'; for (const [k, p] of Object.entries(HERO_CASE.odds).reverse()) { if (r < p) { t = k; break; } r -= p; }
   const pool = lines.filter(k => HERO_GET[k].t === t), fresh = pool.filter(k => !ownsHero(k)), k = (fresh.length ? fresh : pool)[Math.random() * (fresh.length || pool.length) | 0];
   const dup = ownsHero(k);

@@ -116,8 +116,15 @@ function earnedCoins() {
   return c;
 }
 function battleReward(b) { return b.bot ? ({ 1: 20, 0: 10, '-1': 5 }[b.won] || 0) : ({ 1: 50, 0: 25, '-1': 10 }[b.won] || 0); }
-const coins = () => earnedCoins() + S.wallet.reduce((a, w) => a + w.n, 0);
+// 🪙 dwie waluty: 💎 kryształy (naklejki, skrzynki, skiny, motywy) i 🪙 złoto (bohater: broń, kuźnia, mikstury, boostery).
+// Złoto zdobywasz w walkach (bossowie, wieża, łup). Starsze wpisy zostają kryształami (granica: S.stats.goldT).
+const GOLD_WHY = new Set(['boss', 'tower', 'loot', 'loot-dup', 'boss-event', 'gold-start', 'forge', 'forge-slot', 'gear', 'potion', 'boost', 'hero', 'hero-case', 'sk-reset', 'weapon-case', 'duel']);
+const goldWhy = why => GOLD_WHY.has(String(why || '').replace(/-[^-]*$/, '')) || GOLD_WHY.has(String(why || ''));
+const isGold = w => goldWhy(w.why) && w.t >= (S.stats.goldT || Infinity);
+const coins = () => earnedCoins() + S.wallet.reduce((a, w) => a + (isGold(w) ? 0 : w.n), 0);
+const gold = () => S.wallet.reduce((a, w) => a + (isGold(w) ? w.n : 0), 0);
 function spend(n, why) {
+  if (goldWhy(why) && S.stats.goldT) { if (gold() < n) { toast(`Brakuje ${n - gold()} 🪙 złota – zdobywaj je w walkach z bossami`); return false; } S.wallet.push({ id: uid(), n: -n, why, t: Date.now() }); save(); return true; }
   if (coins() < n) { toast(`Brakuje ${n - coins()} 💎`); return false; }
   S.wallet.push({ id: uid(), n: -n, why, t: Date.now() }); save(); return true;
 }
@@ -128,7 +135,7 @@ const ownedStickers = () => [...new Set([...FREE_STICKERS, ...STICKERS.filter(s 
 const stickerTile = (id, extra = '') => { const s = stickerById(id); if (!s) return ''; return `<span class="mini-st${fxCls(shinyLv(id))}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}"${extra}>${stE(s)}</span>`; };
 const showcaseHTML = ids => (ids || []).filter(id => stickerById(id) || (typeof cosById === 'function' && cosById(id))).slice(0, 3).map(id => stickerById(id) ? stickerTile(id) : cosShowTile(id)).join('');
 const cosShowTile = id => { const c = cosById(id); return `<span class="cos-sc r-${c.r}" style="--rc:${COS_R[c.r].c}" title="${esc(c.n)} · ${COS_R[c.r].n}">${cosIconHTML(c)}</span>`; };
-const coinsHTML = () => `<span class="coins">💎 ${coins()}</span>`;
+const coinsHTML = () => `<span class="coins">💎 ${coins()}</span>${S.stats.goldT ? `<span class="coins gold">🪙 ${gold()}</span>` : ''}`;
 
 function rollRarity(odds) {
   let r = Math.random() * 100;
@@ -414,3 +421,5 @@ Object.assign(ACTIONS, {
     save(); render(); showReaction(k, true);
   },
 });
+
+on('start', () => { if (!S.stats.goldT) { S.stats.goldT = Date.now(); S.wallet.push({ id: 'gold-start', n: 300, why: 'gold-start', t: S.stats.goldT + 1 }); save(); setTimeout(() => toast('🪙 Nowa waluta: złoto na bohatera (broń, kuźnia, mikstury). Na start +300 🪙', 5000), 2500); } });

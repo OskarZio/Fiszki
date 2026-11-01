@@ -1,6 +1,6 @@
 'use strict';
 /* 🔨 Kuźnia (jak w strategiach): ulepszanie przedmiotu trwa. Każdy przedmiot (broń, hełm, pancerz, talizman) do +10.
-   – Każdy poziom kosztuje 💎 i czas (+1: 5 min … +10: 24 h). Na start 1 stanowisko, drugie do odblokowania.
+   – Każdy poziom kosztuje 🪙 i czas (+1: 5 min … +10: 24 h). Na start 1 stanowisko, drugie do odblokowania.
    – Nauka przyspiesza kowala: dobra odpowiedź −1 min, wyklute jajko −30 min, materiał z duplikatu −1 h.
    – Progi +5 i +10 wymagają dodatkowo zadania (jajka / bossowie / powtórki).
    – Gotowe ulepszenie odbierasz w Kuźni; znaczek przy zakładce „Kowal” i powiadomienie, gdy coś czeka. */
@@ -43,7 +43,7 @@ function forgeStart(id) {
   const h = hero(), g = GEAR[id], f = h.forge[id] || 0, to = f + 1, J = forgeJobs(h);
   if (!g || !ownsGear(id) || to > FORGE_MAX) return;
   if (J.some(j => j.id === id)) return toast('Ten przedmiot już jest w kuźni');
-  if (J.length >= forgeSlots(h)) return toast(forgeSlots(h) < 2 ? `Kuźnia zajęta – odblokuj 2. stanowisko (${FORGE_SLOT2} 💎)` : 'Oba stanowiska są zajęte');
+  if (J.length >= forgeSlots(h)) return toast(forgeSlots(h) < 2 ? `Kuźnia zajęta – odblokuj 2. stanowisko (${FORGE_SLOT2} 🪙)` : 'Oba stanowiska są zajęte');
   if (!spend(forgeCost(id, to), 'forge')) return;
   const j = { id, to, start: Date.now(), cut: 0 };
   if (to === 5 || to === 10) { const ks = Object.keys(FORGE_TASKS), k = ks[Math.random() * ks.length | 0], T = FORGE_TASKS[k]; j.task = { k, n: T.n[to === 5 ? 0 : 1], base: T.now() }; }
@@ -67,18 +67,19 @@ function forgeHTML() {
   const h = hero(), J = forgeJobs(h), slots = forgeSlots(h), now = Date.now(), mats = matCount(), myMats = Object.keys(MATS).filter(k => matCount(k) > 0);
   const own = Object.keys(GEAR).filter(id => ownsGear(id)).sort((a, b) => (h.eq[GEAR[b].slot] === b) - (h.eq[GEAR[a].slot] === a) || (h.forge[b] || 0) - (h.forge[a] || 0));
   const jobHTML = j => { const g = GEAR[j.id], end = forgeEnd(j), dur = FORGE_T[j.to], left = Math.max(0, end - now), tl = forgeTaskLeft(j), T = j.task && FORGE_TASKS[j.task.k], ready = !left && !tl;
-    return `<div class="fj${ready ? ' ready' : ''}" style="--rc:${RARITY[g.r].color}"><div class="fj-top">${gearImg(j.id)}<div class="grow"><b>${esc(g.name)} → Lv ${j.to}</b>
+    return `<div class="fj${ready ? ' ready' : ''}" style="--rc:${RARITY[g.r].color}"><div class="fj-bench${left ? ' working' : ''}"><img class="fb-table" src="assets/forge8/table.webp" alt=""><span class="fb-item">${gearImg(j.id)}</span><img class="fb-anvil" src="assets/forge8/anvil.webp" alt=""></div>
+      <div class="fj-top"><div class="grow"><b>${esc(g.name)} → Lv ${j.to}</b>
       <small class="fj-left" data-fend="${end}">${left ? 'zostało ' + fClock(left) : 'czas minął ✓'}</small></div></div>
       <div class="pbar"><i style="width:${(100 * Math.min(1, 1 - left / dur)).toFixed(1)}%"></i></div>
       ${T ? `<div class="fj-task${tl ? '' : ' ok'}">${tl ? '📋' : '✅'} ${T.txt(j.task.n)}${tl ? ` – zostało ${tl}` : ''}</div>` : ''}
       <div class="fj-btns">${ready ? `<button class="primary" data-act="forge-take" data-id="${j.id}">🎁 Odbierz Lv ${j.to}</button>`
         : myMats.filter(k => MATS[k].task ? tl : left).map(k => `<button class="mat-btn" data-act="forge-mat" data-id="${j.id}" data-k="${k}">${matImg(k)}<span><b>${MATS[k].d}</b><small>${MATS[k].n} · masz ${matCount(k)}</small></span></button>`).join('')}</div></div>`; };
-  const slotsHTML = [0, 1].map(i => i < slots ? (J[i] ? jobHTML(J[i]) : '<div class="fj empty"><b>Wolne stanowisko</b><small>Wybierz przedmiot niżej i stuknij „Ulepsz”.</small></div>')
-    : `<div class="fj empty locked"><b>🔒 2. stanowisko</b><small>Dwa ulepszenia naraz.</small><button class="sm" data-act="forge-slot">Odblokuj · ${FORGE_SLOT2} 💎</button></div>`).join('');
+  const slotsHTML = [0, 1].map(i => i < slots ? (J[i] ? jobHTML(J[i]) : '<div class="fj empty"><div class="fj-bench"><img class="fb-table" src="assets/forge8/table.webp" alt=""></div><b>Wolne stanowisko</b><small>Wybierz przedmiot niżej i stuknij „Ulepsz”.</small></div>')
+    : `<div class="fj empty locked"><b>🔒 2. stanowisko</b><small>Dwa ulepszenia naraz.</small><button class="sm" data-act="forge-slot">Odblokuj · ${FORGE_SLOT2} 🪙</button></div>`).join('');
   const rows = own.map(id => { const g = GEAR[id], f = h.forge[id] || 0, to = f + 1, busy = J.some(j => j.id === id), on = h.eq[g.slot] === id;
     return `<div class="fi" style="--rc:${RARITY[g.r].color}"><div class="fi-top">${gearImg(id)}<div class="grow"><b>${esc(g.name)}${f ? ` · Lv ${f}` : ''}${on ? ' <small class="fi-on">założone</small>' : ''}</b>
       <small>${f >= FORGE_MAX ? '🏆 maksymalny poziom' : `+${to}: ${FORGE_BONUS[g.slot](to)} łącznie · ⏳ ${fDur(FORGE_T[to])}${to === 5 || to === 10 ? ' · 📋 + zadanie' : ''}`}</small></div></div>
-      ${f >= FORGE_MAX ? '' : busy ? '<span class="fi-busy">w kuźni</span>' : `<button class="primary" data-act="forge-go" data-id="${id}">Ulepsz do Lv ${to} · ${forgeCost(id, to)} 💎</button>`}</div>`; }).join('');
+      ${f >= FORGE_MAX ? '' : busy ? '<span class="fi-busy">w kuźni</span>' : `<button class="primary" data-act="forge-go" data-id="${id}">Ulepsz do Lv ${to} · ${forgeCost(id, to)} 🪙</button>`}</div>`; }).join('');
   return `<div class="forge2"><div class="row nowrap"><b class="grow">🔨 Kuźnia</b><span class="fmat">${matImg('rare')} ${mats}</span></div>
     <p class="small muted" style="margin:6px 0 12px">Ulepszenie trwa – kowal pracuje, a Ty się uczysz. <b>Każda dobra odpowiedź −1 min</b>, wyklute jajko −30 min. Poziomy +5 i +10 wymagają też zadania. Maksimum +${FORGE_MAX}.</p>
     <details class="mat-info"><summary>${matImg('legendary')} Co dają cegły (materiały)?</summary><div class="mat-list">${Object.entries(MATS).map(([k, M]) => `<div>${matImg(k)}<span><b>${M.n}: ${M.d}</b><small>${k === 'ice' ? 'z jajka 90 min' : k === 'void' ? 'z jajka 2 h' : k === 'green' ? 'gdy wykluje się legendarny lub mityczny stworek' : `z duplikatu przedmiotu (${RARITY[k].name.toLowerCase()}) ze skrzyni`} · masz ${matCount(k)}</small></span></div>`).join('')}</div></details>
@@ -90,7 +91,7 @@ Object.assign(ACTIONS, {
   'forge-go': el => forgeStart(el.dataset.id),
   'forge-take': el => forgeCollect(el.dataset.id),
   'forge-mat': el => { const j = forgeJobs().find(x => x.id === el.dataset.id); if (j && matUse(j, el.dataset.k)) render(); },
-  'forge-slot': () => { const h = hero(); if (forgeSlots(h) >= 2) return; if (!confirm(`Odblokować 2. stanowisko w kuźni za ${FORGE_SLOT2} 💎?`)) return; if (!spend(FORGE_SLOT2, 'forge-slot')) return; h.forgeSlots = 2; h.mod = Date.now(); save(); toast('🔨 Drugie stanowisko gotowe!'); render(); },
+  'forge-slot': () => { const h = hero(); if (forgeSlots(h) >= 2) return; if (!confirm(`Odblokować 2. stanowisko w kuźni za ${FORGE_SLOT2} 🪙?`)) return; if (!spend(FORGE_SLOT2, 'forge-slot')) return; h.forgeSlots = 2; h.mod = Date.now(); save(); toast('🔨 Drugie stanowisko gotowe!'); render(); },
   'hero-forge': () => { HERO_TAB = 'shop'; render(); },
 });
 // ⏩ nauka przyspiesza kowala
@@ -108,3 +109,19 @@ setInterval(() => {
   const h = S?.hero; if (!h) return; const ready = forgeJobs(h).filter(forgeDone);
   for (const j of ready) if (!j.told) { j.told = 1; toast(`🔨 Gotowe: ${GEAR[j.id].name} +${j.to} – odbierz w Kuźni (Bohater → Kowal)`, 5000); if (parseRoute().parts[0] === 'hero') render(); }
 }, 1000);
+
+// ⚔️ Skrzynia z bronią (🪙 złoto): losuje przedmiot do ekwipunku – duplikat = cegła do kuźni
+const WCASE = { price: 400, odds: { common: 42, rare: 33, epic: 18, legendary: 6, mythic: 1 } };
+function weaponCaseOpen() {
+  if (!spend(WCASE.price, 'weapon-case')) return;
+  const roll = () => { const r = rollTier(WCASE.odds), pool = Object.keys(GEAR).filter(id => GEAR[id].r === r); return { k: 'gear', id: pool[Math.random() * pool.length | 0], r }; };
+  const win = roll(); grantLoot(win, 'wcase-' + uid()); save();
+  const strip = Array.from({ length: 34 }, (_, i) => i === 29 ? win : roll()), sp = document.createElement('div'); sp.className = 'cos-ov';
+  sp.innerHTML = `<div class="skin-spin-wrap"><div class="skin-spin-t">⚔️ Skrzynia z bronią</div><div class="cos-spin"><div class="cos-strip">${strip.map(x => `<div class="cos-tile r-${x.r}" style="--rc:${RARITY[x.r].color}">${gearImg(x.id)}<small>${esc(GEAR[x.id].name)}</small></div>`).join('')}</div><i class="cos-mark"></i></div></div>`;
+  document.body.append(sp);
+  const el = sp.querySelector('.cos-strip'), tw = sp.querySelector('.cos-tile')?.offsetWidth || 110, stop = 29 * (tw + 10) - (sp.querySelector('.cos-spin').offsetWidth / 2 - tw / 2);
+  requestAnimationFrame(() => { el.style.transition = 'transform 4000ms cubic-bezier(.12,.75,.12,1)'; el.style.transform = `translateX(${-stop}px)`; });
+  setTimeout(() => { sp.remove(); const g = GEAR[win.id]; celebrate(`⚔️ ${g.name}!`, `${RARITY[win.r].name}${win.dup ? ` · duplikat → ${win.matK && MATS[win.matK] ? MATS[win.matK].n : 'cegła'} do kuźni` : ' · w ekwipunku'}`); if (['legendary', 'mythic'].includes(win.r)) confetti(200); render(); }, 4300);
+}
+ACTIONS['weapon-case'] = () => weaponCaseOpen();
+const weaponCaseHTML = () => `<div class="card row nowrap wcase"><img class="crate-img" src="assets/crates/bc_fire.webp" alt=""><div class="grow"><b>Skrzynia z bronią</b><small class="muted">${Object.entries(WCASE.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name} ${p}%</span>`).join(' · ')}<br>Duplikat = cegła do kuźni</small></div><button class="primary" data-act="weapon-case">${WCASE.price} 🪙</button></div>`;

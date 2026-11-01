@@ -656,7 +656,7 @@ function grantLoot(it, key) {
 const lootIcon = it => it.k === 'gear' ? gearImg(it.id) : it.k === 'potion' ? potionSVG(it.id) : it.k === 'boost' ? `<img class="gear-img" src="${fsrc(BOOSTS[it.id].img)}" alt="">` : it.k === 'egg' ? '<span class="loot-big">👑</span>' : `<img class="gear-img gem8" src="${GEM8}" alt="💎">`;
 const lootHTML = it => `${lootIcon(it)}${it.k === 'gear' ? `<b>${esc(GEAR[it.id].name)}</b><small>${it.dup ? (it.mat ? `DUPLIKAT → ${typeof MATS !== 'undefined' && MATS[it.matK] ? `${MATS[it.matK].n} (${MATS[it.matK].d})` : 'cegła'} do kuźni` : it.up ? `DUPLIKAT → ulepszenie +${it.up}` : `DUPLIKAT → +${it.n} 💎`) : RARITY[it.r].name}</small>`
   : it.k === 'potion' ? `<b>${POTIONS[it.id].name}${it.n > 1 ? ' ×' + it.n : ''}</b><small>${POTIONS[it.id].desc}</small>` : it.k === 'boost' ? `<b>${BOOSTS[it.id].name}</b><small>30 min</small>`
-  : it.k === 'egg' ? '<b>Złote jajo</b><small>do inkubatora</small>' : `<b>+${it.n}</b><small>kryształy</small>`}`;
+  : it.k === 'egg' ? '<b>Złote jajo</b><small>do inkubatora</small>' : `<b>+${it.n} 🪙</b><small>złoto</small>`}`;
 const oddsHTML = tier => { const o = TIER_ODDS[Math.max(0, Math.min(4, tier))];
   return `<details class="odds"><summary>📊 Szanse w tej skrzyni</summary><div class="odds-grid">${LOOT_CAT.map(([, w, n]) => `<span>${n}</span><b>${w}%</b>`).join('')}</div>
     <div class="small muted" style="margin:6px 0 4px">Rzadkość przedmiotu:</div><div class="odds-grid">${['common', 'rare', 'epic', 'legendary', 'mythic'].map(r => `<span style="color:${RARITY[r].color}">${RARITY[r].name}</span><b>${o[r]}%</b>`).join('')}</div>
@@ -776,7 +776,7 @@ setInterval(() => {
 }, 250);
 
 // ---------- 🗺️ widok: wybór materiału (talie → rozdziały → finał, kategorie, świat)
-const HP_BAR = (v, max, cls) => `<div class="hpbar ${cls}"><i style="width:${Math.max(0, v / max * 100).toFixed(1)}%"></i><span>${Math.max(0, Math.round(v))} / ${max}</span></div>`;
+const HP_BAR = (v, max, cls) => `<div class="hpbar ${cls}"><i style="width:${Math.max(0, Math.min(1, v / max) * 100).toFixed(1)}%"></i><span>${Math.max(0, Math.round(v))} / ${Math.round(max)}</span></div>`;
 function nodeHTML(b, sel) {
   const on = sel && BOSS_SEL && BOSS_SEL.kind === b.kind && BOSS_SEL.id === b.id && (BOSS_SEL.i ?? null) === (b.i ?? null);
   return `<button class="bnode${b.ok ? '' : ' locked'}${b.stars ? ' beaten' : ''}${b.final ? ' final' : ''}${on ? ' on' : ''}" data-act="boss-sel" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">
@@ -909,7 +909,7 @@ function endView() {
     <div class="row" style="margin-top:10px"><button class="primary grow" data-act="weekly-start">⚔️ Jeszcze raz</button><button class="grow" data-go="#/rank">🏆 Ranking</button><button class="grow" data-act="boss-map">🗺️ Mapa</button></div></div>` };
   const chest = won && B.chest?.n ? (B.chest.open ? `<div class="loot">${B.loot.map((it, i) => `<div class="loot-it roll" style="--d:${i * .35}s;--rc:${RARITY[it.r || 'rare'].color}"><div class="roll-strip" style="--d:${i * .35}s">${Array.from({ length: 14 }, () => `<span>${lootIcon(rollLoot(B.chest.tier))}</span>`).join('')}<span>${lootIcon(it)}</span></div><div class="roll-res" style="--d:${1.6 + i * .35}s">${lootHTML(it)}</div></div>`).join('')}</div>`
       : `<button class="chest-btn" data-act="boss-chest"><div class="chest closed crate">${bossChestImg(B.chest.tier)}</div><b>🎁 Skrzynia ×${B.chest.n} – stuknij, by otworzyć!</b></button>`) + oddsHTML(B.chest.tier) : '';
-  const msg = won ? `${B.medal ? `🏅 ${MODES[B.mode].name}: <b>${MASTER_T[B.medal]}</b>! · ` : ''}+${B.gems} 💎 · +${B.xp} XP${B.rep ? ' · metoda opanowana (diament) – mniejsza nagroda' : ''}${B.caught ? ` · 🕵️ przyłapany ${B.caught}×${B.caught >= 2 ? ' (mniejsza skrzynia)' : ''}` : ''}`
+  const msg = won ? `${B.medal ? `🏅 ${MODES[B.mode].name}: <b>${MASTER_T[B.medal]}</b>! · ` : ''}+${B.gems} 🪙 · +${B.xp} XP${B.rep ? ' · metoda opanowana (diament) – mniejsza nagroda' : ''}${B.caught ? ` · 🕵️ przyłapany ${B.caught}×${B.caught >= 2 ? ' (mniejsza skrzynia)' : ''}` : ''}`
     : B.why === 'cards' ? `Skończyły się fiszki – boss przetrwał. Serce zostaje. +${B.xp} XP` : `${B.hcReset ? '💀 Świat hardcore utracony – bohater i bossowie hardcore od zera. Główny profil nietknięty. ' : ''}${B.lifeLost ? '🖤 Tracisz serce. ' : ''}+${B.xp} XP. Ulepsz bohatera, kup mikstury i spróbuj znowu.`;
   return { tab: 'arena', focus: true, html: `
   <div class="card center boss-end ${won ? 'won' : 'lost'}">
@@ -931,8 +931,10 @@ const PARRY_TXT = cur => cur.runes ? (cur.runes.phase === 'show' ? '🔮 Zapami�
 const runesHTML = R => `<div class="runes ${R.phase}">${R.phase === 'show' ? `<div class="rune-seq">${R.seq.map((k, i) => `<span class="rune flash" style="--c:${RUNES[k][1]};animation-delay:${i * RUNE_MS}ms">${RUNES[k][0]}</span>`).join('')}</div>`
   : `<div class="rune-dots">${R.seq.map((_, i) => `<i class="${i < R.input.length ? 'on' : ''}"></i>`).join('')}</div><div class="rune-pad">${RUNES.map(([e, c], k) => `<button class="rune" style="--c:${c}" data-act="boss-rune" data-k="${k}">${e}</button>`).join('')}</div>`}</div>`;
 // po wpisaniu: werdykt → ocena (ok 3, prawie 2, źle 1)
+// 🐛❄️ przeszkadzajka blokuje odpowiedź: najpierw robaki / lód (też Enter i online)
+const bossBlocked = () => { const B = BOSS; if (B && (B.ice || B.bugs?.length || B.qLock > Date.now() || (B.rolls || []).some(r => Date.now() - r.t < ROLL_MS + 800))) { toast(B.ice ? '❄️ Najpierw rozbij lód!' : B.bugs?.length ? '🐛 Najpierw zabij robaczki!' : '⏳ Chwila…', 1200); return true; } return false; };
 function bossCheck() {
-  const B = BOSS, c = bossCard(); if (!B || !c) return;
+  const B = BOSS, c = bossCard(); if (!B || !c || bossBlocked()) return;
   const given = ($('#boss-in')?.value || '').trim(); if (!given) return toast('Wpisz odpowiedź albo stuknij „Nie wiem”');
   B.verdict = checkAnswer(given, cardView(c).ans); B.shown = true; B.pendingG = B.verdict === 'wrong' ? 1 : B.verdict === 'close' ? 2 : 3; render();
 }
@@ -1000,5 +1002,5 @@ const bossRoute0 = ROUTES.boss;
 ROUTES.boss = (...a) => { const v = bossRoute0(...a); return !v || v.focus ? v : { ...v, tab: 'arena', html: (typeof hubNav === 'function' ? hubNav('arena', 'boss') : '') + v.html }; };
 
 // 🖐️ bez „przeklikiwania”: drugi szybki dotyk (< 0,45 s) po odpowiedzi albo po nowym pytaniu jest ignorowany
-{ let lastTap = 0; for (const k of ['boss-pick', 'boss-tf', 'boss-next', 'boss-self', 'boss-grade', 'boss-show', 'boss-check']) { const f0 = ACTIONS[k]; if (!f0) continue;
-  ACTIONS[k] = (...a) => { const now = Date.now(); if (now - lastTap < 450 || (BOSS && k !== 'boss-next' && (now - (BOSS.qAt || 0) < 350 || now < (BOSS.qLock || 0)))) return; lastTap = now; return f0(...a); }; } }
+{ let lastTap = 0; for (const k of ['boss-pick', 'boss-tf', 'boss-next', 'boss-self', 'boss-grade', 'boss-show', 'boss-check', 'boss-g']) { const f0 = ACTIONS[k]; if (!f0) continue;
+  ACTIONS[k] = (...a) => { const now = Date.now(); if (k !== 'boss-next' && bossBlocked()) return; if (now - lastTap < 450 || (BOSS && k !== 'boss-next' && (now - (BOSS.qAt || 0) < 350 || now < (BOSS.qLock || 0)))) return; lastTap = now; return f0(...a); }; } }

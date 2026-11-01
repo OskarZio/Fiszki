@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '240';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '241';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -502,7 +502,7 @@ function pickNext(sess) {
   if (lrn.length) return lrn[0];
   const rev = pool.filter(c => c.srs.state === 'review' && c.srs.due <= now).sort(byDue);
   const intro = introducedToday();
-  const nwAll = pool.filter(c => c.srs.state === 'new' && (sess.all || (intro[c.deckId] || 0) < deckNewLimit(c.deckId))), key = newOrderKey(nwAll);   // sess.all: bez dziennego limitu
+  const nwAll = pool.filter(c => c.srs.state === 'new' && (sess.all ? (sess.newN || 0) < (sess.newCap || 20) : (intro[c.deckId] || 0) < deckNewLimit(c.deckId))), key = newOrderKey(nwAll);   // sess.all: paczki po 20 nowych
   const nw = nwAll.sort((a, b) => key(a) - key(b));
   // dużo kart „w nauce” naraz (np. 20× „Nie pamiętam”) → najpierw je utrwal, zanim dojdą kolejne nowe
   const open = pool.filter(isLearning);
@@ -533,7 +533,7 @@ function answer(g) {
     if (g === 1) s.cram.splice(Math.min(3, s.cram.length), 0, c.id);
     else s.done++;
   } else {
-    const wasNew = c.srs.state === 'new';
+    const wasNew = c.srs.state === 'new'; if (wasNew) s.newN = (s.newN || 0) + 1;
     const typed = s.mode === 'type' && s.verdict;   // m/v: tryb i wynik – wpisywane odpowiedzi są warte więcej niż przewijane
     const entry = { id: uid(), c: c.id, d: c.deckId, t: Date.now(), g, n: wasNew ? 1 : 0, ms: Math.min(60000, Date.now() - s.shownAt), m: typed ? 'type' : 'flip', ...(typed ? { v: s.verdict } : {}) };
     s.undo = { cardId: c.id, srs: c.srs, logId: entry.id, mod: c.mod };
@@ -948,6 +948,7 @@ function viewStudy(deckId, mode, q) {
     return head + `<div class="card flash"><div style="font-size:54px">🎉</div><h2>Gratulacje!</h2>
       <p class="muted">${s.done ? `Powtórzono ${s.done} ${plural(s.done, 'kartę', 'karty', 'kart')} w ⏱ <b>${fmtDur(s.timeMs || 0)}</b>.` : 'Na teraz nie ma nic do powtórki.'}</p>
       ${setRewardHTML(s.reward)}
+      ${s.all && S.cards.some(c => !c.sus && c.srs.state === 'new' && (s.deckId === 'all' || c.deckId === s.deckId) && (!s.only || s.only.has(c.id))) ? `<button class="primary block" data-act="more-new" style="margin:10px 0">➕ Kolejne 20 nowych fiszek</button>` : ''}
       <p class="small muted">Dziś uczysz się już ${fmtDur(studyMsBetween(dayStart()))}.</p>
       <p class="muted small">${nextDueText()}</p></div>
       ${deckId !== 'all' && !s.cram && starredCards(deckId).length ? `<button class="block" data-act="cram-star" data-id="${deckId}">⭐ Powtórz oznaczone z tej talii (${starredCards(deckId).length})</button><div class="spacer"></div>` : ''}
@@ -1917,6 +1918,7 @@ const ACTIONS = {
     const v = $('#typein').value, c = cardView(SESSION.card);
     SESSION.typed = v; SESSION.verdict = checkAnswer(v, c.ans); SESSION.shown = true; render();
   },
+  'more-new': () => { if (!SESSION) return; SESSION.newCap = (SESSION.newCap || 20) + 20; nextCard(); render(); },
   grade: el => { const s = SESSION, now = Date.now(); if (!s || now - (s.lastTap || 0) < 450 || now - (s.shownTapAt || 0) < 300) return; s.lastTap = now; answer(+el.dataset.g); },
   undo: () => undo(),
 
