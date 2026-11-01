@@ -3083,3 +3083,7 @@ input[type=range]::-moz-range-progress { height: 8px; border-radius: 99px; backg
 .mode-pick button.on.mt4 { box-shadow: inset 0 0 0 3px #22d3ee, 0 6px 18px -6px #22d3ee !important; background: color-mix(in srgb, #22d3ee 14%, var(--card)) !important; border-color: transparent !important; transform: translateY(-2px); }
 .mode-pick button.on.mt3 { box-shadow: inset 0 0 0 3px #a78bfa, 0 6px 18px -6px #a78bfa !important; background: color-mix(in srgb, #a78bfa 14%, var(--card)) !important; }
 .boss-q.qlock ~ .bf-ctrl { opacity: .55; pointer-events: none; transition: opacity .2s; }
+.hc-cta { width: 100%; text-align: left; gap: 12px; border: 1px solid #7f1d1d !important; } .hc-cta img, .hc-banner img { width: 48px; height: 48px; image-rendering: pixelated; flex: none; }
+.hc-cta .grow, .hc-banner .grow { display: grid; gap: 3px; } .hc-cta small, .hc-banner small { color: var(--muted); line-height: 1.35; }
+.hc-banner { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 10px 0; border-radius: 12px; background: #3b0d0d; border: 2px solid #dc2626; color: #fecaca; }
+.hc-banner b { color: #fff; letter-spacing: 1px; } .hc-banner small { color: #fca5a5 !important; }

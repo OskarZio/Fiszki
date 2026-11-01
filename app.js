@@ -118,7 +118,7 @@ function blankState() {
   return { v: 1, decks: [], notes: [], cards: [], palaces: [], log: [], tomb: {}, settings: structuredClone(DEFAULT_SETTINGS), ...extraState() };
 }
 // pola dodane w kolejnych wersjach (tematy, znajomi, gry, osiągnięcia, system liczbowy)
-function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], battles: [], stickies: [], atlases: [], events: [], logins: [], tlog: [], eggs: [] }; }
+function extraState() { return { topics: [], friends: [], games: [], ach: {}, stats: {}, major: { words: {}, mod: 0 }, profile: { nick: '', avatar: '🦊', mod: 0 }, wallet: [], items: [], hcWallet: [], hcItems: [], battles: [], stickies: [], atlases: [], events: [], logins: [], tlog: [], eggs: [] }; }
 
 // Proste zdarzenia, na które reagują moduły (osiągnięcia, ranking…)
 const HOOKS = {};
@@ -1768,6 +1768,8 @@ async function gistText(f) {
 }
 function exportData() { const { settings, ...rest } = S; return { ...rest, exportedAt: Date.now() }; }
 function mergeState(R) {
+  // 💀 portfel i przedmioty świata hardcore są osobne – kopia z innego urządzenia mogła być akurat w drugim świecie
+  if (!!R.settings?.hardcore !== !!S.settings?.hardcore) { [R.wallet, R.hcWallet] = [R.hcWallet || [], R.wallet || []]; { const K = ['gear', 'potion', 'boost', 'forgemat', 'egg'], it = R.items || []; [R.items, R.hcItems] = [[...it.filter(i => !K.includes(i?.kind)), ...(R.hcItems || [])], it.filter(i => K.includes(i?.kind))]; } }
   const tomb = { ...S.tomb };
   for (const k in R.tomb || {}) tomb[k] = Math.max(R.tomb[k], tomb[k] || 0);
   for (const key of ['decks', 'notes', 'cards', 'palaces', 'topics', 'friends', 'stickies', 'atlases', 'events']) {
@@ -1788,7 +1790,7 @@ function mergeState(R) {
   const ids = new Set(S.log.map(l => l.id));
   for (const l of R.log || []) if (!ids.has(l.id)) S.log.push(l);
   S.log.sort((a, b) => a.t - b.t);
-  for (const key of ['games', 'wallet', 'items', 'battles', 'logins', 'tlog', 'eggs']) {
+  for (const key of ['games', 'wallet', 'items', 'hcWallet', 'hcItems', 'battles', 'logins', 'tlog', 'eggs']) {
     S[key] = S[key] || []; const ids = new Set(S[key].map(x => x.id));
     for (const x of R[key] || []) if (!ids.has(x.id)) S[key].push(x);
   }
