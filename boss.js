@@ -733,7 +733,7 @@ const chestSVG = () => `<svg viewBox="0 0 120 100"><defs><linearGradient id="chw
 function bossEnd(won, why) {
   const B = BOSS, b = B.b, hs = B.hs; if (B.phase !== 'fight') return; bossCPClear();
   if (b.kind === 'tower' && typeof towerEnd === 'function') { B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); bossSay(won ? 'down' : 'win'); bossSfx(won ? 'win' : 'lose'); if (won) { bestiaryAdd(b); B.badges = styleBadges(B); } towerEnd(B, won); save(); return render(); }
-  B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); B.why = why; bossSay(won ? 'down' : 'win'); if (!won && why === 'dead') B.deadT = Date.now();
+  B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); B.why = why; bossSay(won ? 'down' : 'win'); if (!won && why === 'dead') { B.deadT = Date.now(); if (!B.fled) setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, deathCutMs() + 60); }
   if (b.kind === 'weekly') return weeklyEnd(B);
   if (won) { bestiaryAdd(b); B.badges = styleBadges(B); }
   const flawless = won && B.lostHp === 0, total = B.ok + B.bad, acc = total ? B.ok / total : 0, modeR = MODE_REWARD[B.mode] || 1, rep = masterKey(b) ? mastery(b, B.mode) >= 4 : b.repeat; B.rep = won && rep;
@@ -974,6 +974,7 @@ function fightView() {
 }
 function endView() {
   const B = BOSS, b = B.b, won = B.phase === 'won';
+  if (!won && B.why === 'dead' && B.deadT && !B.fled && !B.cutSkip && Date.now() - B.deadT < deathCutMs()) return { tab: 'arena', focus: true, html: deathCutHTML(B) };
   if (b.kind === 'weekly') return { tab: 'arena', focus: true, html: `<div class="card center boss-end won"><div class="boss-stage gloat">${bossArt(b)}</div>
     <h2>🏆 Boss tygodnia: ${esc(b.name)}</h2><div class="weekly-score">${B.weeklyScore.toLocaleString('pl')}</div><p class="small muted" style="margin-top:0">zadanych obrażeń${B.weeklyRecord ? ' · <b>🏅 nowy rekord tygodnia!</b>' : ` · rekord: ${weeklyBest().toLocaleString('pl')}`}</p>
     <p class="small">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best} · +${B.xp} XP</p>${badgesHTML(B)}
@@ -988,7 +989,7 @@ function endView() {
   return { tab: 'arena', focus: true, html: `
   <div class="card center boss-end ${won ? 'won' : 'lost'}">
     <div class="boss-stage ${won ? 'dead' : 'gloat'}">${bossArt(b)}${won ? '<div class="boss-boom"></div>' : ''}</div>
-    ${!won && B.why === 'dead' && B.deadT ? deathFxHTML(B) : ''}
+    ${!won && B.why === 'dead' && B.deadT && B.fled ? deathFxHTML(B) : ''}
     ${B.say?.txt ? `<div class="boss-say end">${esc(B.say.txt)}</div>` : ''}
     <h2 style="margin:6px 0">${won ? `🏆 ${esc(b.name)} pokonany!` : `💀 ${esc(b.name)} wygrywa…`}</h2>
     <p class="small muted">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best}${B.verOk ? ` · 🔍 ${B.verOk} sprawdzianów` : ''}${B.parryN ? ` · 🛡️ ${B.parryOk}/${B.parryN} sparowanych` : ''}${won && B.flawless ? ' · <b>bez straty ❤️</b>' : ''}</p>
@@ -1121,6 +1122,20 @@ function bossCPRestore() {
   return true;
 }
 on('start', () => setTimeout(() => { try { if (bossCPRestore()) { go('#/boss/fight'); render(); } } catch (e) { console.warn('cp', e); bossCPClear(); BOSS = null; } }, 300));
+
+// 🎬 cutscenka śmierci: gra od razu w walce, przed bossem – boss uderza, bohater pada, dopiero potem ekran porażki.
+// Hardcore: czerwień, krew, pęknięty ekran i mocniejszy cios. --el = sekundy od śmierci (przerysowanie nie restartuje animacji).
+const deathCutMs = () => S.settings.hardcore ? 4600 : 3800;
+function deathCutHTML(B) {
+  const el = Math.max(0, (Date.now() - B.deadT) / 1000).toFixed(2), hc = S.settings.hardcore, say = B.say?.txt || (hc ? 'Nie ma powrotu.' : 'Następnym razem…');
+  return `<div class="dcut${hc ? ' hc' : ''}" style="--el:${el}s">
+    <div class="dc-stage"><div class="dc-boss">${bossArt(B.b)}</div><div class="dc-say">${esc(say)}</div>
+      <div class="dc-slash"></div><div class="dc-hero">${typeof heroIcon === 'function' ? heroIcon() : ''}</div><i class="dc-ground"></i></div>
+    <i class="dc-veil"></i>${hc ? '<i class="df-blood dc-b"></i><i class="df-crack dc-c"></i>' : ''}
+    <div class="dc-txt"><b>${hc ? '💀 Bohater poległ' : 'Poległeś…'}</b><small>${hc ? `${esc(B.b.name)} nie zna litości` : `${esc(B.b.name)} tym razem wygrywa`}</small></div>
+    <button class="ghost dc-skip" data-act="dcut-skip">Pomiń ›</button></div>`;
+}
+ACTIONS['dcut-skip'] = () => { if (BOSS) { BOSS.cutSkip = 1; render(); } };
 
 // 💀 animacja śmierci bohatera: ekran szarzeje, postać pada („Poległeś”); w hardcore – krew, pęknięty ekran i czaszka
 function deathFxHTML(B) {
