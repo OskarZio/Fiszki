@@ -233,11 +233,18 @@ ROUTES.coop = (...a) => { const v = coopRoute0(...a); return !v || v.focus ? v :
 // Po piętrze: 35% ❤️ wraca i drużyna dostaje wspólną nagrodę. Boss co 4 pytania uczy się nowej mocy. Wszyscy padli = koniec.
 const DUO_EMO = ['👏', '😂', '🔥', '😱', '💪', '🫡'];
 const DUO_BON = { hp: ['❤️', 'więcej maks. ❤️'], dmg: ['⚔️', 'mocniejsze ciosy'], crit: ['🎯', 'więcej krytyków'], heal: ['💚', 'pełne leczenie drużyny'], ult: ['⚡', 'supercios naładowany na start'], time: ['⏱️', 'więcej czasu do namysłu'],
-  shield: ['🛡️', 'tarcza drużyny'], regen: ['🌿', 'regeneracja co turę'], sync: ['🤝', 'mocniejsze synchro'], cleanse: ['✨', 'odporność na przeszkadzajki'] };
+  shield: ['🛡️', 'tarcza drużyny'], regen: ['🌿', 'regeneracja co turę'], sync: ['🤝', 'mocniejsze synchro'], cleanse: ['✨', 'odporność na przeszkadzajki'],
+  ultcap: ['🔋', 'magazyn mocy'], echo: ['🔁', 'echo superciosu'], vamp: ['🦇', 'wampiryzm drużyny'],
+  phoenix: ['🕊️', 'Feniks drużyny ★'], midas: ['💰', 'Dotyk Midasa ★'], crown: ['👑', 'Korona mocy ★'] };
+// ★ wyjątkowe – raz wybrane już nie wracają w głosowaniu (działają do końca biegu)
+const DUO_UNIQUE = ['phoenix', 'midas', 'crown'];
 // 📈 umiejętności drużyny skalują się z piętrem (im wyżej, tym mocniejsza nagroda) – opis z liczbami na dany moment
-const duoBonVal = (k, f) => ({ hp: 15 + 4 * f, dmg: 10 + f, crit: 5 + Math.floor(f / 2), time: 15 + f, shield: 1 + Math.floor(f / 4), regen: 2 + Math.floor(f / 2), sync: 25 + 3 * f, cleanse: 1 + Math.floor(f / 5) })[k];
+const duoBonVal = (k, f) => ({ hp: 15 + 4 * f, dmg: 10 + f, crit: 5 + Math.floor(f / 2), time: 15 + f, shield: 1 + Math.floor(f / 4), regen: 2 + Math.floor(f / 2), sync: 25 + 3 * f, cleanse: 1 + Math.floor(f / 5),
+  ult: 1, ultcap: 1, echo: 15 + 2 * f, vamp: 4 + Math.floor(f / 2) })[k];
 const duoBonTxt = (k, f) => { const v = duoBonVal(k, f); return ({ hp: `+${v} maks. ❤️ dla drużyny`, dmg: `+${v}% obrażeń dla drużyny`, crit: `+${v}% krytyka dla drużyny`, time: `+${v}% czasu do namysłu`,
-  shield: `tarcza blokuje ${v} ${v === 1 ? 'cios' : 'ciosy'} bossa na piętro`, regen: `+${v} ❤️ co turę`, sync: `synchro +${v}% mocniej i 5 s na zgranie`, cleanse: `${v} ${v === 1 ? 'przeszkadzajka' : 'przeszkadzajki'} bossa na piętro nie działa` })[k] || DUO_BON[k][1]; };
+  shield: `tarcza blokuje ${v} ${v === 1 ? 'cios' : 'ciosy'} bossa na piętro`, regen: `+${v} ❤️ co turę`, sync: `synchro +${v}% mocniej i 5 s na zgranie`, cleanse: `${v} ${v === 1 ? 'przeszkadzajka' : 'przeszkadzajki'} bossa na piętro nie działa`,
+  ult: '+1 naładowany supercios na start każdego piętra (sumuje się)', ultcap: '+1 miejsce na zebrany supercios (ponad 3)', echo: `${v}% szansy, że supercios uderzy drugi raz`, vamp: `${v}% obrażeń wraca jako ❤️`,
+  phoenix: 'raz w biegu: zamiast porażki wstajecie z ❤️', midas: '+50% kryształów za każde piętro', crown: 'każde piętro zaczynasz z pełnym magazynem superciosów' })[k] || DUO_BON[k][1]; };
 const DUO_INFO = `<ul class="small duo-info"><li>🗼 Piętro za piętrem, coraz silniejsi bossowie – każdy bije swoją tarczę bossa.</li><li>⚡ <b>Synchro</b>: gdy oboje odpowiecie dobrze w ciągu 4 s – dodatkowy wspólny cios!</li>
   <li>🎁 Po każdym piętrze <b>nagroda drużyny</b> (więcej ❤️, obrażeń, krytyka…) i 35% ❤️ wraca.</li><li>📈 Przed każdym piętrem boss losuje nową przeszkadzajkę – moce się sumują. 💀 Kolega reanimuje 3 dobrymi odpowiedziami.</li><li>👏 Wysyłaj reakcje koledze w trakcie walki. Przegrana nie zabiera serc.</li></ul>`;
 function duoPrep(fl, bon, ab) {
@@ -255,8 +262,10 @@ function duoApply(B, T) {
   const u = T.buff, f = T.floor || 1, V = k => (u[k] || 0) * duoBonVal(k, f);
   B.meMax += V('hp'); B.hs.atk *= 1 + V('dmg') / 100; B.hs.crit = Math.min(.7, B.hs.crit + V('crit') / 100); B.hs.time *= 1 + V('time') / 100;
   B.guard = (B.guard || 0) + V('shield'); B.teamRegen = V('regen'); B.syncBoost = V('sync') / 100; B.cleanse = V('cleanse');
+  B.ultBonusMax = u.ultcap || 0; B.ultEcho = Math.min(.9, V('echo') / 100); B.hs.vamp = (B.hs.vamp || 0) + V('vamp') / 100; B.midas = !!u.midas;
+  B.ult = Math.min(B.hs.ultNeed * (3 + (u.ultcap || 0)), u.crown ? B.hs.ultNeed * (3 + (u.ultcap || 0)) : (B.ult || 0) + B.hs.ultNeed * (u.ult || 0));
+  if (u.phoenix && !T.phUsed) B.second = true;
   B.me = T.hp == null ? B.meMax : Math.min(B.meMax, Math.round(T.hp + B.meMax * .35));
-  if (T.bon === 'ult') B.ult = B.hs.ultNeed;
   if (T.bon) { B.log.unshift(`🎁 Nagroda drużyny: ${DUO_BON[T.bon][0]} ${duoBonTxt(T.bon, T.floor || 1)}`); }
   B.log.unshift(`🗼 Piętro ${T.floor} – razem dacie radę!`); coopSync(); towerIntro(B, T.fresh); render();
 }
@@ -268,7 +277,8 @@ function duoSynchro(C) {
 function duoEnd(won) {
   const C = COOP, T = C.tw;
   S.stats.coopFights = (S.stats.coopFights || 0) + 1;
-  if (won && C.host) { const tk = C.tw?.buff || {}, last = C.lastVote || [], ks = shuffle(Object.keys(DUO_BON).filter(k => !last.includes(k))).sort((a, b) => (tk[a] || 0) - (tk[b] || 0)).slice(0, 3); C.lastVote = ks; C.vote = { opts: ks, picks: {} }; setTimeout(() => coopSend({ t: 'vote', vo: ks }), 300); }
+  if (won && C.host) { const tk = C.tw?.buff || {}, last = C.lastVote || [], ks = shuffle(Object.keys(DUO_BON).filter(k => !last.includes(k) && !(DUO_UNIQUE.includes(k) && tk[k]) && k !== 'heal' || (k === 'heal' && !last.includes(k) && T.hp != null && T.hp < 60))).sort((a, b) => (tk[a] || 0) - (tk[b] || 0)).slice(0, 3); C.lastVote = ks; C.vote = { opts: ks, picks: {} }; setTimeout(() => coopSend({ t: 'vote', vo: ks }), 300); }
+  if (T.buff?.phoenix && BOSS && !BOSS.second) T.phUsed = true;
   if (won) { T.best = T.floor; S.stats.duoBest = Math.max(S.stats.duoBest || 0, T.floor); T.hp = Math.max(1, Math.round(BOSS.me || BOSS.meMax * .25)); T.floor++; C.phase = 'floor'; C.heads = []; }
   else { C.phase = 'end'; T.on = false; S.stats.duoBest = Math.max(S.stats.duoBest || 0, T.floor - 1); }
   duoSaveNow(C, won);

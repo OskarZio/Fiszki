@@ -3389,3 +3389,4 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .boost-row { background: none !important; }
 .duo-saves .ds-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); } .duo-saves .ds-row:first-of-type { border-top: 0; }
 .duo-saves .ds-row b { display: block; font-size: 15px; } .duo-saves .ds-row small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; line-height: 1.3; }
+.ult-btn .ult-n { font-style: normal; background: #f59e0b; color: #1a1c2c; border-radius: 6px; padding: 0 6px; margin-left: 4px; font-size: 12px; font-weight: 900; }

@@ -373,7 +373,7 @@ function parryResult(ok, late, part = 0) {
   if (ok) B.parryOk++;
   if (!ok && B.cur.curse) pr.dmg = Math.round(pr.dmg * 1.5);
   if (!ok && part) pr.dmg = Math.round(pr.dmg * (1 - .5 * part));   // runy: część sekwencji zmniejsza obrażenia
-  if (ok) { const n = dealBoss(Math.max(5, pr.dmg * .6 * B.hs.atk), 'kontra'); B.fxMe = { k: 'block', t: now }; B.fx = { k: 'boss', n, t: now }; B.ult = Math.min(B.hs.ultNeed, B.ult + 1); B.log.unshift(`🛡️ Sparowane: ${pr.name}! Kontra −${n}`); bossSay('proven'); S.stats.parries = (S.stats.parries || 0) + 1; }
+  if (ok) { const n = dealBoss(Math.max(5, pr.dmg * .6 * B.hs.atk), 'kontra'); B.fxMe = { k: 'block', t: now }; B.fx = { k: 'boss', n, t: now }; B.ult = Math.min(ultCap(B), B.ult + 1); B.log.unshift(`🛡️ Sparowane: ${pr.name}! Kontra −${n}`); bossSay('proven'); S.stats.parries = (S.stats.parries || 0) + 1; }
   else { hurtMe(pr.dmg, pr.name + (late ? ' (za późno)' : '')); bossSay('attack'); }
   B.log = B.log.slice(0, 4); save();
   if (!bossAlive(B)) return bossEnd(true);
@@ -410,7 +410,7 @@ function qteResult(ok, late) {
   if (B.me <= 0 && !B.coop) { B.qte = null; return bossEnd(false, 'dead'); }
   if (Q.i < QTE_N && qteNext(B)) return render();
   // koniec serii
-  if (Q.hits === QTE_N) { const n = dealBoss(Math.max(10, 22 * B.hs.atk * (1 + .2 * B.b.diff)), 'QTE perfekcyjny'); B.ult = Math.min(B.hs.ultNeed, B.ult + 2); B.fx = { k: 'boss', n, crit: true, t: now }; B.qteFx = { t: now, perfect: true }; B.log.unshift(`⚡⚡⚡ PERFEKCYJNY QTE! −${n} i ⚡ +2 do superciosu`); S.stats.qtePerfect = (S.stats.qtePerfect || 0) + 1; }
+  if (Q.hits === QTE_N) { const n = dealBoss(Math.max(10, 22 * B.hs.atk * (1 + .2 * B.b.diff)), 'QTE perfekcyjny'); B.ult = Math.min(ultCap(B), B.ult + 2); B.fx = { k: 'boss', n, crit: true, t: now }; B.qteFx = { t: now, perfect: true }; B.log.unshift(`⚡⚡⚡ PERFEKCYJNY QTE! −${n} i ⚡ +2 do superciosu`); S.stats.qtePerfect = (S.stats.qtePerfect || 0) + 1; }
   else B.log.unshift(`⚡ QTE: ${Q.hits}/${QTE_N} trafień`);
   B.qte = null; B.log = B.log.slice(0, 4); save();
   if (!bossAlive(B)) return bossEnd(true);
@@ -498,7 +498,7 @@ function bossAnswer(g, how) {
     B.dealt[c.id] = (B.dealt[c.id] || 0) + dmg; B.fx = { k: 'boss', n: dmg, crit: crit || comboM >= 1.6, t: now };
     if (hs.vamp) healMe(dmg * hs.vamp);
     if (g >= 3 && hs.regen) healMe(hs.regen);
-    if (!fast && g >= 3) B.ult = Math.min(hs.ultNeed, B.ult + (crit ? 2 : 1));
+    if (!fast && g >= 3) B.ult = Math.min(ultCap(B), B.ult + (crit ? 2 : 1));
     if (g >= 3 && B.coop && typeof coopOnCorrect === 'function') coopOnCorrect();
     if (fast) { B.fast++; B.log.unshift('⚡ Za szybko – przeczytaj odpowiedź! Słaby cios'); bossSay('fast'); }
     else bossSay(crit ? 'crit' : B.combo >= 3 && B.combo % 4 === 0 ? 'combo' : bossHpLow(B) ? 'low' : 'hit');
@@ -513,11 +513,11 @@ function bossAnswer(g, how) {
 function verifyResult(c, ok) {
   const B = BOSS, v = B.cur.ver, now = Date.now();
   if (v.retry) {   // 🔁 rewanż: fiszka, którą przed chwilą pomyliłeś
-    if (ok) { const n = dealBoss(Math.max(8, 14 * B.hs.atk), 'odkupienie'); B.combo++; B.ult = Math.min(B.hs.ultNeed, B.ult + 1); B.fx = { k: 'boss', n, crit: true, t: now }; B.log.unshift(`💪 Odkupienie! Teraz pamiętasz: −${n}`); bossSay('proven'); }
+    if (ok) { const n = dealBoss(Math.max(8, 14 * B.hs.atk), 'odkupienie'); B.combo++; B.ult = Math.min(ultCap(B), B.ult + 1); B.fx = { k: 'boss', n, crit: true, t: now }; B.log.unshift(`💪 Odkupienie! Teraz pamiętasz: −${n}`); bossSay('proven'); }
     else { B.combo = 0; B.missed.push(c.id); hurtMe(Math.round(B.b.atk * .7), 'Znowu zapomniane'); bossSay('miss'); }
     return afterTurn(ok ? 3 : 1, true);
   }
-  if (ok) { const n = dealBoss(Math.max(6, v.dealt * .5 * B.hs.verify), 'sprawdzian'); B.verOk++; B.ult = Math.min(B.hs.ultNeed, B.ult + 1); B.fx = { k: 'boss', n, crit: true, t: now }; B.log.unshift(`🔍 Udowodnione! +${n} obrażeń`); bossSay('proven'); }
+  if (ok) { const n = dealBoss(Math.max(6, v.dealt * .5 * B.hs.verify), 'sprawdzian'); B.verOk++; B.ult = Math.min(ultCap(B), B.ult + 1); B.fx = { k: 'boss', n, crit: true, t: now }; B.log.unshift(`🔍 Udowodnione! +${n} obrażeń`); bossSay('proven'); }
   else {
     if (!B.coop) B.hp = Math.min(B.max, B.hp + v.dealt);
     B.caught++; B.combo = 0; B.missed.push(c.id); B.log.unshift(`🕵️ Przyłapany! Boss odzyskuje ${v.dealt} ❤️`); hurtMe(Math.round(B.b.atk * 1.2), 'Kara za przeklikanie'); bossSay('caught');
@@ -624,7 +624,7 @@ function grabEvChest() {
   else { const n = 15 + 5 * B.b.diff; S.wallet.push({ id: 'evchest-' + uid(), n, why: 'boss-event', t: Date.now() }); B.log.unshift(`📦 Złapane! +${n} 💎`); }
   S.stats.evChests = (S.stats.evChests || 0) + 1; bossSfx('chest'); save(); render();
 }
-function gauntReward() { const B = BOSS, n = 20 + 5 * B.b.diff; S.wallet.push({ id: 'gaunt-' + uid(), n, why: 'boss-event', t: Date.now() }); B.ult = Math.min(B.hs.ultNeed, B.ult + 2); B.log.unshift(`🎯 Wyzwanie zaliczone! +${n} 💎 i ⚡ +2 do superciosu`); }
+function gauntReward() { const B = BOSS, n = 20 + 5 * B.b.diff; S.wallet.push({ id: 'gaunt-' + uid(), n, why: 'boss-event', t: Date.now() }); B.ult = Math.min(ultCap(B), B.ult + 2); B.log.unshift(`🎯 Wyzwanie zaliczone! +${n} 💎 i ⚡ +2 do superciosu`); }
 // 🐾 pomocnik: stworek z inkubatora, raz na walkę – siła zależy od jego rzadkości
 const PET_FX = { common: ['leczy 20 ❤️', B => healMe(20)], rare: ['blokuje następny atak', B => { B.guard++; }], epic: ['cios ×3', B => dealBoss(Math.min(B.max * .25, 30 * B.hs.atk), 'pomocnik')],
   legendary: ['leczy 30% ❤️ i blokuje atak', B => { healMe(B.meMax * .3); B.guard++; }], mythic: ['cios ×4 i leczy 20% ❤️', B => { dealBoss(Math.min(B.max * .3, 40 * B.hs.atk), 'pomocnik'); healMe(B.meMax * .2); }] };
@@ -648,12 +648,14 @@ const ULT_FX = {
   phoenix: B => { const n = ultHit(3.5); healMe(B.meMax * .4); return `+40% ❤️ · −${n}`; },
   dragon: B => { B.shield = false; const n = ultHit(5); return `zerwana tarcza · −${n}`; },
 };
+// ⚡ superciosy się zbierają: ładunki do ULT_MAX (domyślnie 3) – solo, w wieży i online
+const ULT_MAX = 3, ultCap = B => B.hs.ultNeed * (ULT_MAX + (B.ultBonusMax || 0)), ultCharges = B => Math.floor((B.ult || 0) / B.hs.ultNeed);
 function ultHit(m) { const B = BOSS; return dealBoss(Math.min(B.max * .35, 10 * B.hs.atk * m * B.hs.ultPow * (B.power > 0 ? 2 : 1)), 'ult'); }
 function useUlt() {
   const B = BOSS; if (!B || B.phase !== 'fight' || B.ult < B.hs.ultNeed || B.down) return;
   if (B.silence > 0) return toast('🔇 Cisza – supercios zablokowany');
   const line = heroLine(), L = lineDef(line), txt = (ULT_FX[line] || ULT_FX.cat)(B);
-  B.ult = 0; B.fx = { k: 'boss', n: '', crit: true, ult: true, t: Date.now() }; B.ultFx = { name: L.ult[0], t: Date.now() }; B.log.unshift(`⚡ ${L.ult[0]}: ${txt}`); bossSay('ult'); bossSfx('win'); save();
+  B.ult = Math.max(0, B.ult - B.hs.ultNeed); if (B.ultEcho > 0 && Math.random() < B.ultEcho) { ultHit(.6); B.log.unshift('🔁 Echo superciosu – drugie uderzenie!'); } B.fx = { k: 'boss', n: '', crit: true, ult: true, t: Date.now() }; B.ultFx = { name: L.ult[0], t: Date.now() }; B.log.unshift(`⚡ ${L.ult[0]}: ${txt}`); bossSay('ult'); bossSfx('win'); save();
   if (!bossAlive(B)) return bossEnd(true);
   render();
 }
@@ -733,7 +735,7 @@ function bossEnd(won, why) {
   B.xp = Math.round((B.ok * 2 + B.verOk * 2 + (won ? 40 + 20 * b.diff + kindXP : 5) + styleXP) * modeR * xpMul() * (rep ? .5 : 1)); giveXP(B.xp, 'za walkę');
   if (won) {
     const base = { ch: 10 + 5 * b.diff, fin: 30 + 15 * b.diff, cat: 25 + 10 * b.diff, world: 30 + 10 * b.stars, hydra: 30 + 10 * b.diff, duo: Math.min(40, 6 + 2 * (b.i || 1)) }[b.kind] || (b.gk ? 3 : 10);   // wieża wiedzy (quiz): mniej 💎
-    B.gems = Math.round(base * gemMul() * hs.gems * modeR * (rep ? .25 : 1) * (1 + .25 * (b.bp || 0)) * (S.settings.hardcore ? 1.5 : 1)); S.wallet.push({ id: 'boss-' + uid(), n: B.gems, why: 'boss', t: Date.now() });
+    B.gems = Math.round(base * (B.midas ? 1.5 : 1) * gemMul() * hs.gems * modeR * (rep ? .25 : 1) * (1 + .25 * (b.bp || 0)) * (S.settings.hardcore ? 1.5 : 1)); S.wallet.push({ id: 'boss-' + uid(), n: B.gems, why: 'boss', t: Date.now() });
     let n = 1 + (b.diff >= 2 ? 1 : 0) + (b.kind !== 'ch' ? 1 : 0) + hs.loot + (flawless ? 1 : 0) + (boostOn('loot2') ? 1 : 0) - (B.caught >= 2 ? 1 : 0);
     if (rep) n = acc >= .8 ? 1 : 0;
     if (b.duo && !b.final) n = 0;   // wieża duetu: skrzynia tylko u strażnika (co 5. piętro)
@@ -952,7 +954,7 @@ function fightView() {
     ${B.bugs?.length ? `<p class="center small bad" style="margin:0">🐛 Zabij robaczki (${B.bugs.length}), żeby odpowiedzieć!</p>` : ''}
     <div class="bf-ctrl">${ctrl}</div>
     <div class="bf-bottom">
-      <button class="ult-btn${ultReady ? ' ready' : ''}" data-act="boss-ult" ${ultReady && !B.silence ? '' : 'disabled'} title="${esc(L.ult[1])}"><span class="ult-fill" style="--f:${(B.ult / hs.ultNeed).toFixed(2)}"></span><b>⚡ ${esc(L.ult[0])}</b><small>${ultReady ? 'GOTOWY!' : `${B.ult}/${hs.ultNeed}`}</small></button>
+      <button class="ult-btn${ultReady ? ' ready' : ''}" data-act="boss-ult" ${ultReady && !B.silence ? '' : 'disabled'} title="${esc(L.ult[1])}"><span class="ult-fill" style="--f:${(ultCharges(B) >= ULT_MAX + (B.ultBonusMax || 0) ? 1 : (B.ult % hs.ultNeed) / hs.ultNeed).toFixed(2)}"></span><b>⚡ ${esc(L.ult[0])}${ultCharges(B) > 1 ? ` <i class="ult-n">×${ultCharges(B)}</i>` : ''}</b><small>${ultReady ? `GOTOWY · ${ultCharges(B)}/${ULT_MAX + (B.ultBonusMax || 0)}` : `${B.ult % hs.ultNeed}/${hs.ultNeed}`}</small></button>
       ${myPet() && !B.petUsed ? `<button class="pet-btn" data-act="boss-pet" title="Pomocnik: ${esc((PET_FX[myPet().cr.r] || PET_FX.common)[0])}">${petImg(myPet().cr)}<small>🐾</small></button>` : ''}
       <div class="pot-bar">${pots.map(k => `<button data-act="boss-pot" data-k="${k}" ${B.silence || k === 'phoenix' ? 'disabled' : ''} title="${POTIONS[k].name}: ${POTIONS[k].desc}">${potionSVG(k)}<i>${potionN(k)}</i></button>`).join('')}</div>
     </div>

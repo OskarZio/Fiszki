@@ -20,6 +20,8 @@ const BLESS = {
   first: ['🗡️', 'Zasadzka', 'pierwszy cios na każdym piętrze ×2 (każdy poziom +0,5)'], regen: ['🌿', 'Odnowa', 'dobra odpowiedź leczy 2 ❤️'],
   exec: ['🪓', 'Egzekutor', 'boss < 25% ❤️ → +40% obrażeń'], abcd: ['🎯', 'Snajper', 'ABCD: cios +20%'], type: ['✍️', 'Pióro', 'wpisywanie: cios +25%'],
   steady: ['🧘', 'Zimna krew', '„Ledwo” nie przerywa serii', 0, 1], cleanse: ['🧹', 'Oczyszczenie', 'boss traci 1 moc wieży', 1],
+  ultcap: ['🔋', 'Magazyn mocy', '+1 miejsce na zebrany supercios (sumuje się)'], echo: ['🔁', 'Echo', '+20% szansy, że supercios uderzy drugi raz (sumuje się)'],
+  crown: ['👑', 'Korona mocy ★', 'każde piętro zaczynasz z pełnym magazynem superciosów', 1, 1], midas: ['💎', 'Dotyk Midasa ★', '+50% kryształów za piętra', 1, 1],
 };
 // perki się sumują (poziom = ile razy wzięty); jednorazowe (5. pole = 1) nie wracają po wzięciu
 const blessLv = (T, k) => (T.blv || {})[k] || 0;
@@ -55,6 +57,9 @@ function towerFloor() {
   T.hp = Math.min(T.hp, hs.hp);
   bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 * u.guard : 0, mode: T.mode }, p);
   if (u.phoenix && !T.phoenixUsed) BOSS.second = true;
+  // ⚡ zebrane superciosy przechodzą na kolejne piętro (do 3 + Magazyn mocy); Korona – zawsze pełny magazyn
+  BOSS.ultBonusMax = u.ultcap || 0; BOSS.ultEcho = Math.min(.9, u.echo || 0); BOSS.midas = !!u.midas;
+  const cap = BOSS.hs.ultNeed * (3 + (u.ultcap || 0)); BOSS.ult = u.crown ? cap : Math.min(cap, T.ult || 0);
   save(); towerIntro(BOSS, fresh);
 }
 function towerStart() {
@@ -74,7 +79,7 @@ function towerEnd(B, won) {
     giveXP(gx, 'wieża'); S.wallet.push({ id: 'tower-' + uid(), n: gg, why: 'tower', t: Date.now() });
     T.bank.xp += gx; T.bank.gems += gg; B.towerGain = { xp: gx, gems: gg };
     if (T.buff.phoenix && !B.second) T.phoenixUsed = true;
-    B.towerHeal = Math.round(B.meMax * FLOOR_HEAL); T.hp = Math.min(B.meMax, Math.round(B.me + B.towerHeal)); T.floor = f + 1;
+    T.ult = B.ult || 0;     B.towerHeal = Math.round(B.meMax * FLOOR_HEAL); T.hp = Math.min(B.meMax, Math.round(B.me + B.towerHeal)); T.floor = f + 1;
     S.stats[twBestKey()] = Math.max(towerBest(), f); S.stats.bossWins = (S.stats.bossWins || 0) + 1;
     // 3 do wyboru; rzadkie mają mniejszą szansę, jedno miejsce zawsze dla czegoś leczącego, gdy ❤️ < 50%
     const pool = shuffle(Object.keys(BLESS).filter(k => !(k === 'phoenix' && T.buff.phoenix) && !(BLESS[k][4] && blessLv(T, k)) && !(k === 'cleanse' && !(T.abil || []).length) && (!BLESS[k][3] || Math.random() < .35)));
@@ -98,6 +103,7 @@ function towerBless(k) {
   if (k === 'gamble') { const win = Math.random() < .5; T.hp = win ? mx : Math.max(1, Math.round(T.hp * .7)); toast(win ? '🎲 Wygrana! Pełne ❤️' : '🎲 Pech… −30% ❤️', 3000); }
   if (k === 'pact') { add('dmg', .3); T.hp = Math.max(1, Math.round(T.hp * .7)); }
   if (k === 'gold') add('gold', .5);
+  if (k === 'ultcap') add('ultcap', 1); if (k === 'echo') add('echo', .2); if (k === 'crown') u.crown = 1; if (k === 'midas') u.midas = 1;
   T.pick = null; T.last = k; hero().mod = Date.now(); save(); render();
 }
 // aktywne błogosławieństwa – krótko pod paskiem ❤️
