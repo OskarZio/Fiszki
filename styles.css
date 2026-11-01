@@ -3189,3 +3189,4 @@ body.focus #hc-fab { display: none; }
 .hc-intro .hi-go { background: #c8102e; border-color: #c8102e; color: #fff; }
 .hc-intro .dmenu, .hc-intro .hi-steps li div { text-align: left; }
 .hc-intro .hi-go { background: #c8102e !important; border-color: #c8102e !important; color: #fff !important; }
+.hi-steps small, .hi-steps b { text-align: left !important; margin-left: 0 !important; }
