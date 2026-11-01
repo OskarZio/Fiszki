@@ -3171,3 +3171,9 @@ body.focus #hc-fab { display: none; }
 .boss-say.sel.hc::after { border-bottom-color: #e5172b; }
 #unoff { position: sticky; top: 0; z-index: 200; background: #b91c1c; color: #fff; padding: 10px 14px; font-size: 13.5px; line-height: 1.35; text-align: center; }
 #unoff a { color: #fff; font-weight: 800; }
+/* v271: dolne menu ze szkłem (blur) w obu trybach; górny pasek w hardcore bez ciemnego prostokąta */
+#tabs { background: color-mix(in srgb, var(--card) 70%, transparent) !important; backdrop-filter: blur(18px) saturate(1.5) !important; -webkit-backdrop-filter: blur(18px) saturate(1.5) !important;
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+:root.hc-mode #tabs { background: color-mix(in srgb, #2a0808 62%, transparent) !important; border-top-color: rgba(255, 77, 94, .25); }
+:root.hc-mode .hubnav { background: color-mix(in srgb, #1c0505 55%, transparent) !important; backdrop-filter: blur(18px) saturate(1.4) !important; -webkit-backdrop-filter: blur(18px) saturate(1.4) !important;
+  border-bottom-color: rgba(255, 77, 94, .2); }
