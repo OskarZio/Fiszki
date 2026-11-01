@@ -695,5 +695,51 @@ end $$;
 revoke all on function public.admin_player(text) from public, anon;
 grant execute on function public.admin_player(text) to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01e'::text $$;
+-- 🔑 hasło do kar w Panelu hosta: w bazie jest tylko skrót (bcrypt), samo hasło ustawiasz osobnym poleceniem (nie ma go w tym pliku)
+create extension if not exists pgcrypto with schema extensions;
+create table if not exists public.admin_secret (id int primary key default 1 check (id = 1), h text not null);
+alter table public.admin_secret enable row level security;
+create or replace function public.admin_pass_ok(p_pass text) returns boolean language plpgsql stable security definer set search_path = '' as $$
+declare hh text;
+begin
+  select h into hh from public.admin_secret where id = 1;
+  if hh is null then raise exception 'no admin password set'; end if;
+  if p_pass is null or extensions.crypt(p_pass, hh) <> hh then raise exception 'bad admin password'; end if;
+  return true;
+end $$;
+revoke all on function public.admin_pass_ok(text) from public, anon, authenticated;
+drop function if exists public.admin_act(text, text, text);
+drop function if exists public.admin_ban(text, boolean);
+create or replace function public.admin_act(p_code text, p_what text, p_msg text default null, p_pass text default null) returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid; nk text;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  perform public.admin_pass_ok(p_pass);
+  if p_what not in ('wallet', 'items', 'stickers', 'all', 'clown', 'unclown', 'msg', 'flip', 'shadow', 'unshadow') then raise exception 'bad action'; end if;
+  select id, nick into uid, nk from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  insert into public.admin_actions(user_id, what, msg) values (uid, p_what, left(p_msg, 300));
+  if p_what in ('wallet', 'items', 'stickers', 'all', 'shadow') then insert into public.cheat_log(user_id, what) values (uid, 'właściciel: ' || p_what); end if;
+  update public.user_data set data = data where user_id = uid;
+  update public.profiles set nick = nick where id = uid;
+  return nk;
+end $$;
+revoke all on function public.admin_act(text, text, text, text) from public, anon;
+grant execute on function public.admin_act(text, text, text, text) to authenticated;
+create or replace function public.admin_ban(p_code text, p_on boolean, p_pass text default null) returns boolean language plpgsql security definer set search_path = '' as $$
+declare uid uuid;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  perform public.admin_pass_ok(p_pass);
+  select id into uid from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  if p_on then
+    insert into public.econ_bans(user_id, why) values (uid, 'admin') on conflict (user_id) do nothing;
+    insert into public.cheat_log(user_id, what) values (uid, 'zablokowano ekonomię (właściciel)');
+  else delete from public.econ_bans where user_id = uid; end if;
+  update public.user_data set data = data where user_id = uid;
+  return p_on;
+end $$;
+revoke all on function public.admin_ban(text, boolean, text) from public, anon;
+grant execute on function public.admin_ban(text, boolean, text) to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01f'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

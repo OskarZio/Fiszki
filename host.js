@@ -82,12 +82,12 @@ setTimeout(() => { ACTIONS['host-recheck'] = () => { HOST_CHK = 0; render(); };
   ACTIONS['host-act'] = async el => { const k = el.dataset.k, code = (el.dataset.code || $('#adm-code')?.value || '').trim().toUpperCase(); if (!code) return toast('Wpisz kod gracza');
     let msg = null; if (k === 'msg') { msg = prompt('Treść wiadomości (gracz zobaczy ją w okienku):'); if (!msg) return; }
     if (['wallet', 'items', 'stickers', 'all'].includes(k) && !confirm(`${el.textContent} – gracz ${code}?\nTego nie da się cofnąć.`)) return;
-    const r = await SB.rpc('admin_act', { p_code: code, p_what: k, p_msg: msg });
+    const pass = admPass(); if (!pass) return; const r = await SB.rpc('admin_act', { p_code: code, p_what: k, p_msg: msg, p_pass: pass }); if (admPassErr(r)) return;
     if (r.error) return toast(/function|schema cache|does not exist/i.test(r.error.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy)' : /no such/.test(r.error.message) ? 'Nie ma gracza o kodzie ' + code : 'Błąd: ' + r.error.message, 4000);
     toast(`✓ ${el.textContent} – ${r.data || code}`); hostStatsLoad(); if (el.dataset.code) admPlayerPopup(code); };
   ACTIONS['host-ban'] = async el => { const on = el.dataset.on === '1', code = el.dataset.code;
     if (on && !confirm(`🚫 Wyzerować i zablokować kryształy, złoto i przedmioty gracza ${code}?\nMożesz to potem cofnąć (Odblokuj), ale wyzerowanych rzeczy to nie przywróci.`)) return;
-    const r = await SB.rpc('admin_ban', { p_code: code, p_on: on });
+    const pass = admPass(); if (!pass) return; const r = await SB.rpc('admin_ban', { p_code: code, p_on: on, p_pass: pass }); if (admPassErr(r)) return;
     if (r.error) return toast(/function|schema cache|does not exist/i.test(r.error.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy)' : 'Błąd: ' + r.error.message, 4000);
     toast(on ? `🚫 Zablokowano ${code}` : `✅ Odblokowano ${code}`); hostStatsLoad(); if (el.closest('.adm-pop')) admPlayerPopup(code); }; }, 0);
 async function hostStatsLoad() {
@@ -340,3 +340,9 @@ async function admPlayerPopup(code) {
       <button class="sm ${p.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(p.code)}" data-on="${p.banned ? 0 : 1}">${p.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button></div>
     <button class="ghost" data-x="1">Zamknij</button>`;
 }
+
+// 🔑 hasło do kar – pytamy raz na uruchomienie aplikacji (trzymane tylko w pamięci), sprawdza je baza
+let ADM_PASS = null;
+const admPass = () => ADM_PASS || (ADM_PASS = (prompt('🔑 Hasło do kar dla graczy:') || '').trim() || null);
+const admPassErr = r => { const m = r?.error?.message || ''; if (/bad admin password/.test(m)) { ADM_PASS = null; toast('🔑 Złe hasło', 3000); return true; }
+  if (/no admin password set/.test(m)) { toast('🔑 Najpierw ustaw hasło w Supabase (polecenie SQL od Claude)', 5000); return true; } return false; };
