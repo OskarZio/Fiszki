@@ -3235,3 +3235,8 @@ body.photo-bg::before { content: ''; position: fixed; inset: 0; z-index: -1; poi
   background: linear-gradient(rgba(0,0,0,var(--photo-dim, .45)), rgba(0,0,0,var(--photo-dim, .45))), var(--photo) center / cover no-repeat; }
 body.photo-bg .card, body.photo-bg .tile, body.photo-bg .mtile { background: color-mix(in srgb, var(--card) 80%, transparent) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .theme.photo-th { position: relative; }
+/* v283: 💀 hardcore – krwiste tło za postacią */
+:root.hc-mode .hero-card { background: radial-gradient(120% 70% at 50% 42%, #8a0c18 0%, #4a070d 38%, #240506 70%, #1a0404 100%) !important; border-color: #6b1018 !important;
+  box-shadow: inset 0 0 40px rgba(229, 23, 43, .25), 0 0 0 1px #5c1616; }
+:root.hc-mode .hero-card .hero-fig, :root.hc-mode .hero-fig { filter: drop-shadow(0 0 14px rgba(229, 23, 43, .7)) drop-shadow(0 6px 0 rgba(0, 0, 0, .35)); }
+:root.hc-mode .hero-card .lvl, :root.hc-mode .hero-card [class*="lv"] { border-color: #e5172b; }
