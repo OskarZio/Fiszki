@@ -42,6 +42,7 @@ function sCoopMsg(m) {
   if (Array.isArray(m.players)) o.players = m.players.slice(0, 4).map(p => ({ id: sStr(p?.id, 40), nick: sStr(p?.nick, 24), line: CHAR_LINES[p?.line] ? p.line : 'cat', g: p?.g === 'm' ? 'm' : 'w', pr: sInt(p?.pr, 0, 99), lv: sInt(p?.lv, 1, 99, 1), atk: sNum(p?.atk, .5, 10, 1), look: sInt(p?.look, 0, 1e7) }));
   if (Array.isArray(m.heads)) o.heads = m.heads.slice(0, 4).map(x => ({ id: sStr(x?.id, 40), max: sInt(x?.max, 50, 400000, 300), ...(x?.hp != null ? { hp: sInt(x.hp, 0, 400000) } : {}) }));
   if (Array.isArray(m.gqi)) o.gqi = m.gqi.slice(0, 40).map(x => sStr(x, 40)); if (Array.isArray(m.vo)) o.vo = m.vo.slice(0, 3).filter(k => DUO_BON[k]); if (m.vk != null) o.vk = DUO_BON[m.vk] ? m.vk : null;
+  if (m.bf && typeof m.bf === 'object') { o.bf = {}; for (const k of Object.keys(DUO_BON)) if (m.bf[k] != null) o.bf[k] = sInt(m.bf[k], 0, 50); }
   if (m.txt != null) o.txt = sStr(m.txt, 80); if (m.st != null) o.st = sStr(m.st, 30);
   return o;
 }
@@ -85,7 +86,7 @@ function coopMsg(m0) {
     C.hostId = m.from; C.tower = !!m.tw; C.gq = !!m.gq; C.setInfo = m.sm ? { name: m.sm, n: m.sn || 0 } : null; for (const x of m.players) C.players[x.id] = { ...(C.players[x.id] || {}), ...x, seen: Date.now() }; return render();
   }
   if (m.t === 'start' && !C.host && (m.from === C.hostId || !C.hostId) && ['lobby', 'floor'].includes(C.phase) && m.heads) { C.hostId = m.from; }
-  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); C.gq = !!m.gq; C.gqi = m.gqi; } return coopBegin(m.heads, m.seed, m.set); }
+  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); if (m.bf) C.tw.buff = { ...m.bf }; C.gq = !!m.gq; C.gqi = m.gqi; } return coopBegin(m.heads, m.seed, m.set); }
   if (m.t === 'ok' && p) { C.mateOk = { id: m.from, t: Date.now() }; return; }
   if (m.t === 'emo' && p && (m.emo != null || m.st)) { p.emo = { i: m.emo, st: m.st, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
   if (m.t === 'hit' && C.phase === 'fight') { const hd = C.heads.find(x => x.id === m.h); if (hd) { hd.hp = Math.max(0, hd.hp - m.n); syncMyHead(); if (BOSS?.phase === 'fight' && !coopAlive()) return bossEnd(true); softRender(); } return; }
@@ -112,7 +113,7 @@ function coopStartHost() {
     const tot = heads.reduce((a, h) => a + h.max, 0); heads.splice(0, heads.length, { id: 'boss', max: Math.round(tot * .9 * (1 + .2 * (fl - 1))) });   // 🐉 jeden wspólny boss z dużym ❤️
     const ab = [...(fl > 1 && C.tw?.abil || [])]; const nx = towerCurse(ab); if (nx) ab.push(nx);
     let gqi; if (COOP_SRC === 'gk' && typeof gkPick === 'function') { const T0 = { floor: fl * 2, used: C.gkUsed || [] }; gqi = gkPick(T0, 30).map(c => String(c.id).slice(3)); C.gkUsed = T0.used; }
-    tw = { tw: true, fl, ab, ...(bon ? { bon } : {}), ...(gqi ? { gq: true, gqi } : {}) }; duoPrep(fl, bon, ab); C.gq = COOP_SRC === 'gk'; C.gqi = gqi; }
+    duoPrep(fl, bon, ab); tw = { tw: true, fl, ab, bf: { ...(C.tw?.buff || {}) }, ...(bon ? { bon } : {}), ...(gqi ? { gq: true, gqi } : {}) }; C.gq = COOP_SRC === 'gk'; C.gqi = gqi; }
   coopSend({ t: 'start', heads, seed, ...(set ? { set } : {}), ...tw }); coopBegin(heads, seed, set);
 }
 const coopSetInfo = () => { const d = COOP_SHARED && deckById(COOP_SRC), tw = COOP_MODE === 'tower' ? { tw: true, ...(COOP_SRC === 'gk' ? { gq: true } : {}) } : {}; return d ? { ...tw, sm: d.name.replace(/^👥\s*/, '').slice(0, 60), sn: S.cards.filter(c => c.deckId === d.id && fightable(c)).length } : tw; };
@@ -191,6 +192,7 @@ ROUTES.coop = parts => {
     <div class="card"><h3 style="margin-top:0">Gra</h3>${gameSeg}${COOP_MODE === 'tower' ? DUO_INFO : ''}<h3>Materiał</h3>${src}<h3>Tryb</h3>${modes}</div>
     ${COOP_LASTSET && !S.decks.some(d => d.name.replace(/^👥\s*/, '') === COOP_LASTSET.name) ? `<div class="card coop-set"><b>📥 Ostatni wspólny zestaw: „${esc(COOP_LASTSET.name)}”</b><small>${COOP_LASTSET.cards.length} fiszek z ostatniej walki</small><button class="sm primary" data-act="coop-save-set" style="margin-top:6px">💾 Zapisz u siebie jako talię</button></div>` : ''}
     ${(() => { try { const L = JSON.parse(localStorage.getItem('coopLast') || 'null'); return L && !L.host && Date.now() - L.t < 3 * 3600e3 ? `<button class="block primary" data-act="coop-resume" data-code="${esc(L.code)}" style="margin-bottom:10px">🔌 Wróć do walki ${esc(L.code)}</button>` : ''; } catch { return ''; } })()}
+    ${duoSavesHTML()}
     <div class="card"><button class="primary block" data-act="coop-host">➕ Stwórz lobby</button>
       <div class="row nowrap" style="margin-top:10px"><input id="coop-code" class="grow" maxlength="6" placeholder="Kod lobby, np. K7P2QX" value="${esc(COOP_JOIN)}" autocapitalize="characters" autocomplete="off"><button data-act="coop-join">Dołącz</button></div>
       ${!window.BATTLE_LOCAL && !(typeof SB !== 'undefined' && SB) ? '<p class="small muted">Lobby działa przez internet (ten sam przekaźnik co bitwy).</p>' : ''}</div>` };
@@ -269,6 +271,7 @@ function duoEnd(won) {
   if (won && C.host) { const tk = C.tw?.buff || {}, last = C.lastVote || [], ks = shuffle(Object.keys(DUO_BON).filter(k => !last.includes(k))).sort((a, b) => (tk[a] || 0) - (tk[b] || 0)).slice(0, 3); C.lastVote = ks; C.vote = { opts: ks, picks: {} }; setTimeout(() => coopSend({ t: 'vote', vo: ks }), 300); }
   if (won) { T.best = T.floor; S.stats.duoBest = Math.max(S.stats.duoBest || 0, T.floor); T.hp = Math.max(1, Math.round(BOSS.me || BOSS.meMax * .25)); T.floor++; C.phase = 'floor'; C.heads = []; }
   else { C.phase = 'end'; T.on = false; S.stats.duoBest = Math.max(S.stats.duoBest || 0, T.floor - 1); }
+  duoSaveNow(C, won);
   save();
 }
 const duoVoteWinner = C => { const P = Object.values(C.vote?.picks || {}); if (!P.length) return null; const n = {}; for (const k of P) n[k] = (n[k] || 0) + 1; const top = Math.max(...Object.values(n)), best = Object.keys(n).filter(k => n[k] === top); return best[Math.random() * best.length | 0]; };
@@ -276,10 +279,39 @@ function duoFloorView(C) {
   const T = C.tw, ps = Object.values(C.players).filter(p => !p.gone), buffs = Object.entries(T.buff).filter(([, n]) => n);
   return { tab: 'arena', html: `
     <div class="row nowrap"><button class="iconbtn" data-act="coop-leave">‹</button><h1 class="grow" style="margin:0">🗼 Wieża duetu</h1></div>
-    <div class="card center duo-floor"><div class="duo-fl">Piętro ${T.floor - 1} zdobyte!</div>
+    <div class="card center duo-floor"><div class="duo-fl">${ps.length < 2 && C.host ? `💾 Wczytany zapis – piętro ${T.floor}` : `Piętro ${T.floor - 1} zdobyte!`}</div>
+      ${C.host ? `<div class="small muted" style="margin-top:6px">Kod lobby dla kolegi</div><div class="coop-code">${esc(C.code)}</div>${ps.length < 2 ? '<p class="small muted" style="margin:0 0 8px">Poczekaj, aż kolega dołączy tym kodem – potem ruszajcie dalej.</p>' : ''}` : ''}
       <div class="mates lobby">${ps.map(p => `<div class="mate">${pHero(p)}<b>${esc(p.nick)}${p.id === MY_ID ? ' (Ty)' : ''}</b></div>`).join('')}</div>
       <p class="small muted" style="margin:10px 0 4px">Rekord duetu: piętro ${S.stats.duoBest || 0}. Przed Wami piętro <b>${T.floor}</b>${T.floor % TOWER_GUARD === 0 ? ' – <b>strażnik!</b>' : ''}.</p>
       ${buffs.length ? `<div class="duo-buffs">${buffs.map(([k, n]) => `<span>${DUO_BON[k][0]} ${duoBonTxt(k, T.floor)}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>` : ''}
       ${C.vote ? `<h3 style="margin:12px 0 4px">🗳️ Głosujcie na nagrodę drużyny</h3><div class="duo-vote">${C.vote.opts.map(k => { const n = Object.values(C.vote.picks).filter(x => x === k).length, mine = C.vote.picks[MY_ID] === k; return `<button class="${mine ? 'on' : ''}" data-act="duo-vote" data-k="${k}"><span>${DUO_BON[k][0]}</span><b class="dv-n">${DUO_BON[k][1]}</b><small>${duoBonTxt(k, T.floor)}</small><b>${n ? '✓'.repeat(n) : ''}</b></button>`; }).join('')}</div><p class="small muted">Wygrywa najwięcej głosów (remis = losowo).</p>` : ''}</div>
     ${C.host ? `<button class="primary block boss-go" data-act="duo-next">⚔️ Piętro ${T.floor}</button>` : '<p class="center muted">Host prowadzi na kolejne piętro…</p>'}` };
 }
+
+// 💾 zapisy Wieży duetu (jak w grach): po każdym piętrze stan biegu zapisuje się na tym urządzeniu.
+// W menu Online wybierasz zapis → tworzy się nowe lobby z tym piętrem, nagrodami drużyny i mocami bossa; kolega dołącza kodem i gracie dalej.
+const DUO_SAVES_MAX = 6;
+const duoSaves = () => { try { const a = JSON.parse(localStorage.getItem('duoSaves') || '[]'); return Array.isArray(a) ? a : []; } catch { return []; } };
+const duoSavesSet = a => { try { localStorage.setItem('duoSaves', JSON.stringify(a.slice(0, DUO_SAVES_MAX))); } catch { /* */ } };
+function duoSaveNow(C, won) {
+  if (!C?.tw) return; C.saveId = C.saveId || uid(); let a = duoSaves().filter(x => x.id !== C.saveId);
+  if (won) { const mates = Object.values(C.players || {}).filter(p => p.id !== MY_ID && !p.gone).map(p => p.nick || 'Kolega').slice(0, 3);
+    a.unshift({ id: C.saveId, t: Date.now(), floor: C.tw.floor, best: C.tw.best || 0, buff: { ...(C.tw.buff || {}) }, hp: C.tw.hp ?? null, abil: [...(C.tw.abil || [])], src: COOP_SRC, shared: !!COOP_SHARED, mode: BOSS_PICK.mode, gq: !!C.gq, mates }); }
+  duoSavesSet(a);   // przegrana kończy bieg – zapis znika
+}
+function duoSavesHTML() {
+  const a = duoSaves(); if (!a.length) return '';
+  const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 60 ? `${m} min temu` : m < 1440 ? `${Math.round(m / 60)} h temu` : `${Math.round(m / 1440)} d temu`; };
+  return `<div class="card duo-saves"><h3 style="margin-top:0">💾 Zapisane gry</h3>${a.map(x => `<div class="ds-row"><div class="grow"><b>🗼 Wieża duetu · piętro ${x.floor}</b>
+      <small>${x.mates?.length ? 'z: ' + esc(x.mates.join(', ')) + ' · ' : ''}${ago(x.t)}${Object.keys(x.buff || {}).length ? ' · nagród drużyny: ' + Object.values(x.buff).reduce((s, n) => s + n, 0) : ''}${x.gq ? ' · quiz' : ''}</small></div>
+      <button class="sm primary" data-act="duo-load" data-id="${esc(x.id)}">▶ Wczytaj</button><button class="sm ghost" data-act="duo-del" data-id="${esc(x.id)}" aria-label="Usuń zapis">✕</button></div>`).join('')}
+    <p class="small muted" style="margin:6px 0 0">Wczytanie tworzy nowe lobby z tym piętrem – wyślij koledze kod i grajcie dalej.</p></div>`;
+}
+Object.assign(ACTIONS, {
+  'duo-load': el => { const x = duoSaves().find(s => s.id === el.dataset.id); if (!x) return;
+    COOP_MODE = 'tower'; if (x.src) COOP_SRC = x.src; COOP_SHARED = !!x.shared; if (x.mode && MODES[x.mode]) BOSS_PICK.mode = x.mode;
+    coopOpen(roomCode(), true); const C = COOP; if (!C) return;
+    C.saveId = x.id; C.tw = { on: true, floor: x.floor, buff: { ...(x.buff || {}) }, hp: x.hp, best: x.best || 0, abil: [...(x.abil || [])] }; C.phase = 'floor'; C.vote = null;
+    toast(`💾 Wczytano: piętro ${x.floor} – wyślij koledze kod lobby`, 3500); render(); },
+  'duo-del': el => { if (!confirm('Usunąć ten zapis?')) return; duoSavesSet(duoSaves().filter(s => s.id !== el.dataset.id)); render(); },
+});
