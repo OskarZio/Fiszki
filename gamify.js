@@ -19,9 +19,28 @@ async function squareAvatar(blob, px = 128) {
 }
 
 // ============================================================ XP i poziomy
+// ⚖️ XP za powtórki (od 1 XI 2026): zwykłe przewijanie fiszek daje mało, wpisywanie dużo; bez nabijania –
+// za szybkie kliknięcia (<1,2 s) = 0, ta sama fiszka liczy się max 2× dziennie, po 400 powtórkach dziennie XP ×0,25
+const XP_V2_T = 1793537482111, XP_FAST_MS = 1200, XP_CARD_DAY = 2, XP_DAY_SOFT = 400;
+function logXP(l, st) {
+  const typed = l.m === 'type', mul = typed ? (l.v === 'ok' ? 2.5 : 2) : 1;
+  if ((l.t || 0) < XP_V2_T) return (l.n ? 3 : l.g > 1 ? 2 : 1) * mul;   // starsze powtórki – po staremu (nikt nie traci poziomu)
+  const day = Math.floor((l.t || 0) / 864e5); if (st.day !== day) { st.day = day; st.n = 0; st.cards = new Map(); }
+  if ((l.ms || 0) && l.ms < XP_FAST_MS && !typed) return 0;
+  const k = l.c || l.id, cc = (st.cards.get(k) || 0) + 1; st.cards.set(k, cc); if (cc > XP_CARD_DAY) return 0;
+  st.n++;
+  const base = typed ? (l.n ? 3 : l.g > 1 ? 2 : 1) * mul : (l.n ? 1.5 : l.g > 1 ? .5 : .25);
+  return base * (st.n > XP_DAY_SOFT ? .25 : 1);
+}
+// XP ostatniej powtórki (dla bohatera) – te same zasady, liczone na dzisiejszych wpisach
+function lastLogXP() {
+  const L = S.log, last = L[L.length - 1]; if (!last) return 0;
+  const day = Math.floor(last.t / 864e5), st = {}; let i = L.length - 1; while (i > 0 && Math.floor((L[i - 1].t || 0) / 864e5) === day) i--;
+  let x = 0; for (let j = i; j < L.length; j++) x = logXP(L[j], st); return x;
+}
 function xpTotal() {
-  let xp = 0;
-  for (const l of S.log) xp += (l.n ? 3 : l.g > 1 ? 2 : 1) * (l.m === 'type' ? (l.v === 'ok' ? 2.5 : 2) : 1);   // ✍️ wpisywanie (trudniejsze) – więcej XP
+  let xp = 0; const st = {};
+  for (const l of S.log) xp += logXP(l, st);
   for (const g of S.games) xp += Math.round((g.correct || 0) / 2);
   xp += Object.keys(S.ach).length * 25;
   for (const b of S.battles || []) xp += b.won === 1 ? 30 : 10;
@@ -294,7 +313,7 @@ ROUTES.ach = () => {
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Osiągnięcia</h1></div>
   <div class="card center"><div class="lvl big">${lvl}</div><b>${levelTitle(lvl)}</b><p class="small muted">${xp} XP · do poziomu ${lvl + 1}: ${levelStart(lvl + 1) - xp} XP</p>
-    <p class="small muted">XP: 1 za powtórkę, 2 za poprawną, 3 za nową kartę, punkty z gier i 25 za każde osiągnięcie.</p>
+    <p class="small muted">XP: zwykłe przewijanie fiszek daje mało (nowa 1,5 · powtórka 0,5), ✍️ wpisywanie dużo więcej (do ×2,5). Nie da się nabijać: za szybkie kliknięcia nic nie dają, ta sama fiszka liczy się max 2× dziennie, po 400 powtórkach w dniu XP spada. Do tego punkty z gier, bitew i 25 za każde osiągnięcie.</p>
     ${progress(got.length / ACHIEVEMENTS.length)}<p class="small">${got.length} z ${ACHIEVEMENTS.length} odblokowanych</p></div>
   ${ACH_TIERS.map(t => [`${t.name} · po ${t.gems} 💎`, ACHIEVEMENTS.filter(a => a.tier === t.k)]).filter(([, l]) => l.length).map(([title, list]) => `<h2 style="margin:22px 0 4px">${title}</h2><p class="small muted" style="margin:0 0 10px">Zdobyte ${list.filter(a => S.ach[a.id]).length} z ${list.length}</p>
   <div class="badges">${list.map(a => {
