@@ -1,7 +1,7 @@
 'use strict';
 /* 🥚 Inkubator naklejek (jak Forest): wybierasz czas skupienia, jajko rośnie, a po czasie wykluwa się naklejka.
    Wyjście z aplikacji na dłużej niż EGG_GRACE = jajko pęka (chyba że uratuje je 🛡️ tarcza).
-   Tryby: 📚 nauka – czas leci tylko podczas nauki (fiszki, testy, gry, bitwy) i aktywności,
+   Tryby: 📚 nauka – czas leci tylko podczas nauki (fiszki, testy, gry, bitwy, bossowie, wieże, pojedynki i walki online) i aktywności,
           📵 telefon odłożony – czas leci cały czas, ekran nie gaśnie (Wake Lock), wyjście = pęknięcie.
    Trwająca sesja żyje w localStorage (jedno urządzenie), wynik trafia do S.eggs (synchronizowane). */
 
@@ -15,7 +15,9 @@ const EGG_TIERS = [
   { min: 120, odds: { common: 10, rare: 30, epic: 35, legendary: 25 }, gems: 500, mythic: 2, color: '#fee2e2', spot: '#dc2626' },
 ];
 const EGG_EXCL = 50, EGG_BONUS_ST = 35;   // % naklejek tylko z inkubatora · % szans na bonusową naklejkę przy wykluciu   // % szans, że wykluje się naklejka dostępna tylko z inkubatora
-const EGG_STUDY_ROUTES = ['study', 'quiz', 'game', 'battle', 'weak', 'walk', 'ptrain', 'show', 'station', 'atlas'];
+const EGG_STUDY_ROUTES = ['study', 'quiz', 'game', 'battle', 'weak', 'walk', 'ptrain', 'show', 'station', 'atlas', 'gk'];
+// ⚔️ walka też jest nauką: boss, wieża, hydra/wieża duetu (online) i pojedynek – jajko rośnie także wtedy
+const eggStudyHere = () => { const [a, b] = parseRoute().parts; return EGG_STUDY_ROUTES.includes(a || '') || (['boss', 'duel', 'coop', 'tower'].includes(a) && b === 'fight'); };
 const eggTier = min => EGG_TIERS.find(t => t.min === min) || EGG_TIERS[1];
 const eggs = () => (S.eggs = S.eggs || []);
 
@@ -45,9 +47,9 @@ const eggInBreak = E => E.breakUntil && Date.now() < E.breakUntil;
 function eggGrowing(E) {
   if (document.hidden || eggInBreak(E)) return false;
   if (E.mode === 'phone') return true;
-  return EGG_STUDY_ROUTES.includes(parseRoute().parts[0] || '') && Date.now() - eggInput < EGG_IDLE;
+  return eggStudyHere() && Date.now() - eggInput < EGG_IDLE;
 }
-const eggStatus = E => eggInBreak(E) ? '☕ Przerwa – możesz odejść od telefonu' : eggGrowing(E) ? '🌱 Jajko rośnie' : E.mode === 'study' ? (EGG_STUDY_ROUTES.includes(parseRoute().parts[0] || '') ? '⏸ Wstrzymane – brak aktywności' : '⏸ Wstrzymane – ucz się, żeby rosło') : '⏸ Wstrzymane';
+const eggStatus = E => eggInBreak(E) ? '☕ Przerwa – możesz odejść od telefonu' : eggGrowing(E) ? '🌱 Jajko rośnie' : E.mode === 'study' ? (eggStudyHere() ? '⏸ Wstrzymane – brak aktywności' : '⏸ Wstrzymane – ucz się, żeby rosło') : '⏸ Wstrzymane';
 
 // 🛡️ tarcze: 1 darmowa dziennie + kupione
 const todayN = () => Math.floor(dayStart() / DAY);
@@ -222,7 +224,7 @@ ROUTES.egg = () => {
     <div class="egg-cats">${[...EGG_CATS, ...eggUserCats()].map(c => `<button class="egg-cat${eggCat(EGG_PICK.cat).id === c.id ? ' on' : ''}" data-act="egg-cat" data-c="${esc(c.id)}">${eggCatIc(c)}<span>${esc(c.n)}</span></button>`).join('')}<button class="egg-cat add" data-act="egg-cat-add"><b class="ec-plus">+</b><span>Własna</span></button></div>
     ${eggCat(EGG_PICK.cat).own ? `<button class="sm ghost" data-act="egg-cat-del" style="margin:2px 0 8px">Usuń kategorię „${esc(eggCat(EGG_PICK.cat).n)}” z listy</button>` : ''}
     <div class="seg egg-mode"><button class="${EGG_PICK.mode === 'study' ? 'on' : ''}" data-act="egg-mode" data-m="study">📚 Nauka w aplikacji</button><button class="${EGG_PICK.mode === 'phone' ? 'on' : ''}" data-act="egg-mode" data-m="phone">📵 Telefon odłożony</button></div>
-    <p class="small muted" style="margin:6px 0">${EGG_PICK.mode === 'study' ? 'Czas leci tylko, gdy uczysz się w aplikacji (fiszki, testy, gry, bitwy). Liczy się do czasu nauki w rankingu.' : (EGG_PICK.cat === 'book' ? 'Czytasz książkę. ' : 'Uczysz się z zeszytu, książki albo robisz coś poza telefonem. ') + 'Telefon leży ekranem w dół, ekran nie gaśnie, czas leci cały czas.'}</p>
+    <p class="small muted" style="margin:6px 0">${EGG_PICK.mode === 'study' ? 'Czas leci tylko, gdy uczysz się w aplikacji (fiszki, testy, gry, bitwy, bossowie, wieże, pojedynki i walki online). Liczy się do czasu nauki w rankingu.' : (EGG_PICK.cat === 'book' ? 'Czytasz książkę. ' : 'Uczysz się z zeszytu, książki albo robisz coś poza telefonem. ') + 'Telefon leży ekranem w dół, ekran nie gaśnie, czas leci cały czas.'}</p>
     ${EGG_PICK.min >= 45 ? `<label class="row nowrap small" style="gap:8px;margin:6px 0"><input type="checkbox" data-act="egg-pomo" ${EGG_PICK.pomo ? 'checked' : ''}> ☕ Przerwy pomodoro (co 25 min – 5 min, wtedy można wyjść)</label>` : ''}
     ${itemCount('egg', 'boss') ? `<label class="row nowrap small golden-pick" style="gap:8px;margin:6px 0"><input type="checkbox" data-act="egg-golden" ${EGG_PICK.golden ? 'checked' : ''}> 👑 Użyj złotego jaja z bossa (masz ${itemCount('egg', 'boss')}) – stworek co najmniej epicki</label>` : ''}
     <button class="primary block" data-act="egg-start" style="min-height:56px;font-size:18px">🥚 Zacznij · ${esc(eggCat(EGG_PICK.cat).n)} · ${EGG_PICK.min} min</button>
