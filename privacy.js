@@ -62,7 +62,7 @@ const TERMS_HTML = () => `
 ROUTES.privacy = () => ({ tab: 'more', html: `<div class="row nowrap"><button class="iconbtn" data-act="back">‹</button><h1 class="grow">Prywatność</h1></div>
   <div class="card legal">${POLICY_HTML()}</div><div class="card"><button class="block" data-go="#/terms">Regulamin</button></div>` });
 ROUTES.terms = () => ({ tab: 'more', html: `<div class="row nowrap"><button class="iconbtn" data-act="back">‹</button><h1 class="grow">Regulamin</h1></div>
-  <div class="card legal">${TERMS_HTML()}</div><div class="card"><button class="block" data-go="#/privacy">Polityka prywatności</button></div>` });
+  <div class="card legal">${TERMS_HTML()}<p class="small muted">Licencje grafik: game-icons.net (Lorc, Delapouite i in., CC BY 3.0), Microsoft Fluent Emoji (MIT), Phosphor Icons (MIT).</p></div><div class="card"><button class="block" data-go="#/privacy">Polityka prywatności</button></div>` });
 
 // ---------- zgoda przy rejestracji (wymagana) – wstawiamy pole do formularza konta
 const prAcc0 = accountCardHTML;
@@ -163,7 +163,7 @@ Object.assign(ACTIONS, {
 });
 // linki w Ustawieniach
 const prMore0 = viewMore;
-viewMore = function () { return prMore0() + `<div class="card small center legal-links"><a href="#/privacy">🔒 Polityka prywatności</a> · <a href="#/terms">Regulamin</a><br><span class="muted">Bez reklam, bez śledzenia, bez plików cookie.</span><br><span class="muted">Grafiki: <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a> (Lorc, Delapouite i in., CC BY 3.0) · Microsoft Fluent Emoji (MIT) · Phosphor Icons (MIT)</span></div>`; };
+viewMore = function () { return prMore0() + `<div class="card small center legal-links"><a href="#/privacy">🔒 Polityka prywatności</a> · <a href="#/terms">Regulamin</a><br><span class="muted">Bez reklam, bez śledzenia, bez plików cookie.</span></div>`; };
 // link z maila (potwierdzenie konta) zostawia tokeny w adresie – usuwamy je z paska adresu i historii
 if (/(access_token|refresh_token)=/.test(location.hash)) history.replaceState(null, '', location.pathname);
 
