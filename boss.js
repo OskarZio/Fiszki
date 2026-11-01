@@ -360,7 +360,7 @@ function qteCard(B) {
 }
 function qteNext(B) {
   const cur = qteCard(B); if (!cur) { B.qte = null; return false; }
-  B.cur = cur; (B.pUsed = B.pUsed || []).push(cur.id); B.qLock = Date.now() + 600; B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0; B.ice = null; B.bugs = []; return true;
+  B.cur = cur; (B.pUsed = B.pUsed || []).push(cur.id); B.qLock = Date.now() + 600; setTimeout(() => { if (BOSS === B) render(); }, 620); B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0; B.ice = null; B.bugs = []; return true;
 }
 function qteResult(ok, late) {
   const B = BOSS, Q = B.qte, now = Date.now(); if (!Q || !B.cur?.qte) return;
