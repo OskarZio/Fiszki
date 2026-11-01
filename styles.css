@@ -3412,3 +3412,21 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 /* v303: odstęp pod nagłówkiem z walutami */
 .row.nowrap:has(> .coins-pair) { margin-bottom: 14px; }
 .row.nowrap:has(> .coins-pair) + .col-seg, .row.nowrap:has(> .coins-pair) + .seg { margin-top: 4px; }
+/* v306: zgłaszanie / blokowanie */
+.pl-safety { gap: 8px; margin-top: 4px; } .pl-safety button { color: var(--muted); }
+.rep-ov .dmenu { gap: 12px; } .rep-reasons { display: flex; flex-direction: column; gap: 8px; } .rep-reasons label, .rep-also { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.rep-reasons input, .rep-also input { width: 20px; height: 20px; accent-color: var(--accent); }
+.credits li { margin: 3px 0; }
+.adm-rep { padding: 8px 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; } .adm-rep.done { opacity: .55; }
+/* 📺 reklama nagradzana */
+.ad-heart-btn { margin-left: 8px; padding: 4px 10px !important; min-height: 0 !important; font-size: 13px !important; } .ad-heart-btn small { color: var(--muted); margin-left: 4px; }
+.ad-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.82); display: grid; place-items: center; padding: 20px; }
+.ad-box { width: min(380px, 100%); background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--line); }
+.ad-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; color: var(--muted); }
+.ad-x { width: 34px; height: 34px; min-height: 0 !important; padding: 0 !important; border-radius: 50%; opacity: .35; } .ad-x.ok { opacity: 1; background: var(--accent) !important; color: #fff; }
+.ad-body { padding: 18px 20px 22px; text-align: center; } .ad-ic { font-size: 56px; } .ad-ic .emo8 { width: 64px !important; height: 64px !important; }
+.ad-body b { display: block; font-size: 20px; margin-top: 6px; } .ad-body p { color: var(--muted); margin: 6px 0 0; }
+.ad-bar { height: 5px; background: var(--card2); } .ad-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 1s linear; }
+/* 💠 sklep premium */
+.prem-list { display: flex; flex-direction: column; } .prem-it { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.prem-it:first-child { border-top: 0; } .prem-bal { color: #38bdf8 !important; }

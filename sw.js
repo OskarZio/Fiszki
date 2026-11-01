@@ -1,7 +1,7 @@
 // Offline: aplikacja działa bez internetu. Zmień numer wersji przy każdej aktualizacji plików.
-const CACHE = 'fiszki-v305';
+const CACHE = 'fiszki-v306';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'assets/reakcja-kot.webp', 'assets/stickers/kot-zolnierz.webp', 'assets/stickers/kot-zolnierz-cut.webp'];
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 // ⚡ szybki start: przy instalacji nowej wersji pobieramy od razu cały kod (skrypty z index.html),
 // potem kod idzie z pamięci (bez ~60 zapytań do serwera przy każdym uruchomieniu). Nowa wersja = nowy sw.js = nowy CACHE.

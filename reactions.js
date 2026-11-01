@@ -9,7 +9,7 @@ const REACT_SLOTS = {
   session: { name: '✅ Ukończony zestaw fiszek', caption: 'Zestaw zrobiony! 🎉', def: true },
   goal: { name: '🎯 Cel dzienny osiągnięty', caption: 'Cel na dziś zaliczony! 🔥', def: false },
 };
-const REACT_DEFAULT = 'assets/reakcja-kot.webp';
+const REACT_DEFAULT = 'assets/e8/popper.webp';   // własna grafika 8-bit (bez memów z internetu)
 let GLOBAL_RX = {};
 let GIF_CASE = [];            // GIF-y do wylosowania w skrzynce (host wgrywa je w panelu) – [{ id, name, path, r, t }]
 const GIFCASE_PREVIEW = {};   // podgląd świeżo wgranych (zanim GitHub Pages je opublikuje)

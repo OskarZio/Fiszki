@@ -167,7 +167,7 @@ function lives() {
 const HEART_PX = ['.XX...XX.', 'XRRX.XRRX', 'XRWRXRRRX', 'XRRRRRRRX', 'XRRRRRRDX', '.XRRRRDX.', '..XRRDX..', '...XDX...', '....X....'];
 const heartPX = (full = true, cls = '') => { const c = full ? { X: '#2b0606', R: '#e3262b', W: '#ffd1d1', D: '#9c1015' } : { X: '#1a1a1a', R: '#4a4a4a', W: '#6b6b6b', D: '#363636' };
   return `<svg class="px-heart ${cls}" viewBox="0 0 9 9" shape-rendering="crispEdges" aria-hidden="true">${HEART_PX.map((r, y) => [...r].map((k, x) => c[k] ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${c[k]}"/>` : '').join('')).join('')}</svg>`; };
-const livesHTML = () => { const L = lives(); return `<span class="lives" title="Serca: przegrana walka zabiera serce. Wracają co 2 h albo za ${LIFE_REV} powtórek."><span class="px-hearts">${heartPX().repeat(L.n)}${heartPX(false).repeat(LIVES_MAX - L.n)}</span>${L.n < LIVES_MAX ? `<small>+1 za ${fmtLeft(LIFE_MS - (Date.now() - L.t))}</small>` : ''}</span>`; };
+let livesHTML = () => { const L = lives(); return `<span class="lives" title="Serca: przegrana walka zabiera serce. Wracają co 2 h albo za ${LIFE_REV} powtórek."><span class="px-hearts">${heartPX().repeat(L.n)}${heartPX(false).repeat(LIVES_MAX - L.n)}</span>${L.n < LIVES_MAX ? `<small>+1 za ${fmtLeft(LIFE_MS - (Date.now() - L.t))}</small>` : ''}</span>`; };
 const fmtLeft = ms => { const m = Math.max(1, Math.ceil(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`; };
 function loseLife() { const L = lives(); L.n = Math.max(0, L.n - 1); if (L.n === LIVES_MAX - 1) L.t = Date.now(); hero().mod = Date.now(); }
 

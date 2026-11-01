@@ -16,8 +16,6 @@ const CHARS = {
 };
 function charSVG(line, form = 0, g = 'w') {
   const C = CHARS[line] || CHARS.cat, [main, dark, light] = C.c, f = Math.max(0, Math.min(3, form)), id = `h${line}${f}${g}`;
-  // legendarna forma kota = zdjęcie z mema w złotej ramie z laurem
-  if (line === 'cat' && f === 3) return `<svg class="charsvg legend-cat" viewBox="0 0 120 120"><image href="assets/stickers/kot-zolnierz-cut.webp" x="12" y="4" width="96" height="114" preserveAspectRatio="xMidYMid meet"/></svg>`;
   const baby = f === 0, headR = baby ? 32 : 29, hy = baby ? 54 : 50, by = baby ? 92 : 90, bry = baby ? 16 : 21;
   const P = [];
   const stroke = `stroke="${dark}" stroke-width="2.5" stroke-linejoin="round"`;

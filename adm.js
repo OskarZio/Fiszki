@@ -4,6 +4,10 @@ let HOST_ST = null;
 {
   ACTIONS['adm-pick'] = el => { const i = $('#adm-code'); if (i) { i.value = el.dataset.code; i.scrollIntoView({ block: 'center', behavior: 'smooth' }); } };
   ACTIONS['adm-player'] = el => admPlayerPopup(el.dataset.code);
+  ACTIONS['prem-grant'] = async el => { const n = parseInt(prompt('Ile 💠 dodać (ujemna liczba odejmuje)?') || '', 10); if (!n) return; const pass = admPass(); if (!pass) return;
+    const r = await SB.rpc('admin_premium_grant', { p_code: el.dataset.code, p_amount: n, p_pass: pass }); if (admPassErr(r)) return;
+    toast(r.error ? 'Błąd: ' + r.error.message : `💠 Saldo gracza: ${r.data}`, 3500); };
+  ACTIONS['rep-done'] = async el => { const r = await SB.rpc('admin_report_done', { p_id: +el.dataset.id }); if (r.error) return toast('Błąd: ' + r.error.message); hostStatsLoad(); };
   ACTIONS['adm-show'] = () => { const c = ($('#adm-code')?.value || '').trim(); if (!c) return toast('Wpisz kod gracza'); admPlayerPopup(c); };
   ACTIONS['host-act'] = async el => { const k = el.dataset.k, code = (el.dataset.code || $('#adm-code')?.value || '').trim().toUpperCase(); if (!code) return toast('Wpisz kod gracza');
     let msg = null; if (k === 'msg') { msg = prompt('Treść wiadomości (gracz zobaczy ją w okienku):'); if (!msg) return; }
@@ -24,7 +28,7 @@ async function hostStatsLoad() {
     const c = await SB.rpc('claim_admin'); if (c.error) throw c.error;
     if (c.data !== true) { HOST_ST = { err: 'Statystyki widzi tylko konto właściciela aplikacji.' }; return render(); }
     const r = await SB.rpc('host_stats'); if (r.error) throw r.error;
-    const a = await SB.rpc('admin_audit'), lv = await SB.rpc('admin_levels'); HOST_ST = { d: r.data, audit: a.error ? null : a.data, levels: lv.error ? null : lv.data, t: Date.now() };
+    const a = await SB.rpc('admin_audit'), lv = await SB.rpc('admin_levels'), rp = await SB.rpc('admin_reports'); HOST_ST = { d: r.data, audit: a.error ? null : a.data, levels: lv.error ? null : lv.data, reports: rp.error ? null : rp.data, t: Date.now() };
   } catch (e) { HOST_ST = { err: /function|schema cache|does not exist/i.test(e.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy niżej), żeby zobaczyć statystyki.' : 'Błąd: ' + (e.message || e) }; }
   render();
 }
@@ -42,6 +46,9 @@ function admStatsHTML() {
         <div class="adm-btns">${[['wallet', '💸 Zabierz kryształy i złoto'], ['items', '🎒 Zabierz przedmioty'], ['stickers', '🃏 Zabierz naklejki'], ['all', '🧹 Zabierz wszystko'],
           ['shadow', '👻 Cień (myśli, że ma)'], ['unshadow', '👻 Zdejmij cień'], ['clown', '🤡 Zrób klauna'], ['unclown', '🙂 Zdejmij klauna'], ['flip', '🙃 Ekran do góry nogami'], ['msg', '💬 Wyślij wiadomość'], ['restore', '♻️ Przywróć wszystko']].map(([k, l]) => `<button class="sm${['wallet', 'items', 'stickers', 'all'].includes(k) ? ' danger' : ''}" data-act="host-act" data-k="${k}">${l}</button>`).join('')}</div>
         <p class="small muted">Stuknij gracza na liście wyżej, żeby zobaczyć jego dane i ukarać go w okienku. Zabrane rzeczy znikają też na jego telefonie przy najbliższej synchronizacji – nie da się ich odzyskać. Klaun = 🤡 przed nickiem w rankingu i czacie. ♻️ Przywróć = oddaje wszystko sprzed pierwszej kary (kopia robi się automatycznie) i zdejmuje cień oraz blokadę. 👻 Cień = gracz dalej widzi u siebie wszystko, ale w chmurze tego nie ma: inni nie widzą jego gabloty i prestiżu, a na innym urządzeniu (albo po reinstalacji) ma pusto.</p></div>
+      <h4>🚩 Zgłoszenia graczy</h4><div class="small adm-reps">${H.reports == null ? '<span class="muted">Wgraj nowy supabase.sql, żeby zobaczyć zgłoszenia.</span>' : (H.reports || []).map(x => `<div class="adm-rep${x.done ? ' done' : ''}">
+        <div class="row nowrap" style="gap:8px"><b class="grow" data-act="adm-player" data-code="${esc(x.target_code || '')}" role="button" style="cursor:pointer">${esc(x.target_nick || '?')} <span class="muted">${esc(x.target_code || '')}</span>${x.total > 1 ? ` <span class="bad">· ${x.total} zgłoszeń</span>` : ''}</b>${x.done ? '<span class="muted">✓</span>' : `<button class="sm" data-act="rep-done" data-id="${x.id}">✓ Załatwione</button>`}</div>
+        <div class="muted">${esc(({ nick: 'Nick', chat: 'Wiadomości', img: 'Zdjęcie', cheat: 'Oszukiwanie', spam: 'Spam/nękanie', other: 'Inne' })[x.reason] || x.reason)} · od ${esc(x.reporter_nick || '?')} · ${new Date(x.t).toLocaleString('pl-PL')}</div>${x.ctx ? `<div>„${esc(x.ctx)}”</div>` : ''}</div>`).join('') || '✅ brak zgłoszeń'}</div>
       <h4>📈 Podejrzane poziomy</h4><div class="small">${H.levels == null ? '<span class="muted">Wgraj nowy supabase.sql, żeby zobaczyć tę listę.</span>' : (H.levels || []).map(x => `<div class="row nowrap adm-row" data-act="adm-player" data-code="${esc(x.code || '')}" role="button" style="justify-content:space-between;align-items:flex-start"><span>${esc(x.nick || '?')} <span class="muted">${esc(x.code || '')}</span></span>
         <span class="muted" style="text-align:right">poz. ${esc(String(x.level ?? '?'))} · z danych ${n(x.est)} XP · ${n(x.reviews)} powt.${x.max_day > 1500 ? ` · ⚠️ ${n(x.max_day)} powt. jednego dnia` : ''}${x.hero_xp > 20 * x.est + 2000 ? ` · ⚠️ bohater ${n(x.hero_xp)} XP` : ''}</span></div>`).join('') || '✅ nikt nie podbija poziomu'}</div>
       <p class="small muted">Poziom i XP w profilu są liczone na serwerze z prawdziwych powtórek, gier, osiągnięć i bitew – dopisany poziom jest automatycznie przycinany.</p>
@@ -74,7 +81,8 @@ async function admPlayerPopup(code) {
     ${(p.actions || []).length ? `<b class="small">🛡️ Twoje kary</b><div class="small adm-log">${p.actions.map(x => `<div>${esc(x.what)}${x.msg ? ': „' + esc(x.msg) + '”' : ''} <span class="muted">${dt(x.t)}</span></div>`).join('')}</div>` : ''}
     <div class="adm-btns">${[['wallet', '💸 Zabierz kryształy'], ['items', '🎒 Zabierz przedmioty'], ['stickers', '🃏 Zabierz naklejki'], ['all', '🧹 Zabierz wszystko'],
       p.shadow ? ['unshadow', '👻 Zdejmij cień'] : ['shadow', '👻 Cień (myśli, że ma)'], p.clown ? ['unclown', '🙂 Zdejmij klauna'] : ['clown', '🤡 Zrób klauna'], ['flip', '🙃 Do góry nogami'], ['msg', '💬 Wiadomość'], ['restore', '♻️ Przywróć wszystko']].map(([k, l]) => `<button class="sm${['wallet', 'items', 'stickers', 'all'].includes(k) ? ' danger' : ''}" data-act="host-act" data-k="${k}" data-code="${esc(p.code)}">${l}</button>`).join('')}
-      <button class="sm ${p.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(p.code)}" data-on="${p.banned ? 0 : 1}">${p.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button></div>
+      <button class="sm ${p.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(p.code)}" data-on="${p.banned ? 0 : 1}">${p.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button>
+      <button class="sm" data-act="prem-grant" data-code="${esc(p.code)}">💠 Dodaj premium</button></div>
     <button class="ghost" data-x="1">Zamknij</button>`;
 }
 

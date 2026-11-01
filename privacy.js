@@ -62,7 +62,10 @@ const TERMS_HTML = () => `
 ROUTES.privacy = () => ({ tab: 'more', html: `<div class="row nowrap"><button class="iconbtn" data-act="back">‹</button><h1 class="grow">Prywatność</h1></div>
   <div class="card legal">${POLICY_HTML()}</div><div class="card"><button class="block" data-go="#/terms">Regulamin</button></div>` });
 ROUTES.terms = () => ({ tab: 'more', html: `<div class="row nowrap"><button class="iconbtn" data-act="back">‹</button><h1 class="grow">Regulamin</h1></div>
-  <div class="card legal">${TERMS_HTML()}<p class="small muted">Licencje grafik: game-icons.net (Lorc, Delapouite i in., CC BY 3.0), Microsoft Fluent Emoji (MIT), Phosphor Icons (MIT).</p></div><div class="card"><button class="block" data-go="#/privacy">Polityka prywatności</button></div>` });
+  <div class="card legal">${TERMS_HTML()}<h3>Autorzy i licencje</h3><ul class="small muted credits"><li>Ikony: <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a> – Lorc, Delapouite i inni, licencja CC BY 3.0</li>
+<li>Emoji: Microsoft Fluent Emoji (MIT) · ikony interfejsu: Phosphor Icons (MIT)</li><li>Czcionki: Rubik i Pixelify Sans – SIL Open Font License 1.1</li>
+<li>Pytania Wieży wiedzy częściowo z Wikidata (CC0)</li><li>Grafiki 8-bit, postacie, bossowie i naklejki – własne grafiki aplikacji</li>
+<li>Fiszki medyczne i z pierwszej pomocy to materiał edukacyjny – nie zastępują kursu ani porady lekarza.</li></ul></div><div class="card"><button class="block" data-go="#/privacy">Polityka prywatności</button></div>` });
 
 // ---------- zgoda przy rejestracji (wymagana) – wstawiamy pole do formularza konta
 const prAcc0 = accountCardHTML;
@@ -168,7 +171,7 @@ viewMore = function () { return prMore0() + `<div class="card small center legal
 if (/(access_token|refresh_token)=/.test(location.hash)) history.replaceState(null, '', location.pathname);
 
 // ---------- 🛠️ Panel hosta: aktualizacja bazy jednym przyciskiem + dane administratora (RODO)
-const DB_VERSION = '2026-11-01k';   // podbijaj razem z public.db_version() w supabase.sql
+const DB_VERSION = '2026-11-01m';   // podbijaj razem z public.db_version() w supabase.sql
 let DB_STATE = null, DB_SQL = '';  // null = nie sprawdzono, 'ok', 'old', 'err'; skrypt pobrany z góry (schowek na iPhonie wymaga kliknięcia bez czekania)
 async function dbCheck(quiet) {
   if (!SB) { DB_STATE = 'err'; return; }

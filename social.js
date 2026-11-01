@@ -358,4 +358,4 @@ ACTIONS['bt-challenge-friend'] = el => { CHAT = { fid: el.dataset.fid, pick: fal
 
 // 👤 profil znajomego (lista znajomych, nagłówek czatu)
 ACTIONS['pl-view-f'] = el => { const id = el.dataset.fid, r = (typeof rankRows === 'function' ? rankRows() : []).find(x => String(x.id).replace('sb:', '') === String(id));
-  const f = friendById(id); if (r) return playerView(r); if (f) playerView({ nick: f.nick, avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos, ...(f.stats || {}), updated: f.updated_at ? +new Date(f.updated_at) : 0 }); };
+  const f = friendById(id); if (r) return playerView(r); if (f) playerView({ id: f.id, nick: f.nick, avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos, ...(f.stats || {}), updated: f.updated_at ? +new Date(f.updated_at) : 0 }); };

@@ -985,5 +985,128 @@ end $$;
 revoke all on function public.admin_levels() from public, anon;
 grant execute on function public.admin_levels() to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01k'::text $$;
+-- 🚩 zgłaszanie i 🚫 blokowanie graczy + 🤬 filtr wulgaryzmów (nicki i czat)
+create table if not exists public.reports (id bigserial primary key, reporter uuid not null default auth.uid() references auth.users on delete cascade,
+  target uuid not null references auth.users on delete cascade, reason text not null check (char_length(reason) <= 40), ctx text check (char_length(ctx) <= 400), t timestamptz not null default now(), done boolean not null default false);
+alter table public.reports enable row level security;
+drop policy if exists "rep_insert" on public.reports;
+create policy "rep_insert" on public.reports for insert to authenticated with check (reporter = auth.uid() and target <> auth.uid());
+create or replace function public.rep_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.reports where reporter = new.reporter and t > now() - interval '1 hour') >= 10 then raise exception 'rate limit'; end if;
+  new.t := now(); new.done := false; return new;
+end $$;
+drop trigger if exists rep_guard on public.reports;
+create trigger rep_guard before insert on public.reports for each row execute function public.rep_guard();
+create table if not exists public.blocks (user_id uuid not null default auth.uid() references auth.users on delete cascade, blocked uuid not null references auth.users on delete cascade, t timestamptz not null default now(), primary key (user_id, blocked));
+alter table public.blocks enable row level security;
+drop policy if exists "blocks_own" on public.blocks;
+create policy "blocks_own" on public.blocks for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+-- słowa zakazane (rdzenie, także z cyframi zamiast liter) – nick zamieniany na „Gracz”, w czacie gwiazdki
+create or replace function public.bad_words_re() returns text language sql immutable set search_path = '' as $$
+  select '(k+u+r+w|ch+[uo]+j|(^|[^a-z])h+[uo]+j|p+i+e+r+d+o*l|j+e+b+a+[ćcnl]|j+e+b+i|p+i+z+d|s+k+u+r+w|d+z+i+w+k|p+e+d+a+[lł]|c+w+e+l|k+u+t+a+s|s+z+m+a+t+a|s+p+i+e+r+d|w+y+p+i+e+r+d|f+u+c+k|s+h+i+t|b+i+t+c+h|c+u+n+t|n+i+g+g|f+a+g+g?o?t|w+h+o+r+e|h+i+t+l+e+r|n+a+z+i)'::text $$;
+create or replace function public.norm_txt(t text) returns text language sql immutable set search_path = '' as $$
+  select translate(lower(coalesce(t, '')), '013457@$ąćęłńóśźż', 'oieastasacelnoszz') $$;
+create or replace function public.profile_bad_nick() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if public.norm_txt(new.nick) ~ public.bad_words_re() then new.nick := 'Gracz'; end if;
+  return new;
+end $$;
+drop trigger if exists profile_bad_nick on public.profiles;
+create trigger profile_bad_nick before insert or update on public.profiles for each row execute function public.profile_bad_nick();
+create or replace function public.msg_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.messages where from_id = new.from_id and created_at > now() - interval '1 minute') >= 30 then raise exception 'rate limit'; end if;
+  if exists (select 1 from public.blocks where user_id = new.to_id and blocked = new.from_id) then raise exception 'blocked'; end if;   -- zablokowany nie może pisać
+  new.created_at := now(); new.read_at := null;
+  return new;
+end $$;
+-- właściciel: lista zgłoszeń (z kodami graczy do okienka kar)
+create or replace function public.admin_reports() returns json language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  return (select coalesce(json_agg(x), '[]') from (select r.id, r.reason, r.ctx, r.t, r.done, pt.nick as target_nick, pt.code as target_code, pr.nick as reporter_nick,
+    (select count(*) from public.reports r2 where r2.target = r.target) as total
+    from public.reports r left join public.profiles pt on pt.id = r.target left join public.profiles pr on pr.id = r.reporter order by r.done, r.t desc limit 40) x);
+end $$;
+revoke all on function public.admin_reports() from public, anon;
+grant execute on function public.admin_reports() to authenticated;
+create or replace function public.admin_report_done(p_id bigint) returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  update public.reports set done = true where id = p_id;
+end $$;
+revoke all on function public.admin_report_done(bigint) from public, anon;
+grant execute on function public.admin_report_done(bigint) to authenticated;
+revoke all on public.reports, public.blocks from anon;
+
+-- 💰 ekonomia na serwerze
+-- (1) limit zarobku: maks. 15 000 💎/🪙 zdobytych jednego dnia i bez wpisów „z przyszłości” – nadwyżka znika przy zapisie, próba trafia do dziennika
+create or replace function public.econ_daily_guard(d jsonb, uid uuid) returns jsonb language plpgsql security definer set search_path = '' as $$
+declare k text; kept jsonb; cut int := 0; nowms numeric := extract(epoch from now()) * 1000;
+begin
+  foreach k in array array['wallet', 'hcWallet'] loop
+    with e as (select x, (x->>'n')::numeric n, case when (x->>'t') ~ '^[0-9]+$' then (x->>'t')::numeric else 0 end t, ord from jsonb_array_elements(coalesce(d->k, '[]')) with ordinality as a(x, ord)),
+      s as (select x, n, t, ord, sum(case when n > 0 and t >= 1793554663731 then n else 0 end) over (partition by floor(t / 86400000) order by t, ord) run from e)
+    select coalesce(jsonb_agg(x order by ord), '[]'::jsonb), count(*) filter (where not (t <= nowms + 86400000 and (n <= 0 or run <= 15000))) into kept, cut
+      from s where (t <= nowms + 86400000 and (n <= 0 or run <= 15000)) or t < 1793554663731;   -- starsze wpisy (sprzed wprowadzenia limitu) zostają nietknięte
+    select count(*) - jsonb_array_length(kept) into cut from jsonb_array_elements(coalesce(d->k, '[]'));
+    if cut > 0 then d := jsonb_set(d, array[k], kept);
+      if not exists (select 1 from public.cheat_log where user_id = uid and what like 'limit dzienny%' and t > now() - interval '1 day') then
+        insert into public.cheat_log(user_id, what) values (uid, 'limit dzienny: usunięto ' || cut || ' wpisów ponad 15 000 / dzień lub z przyszłości'); end if;
+    end if;
+  end loop;
+  return d;
+end $$;
+revoke all on function public.econ_daily_guard(jsonb, uuid) from public, anon, authenticated;
+create or replace function public.data_guard_admin() returns trigger language plpgsql security definer set search_path = '' as $$
+begin new.data := public.econ_daily_guard(public.strip_taken(public.apply_admin_actions(new.data, new.user_id), new.user_id), new.user_id); return new; end $$;
+
+-- (2) 💠 waluta premium: saldo zmienia WYŁĄCZNIE serwer (płatność przez webhook z kluczem serwisowym albo właściciel), gracz tylko czyta
+create table if not exists public.premium_wallet (user_id uuid primary key references auth.users on delete cascade, balance int not null default 0 check (balance >= 0), updated_at timestamptz not null default now());
+create table if not exists public.premium_ledger (id bigserial primary key, user_id uuid not null references auth.users on delete cascade, delta int not null, why text not null, t timestamptz not null default now());
+create table if not exists public.premium_items (k text primary key, price int not null check (price > 0), kind text not null, key text not null, name text not null, active boolean not null default true);
+create table if not exists public.premium_owned (user_id uuid not null references auth.users on delete cascade, k text not null references public.premium_items, t timestamptz not null default now(), primary key (user_id, k));
+alter table public.premium_wallet enable row level security; alter table public.premium_ledger enable row level security;
+alter table public.premium_items enable row level security; alter table public.premium_owned enable row level security;
+drop policy if exists "pw_own" on public.premium_wallet; create policy "pw_own" on public.premium_wallet for select to authenticated using (user_id = auth.uid());
+drop policy if exists "pl_own" on public.premium_ledger; create policy "pl_own" on public.premium_ledger for select to authenticated using (user_id = auth.uid());
+drop policy if exists "pi_read" on public.premium_items; create policy "pi_read" on public.premium_items for select to authenticated using (active);
+drop policy if exists "po_own" on public.premium_owned; create policy "po_own" on public.premium_owned for select to authenticated using (user_id = auth.uid());
+insert into public.premium_items(k, price, kind, key, name) values
+  ('theme_photo', 300, 'theme', 'photo', 'Własne tło'), ('theme_gold', 200, 'theme', 'gold', 'Motyw Złoto'), ('theme_holo', 250, 'theme', 'holo', 'Motyw Hologram'),
+  ('theme_neon', 200, 'theme', 'neon', 'Motyw Neon'), ('theme_galaxy', 150, 'theme', 'galaxy', 'Motyw Galaktyka')
+on conflict (k) do update set price = excluded.price, kind = excluded.kind, key = excluded.key, name = excluded.name;
+-- zakup: serwer sprawdza saldo, cenę i czy już masz – atomowo
+create or replace function public.premium_buy(p_k text) returns json language plpgsql security definer set search_path = '' as $$
+declare it record; bal int;
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  select * into it from public.premium_items where k = p_k and active; if not found then raise exception 'no such item'; end if;
+  if exists (select 1 from public.premium_owned where user_id = auth.uid() and k = p_k) then raise exception 'already owned'; end if;
+  insert into public.premium_wallet(user_id) values (auth.uid()) on conflict (user_id) do nothing;
+  update public.premium_wallet set balance = balance - it.price, updated_at = now() where user_id = auth.uid() and balance >= it.price returning balance into bal;
+  if bal is null then raise exception 'not enough'; end if;
+  insert into public.premium_ledger(user_id, delta, why) values (auth.uid(), -it.price, 'buy:' || p_k);
+  insert into public.premium_owned(user_id, k) values (auth.uid(), p_k);
+  return json_build_object('balance', bal, 'kind', it.kind, 'key', it.key);
+end $$;
+revoke all on function public.premium_buy(text) from public, anon; grant execute on function public.premium_buy(text) to authenticated;
+-- doładowanie: tylko właściciel (z hasłem) – docelowo robi to webhook płatności kluczem serwisowym
+create or replace function public.admin_premium_grant(p_code text, p_amount int, p_pass text default null) returns int language plpgsql security definer set search_path = '' as $$
+declare uid uuid; bal int;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  perform public.admin_pass_ok(p_pass);
+  if p_amount = 0 or abs(p_amount) > 100000 then raise exception 'bad amount'; end if;
+  select id into uid from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  insert into public.premium_wallet(user_id) values (uid) on conflict (user_id) do nothing;
+  update public.premium_wallet set balance = greatest(0, balance + p_amount), updated_at = now() where user_id = uid returning balance into bal;
+  insert into public.premium_ledger(user_id, delta, why) values (uid, p_amount, 'admin');
+  return bal;
+end $$;
+revoke all on function public.admin_premium_grant(text, int, text) from public, anon; grant execute on function public.admin_premium_grant(text, int, text) to authenticated;
+revoke all on public.premium_wallet, public.premium_ledger, public.premium_items, public.premium_owned from anon;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01m'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
