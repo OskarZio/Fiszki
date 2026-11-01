@@ -630,5 +630,70 @@ end $$;
 revoke all on function public.admin_player(text) from public, anon;
 grant execute on function public.admin_player(text) to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01d'::text $$;
+-- 👻 „cień”: oszust dalej WIDZI u siebie kryształy i przedmioty, ale w chmurze ich nie ma (inne urządzenie, ranking, gablota – pusto)
+create or replace function public.is_shadow(uid uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select coalesce((select what = 'shadow' from public.admin_actions where user_id = uid and what in ('shadow', 'unshadow') order by id desc limit 1), false) $$;
+revoke all on function public.is_shadow(uuid) from public, anon, authenticated;
+create or replace function public.apply_admin_actions(d jsonb, uid uuid) returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare ack bigint; a record; ops jsonb := '[]'::jsonb;
+begin
+  ack := case when (d->'stats'->>'adminAck') ~ '^[0-9]+$' then (d->'stats'->>'adminAck')::bigint else 0 end;
+  for a in select id, what, msg from public.admin_actions where user_id = uid and id > ack and what not in ('shadow', 'unshadow') order by id loop
+    ops := ops || jsonb_build_object('id', a.id, 'what', a.what, 'msg', a.msg);
+    if a.what in ('wallet', 'all') then d := d || jsonb_build_object('wallet', '[]'::jsonb, 'hcWallet', '[]'::jsonb); end if;
+    if a.what in ('items', 'all') then
+      d := jsonb_set(d, '{items}', coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d->'items', '[]')) e where e->>'kind' = 'sticker' and a.what = 'items'), '[]'::jsonb));
+      d := d || jsonb_build_object('hcItems', '[]'::jsonb);
+    end if;
+    if a.what = 'stickers' then
+      d := jsonb_set(d, '{items}', coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d->'items', '[]')) e where coalesce(e->>'kind', '') <> 'sticker'), '[]'::jsonb));
+    end if;
+  end loop;
+  -- cień: po cichu (bez komunikatu i bez czyszczenia na jego telefonie)
+  if public.is_shadow(uid) then d := d || jsonb_build_object('wallet', '[]'::jsonb, 'items', '[]'::jsonb, 'hcWallet', '[]'::jsonb, 'hcItems', '[]'::jsonb); end if;
+  return case when jsonb_array_length(ops) > 0 then d || jsonb_build_object('adminOps', ops) else d - 'adminOps' end;
+end $$;
+revoke all on function public.apply_admin_actions(jsonb, uuid) from public, anon, authenticated;
+create or replace function public.profile_guard_admin() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.nick := regexp_replace(coalesce(new.nick, ''), '^🤡 ', '');
+  if public.is_clown(new.id) then new.nick := left('🤡 ' || new.nick, 24); end if;
+  if public.is_shadow(new.id) then new.stats := coalesce(new.stats, '{}'::jsonb) - 'showcase' - 'cos'; end if;
+  return new;
+end $$;
+create or replace function public.admin_act(p_code text, p_what text, p_msg text default null) returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid; nk text;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  if p_what not in ('wallet', 'items', 'stickers', 'all', 'clown', 'unclown', 'msg', 'flip', 'shadow', 'unshadow') then raise exception 'bad action'; end if;
+  select id, nick into uid, nk from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  insert into public.admin_actions(user_id, what, msg) values (uid, p_what, left(p_msg, 300));
+  if p_what in ('wallet', 'items', 'stickers', 'all', 'shadow') then insert into public.cheat_log(user_id, what) values (uid, 'właściciel: ' || p_what); end if;
+  update public.user_data set data = data where user_id = uid;
+  update public.profiles set nick = nick where id = uid;
+  return nk;
+end $$;
+revoke all on function public.admin_act(text, text, text) from public, anon;
+grant execute on function public.admin_act(text, text, text) to authenticated;
+create or replace function public.admin_player(p_code text) returns json language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  select id into uid from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  return (select json_build_object(
+    'nick', p.nick, 'code', p.code, 'avatar', p.avatar, 'avatar_img', p.avatar_img, 'stats', p.stats, 'updated', p.updated_at, 'created', u.created_at,
+    'gems', (select coalesce(sum((e->>'n')::numeric), 0) from jsonb_array_elements(coalesce(d.data->'wallet', '[]')) e where jsonb_typeof(e->'n') = 'number'),
+    'wallet_n', jsonb_array_length(coalesce(d.data->'wallet', '[]')),
+    'biggest', (select coalesce(max((e->>'n')::numeric), 0) from jsonb_array_elements(coalesce(d.data->'wallet', '[]')) e where jsonb_typeof(e->'n') = 'number'),
+    'items', (select coalesce(json_object_agg(k, n), '{}') from (select coalesce(e->>'kind', '?') k, count(*) n from jsonb_array_elements(coalesce(d.data->'items', '[]')) e group by 1) x),
+    'reviews', jsonb_array_length(coalesce(d.data->'log', '[]')), 'cards', jsonb_array_length(coalesce(d.data->'cards', '[]')), 'decks', jsonb_array_length(coalesce(d.data->'decks', '[]')),
+    'synced', d.updated_at, 'banned', exists (select 1 from public.econ_bans b where b.user_id = uid), 'clown', public.is_clown(uid), 'shadow', public.is_shadow(uid),
+    'log', (select coalesce(json_agg(x), '[]') from (select what, t from public.cheat_log where user_id = uid order by t desc limit 10) x),
+    'actions', (select coalesce(json_agg(x), '[]') from (select what, msg, t from public.admin_actions where user_id = uid order by id desc limit 10) x))
+    from public.profiles p left join public.user_data d on d.user_id = p.id left join auth.users u on u.id = p.id where p.id = uid);
+end $$;
+revoke all on function public.admin_player(text) from public, anon;
+grant execute on function public.admin_player(text) to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01e'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
