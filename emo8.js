@@ -40,7 +40,7 @@ const EMO8 = {
   '💖': 'px8/e_heartdark', '❤️': 'px8/e_heartbeat', '💗': 'px8/e_heartbeat', '🌠': 'px8/e_shootstar', '🦄': 'px8/e_unicorn', '⚗️': 'px8/b_flasks', '🧰': 'px8/b_chest',
 };
 const EMO8_RE = new RegExp(Object.keys(EMO8).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + '|⟦a:(\\w+):(\\d+)⟧', 'g');
-const emo8Img = (src, alt) => `<img class="emo8" src="assets/${src}.webp" alt="${alt}" draggable="false">`;
+const emo8Img = (src, alt) => `<img class="emo8" src="assets/${src}.webp" alt="${alt}" draggable="false" decoding="async">`;
 function emo8Decorate(root = document.body) {
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => { EMO8_RE.lastIndex = 0; return EMO8_RE.test(n.nodeValue) && !n.parentElement?.closest('textarea, input, select, option, script, style, [contenteditable], svg, .no-emo8') ? 1 : 3; } });
   const hits = []; while (w.nextNode()) hits.push(w.currentNode);

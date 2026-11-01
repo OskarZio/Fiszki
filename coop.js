@@ -86,7 +86,7 @@ function coopMsg(m0) {
     C.hostId = m.from; C.tower = !!m.tw; C.gq = !!m.gq; C.setInfo = m.sm ? { name: m.sm, n: m.sn || 0 } : null; for (const x of m.players) C.players[x.id] = { ...(C.players[x.id] || {}), ...x, seen: Date.now() }; return render();
   }
   if (m.t === 'start' && !C.host && (m.from === C.hostId || !C.hostId) && ['lobby', 'floor'].includes(C.phase) && m.heads) { C.hostId = m.from; }
-  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); if (m.bf) C.tw.buff = { ...m.bf }; C.gq = !!m.gq; C.gqi = m.gqi; } return coopBegin(m.heads, m.seed, m.set); }
+  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); if (m.bf) C.tw.buff = { ...m.bf }; C.gq = !!m.gq; C.gqi = m.gqi; if (m.gqi?.length && typeof gkCard === 'function') C.gkCat = gkCard('gk:' + m.gqi[0])?.cat || null; } return coopBegin(m.heads, m.seed, m.set); }
   if (m.t === 'ok' && p) { C.mateOk = { id: m.from, t: Date.now() }; return; }
   if (m.t === 'emo' && p && (m.emo != null || m.st)) { p.emo = { i: m.emo, st: m.st, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
   if (m.t === 'hit' && C.phase === 'fight') { const hd = C.heads.find(x => x.id === m.h); if (hd) { hd.hp = Math.max(0, hd.hp - m.n); syncMyHead(); if (BOSS?.phase === 'fight' && !coopAlive()) return bossEnd(true); softRender(); } return; }
@@ -112,7 +112,7 @@ function coopStartHost() {
   if (COOP_MODE === 'tower') { const fl = C.phase === 'floor' ? C.tw.floor : 1, keys = Object.keys(DUO_BON), bon = fl > 1 ? duoVoteWinner(C) || keys[Math.random() * keys.length | 0] : null;
     const tot = heads.reduce((a, h) => a + h.max, 0); heads.splice(0, heads.length, { id: 'boss', max: Math.round(tot * .9 * (1 + .2 * (fl - 1))) });   // 🐉 jeden wspólny boss z dużym ❤️
     const ab = [...(fl > 1 && C.tw?.abil || [])]; const nx = towerCurse(ab); if (nx) ab.push(nx);
-    let gqi; if (COOP_SRC === 'gk' && typeof gkPick === 'function') { const T0 = { floor: fl * 2, used: C.gkUsed || [] }; gqi = gkPick(T0, 30).map(c => String(c.id).slice(3)); C.gkUsed = T0.used; }
+    let gqi; if (COOP_SRC === 'gk' && typeof gkPick === 'function') { if (fl === 1) C.gkCat = undefined; const T0 = { floor: fl * 2, used: C.gkUsed || [], cat: C.gkCat }; gqi = gkPick(T0, 30).map(c => String(c.id).slice(3)); C.gkUsed = T0.used; C.gkCat = T0.cat; }
     duoPrep(fl, bon, ab); tw = { tw: true, fl, ab, bf: { ...(C.tw?.buff || {}) }, ...(bon ? { bon } : {}), ...(gqi ? { gq: true, gqi } : {}) }; C.gq = COOP_SRC === 'gk'; C.gqi = gqi; }
   coopSend({ t: 'start', heads, seed, ...(set ? { set } : {}), ...tw }); coopBegin(heads, seed, set);
 }
@@ -126,7 +126,7 @@ function coopBegin(heads, seed, set) {
     if (cs.length < 10) { toast('Masz za mało nauczonych fiszek (min. 10) – walczysz tym, co jest', 3500); } }
   const n = Object.keys(C.players).length, diff = Math.min(4, 1 + Math.floor(heroLv() / 6));
   const T = C.tw?.on ? C.tw : null;
-  const b = T ? { ...duoBoss(T.floor, seed, cs.length ? cs : S.cards.filter(fightable)), ...(C.gq ? { gk: true } : {}) } : { kind: 'hydra', id: 'hydra', name: n > 2 ? `Hydra ${n}-głowa` : 'Hydra', desc: 'Każdy z Was bije swoją głowę.', img: 'assets/bosses/hydra.webp', persona: HYDRA_TALK, diff, stars: 0, cards: cs.length ? cs : S.cards.filter(fightable), ok: true, repeat: false, pr: hero().pr || 0, len: 30, title: `Lobby ${C.code}`, seed };
+  const b = T ? { ...duoBoss(T.floor, seed, cs.length ? cs : S.cards.filter(fightable)), ...(C.gq ? { gk: true, gkCat: C.gkCat || null, title: `🗼 Wieża duetu · piętro ${T.floor}${C.gkCat && typeof GK_CAT !== 'undefined' && GK_CAT[C.gkCat] ? ' · ' + GK_CAT[C.gkCat] : ''}` } : {}) } : { kind: 'hydra', id: 'hydra', name: n > 2 ? `Hydra ${n}-głowa` : 'Hydra', desc: 'Każdy z Was bije swoją głowę.', img: 'assets/bosses/hydra.webp', persona: HYDRA_TALK, diff, stars: 0, cards: cs.length ? cs : S.cards.filter(fightable), ok: true, repeat: false, pr: hero().pr || 0, len: 30, title: `Lobby ${C.code}`, seed };
   const p = bossParams(b); const mine = C.heads.find(h => h.id === MY_ID); p.hp = mine?.max || p.hp; if (T) { b.curses = true; p.abil = [...(T.abil || [])]; }
   bossBegin(b, { coop: true }, p);
   if (T) duoApply(BOSS, T);

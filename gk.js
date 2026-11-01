@@ -224,18 +224,25 @@ const gkCv0 = cardView;
 cardView = c => c?.gk ? { q: `<div class="gk-cat">${GK_CAT[c.cat] || ''}</div><div class="ctext">${esc(c.q)}</div>`, a: `<div class="ctext">${esc(c.q)}</div><hr><div class="ctext">${esc(c.a)}</div>`,
   b: `<div class="ctext">${esc(c.a)}</div>`, ans: c.a, hints: [], label: c.q } : gkCv0(c);
 // pytania na piętro: głównie z poziomu piętra, trochę z innych; w jednej wspinaczce bez powtórek
+// 🎲 jedna kategoria na całą wspinaczkę (solo i online) – losowana na starcie, potem pytania tylko z niej
+function gkRandCat() { const n = {}; for (const x of GK_ALL) n[x.cat] = (n[x.cat] || 0) + 1; const ok = Object.keys(GK_CAT).filter(k => (n[k] || 0) >= 60); return ok[Math.random() * ok.length | 0] || null; }
 function gkPick(T, n) {
+  if (T.cat === undefined) T.cat = gkRandCat();
   const lv = T.floor <= 3 ? 1 : T.floor <= 7 ? 2 : 3;
   const used = new Set((T.used || []).map(String)), seen = gkSeen();
   // poziom wyczerpany? zapominamy tylko jego pytania (te z bieżącej wspinaczki dalej się nie powtórzą)
   for (const l of [lv, Math.min(3, lv + 1)]) if (GK_ALL.filter(x => x.lvl === l && !seen.has(x.k) && !used.has(x.k)).length < n) for (const x of GK_ALL) if (x.lvl === l) seen.delete(x.k);
-  const free = GK_ALL.filter(x => !used.has(x.k) && !seen.has(x.k));
+  let free = GK_ALL.filter(x => !used.has(x.k) && !seen.has(x.k));
+  if (T.cat) { const inCat = free.filter(x => x.cat === T.cat);
+    if (inCat.length < n) { for (const x of GK_ALL) if (x.cat === T.cat) seen.delete(x.k); free = GK_ALL.filter(x => !used.has(x.k) && x.cat === T.cat); } else free = inCat;
+    if (free.length < n) free = GK_ALL.filter(x => !used.has(x.k) && !seen.has(x.k)); }
   // różne kategorie przemieszane: z każdej kategorii najpierw po jednym, potem reszta
   // 🎲 mieszanka wiedzy ogólnej: koszyki tematów po kolei (geografia, historia, kultura, popkultura, nauka, przyroda…),
   // matematyki i województw/stolic tylko odrobina – żeby nie było „ciągle liczenia i województw”
   const MATH = /^(add|sub|div|mul|mul2|frac|eq|sq|sqrt|pow|pct|rom|romr|prime|unit)_/, LOCAL = /^(woj|wd_)/;
   const bucket = x => MATH.test(x.k) ? 'math' : /^woj_/.test(x.k) || /województwie/.test(x.q) ? 'woj' : /^(cap|capr|cont|cur)_/.test(x.k) || /leży miasto/.test(x.q) ? 'cap' : x.cat;
-  const cand = shuffle(free.filter(x => x.lvl === lv)).concat(shuffle(free.filter(x => x.lvl !== lv && x.lvl <= lv + 1)));
+  let cand = shuffle(free.filter(x => x.lvl === lv)).concat(shuffle(free.filter(x => x.lvl !== lv && x.lvl <= lv + 1)));
+  if (T.cat && cand.length < n) cand = cand.concat(shuffle(free.filter(x => !cand.includes(x))));
   const quota = { math: Math.max(1, Math.round(n * .08)), woj: Math.max(1, Math.round(n * .05)), cap: Math.max(1, Math.round(n * .12)) }, cnt = {}, groups = {};
   for (const x of cand) (groups[bucket(x)] = groups[bucket(x)] || []).push(x);
   const order = shuffle(Object.keys(groups)), pick = [];

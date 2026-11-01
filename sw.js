@@ -1,5 +1,5 @@
 // Offline: aplikacja działa bez internetu. Zmień numer wersji przy każdej aktualizacji plików.
-const CACHE = 'fiszki-v303';
+const CACHE = 'fiszki-v304';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'assets/reakcja-kot.webp', 'assets/stickers/kot-zolnierz.webp', 'assets/stickers/kot-zolnierz-cut.webp'];
 
@@ -22,7 +22,16 @@ self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
     .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== ACACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
+  setTimeout(precacheIcons, 3000);   // ⚡ w tle: ikony i postacie trafiają do pamięci, zanim będą potrzebne
 });
+async function precacheIcons() {
+  try {
+    const list = await (await fetch('assets/precache.json', { cache: 'no-cache' })).json(), c = await caches.open(ACACHE), base = self.registration.scope;
+    for (let i = 0; i < list.length; i += 6) await Promise.all(list.slice(i, i + 6).map(async p => {
+      const key = new URL(p, base).href; if (await c.match(key)) return;
+      try { const r = await fetch(key); if (r.ok) await c.put(key, r); } catch { /* */ } }));
+  } catch { /* bez sieci – spróbujemy przy następnej aktualizacji */ }
+}
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);

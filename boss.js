@@ -297,7 +297,7 @@ function weakCards(b) {
 // karty do ataku: najpierw pomyłki z tej walki, potem „słabe” z historii, na końcu reszta widzianych
 function parryPool(B) {
   // 🧠 wieża wiedzy: ataki specjalne (podstęp, QTE, cios) dostają ŚWIEŻE pytania z biblioteki – nie powtarzają tych z walki
-  if (B.b.gk && typeof gkPick === 'function') { const T = { floor: B.b.i || 1, used: [...B.ids, ...(B.gkx || [])].map(id => String(id).replace(/^gk:/, '')) }, cs = gkPick(T, 3);
+  if (B.b.gk && typeof gkPick === 'function') { const T = { floor: B.b.i || 1, cat: B.b.gkCat || null, used: [...B.ids, ...(B.gkx || [])].map(id => String(id).replace(/^gk:/, '')) }, cs = gkPick(T, 3);
     B.gkx = [...(B.gkx || []), ...cs.map(c => c.id)]; return cs.map(c => ({ id: c.id, weak: false, c })); }
   const seen = B.ids.slice(0, Math.max(1, B.i)), missed = shuffle([...new Set(B.missed)]), weak = shuffle((B.weakIds || []).filter(id => !missed.includes(id)));
   const used = new Set(B.pUsed || []), all0 = [...new Set([...missed, ...weak, ...shuffle(B.ids.slice(B.i + 1)), ...shuffle(seen), ...shuffle([...B.ids])])], fresh = all0.filter(id => !used.has(id) && !(B.askedIds || []).includes(id));
