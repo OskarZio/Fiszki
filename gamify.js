@@ -315,7 +315,8 @@ function playerView(p) {
   const kv = (l, v) => v != null && v !== '' ? `<div><b>${v}</b><small>${l}</small></div>` : '';
   ov.innerHTML = `<div class="dmenu pl-card" role="dialog"><div class="row nowrap" style="gap:12px">${avatarHTML(p, 64)}<div class="grow"><b style="font-size:20px">${typeof nickHTML === 'function' ? nickHTML(p.nick, p.cos, false) : esc(p.nick)}</b><div>${p.me ? '<span class="live-dot">● to Ty</span>' : liveTag(p)}</div></div></div>
     <div class="time-kpis">${kv('poziom', p.level)}${kv('Elo', p.elo)}${kv('min w tygodniu', p.weekMin)}${kv('seria dni', p.streak)}</div>
-    ${typeof showcaseHTML === 'function' && p.showcase?.length ? `<div class="small muted">Gablota</div><div>${showcaseHTML(p.showcase)}</div>` : ''}
+    ${typeof showcaseHTML === 'function' && p.showcase?.length ? `<div class="pl-case-h">🏆 Gablota</div><div class="pl-case">${p.showcase.slice(0, 3).map(id => { const st = stickerById(id), c = !st && typeof cosById === 'function' ? cosById(id) : null; if (!st && !c) return '';
+      return `<div class="pl-case-it">${showcaseHTML([id])}<small>${esc(st ? st.name : c.n)}</small></div>`; }).join('')}</div>` : ''}
     <button class="ghost" data-x="1">Zamknij</button></div>`;
   ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-x]')) ov.remove(); }); document.body.append(ov);
 }

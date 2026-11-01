@@ -303,10 +303,15 @@ ROUTES.cos = () => {
     ${COS_TAB === 'react' ? '<br>Reakcje wysyłasz na czacie: 😀 GIF → ✨ Reakcje premium.' : ''}${!cosAnimOn() ? '<br>Animacje prestiżu są wyłączone (Ustawienia → Wygląd).' : ''}</div>` };
 };
 HUB_OF.cos = 'profile';
-if (Array.isArray(HUBS.profile) && !HUBS.profile.some(x => x[0] === 'cos')) HUBS.profile.splice(1, 0, ['cos', '👑', 'Prestiż']);
+// 👑 Prestiż nie ma osobnej zakładki – jest częścią „Kolekcji” (przełącznik na górze)
+if (Array.isArray(HUBS.profile)) { const i = HUBS.profile.findIndex(x => x[0] === 'cos'); if (i >= 0) HUBS.profile.splice(i, 1); }
+const colSeg = cur => `<div class="seg col-seg"><button class="${cur === 'inv' ? 'on' : ''}" data-go="#/inv">🎒 Przedmioty</button><button class="${cur === 'cos' ? 'on' : ''}" data-go="#/cos">👑 Prestiż</button></div>`;
 const cosRoute0 = ROUTES.cos;
-ROUTES.cos = (...a) => { const v = cosRoute0(...a); if (typeof hubNav !== 'function') return v; LAST_HUB.profile = 'cos';
-  return { ...v, html: hubNav('profile', 'cos') + (typeof stripBack === 'function' ? stripBack(v.html) : v.html) }; };
+ROUTES.cos = (...a) => { const v = cosRoute0(...a); if (typeof hubNav !== 'function') return v; LAST_HUB.profile = 'inv';
+  const body = typeof stripBack === 'function' ? stripBack(v.html) : v.html, k = body.indexOf('</div>') + 6;
+  return { ...v, html: hubNav('profile', 'inv') + body.slice(0, k) + colSeg('cos') + body.slice(k) }; };
+setTimeout(() => { const inv0 = ROUTES.inv; ROUTES.inv = (...a) => { const v = inv0(...a); if (!v?.html) return v; const k = v.html.indexOf('</div>', v.html.indexOf('<h1')) + 6;
+  return { ...v, html: v.html.slice(0, k) + colSeg('inv') + v.html.slice(k) }; }; }, 0);
 
 Object.assign(ACTIONS, {
   'cos-open': () => cosOpenCase(),

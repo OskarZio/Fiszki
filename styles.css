@@ -3133,3 +3133,15 @@ html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-si
 .row.nowrap:has(> .coins-pair) { flex-wrap: wrap; row-gap: 4px; align-content: flex-start; }
 .row.nowrap:has(> .coins-pair) > h1 { margin-bottom: 0; }
 .row.nowrap:has(> .coins-pair) > h1 { white-space: nowrap; flex: 1 0 auto; }
+.col-seg { display: flex; margin: 0 0 14px; } .col-seg button { flex: 1; }
+body.admin-flip #app, body.admin-flip main { transform: rotate(180deg); transition: transform .8s; }
+.adm-tools input { width: 100%; margin-bottom: 10px; } .adm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .adm-btns button { white-space: normal; line-height: 1.2; min-height: 44px; }
+/* v263: duża gablota w profilu gracza */
+.pl-case-h { font-weight: 800; margin: 14px 0 8px; }
+.pl-case { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.pl-case-it { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 16px; background: var(--card2); text-align: center; }
+.pl-case-it > span { font-size: 54px !important; width: 84px !important; height: 84px !important; display: grid !important; place-items: center; border-radius: 16px; }
+.pl-case-it > span img, .pl-case-it > span .emo8, .pl-case-it > span svg { width: 64px !important; height: 64px !important; }
+.pl-case-it small { font-size: 12px; line-height: 1.2; color: var(--muted); overflow-wrap: anywhere; }
+.pl-case-it .cos-sc * { font-size: 46px !important; width: auto; height: auto; }
+.pl-case-it .cos-sc img, .pl-case-it .cos-sc .emo8 { width: 60px !important; height: 60px !important; }

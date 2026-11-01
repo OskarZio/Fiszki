@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '262';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '263';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1768,9 +1768,30 @@ async function gistText(f) {
   const r = await fetch(f.raw_url); if (!r.ok) throw new Error('pobieranie pliku ' + r.status); return r.text();
 }
 function exportData() { const { settings, ...rest } = S; return { ...rest, exportedAt: Date.now() }; }
+function adminOpFx(o) {
+  const T = { wallet: ['💸', 'Twoje kryształy i złoto zostały zabrane.'], items: ['🎒', 'Twoje przedmioty zostały zabrane.'], stickers: ['🃏', 'Twoje naklejki zostały zabrane.'], all: ['🧹', 'Wszystkie Twoje kryształy, złoto i przedmioty zostały zabrane.'],
+    clown: ['🤡', 'Od teraz w rankingu wszyscy widzą Cię jako klauna.'], msg: ['💬', ''], flip: ['🙃', 'Ups… coś się przewróciło.'] }[o.what];
+  if (!T || o.what === 'unclown') return;
+  if (o.what === 'flip') { document.body.classList.add('admin-flip'); setTimeout(() => document.body.classList.remove('admin-flip'), 60e3); }
+  const ov = document.createElement('div'); ov.className = 'dmenu-ov';
+  ov.innerHTML = `<div class="dmenu center" role="dialog"><div style="font-size:54px">${T[0]}</div><b style="font-size:19px">Wiadomość od twórcy aplikacji</b>
+    <p>${esc(o.msg || T[1])}</p>${['wallet', 'items', 'stickers', 'all'].includes(o.what) ? '<p class="small muted">Powód: nieuczciwa gra (dopisane kryształy lub przedmioty).</p>' : ''}<button class="primary" data-x="1">OK</button></div>`;
+  ov.addEventListener('click', e => { if (e.target.closest('[data-x]')) ov.remove(); }); document.body.append(ov);
+}
 function mergeState(R) {
   // 🚫 właściciel zablokował ekonomię tego konta (oszustwo) – kryształy i przedmioty znikają też na urządzeniu
   if (R.econBan) { for (const k of ['wallet', 'items', 'hcWallet', 'hcItems']) { S[k] = []; R[k] = []; } }
+  // 🛡️ kary od właściciela (zabranie kryształów / przedmiotów / naklejek, wiadomość, ekran do góry nogami) – raz na każdą
+  const ops = (Array.isArray(R.adminOps) ? R.adminOps : []).filter(o => +o.id > (S.stats.adminAck || 0)).sort((a, b) => a.id - b.id);
+  for (const o of ops) {
+    if (o.what === 'wallet' || o.what === 'all') { S.wallet = []; S.hcWallet = []; }
+    if (o.what === 'items') { S.items = (S.items || []).filter(i => i.kind === 'sticker'); S.hcItems = []; }
+    if (o.what === 'all') { S.items = []; S.hcItems = []; }
+    if (o.what === 'stickers') S.items = (S.items || []).filter(i => i.kind !== 'sticker');
+    if (['items', 'stickers', 'all'].includes(o.what) && S.profile?.showcase) S.profile.showcase = [];
+    S.stats.adminAck = Math.max(S.stats.adminAck || 0, +o.id);
+    setTimeout(() => adminOpFx(o), 800);
+  }
   // 💀 portfel i przedmioty świata hardcore są osobne – kopia z innego urządzenia mogła być akurat w drugim świecie
   if (!!R.settings?.hardcore !== !!S.settings?.hardcore) { [R.wallet, R.hcWallet] = [R.hcWallet || [], R.wallet || []]; { const K = ['gear', 'potion', 'boost', 'forgemat', 'egg'], it = R.items || []; [R.items, R.hcItems] = [[...it.filter(i => !K.includes(i?.kind)), ...(R.hcItems || [])], it.filter(i => K.includes(i?.kind))]; } }
   const tomb = { ...S.tomb };

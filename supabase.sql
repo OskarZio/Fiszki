@@ -558,5 +558,56 @@ end $$;
 revoke all on function public.admin_audit() from public, anon;
 grant execute on function public.admin_audit() to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01b'::text $$;
+-- 🛡️ kary właściciela: zabranie kryształów / przedmiotów / naklejek, klaun, wiadomość, ekran do góry nogami
+create table if not exists public.admin_actions (id bigserial primary key, user_id uuid not null references auth.users on delete cascade, what text not null, msg text, t timestamptz not null default now());
+alter table public.admin_actions enable row level security;
+create or replace function public.apply_admin_actions(d jsonb, uid uuid) returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare ack bigint; a record; ops jsonb := '[]'::jsonb;
+begin
+  ack := case when (d->'stats'->>'adminAck') ~ '^[0-9]+$' then (d->'stats'->>'adminAck')::bigint else 0 end;
+  for a in select id, what, msg from public.admin_actions where user_id = uid and id > ack order by id loop
+    ops := ops || jsonb_build_object('id', a.id, 'what', a.what, 'msg', a.msg);
+    if a.what in ('wallet', 'all') then d := d || jsonb_build_object('wallet', '[]'::jsonb, 'hcWallet', '[]'::jsonb); end if;
+    if a.what in ('items', 'all') then
+      d := jsonb_set(d, '{items}', coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d->'items', '[]')) e where e->>'kind' = 'sticker' and a.what = 'items'), '[]'::jsonb));
+      d := d || jsonb_build_object('hcItems', '[]'::jsonb);
+    end if;
+    if a.what = 'stickers' then
+      d := jsonb_set(d, '{items}', coalesce((select jsonb_agg(e) from jsonb_array_elements(coalesce(d->'items', '[]')) e where coalesce(e->>'kind', '') <> 'sticker'), '[]'::jsonb));
+    end if;
+  end loop;
+  return case when jsonb_array_length(ops) > 0 then d || jsonb_build_object('adminOps', ops) else d - 'adminOps' end;
+end $$;
+revoke all on function public.apply_admin_actions(jsonb, uuid) from public, anon, authenticated;
+create or replace function public.data_guard_admin() returns trigger language plpgsql security definer set search_path = '' as $$
+begin new.data := public.apply_admin_actions(new.data, new.user_id); return new; end $$;
+drop trigger if exists data_guard_admin on public.user_data;
+create trigger data_guard_admin before insert or update on public.user_data for each row execute function public.data_guard_admin();
+create or replace function public.is_clown(uid uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select coalesce((select what = 'clown' from public.admin_actions where user_id = uid and what in ('clown', 'unclown') order by id desc limit 1), false) $$;
+revoke all on function public.is_clown(uuid) from public, anon, authenticated;
+create or replace function public.profile_guard_admin() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.nick := regexp_replace(coalesce(new.nick, ''), '^🤡 ', '');
+  if public.is_clown(new.id) then new.nick := left('🤡 ' || new.nick, 24); end if;
+  return new;
+end $$;
+drop trigger if exists profile_guard_admin on public.profiles;
+create trigger profile_guard_admin before insert or update on public.profiles for each row execute function public.profile_guard_admin();
+create or replace function public.admin_act(p_code text, p_what text, p_msg text default null) returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid; nk text;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  if p_what not in ('wallet', 'items', 'stickers', 'all', 'clown', 'unclown', 'msg', 'flip') then raise exception 'bad action'; end if;
+  select id, nick into uid, nk from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  insert into public.admin_actions(user_id, what, msg) values (uid, p_what, left(p_msg, 300));
+  if p_what in ('wallet', 'items', 'stickers', 'all') then insert into public.cheat_log(user_id, what) values (uid, 'właściciel zabrał: ' || p_what); end if;
+  update public.user_data set data = data where user_id = uid;
+  update public.profiles set nick = nick where id = uid;
+  return nk;
+end $$;
+revoke all on function public.admin_act(text, text, text) from public, anon;
+grant execute on function public.admin_act(text, text, text) to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01c'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
