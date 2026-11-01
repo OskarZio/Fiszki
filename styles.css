@@ -3128,3 +3128,8 @@ html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-si
 .fj.empty .fj-bench { height: auto; }
 .fj > b { display: block; margin-top: 4px; } .fj > small { display: block; margin-top: 6px; }
 .fj .pbar { margin: 14px 0 12px; } .fj .fj-task { margin-top: 12px; } .fj .fj-btns:not(:empty) { margin-top: 14px; }
+/* v262: nagłówek z walutami – ikona zostaje przy tytule, waluty schodzą pod spód, gdy brak miejsca */
+.coins-pair { display: inline-flex; gap: 8px; flex: none; align-items: center; margin-left: auto; }
+.row.nowrap:has(> .coins-pair) { flex-wrap: wrap; row-gap: 4px; align-content: flex-start; }
+.row.nowrap:has(> .coins-pair) > h1 { margin-bottom: 0; }
+.row.nowrap:has(> .coins-pair) > h1 { white-space: nowrap; flex: 1 0 auto; }
