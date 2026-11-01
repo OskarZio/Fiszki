@@ -3208,3 +3208,11 @@ html, body { overflow-x: clip; }
 body:has(.hubnav) #sbar { display: none; }
 .hubnav::before { background: color-mix(in srgb, var(--bg) 90%, transparent); }
 :root.hc-mode .hubnav::before { background: color-mix(in srgb, #1c0505 86%, transparent); }
+/* v277: odstępy – pełne nazwy talii, treść nie chowa się pod pływającymi przyciskami i dolnym menu */
+.deck .name { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; line-height: 1.25; }
+body:not(.focus) main { padding-bottom: calc(var(--tabs-h, 64px) + 96px + env(safe-area-inset-bottom)); }
+#hc-fab { bottom: calc(var(--tabs-h, 64px) + 84px + env(safe-area-inset-bottom)); }
+.card + .card, .card + details.card, details.card + .card { margin-top: 14px; }
+.card > h2:first-child, .card > h3:first-child { margin-top: 0; }
+.row + .row { margin-top: 8px; }
+.seg.rank-tabs { flex-wrap: wrap; overflow: visible; gap: 4px; } .seg.rank-tabs button { flex: 1 1 auto; white-space: nowrap; }

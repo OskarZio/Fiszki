@@ -50,9 +50,20 @@ function emo8Decorate(root = document.body) {
     t.replaceWith(...span.childNodes);
   }
 }
-let emo8Q = false;
-new MutationObserver(() => { if (emo8Q) return; emo8Q = true; requestAnimationFrame(() => { emo8Q = false; emo8Decorate(); }); })
-  .observe(document.body, { childList: true, subtree: true, characterData: true });
+// ⚡ tylko to, co się zmieniło (nowe elementy / zmieniony tekst), a nie cały ekran przy każdej zmianie
+let emo8Q = null;
+const emo8Run = () => { const set = emo8Q; emo8Q = null;
+  for (const n of set) { if (!n.isConnected) continue;
+    if (n.nodeType === 3) { if (n.parentElement && !set.has(n.parentElement)) emo8Decorate(n.parentElement); }
+    else if (n.nodeType === 1) emo8Decorate(n); } };
+new MutationObserver(recs => {
+  if (!emo8Q) { emo8Q = new Set(); requestAnimationFrame(emo8Run); }
+  for (const r of recs) {
+    if (r.type === 'characterData') { EMO8_RE.lastIndex = 0; if (EMO8_RE.test(r.target.nodeValue || '')) emo8Q.add(r.target); continue; }
+    for (const n of r.addedNodes) { if (n.nodeType === 1 && n.classList?.contains('emo8')) continue; if (n.nodeType === 1 || n.nodeType === 3) emo8Q.add(n); }
+  }
+}).observe(document.body, { childList: true, subtree: true, characterData: true });
+emo8Decorate();
 // ikony mocy bohaterów: [bierna, supercios, gałąź 1, 2, 3] – numery obrazków z arkusza danej postaci
 const ABIL8 = { cat: [4, 6, 2, 3, 7], frog: [2, 5, 1, 8, 4], dog: [3, 5, 6, 1, 7], owl: [8, 6, 1, 4, 2], hamster: [6, 5, 3, 8, 4], fox: [1, 8, 2, 3, 5], beast: [1, 10, 9, 2, 4],
   rabbit: [1, 3, 5, 2, 7], phoenix: [2, 3, 7, 0, 6], dragon: [0, 1, 5, 3, 2] };
