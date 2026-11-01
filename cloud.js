@@ -16,8 +16,18 @@ async function loadCloudConfig() {
   const c = [a, b].filter(x => x?.supabaseUrl && x?.supabaseAnonKey).sort((x, y) => (y.updated || 0) - (x.updated || 0))[0];
   return c ? { url: c.supabaseUrl, key: c.supabaseAnonKey, owner: c.policyOwner || null } : null;
 }
+// 🔒 konto, ranking i czat działają tylko w oficjalnej aplikacji – skopiowana strona na innym adresie zostaje bez chmury
+const OFFICIAL_HOSTS = ['oskarzio.github.io', 'localhost', '127.0.0.1'];
+const isOfficial = () => OFFICIAL_HOSTS.includes(location.hostname);
+function unofficialBanner() {
+  if (isOfficial() || document.getElementById('unoff')) return;
+  const d = document.createElement('div'); d.id = 'unoff';
+  d.innerHTML = '⚠️ To nieoficjalna kopia Fiszek – konto, ranking i czat są tu wyłączone. Oficjalna aplikacja: <a href="https://oskarzio.github.io/Fiszki/">oskarzio.github.io/Fiszki</a>';
+  document.body.prepend(d);
+}
 async function initCloud() {
   try {
+    if (!isOfficial()) { SB_CFG = null; unofficialBanner(); return; }
     const cfg = await loadCloudConfig(); if (!cfg) { SB_CFG = null; return; }
     if (SB && SB_CFG && SB_CFG.url === cfg.url && SB_CFG.key === cfg.key) return;   // już połączone
     SB_CFG = cfg;

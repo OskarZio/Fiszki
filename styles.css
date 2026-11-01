@@ -3169,3 +3169,5 @@ body.focus #hc-fab { display: none; }
 .boss-say.sel { max-width: 100%; width: auto; margin-left: 0; text-align: left; }
 .boss-say.sel::after { bottom: auto; top: -7px; left: 36px; border-top: 0; border-bottom: 8px solid #1f2937; }
 .boss-say.sel.hc::after { border-bottom-color: #e5172b; }
+#unoff { position: sticky; top: 0; z-index: 200; background: #b91c1c; color: #fff; padding: 10px 14px; font-size: 13.5px; line-height: 1.35; text-align: center; }
+#unoff a { color: #fff; font-weight: 800; }
