@@ -3201,3 +3201,4 @@ body.focus #hc-fab { display: none; }
 :root.hc-mode .hubnav::before { background: color-mix(in srgb, #1c0505 60%, transparent); box-shadow: 0 1px 0 rgba(255, 77, 94, .2); }
 :root.hc-mode .hubnav::after { background: linear-gradient(rgba(28, 5, 5, .5), transparent); }
 html, body { overflow-x: clip; }
+@media (min-width: 700px) { .hubnav { padding-top: calc(12px + var(--sat)) !important; padding-bottom: 10px !important; } }
