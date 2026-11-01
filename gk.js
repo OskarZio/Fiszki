@@ -228,9 +228,16 @@ function gkPick(T, n) {
   for (const l of [lv, Math.min(3, lv + 1)]) if (GK_ALL.filter(x => x.lvl === l && !seen.has(x.k) && !used.has(x.k)).length < n) for (const x of GK_ALL) if (x.lvl === l) seen.delete(x.k);
   const free = GK_ALL.filter(x => !used.has(x.k) && !seen.has(x.k));
   // różne kategorie przemieszane: z każdej kategorii najpierw po jednym, potem reszta
-  const main = shuffle(free.filter(x => x.lvl === lv)), other = shuffle(free.filter(x => x.lvl !== lv && x.lvl <= lv + 1));
-  const k = Math.min(main.length, Math.ceil(n * .75)), pick = [...main.slice(0, k), ...other].slice(0, n);
-  if (pick.length < n) pick.push(...main.slice(k, k + n - pick.length));
+  // 🎲 mieszanka wiedzy ogólnej: koszyki tematów po kolei (geografia, historia, kultura, popkultura, nauka, przyroda…),
+  // matematyki i województw/stolic tylko odrobina – żeby nie było „ciągle liczenia i województw”
+  const MATH = /^(add|sub|div|mul|mul2|frac|eq|sq|sqrt|pow|pct|rom|romr|prime|unit)_/, LOCAL = /^(woj|wd_)/;
+  const bucket = x => MATH.test(x.k) ? 'math' : /^woj_/.test(x.k) || /województwie/.test(x.q) ? 'woj' : /^(cap|capr|cont|cur)_/.test(x.k) || /leży miasto/.test(x.q) ? 'cap' : x.cat;
+  const cand = shuffle(free.filter(x => x.lvl === lv)).concat(shuffle(free.filter(x => x.lvl !== lv && x.lvl <= lv + 1)));
+  const quota = { math: Math.max(1, Math.round(n * .08)), woj: Math.max(1, Math.round(n * .05)), cap: Math.max(1, Math.round(n * .12)) }, cnt = {}, groups = {};
+  for (const x of cand) (groups[bucket(x)] = groups[bucket(x)] || []).push(x);
+  const order = shuffle(Object.keys(groups)), pick = [];
+  for (let round = 0; pick.length < n && round < 99; round++) for (const g of order) { if (pick.length >= n) break; if (quota[g] != null && (cnt[g] || 0) >= quota[g]) continue; const x = groups[g].shift(); if (x) { pick.push(x); cnt[g] = (cnt[g] || 0) + 1; } }
+  if (pick.length < n) pick.push(...cand.filter(x => !pick.includes(x)).slice(0, n - pick.length));
   T.used = [...used, ...pick.map(x => x.k)];
   for (const x of pick) seen.add(x.k); gkSeenSave(seen);
   return shuffle(pick).map(x => gkCard('gk:' + x.k));
