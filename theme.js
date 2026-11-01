@@ -53,6 +53,17 @@ function currentTheme() { return S.settings.theme || { id: 'auto' }; }
 function applyTheme() {
   try { applyAppIcon(); } catch { /* jeszcze brak stanu */ }
   const th = currentTheme(), root = document.documentElement.style;
+  // 💀 hardcore: zawsze krwisty motyw – nadpisuje każdy wybrany motyw; po wyjściu wraca Twój motyw
+  if (S.settings?.hardcore) {
+    const HC = { '--bg': '#170404', '--bg-image': 'radial-gradient(120% 60% at 50% 0%, #3a0707 0%, #170404 60%)', '--card': '#260808', '--card2': '#360c0c', '--text': '#f7e4e4', '--muted': '#c99a9a',
+      '--line': '#4d1414', '--accent': '#e5172b', '--accent2': '#e5172b', '--accent-soft': '#4a0d12', '--shadow': '0 1px 3px rgba(0,0,0,.5)' };
+    for (const [k, v] of Object.entries(HC)) root.setProperty(k, v);
+    ['--fx1', '--fx2', '--fx3', '--photo'].forEach(v => root.removeProperty(v));
+    document.body?.classList.remove('px-theme', 'prem-fx', 'photo-bg');
+    document.documentElement.style.colorScheme = 'dark';
+    document.querySelector('meta[name=theme-color]')?.setAttribute('content', '#2a0606');
+    return;
+  }
   // 🖼️ własne tło (płatne): zdjęcie leży tylko na tym urządzeniu (localStorage), nie w synchronizowanych danych
   const photo = th.id === 'photo' ? bgPhotoGet() : null;
   document.body?.classList.toggle('photo-bg', !!photo);
