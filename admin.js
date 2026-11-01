@@ -16,12 +16,16 @@ const FEATURES = {
   topics: ['📁 Kategorie i notatki', ['topics', 'topic', 'item'], 'kategorie talii, materiały, notatki'],
 };
 // 🌍 flagi globalne (Supabase app_flags) – ustawia tylko admin aplikacji, działają u wszystkich; kopia w localStorage na offline
+let ADMIN_ERR = '';
 let FLAGS = (() => { try { return JSON.parse(localStorage.getItem('appFlags') || '{}'); } catch { return {}; } })(), IS_ADMIN = false;
 const featureOn = k => k !== 'methods' && !FLAGS[k];   // 📖 metody nauki usunięte z aplikacji
 async function flagsLoad() {
   if (typeof SB === 'undefined' || !SB) return;
   try { const r = await SB.from('app_flags').select('k,off'); if (!r.error && Array.isArray(r.data)) { FLAGS = Object.fromEntries(r.data.filter(x => x.off && FEATURES[x.k]).map(x => [x.k, 1])); try { localStorage.setItem('appFlags', JSON.stringify(FLAGS)); } catch { /* */ } updateTabBadges(); render(); } } catch { /* */ }
-  try { if (typeof cloudOn === 'function' && cloudOn()) { const a = await SB.rpc('am_admin'); IS_ADMIN = a.data === true; if (IS_ADMIN) render(); } } catch { /* */ }
+  try { if (typeof cloudOn === 'function' && cloudOn()) {
+    let a = await SB.rpc('am_admin'); if (a.error) a = await SB.rpc('claim_admin');   // starsza baza bez am_admin
+    IS_ADMIN = a.data === true; ADMIN_ERR = a.error ? (a.error.message || 'błąd') : (IS_ADMIN ? '' : 'not-admin'); render(); }
+    else ADMIN_ERR = 'not-logged'; } catch (e) { ADMIN_ERR = e.message || 'błąd'; }
 }
 on('start', () => setTimeout(flagsLoad, 1500));
 setInterval(() => { if (document.visibilityState === 'visible') flagsLoad(); }, 10 * 60000);

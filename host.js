@@ -74,7 +74,8 @@ async function writeGlobalJson(data, sha, msg) {
 }
 
 // 📊 statystyki aplikacji (tylko liczby) – pierwsze zalogowane konto, które otworzy Panel hosta, zostaje właścicielem
-let HOST_ST = null;
+let HOST_ST = null, HOST_CHK = 0;
+setTimeout(() => { ACTIONS['host-recheck'] = () => { HOST_CHK = 0; render(); }; }, 0);
 async function hostStatsLoad() {
   HOST_ST = { loading: true };
   if (!(typeof cloudOn === 'function' && cloudOn())) { HOST_ST = { err: 'Zaloguj się na swoje konto, żeby zobaczyć statystyki.' }; return render(); }
@@ -99,8 +100,9 @@ function hostStatsHTML() {
     <p class="small muted" style="margin:10px 0 0">Same liczby – bez e-maili i nazw użytkowników. Odświeżone ${new Date(H.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}.</p>`}</div>`;
 }
 ROUTES.host = () => {
+  if (typeof flagsLoad === 'function' && !HOST_CHK) { HOST_CHK = 1; flagsLoad(); }
   const back = `<div class="row nowrap"><button class="iconbtn" data-go="#/more">‹</button><h1 class="grow">🔑 Panel hosta</h1></div>`;
-  if (!hostUnlocked()) return { tab: 'more', html: back + `<div class="card"><p class="small muted" style="margin-top:0">Panel tylko dla właściciela aplikacji. Musisz być <b>zalogowany na koncie właściciela</b> (dopisanym w bazie) i podać kod.${typeof IS_ADMIN !== 'undefined' && !IS_ADMIN ? ' <b>To konto nie jest kontem właściciela.</b>' : ''}</p>
+  if (!hostUnlocked()) return { tab: 'more', html: back + `<div class="card"><p class="small muted" style="margin-top:0">Panel tylko dla właściciela aplikacji. Musisz być <b>zalogowany na koncie właściciela</b> (dopisanym w bazie) i podać kod.${typeof ADMIN_ERR === 'undefined' || !ADMIN_ERR ? '' : ADMIN_ERR === 'not-logged' ? '<br><b>Najpierw zaloguj się na swoje konto</b> (Ustawienia → Konto).' : ADMIN_ERR === 'not-admin' ? '<br><b>To konto nie jest dopisane jako właściciel.</b> W Supabase → SQL Editor uruchom: <code>insert into public.app_admins select id from auth.users where email = \'TWÓJ EMAIL\';</code>' : `<br><b>Baza nie odpowiada poprawnie</b> (${esc(ADMIN_ERR)}) – wgraj nowy supabase.sql.`}<br><button class="sm" data-act="host-recheck" style="margin-top:8px">🔄 Sprawdź ponownie</button></p>
       <div class="row nowrap"><input id="host-code" class="grow" type="password" placeholder="Kod hosta" autocomplete="off" autocapitalize="off"><button class="primary" data-act="host-unlock">Odblokuj</button></div></div>` };
   const st = S.settings;
   if (!HOST_ST) hostStatsLoad();
@@ -165,7 +167,7 @@ Object.assign(ACTIONS, {
     const ok = (await sha256($('#host-code').value.trim())) === HOST_HASH;
     if (!ok) return toast('Nieprawidłowy kod hosta');
     try { localStorage.setItem('hostOK', HOST_HASH); } catch { /* */ }
-    toast('Panel hosta odblokowany ✓'); render();
+    toast(typeof IS_ADMIN !== 'undefined' && IS_ADMIN ? 'Panel hosta odblokowany ✓' : 'Kod poprawny – ale to konto nie jest potwierdzone jako właściciel (patrz opis niżej)', 4000); HOST_CHK = 0; render();
   },
   'host-check': () => checkHostToken(),
   'host-sb-save': async () => {
