@@ -2920,8 +2920,8 @@ img.emo8 { width: 1.2em !important; height: 1.2em !important; max-width: none !i
 @keyframes rollIn { from { opacity: 0; transform: scaleY(.6); } } @keyframes rollOut { to { opacity: 0; transform: scaleY(.7); } }
 .roll-h { text-align: center; font-weight: 800; color: #fde68a; font-size: 15px; letter-spacing: .3px; }
 .roll-win { position: relative; height: 92px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
-.roll-strip2 { position: absolute; top: 0; left: 50%; display: flex; gap: 8px; transform: translateX(calc(-48px - var(--at) * 104px)); animation: rollSpin var(--ms, 1700ms) cubic-bezier(.15,.8,.2,1) both; }
-@keyframes rollSpin { from { transform: translateX(-48px); } to { transform: translateX(calc(-48px - var(--at) * 104px)); } }
+.roll-strip2 { position: absolute; top: 0; left: 50%; display: flex; gap: 8px; transform: translateX(calc(-48px - var(--at) * 104px)); animation: rollSpin2 var(--ms, 1700ms) cubic-bezier(.15,.8,.2,1) both; }
+@keyframes rollSpin2 { from { transform: translateX(-48px); } to { transform: translateX(calc(-48px - var(--at) * 104px)); } }
 .roll-it { flex: none; width: 96px; height: 92px; display: grid; place-items: center; align-content: center; gap: 4px; border-radius: 14px; background: #1c2033; border: 2px solid #2e3450; text-align: center; padding: 6px 4px; }
 .roll-it i { font-style: normal; font-size: 30px; line-height: 1; } .roll-it i .emo8 { width: 32px !important; height: 32px !important; } .roll-it small { font-size: 10.5px; font-weight: 800; color: #e2e8f0; line-height: 1.15; }
 .roll-ov.done .roll-it.hit { border-color: #f59e0b; box-shadow: 0 0 18px #f59e0b88; background: #3a2a10; }
@@ -3069,3 +3069,17 @@ input[type=range]::-moz-range-progress { height: 8px; border-radius: 99px; backg
 .card.row.nowrap > img.gear-img:first-child, .card.row.nowrap > .wk-art:first-child, .card.row.nowrap > .egg-home-ic:first-child, .card.row.nowrap > .tower-ic:first-child, .card.row.nowrap > .m-ic:first-child,
 .card.row.nowrap > span:first-child > .boss-art { width: 56px !important; height: 56px !important; flex: none; }
 .egg-home-ic svg, .egg-home-ic img, .wk-art .boss-art, .wk-art img, .tower-ic img { width: 56px !important; height: 56px !important; object-fit: contain; }
+
+/* 🎁 łup z bossa: bez tła i ramki wokół przedmiotu – tylko obrazek, podpis i kolor rzadkości w napisie */
+.loot-it { border: 0 !important; background: none !important; box-shadow: none !important; }
+.loot-it .roll-res small, .loot-it > small { color: var(--rc) !important; font-weight: 800; }
+/* 🎰 w trakcie losowania pytanie i odpowiedzi są ukryte – walka startuje po losowaniu */
+.bf.rolling .boss-q, .bf.rolling .bf-ctrl, .bf.rolling .think-bar { visibility: hidden; }
+.bf.rolling .roll-ov { top: 32%; }
+.medals .md.t3 { background: linear-gradient(135deg, #f5f3ff, #c4b5fd) !important; box-shadow: inset 0 0 0 1.5px #8b5cf6 !important; filter: none; opacity: 1; }
+.medals .md.t4 { background: linear-gradient(135deg, #a5f3fc, #22d3ee 45%, #a78bfa); box-shadow: inset 0 0 0 1.5px #0891b2, 0 0 8px #22d3ee99; filter: none; opacity: 1; }
+.mode-pick button.mt4 { box-shadow: inset 0 0 0 2px #22d3ee, 0 0 12px #22d3ee66 !important; } .mode-pick button.mt4 small { color: #67e8f9; font-weight: 800; }
+.mode-pick button.mt3 { box-shadow: inset 0 0 0 2px #a78bfa !important; } .mode-pick button.mt3 small { color: #c4b5fd !important; }
+.mode-pick button.on.mt4 { box-shadow: inset 0 0 0 3px #22d3ee, 0 6px 18px -6px #22d3ee !important; background: color-mix(in srgb, #22d3ee 14%, var(--card)) !important; border-color: transparent !important; transform: translateY(-2px); }
+.mode-pick button.on.mt3 { box-shadow: inset 0 0 0 3px #a78bfa, 0 6px 18px -6px #a78bfa !important; background: color-mix(in srgb, #a78bfa 14%, var(--card)) !important; }
+.boss-q.qlock ~ .bf-ctrl { opacity: .55; pointer-events: none; transition: opacity .2s; }

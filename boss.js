@@ -115,16 +115,16 @@ function bossPrestige(kind, id, i) {
   const b = bossFor(kind, id, i); if (!b || b.stars < 4) return;
   if (!confirm(`Prestiż bossa „${b.name}”?\n\nPuchary zaczynasz od nowa, a boss staje się o 35% silniejszy, z turbo-przeszkadzajkami. Nagrody +25% za każdy prestiż.`)) return;
   if (kind === 'cat') { S.stats[HCP() + 'cbp_' + id] = (S.stats[HCP() + 'cbp_' + id] || 0) + 1; S.stats[HCP() + 'cb_' + id] = 0; }
-  else { const d = deckById(id), r = deckRec(d); r.noAuto = 1; if (kind === 'ch') { r.chP = r.chP || {}; r.chP[i] = (r.chP[i] || 0) + 1; r.ch[i] = 0; } else { r.finP = (r.finP || 0) + 1; r.fin = 0; } touch(d); }
+  else { const d = deckById(id), r = deckRec(d); r.noAuto = 1; if (kind === 'ch') { r.chP = r.chP || {}; r.chP[i] = (r.chP[i] || 0) + 1; r.ch[i] = 0; } else { r.finP = (r.finP || 0) + 1; r.fin = 0; } if (r.m) delete r.m[kind === 'ch' ? 'ch' + i : 'fin']; touch(d); }
   S.stats.bossPrestige = (S.stats.bossPrestige || 0) + 1; save(); toast('⭐ Boss wszedł na wyższy poziom prestiżu!'); render();
 }
 // 🏅 mistrzostwo metod: każdy boss talii osobno dla ABCD / Fiszek / Wpisz / Mix – 1. wygrana brąz, 2. srebro, 3. diament
-const MASTER_T = ['', 'Brąz', 'Srebro', 'Diament'], MASTER_MODES = ['abcd', 'flip', 'type', 'mix'];
+const MASTER_T = ['', 'Brąz', 'Srebro', 'Platyna', 'Diament'], MASTER_MODES = ['abcd', 'flip', 'type', 'mix'];
 const masterKey = b => b.kind === 'ch' ? 'ch' + b.i : b.kind === 'fin' ? 'fin' : null;
 function mastery(b, mode) { const k = masterKey(b), d = k && deckById(b.id); if (!d) return 0; const m = deckRec(d).m?.[k] || {};
   if (mode) return m[mode] || 0; return m; }
 function masteryUp(b, mode) { const k = masterKey(b), d = k && deckById(b.id); if (!d) return 0; const r = deckRec(d); r.m = r.m || {}; const m = r.m[k] = r.m[k] || {};
-  m[mode] = Math.min(3, (m[mode] || 0) + 1); touch(d); return m[mode]; }
+  m[mode] = Math.min(4, (m[mode] || 0) + 1); touch(d); return m[mode]; }
 const medalsHTML = b => { const m = mastery(b) || {}; return `<span class="medals">${MASTER_MODES.map(k => `<i class="md t${m[k] || 0}" title="${MODES[k].name}: ${MASTER_T[m[k] || 0] || 'nie pokonany'}">${MODES[k].icon}</i>`).join('')}</span>`; };
 // rozdział właśnie nauczony (wywołuje hero.js po nauce nowej fiszki) → numer rozdziału albo null
 function chapterJustLearned(c) {
@@ -134,20 +134,22 @@ function chapterJustLearned(c) {
   const k = 'chl_' + d.id + '_' + i; if (S.stats[k]) return null; S.stats[k] = 1; return i;
 }
 const bossChestImg = t => `<img class="crate-img bchest" src="assets/crates/bc_${t >= 5 ? 'fire' : t >= 4 ? 'void' : t >= 2 ? 'holy' : 'nature'}.webp" alt="" draggable="false">`;   // 📦 skrzynie bossów wg poziomu łupu
+// 🏆 puchar bossa talii = najniższy medal ze wszystkich trybów (brąz we wszystkich 4 → brązowy puchar itd.)
+const cupOf = (rec, k) => { const m = rec.m?.[k] || {}; return Math.min(...['abcd', 'flip', 'type', 'mix'].map(x => m[x] || 0)); };
 const CAT_EMB = ['war', 'book', 'tree', 'holy', 'skull', 'ice', 'paw', 'storm', 'void', 'fire', 'time', 'shadow'];   // 🛡️ herby kategorii
 // ---------- 🐉 definicje bossów
 function bossFor(kind, id, i) {
   const pr = hero().pr || 0;
   if (kind === 'ch') {
     const d = deckById(id), chs = d ? deckChapters(d) : [], cs = chs[i] || []; if (!cs.length) return null;
-    const rec = deckRec(d), auto = d.done && !rec.noAuto ? 1 : 0, stars = Math.max(auto, rec.ch[i] || 0), bp = rec.chP?.[i] || 0, single = chs.length === 1, bo = bossOf(single ? FINAL_IDX[hashStr(d.id) % FINAL_IDX.length] : CHAPTER_IDX[(hashStr(d.id) + i * 7) % CHAPTER_IDX.length]);
+    const rec = deckRec(d), auto = d.done && !rec.noAuto ? 1 : 0, stars = Math.max(auto, cupOf(rec, 'ch' + i)), bp = rec.chP?.[i] || 0, single = chs.length === 1, bo = bossOf(single ? FINAL_IDX[hashStr(d.id) % FINAL_IDX.length] : CHAPTER_IDX[(hashStr(d.id) + i * 7) % CHAPTER_IDX.length]);
     return { kind, id, i, bp, cards: cs, stars, diff: Math.min(STARS_MAX, stars), ...bo, seed: hashStr(d.id) % 100000 + i * 7919,
       title: single ? `Boss talii „${d.name}”` : `Rozdział ${i + 1}/${chs.length} · „${d.name}”`, ok: learnedN(cs) >= cs.length, learned: learnedN(cs), need: cs.length,
       lockMsg: `Naucz się wszystkich ${cs.length} fiszek rozdziału`, repeat: stars >= STARS_MAX, pr };
   }
   if (kind === 'fin') {
     const d = deckById(id), chs = d ? deckChapters(d) : []; if (chs.length < 2) return null;
-    const rec = deckRec(d), stars = Math.max(d.done && !rec.noAuto ? 1 : 0, rec.fin || 0), bp = rec.finP || 0, cs = chs.flat(), bo = bossOf(FINAL_IDX[hashStr(d.id) % FINAL_IDX.length]), beaten = chs.filter((_, k) => (rec.ch[k] || 0) >= 1).length;
+    const rec = deckRec(d), stars = Math.max(d.done && !rec.noAuto ? 1 : 0, cupOf(rec, 'fin')), bp = rec.finP || 0, cs = chs.flat(), bo = bossOf(FINAL_IDX[hashStr(d.id) % FINAL_IDX.length]), beaten = chs.filter((_, k) => (rec.ch[k] || 0) >= 1 || Object.values(rec.m?.['ch' + k] || {}).some(v => v > 0)).length;
     return { kind, id, bp, cards: cs, stars, diff: Math.min(4, 1 + stars), ...bo, img: 'assets/bosses/deckking.webp', name: 'Władca talii', final: true, title: `👑 Finał – cała talia „${d.name}” (${cs.length} fiszek)`,
       ok: beaten >= chs.length && learnedN(cs) >= cs.length, learned: beaten, need: chs.length, lockMsg: `Pokonaj bossów wszystkich ${chs.length} rozdziałów`, repeat: stars >= STARS_MAX, pr };
   }
@@ -358,7 +360,7 @@ function qteCard(B) {
 }
 function qteNext(B) {
   const cur = qteCard(B); if (!cur) { B.qte = null; return false; }
-  B.cur = cur; (B.pUsed = B.pUsed || []).push(cur.id); B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0; B.ice = null; B.bugs = []; return true;
+  B.cur = cur; (B.pUsed = B.pUsed || []).push(cur.id); B.qLock = Date.now() + 600; B.shown = false; B.typed = null; B.verdict = null; B.picked = null; B.qAt = Date.now(); B.revealAt = 0; B.ice = null; B.bugs = []; return true;
 }
 function qteResult(ok, late) {
   const B = BOSS, Q = B.qte, now = Date.now(); if (!Q || !B.cur?.qte) return;
@@ -380,7 +382,11 @@ function presentCard() {
   if (B.pendQte) { B.pendQte = false; B.qte = { i: 0, hits: 0 }; if (qteNext(B)) { B.qteFx = { t: Date.now() }; bossSfx('tick'); return; } }
   const vi = B.verQ.findIndex(v => v.at <= B.i || B.i >= B.ids.length);
   let id, ver = null;
-  if (vi >= 0) { ver = B.verQ.splice(vi, 1)[0]; id = ver.id; } else if (B.i < B.ids.length) id = B.ids[B.i]; else { B.cur = null; return; }
+  if (vi >= 0) { ver = B.verQ.splice(vi, 1)[0]; id = ver.id; } else if (B.i < B.ids.length) id = B.ids[B.i];
+  else if (bossAlive(B) && B.ids.length && (B.loop || 0) < 5) {   // 🔁 fiszki się skończyły, boss żyje → lecą od nowa, a boss się wzmacnia
+    B.base = B.base || B.ids.slice(); B.loop = (B.loop || 0) + 1; B.ids = B.ids.concat(shuffle([...B.base])); B.b.atk = Math.round(B.b.atk * 1.2); B.b.every = Math.max(1, B.b.every - (B.loop % 2 ? 0 : 1));
+    B.log.unshift(`🔁 Runda ${B.loop + 1}: fiszki od nowa – boss bije mocniej (+20%)!`); B.phaseFx = { n: B.loop + 1, t: Date.now() }; return presentCard();
+  } else { B.cur = null; return; }
   const c = bossCardById(id); if (!c) { if (!ver) B.i++; return presentCard(); }
   const v = cardView(c);
   let cm = ver && !(ver.retry && B.mode === 'type') ? 'abcd' : B.mode === 'mix' ? ['abcd', 'flip', 'type'][Math.random() * 3 | 0] : B.mode, opts = null;
@@ -516,7 +522,7 @@ function afterTurn(g, isVer) {
   bossSfx(g >= 2 ? 'hit' : 'hurt'); render();
 }
 // 🎰 mini losowanie przeszkadzajki: pasek ikon przewija się i staje na wylosowanej (wynik znany wcześniej – to tylko pokaz)
-const ROLL_MS = 1700, ROLL_AT = 11;
+const ROLL_MS = 2400, ROLL_AT = 22;   // dłuższy pasek – więcej przeszkadzajek przewija się w losowaniu
 function rollFx(B, a, pool, learn = false) {
   const P = [...new Set(pool.length ? pool : [a])], now = Date.now(), strip = [];
   // bez powtórek obok siebie: kolejne ikonki z przetasowanej puli, wygrana nie sąsiaduje z taką samą
@@ -524,7 +530,7 @@ function rollFx(B, a, pool, learn = false) {
     let k = bag.findIndex(x => x !== strip[i - 1] && !(i === ROLL_AT - 1 && x === a) && !(i === ROLL_AT + 1 && x === a)); if (k < 0) k = 0; strip.push(bag.splice(k, 1)[0] ?? P[0]); }
   // kolejka: drugie losowanie startuje po pierwszym
   B.rolls = (B.rolls || []).filter(r => now - r.t < ROLL_MS + 800); const t = B.rolls.length ? B.rolls[B.rolls.length - 1].t + ROLL_MS + 900 : now;
-  B.rolls.push({ a, strip, learn, t }); B.qAt = Math.max(B.qAt || 0, t + ROLL_MS + 800); /* zegar pytania startuje po losowaniu */ if (learn && B.learnFx) { B.learnFx.t = t + ROLL_MS + 500; setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, t - now + ROLL_MS + 3200); }
+  B.rolls.push({ a, strip, learn, t }); B.qAt = Math.max(B.qAt || 0, t + ROLL_MS + 800); /* zegar pytania startuje po losowaniu */ if (learn && B.learnFx) { B.learnFx.t = t + ROLL_MS + 500; B.qAt = Math.max(B.qAt, B.learnFx.t + 2700); setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, t - now + ROLL_MS + 3200); }
   for (const d of [t - now, t - now + ROLL_MS + 900]) setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, Math.max(0, d) + 20);
 }
 const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t && now - r.t <= ROLL_MS + 800); if (!R) return '';
@@ -663,7 +669,7 @@ function bossEnd(won, why) {
   B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); B.why = why; bossSay(won ? 'down' : 'win');
   if (b.kind === 'weekly') return weeklyEnd(B);
   if (won) { bestiaryAdd(b); B.badges = styleBadges(B); }
-  const flawless = won && B.lostHp === 0, total = B.ok + B.bad, acc = total ? B.ok / total : 0, modeR = MODE_REWARD[B.mode] || 1, rep = masterKey(b) ? mastery(b, B.mode) >= 3 : b.repeat; B.rep = won && rep;
+  const flawless = won && B.lostHp === 0, total = B.ok + B.bad, acc = total ? B.ok / total : 0, modeR = MODE_REWARD[B.mode] || 1, rep = masterKey(b) ? mastery(b, B.mode) >= 4 : b.repeat; B.rep = won && rep;
   const kindXP = { ch: 0, fin: 60, cat: 40, world: 50, hydra: 50 }[b.kind] || 0;
   const styleXP = (B.badges || []).reduce((a, x) => a + x[3], 0);
   B.xp = Math.round((B.ok * 2 + B.verOk * 2 + (won ? 40 + 20 * b.diff + kindXP : 5) + styleXP) * modeR * xpMul() * (rep ? .5 : 1)); giveXP(B.xp, 'za walkę');
@@ -783,13 +789,13 @@ function setupSheetHTML() {
     <div class="row nowrap" style="gap:12px">${bossArt(b, 'sheet')}<div class="grow"><b style="font-size:18px">${esc(b.name)}</b><div class="small muted">${esc(b.title)}</div><div class="small">${esc(b.desc)}</div>
       <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : ['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) + (masterKey(b) ? medalsHTML(b) : '') : starsHTML(b.stars)}<span class="small muted">trudność ${b.diff + 1}${b.stars ? ` · ${CUP_N[Math.min(4, b.stars)]}: boss silniejszy` : ''}</span></div></div>
       <button class="iconbtn" data-act="boss-sel-close">✕</button></div>
-    ${['ch', 'fin', 'cat'].includes(b.kind) && b.stars >= 4 ? `<button class="block bprest" data-act="boss-prestige" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">⭐ Prestiż bossa → P${(b.bp || 0) + 1}: puchary od nowa, boss +35% silniejszy i z turbo-przeszkadzajkami, nagrody +25%</button>` : ''}
+    ${['ch', 'fin', 'cat'].includes(b.kind) && b.stars >= 4 ? `<button class="block bprest" data-act="boss-prestige" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">⭐ Prestiż bossa → P${(b.bp || 0) + 1}: medale i puchary od nowa, boss +35% silniejszy i z turbo-przeszkadzajkami, nagrody +25%</button>` : ''}
     ${b.weak ? `<div class="weak-tag">🎯 Słabość: <b>${WEAK_NAME[b.weak]}</b> – cios ×${String(WEAK_M).replace('.', ',')} · przy 50% i 25% ❤️ boss wpada w szał (fazy)</div>` : ''}
     <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : '<span>⏱️ bez limitu</span>'}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
     ${b.ok && lessonFor(b) ? `<div class="lock-box"><b>📚 Lekcja z porażki</b><small>${esc(b.name)} pokonał Cię na tych fiszkach. Powtórz je (${lessonFor(b).ids.length}) – rewanż odblokuje się od razu.</small></div>
       <button class="primary block" data-act="boss-lesson">📚 Powtórz i wróć do walki</button>`
     : b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => { const t = masterKey(b) ? mastery(b, k) : 0; return `<button class="${BOSS_PICK.mode === k ? 'on' : ''} mt${t}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>${masterKey(b) ? (MASTER_T[t] || 'brak medalu') : 'cios ' + m.mul}</small></button>`; }).join('')}</div>
-      <p class="small muted center" style="margin:4px 0 8px">${MODES[BOSS_PICK.mode].desc} · nagrody ×${String(MODE_REWARD[BOSS_PICK.mode]).replace('.', ',')}${masterKey(b) ? ` · ${mastery(b, BOSS_PICK.mode) >= 3 ? '💎 diament – mniejsza nagroda' : `wygraj, by zdobyć: <b>${MASTER_T[mastery(b, BOSS_PICK.mode) + 1]}</b>`}` : ''}</p>
+      <p class="small muted center" style="margin:4px 0 8px">${MODES[BOSS_PICK.mode].desc} · nagrody ×${String(MODE_REWARD[BOSS_PICK.mode]).replace('.', ',')}${masterKey(b) ? ` · ${mastery(b, BOSS_PICK.mode) >= 4 ? '💎 diament – mniejsza nagroda' : `wygraj, by zdobyć: <b>${MASTER_T[mastery(b, BOSS_PICK.mode) + 1]}</b>`}` : ''}</p>
       <button class="primary block boss-go" data-act="boss-start" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}" ${lives().n || b.kind === 'weekly' ? '' : 'disabled'}>${lives().n || b.kind === 'weekly' ? '⚔️ Walcz sam' : '🖤 Brak serc'}</button>
       <button class="block" data-go="#/coop">👥 Walcz z kolegą (lobby – Hydra)</button>`
     : `<div class="lock-box"><b>🔒 ${b.lockMsg}</b><div class="pbar"><i style="width:${Math.min(100, b.learned / b.need * 100)}%"></i></div><small class="muted">${b.learned}/${b.need}</small></div>
@@ -811,11 +817,11 @@ ROUTES.boss = parts => {
     <div class="card row nowrap bestiary-cta" data-go="#/bestiary"><span style="font-size:30px">📖</span><div class="grow"><b>Kronika bossów ${n}/50</b><div class="pbar"><i style="width:${n * 2}%"></i></div></div><span>›</span></div>`; })()}
   <button class="block hc-toggle${S.settings.hardcore ? ' on' : ''}" data-act="boss-hardcore">${S.settings.hardcore ? `💀 Świat hardcore – grasz w nim (rekord śmierci: ${S.stats.hcDeaths || 0}) · dotknij, by wrócić do zwykłego` : '💀 Świat hardcore – osobny bohater, jedna śmierć kasuje cały świat, nagrody ×1,5'}</button>
   <h2 class="bm-h">📚 Twoje talie <small class="muted">rozdziały po ${CH_SIZE} fiszek · finał = cała talia</small></h2>
-  ${decks.filter(x => !x.d.done).map(({ d, chs }, k) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars).length;
+  ${decks.filter(x => !x.d.done).map(({ d, chs }, k) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars || Object.values(mastery(b) || {}).some(v => v > 0)).length;
     return `<details class="card bregion"${k < 2 ? ' open' : ''}><summary class="row nowrap"><b class="grow">${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} ${plural(chs.length, 'rozdział', 'rozdziały', 'rozdziałów')}${fin?.stars ? ' · 👑' : ''}</span></summary>
       <div class="bpath">${nodes.map(b => nodeHTML(b, true)).join('<i class="mline"></i>')}${fin ? '<i class="mline"></i>' + nodeHTML(fin, true) : ''}</div></details>`; }).join('') || '<p class="muted">Dodaj fiszki do talii – każdy rozdział (20 fiszek) ma swojego bossa.</p>'}
   ${(() => { const dn = decks.filter(x => x.d.done); if (!dn.length) return '';
-    return `<h2 class="bm-h">🎓 Zdane talie <small class="muted">bossowie dalej czekają – masteruj metody</small></h2>` + dn.map(({ d, chs }) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars).length;
+    return `<h2 class="bm-h">🎓 Zdane talie <small class="muted">bossowie dalej czekają – masteruj metody</small></h2>` + dn.map(({ d, chs }) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars || Object.values(mastery(b) || {}).some(v => v > 0)).length;
       return `<details class="card bregion done-region"><summary class="row nowrap"><b class="grow">🎓 ${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} pokonanych</span></summary>
         <button class="sm ghost" data-act="done-beaten" data-id="${d.id}" style="margin:8px 0">${deckRec(d).noAuto ? '🏆 Oznacz bossów jako pokonanych' : '↩️ Odznacz pokonanych (walcz od zera)'}</button>
         <div class="bpath">${nodes.map(b => nodeHTML(b, true)).join('<i class="mline"></i>')}${fin ? '<i class="mline"></i>' + nodeHTML(fin, true) : ''}</div></details>`; }).join(''); })()}
@@ -856,7 +862,7 @@ function fightView() {
   const pots = Object.keys(POTIONS).filter(k => potionN(k) > 0);
   return { tab: 'arena', focus: true, html: `
   <div class="studybar"><button class="iconbtn" data-act="boss-quit">✕</button><div class="title">${esc(b.name)} ${b.kind === 'world' ? `· etap ${b.stars + 1}` : starsHTML(b.diff + 1, b.kind === 'ch' ? STARS_MAX : 5)}</div><span class="small muted">${Math.min(B.i + 1, B.ids.length)}/${B.ids.length}</span></div>
-  <div class="bf${fm?.k === 'hit' ? ' shake-screen' : ''}${ultFx ? ' ult-on' : ''}">
+  <div class="bf${(B.rolls || []).some(r => now - r.t < ROLL_MS + 800) || (B.learnFx && now - B.learnFx.t < 2600) ? ' rolling' : ''}${fm?.k === 'hit' ? ' shake-screen' : ''}${ultFx ? ' ult-on' : ''}">
     <div class="bf-top">
       ${B.say?.txt ? `<div class="boss-say" key="${B.say.t}">${esc(B.say.txt)}</div>` : ''}
       <div class="bf-boss">${B.coop && typeof coopHeadsHTML === 'function' ? coopHeadsHTML(fx, act) : `<div class="boss-stage${fx ? ' hit' : ''}${fx?.crit ? ' crit' : ''}${act ? ' attack' : ''}">${bossArt(b)}${B.shield ? '<span class="boss-shield">🛡️</span>' : ''}${fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}${fx.crit ? '!' : ''}</b><i class="slash"></i>` : ''}</div>`}
@@ -872,7 +878,7 @@ function fightView() {
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
     ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 FAZA ${B.phaseFx.n}!</div>` : ''}${B.syncFx && now - B.syncFx < 1400 ? '<div class="ult-banner sync-banner">⚡ SYNCHRO! ⚡</div>' : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
     ${rollHTML(B, now)}
-    <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
+    <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${B.qLock && now < B.qLock ? ' qlock' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}
       ${cur?.dis && !B.shown ? `<div class="dis-tag">${BOSS_ABIL[cur.dis][0]} ${BOSS_ABIL[cur.dis][1]}</div>` : ''}
       ${cur?.ver ? (cur.ver.retry ? '<div class="ver-tag retry-tag">🔁 Rewanż: ta fiszka przed chwilą Cię pokonała. Teraz pamiętasz?</div>' : '<div class="ver-tag">🔍 Sprawdzian bossa – udowodnij, że to wiesz!</div>') : ''}
@@ -991,4 +997,4 @@ ROUTES.boss = (...a) => { const v = bossRoute0(...a); return !v || v.focus ? v :
 
 // 🖐️ bez „przeklikiwania”: drugi szybki dotyk (< 0,45 s) po odpowiedzi albo po nowym pytaniu jest ignorowany
 { let lastTap = 0; for (const k of ['boss-pick', 'boss-tf', 'boss-next', 'boss-self', 'boss-grade', 'boss-show', 'boss-check']) { const f0 = ACTIONS[k]; if (!f0) continue;
-  ACTIONS[k] = (...a) => { const now = Date.now(); if (now - lastTap < 450 || (BOSS && k !== 'boss-next' && now - (BOSS.qAt || 0) < 350)) return; lastTap = now; return f0(...a); }; } }
+  ACTIONS[k] = (...a) => { const now = Date.now(); if (now - lastTap < 450 || (BOSS && k !== 'boss-next' && (now - (BOSS.qAt || 0) < 350 || now < (BOSS.qLock || 0)))) return; lastTap = now; return f0(...a); }; } }
