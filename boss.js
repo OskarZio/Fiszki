@@ -655,7 +655,7 @@ function useUlt() {
   const B = BOSS; if (!B || B.phase !== 'fight' || B.ult < B.hs.ultNeed || B.down) return;
   if (B.silence > 0) return toast('🔇 Cisza – supercios zablokowany');
   const line = heroLine(), L = lineDef(line), txt = (ULT_FX[line] || ULT_FX.cat)(B);
-  B.ult = Math.max(0, B.ult - B.hs.ultNeed); if (B.ultEcho > 0 && Math.random() < B.ultEcho) { ultHit(.6); B.log.unshift('🔁 Echo superciosu – drugie uderzenie!'); } B.fx = { k: 'boss', n: '', crit: true, ult: true, t: Date.now() }; B.ultFx = { name: L.ult[0], t: Date.now() }; B.log.unshift(`⚡ ${L.ult[0]}: ${txt}`); bossSay('ult'); bossSfx('win'); save();
+  B.ult = Math.max(0, B.ult - B.hs.ultNeed); if (B.ultEcho > 0 && Math.random() < B.ultEcho) { ultHit(.6); B.log.unshift('🔁 Echo superciosu – drugie uderzenie!'); } B.fx = { k: 'boss', n: '', crit: true, ult: true, t: Date.now() }; B.ultFx = { name: L.ult[0], t: Date.now() }; setTimeout(() => { if (BOSS === B && B.phase === 'fight') render(); }, 1500); if (navigator.vibrate) try { navigator.vibrate([30, 40, 60]); } catch { /* */ } B.log.unshift(`⚡ ${L.ult[0]}: ${txt}`); bossSay('ult'); bossSfx('win'); save();
   if (!bossAlive(B)) return bossEnd(true);
   render();
 }
@@ -827,6 +827,8 @@ setInterval(() => {
     if (f >= 1) parryResult(false, true);
     return;
   }
+  { const B = BOSS; if (B && B.phase === 'fight' && B.qAt) {   // ❄️🐛 lód i robaczki zatrzymują zegar pytania – nie tracisz czasu na klikanie
+    if (B.ice || B.bugs?.length) { if (B.frzE == null) B.frzE = Date.now() - B.qAt; B.qAt = Date.now() - B.frzE; } else B.frzE = null; } }
   const B = BOSS; if (!B || B.phase !== 'fight' || !B.b.think || B.cur?.parry || B.cur?.qte || B.shown || B.timeFree > 0 || B.down || document.hidden || parseRoute().parts[1] !== 'fight') return;
   const T = thinkMs(B), f = (Date.now() - B.qAt) / T, el = document.querySelector('.think-bar i');
   if (el) { el.style.width = Math.max(0, 100 - f * 100).toFixed(1) + '%'; el.parentElement.classList.toggle('late', f > .7); }
@@ -938,7 +940,7 @@ function fightView() {
     ${fm?.k === 'hit' ? `<b class="dmg me">−${fm.n}</b><i class="claw"></i>` : fm?.k === 'dodge' ? '<b class="dmg me dodge">Unik!</b>' : fm?.k === 'block' ? '<b class="dmg me dodge">Blok!</b>' : ''}
     ${B.coop && typeof coopMatesHTML === 'function' ? coopMatesHTML() : ''}
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-    ${ultFx ? `<div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 Faza ${B.phaseFx.n} · szał bossa!</div>` : ''}${B.syncFx && now - B.syncFx < 1400 ? '<div class="ult-banner sync-banner">⚡ SYNCHRO! ⚡</div>' : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
+    ${ultFx ? `<div class="ult-show" aria-hidden="true"><i class="us-flash"></i><i class="us-rays"></i><div class="us-hero">${typeof heroIcon === 'function' ? heroIcon() : ''}</div>${'<b class="us-spark"></b>'.repeat(10)}</div><div class="ult-banner">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner">🔥 Faza ${B.phaseFx.n} · szał bossa!</div>` : ''}${B.syncFx && now - B.syncFx < 1400 ? '<div class="ult-banner sync-banner">⚡ SYNCHRO! ⚡</div>' : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
     <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${B.qLock && now < B.qLock ? ' qlock' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
       ${rollHTML(B, now)}
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}

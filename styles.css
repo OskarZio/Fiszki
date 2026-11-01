@@ -3390,3 +3390,22 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .duo-saves .ds-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); } .duo-saves .ds-row:first-of-type { border-top: 0; }
 .duo-saves .ds-row b { display: block; font-size: 15px; } .duo-saves .ds-row small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; line-height: 1.3; }
 .ult-btn .ult-n { font-style: normal; background: #f59e0b; color: #1a1c2c; border-radius: 6px; padding: 0 6px; margin-left: 4px; font-size: 12px; font-weight: 900; }
+/* v302: ⚡ supercios – widowisko: błysk, promienie, wielka postać, iskry i wstrząs (pytanie zostaje na miejscu) */
+.bf:has(.ult-show) { animation: ultShake .5s steps(6) 1; }
+@keyframes ultShake { 0%, 100% { transform: none; } 20% { transform: translate(-6px, 3px); } 40% { transform: translate(5px, -4px); } 60% { transform: translate(-4px, -2px); } 80% { transform: translate(3px, 4px); } }
+.ult-show { position: fixed; inset: 0; z-index: 45; pointer-events: none; display: grid; place-items: center; overflow: hidden; }
+.us-flash { position: absolute; inset: 0; background: #fff6d6; opacity: 0; animation: usFlash .5s ease-out; }
+@keyframes usFlash { 0% { opacity: .85; } 100% { opacity: 0; } }
+.us-rays { position: absolute; width: 160vmax; height: 160vmax; opacity: 0;
+  background: repeating-conic-gradient(from 0deg, rgba(255,205,117,.55) 0 6deg, transparent 6deg 18deg); animation: usRays 1.3s ease-out forwards; }
+@keyframes usRays { 0% { opacity: 0; transform: rotate(0) scale(.4); } 25% { opacity: 1; } 100% { opacity: 0; transform: rotate(40deg) scale(1); } }
+.us-hero { position: relative; width: 180px; height: 180px; opacity: 0; animation: usHero 1.25s cubic-bezier(.2,1.4,.4,1) forwards; filter: drop-shadow(0 0 24px #ffcd75) drop-shadow(6px 6px 0 rgba(0,0,0,.5)); }
+.us-hero .hero-ic { width: 100% !important; height: 100% !important; } .us-hero img { width: 100% !important; height: 100% !important; object-fit: contain; image-rendering: pixelated; transform: scale(1.5); transform-origin: 50% 90%; }
+@keyframes usHero { 0% { opacity: 0; transform: scale(.2) translateY(60px); } 30% { opacity: 1; transform: scale(1.15); } 70% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.4) translateY(-40px); } }
+.us-spark { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; background: #ffcd75; box-shadow: 0 0 0 2px #000; opacity: 0; animation: usSpark 1s ease-out forwards; }
+.us-spark:nth-of-type(1) { --x: -140px; --y: -120px; } .us-spark:nth-of-type(2) { --x: 150px; --y: -100px; } .us-spark:nth-of-type(3) { --x: -160px; --y: 60px; } .us-spark:nth-of-type(4) { --x: 170px; --y: 80px; animation-delay: .05s; }
+.us-spark:nth-of-type(5) { --x: 0; --y: -180px; animation-delay: .08s; } .us-spark:nth-of-type(6) { --x: -60px; --y: 170px; background: #ff6b6b; } .us-spark:nth-of-type(7) { --x: 90px; --y: 160px; background: #5eead4; }
+.us-spark:nth-of-type(8) { --x: -190px; --y: -10px; background: #5eead4; animation-delay: .1s; } .us-spark:nth-of-type(9) { --x: 200px; --y: -20px; background: #ff6b6b; } .us-spark:nth-of-type(10) { --x: 40px; --y: -150px; animation-delay: .12s; }
+@keyframes usSpark { 0% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(180deg); } }
+.bf .ult-banner { z-index: 46; }
+@media (prefers-reduced-motion: reduce) { .ult-show, .bf:has(.ult-show) { animation: none; } .ult-show { display: none; } }
