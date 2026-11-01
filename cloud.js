@@ -8,12 +8,16 @@
 let SB = null, SB_USER = null, SB_CFG = null, SB_PROFILE = null, CLOUD_FRIENDS = [], cloudBusy = false, cloudTimer;
 const cloudOn = () => !!(SB && SB_USER);
 
+// adres i klucz w config.json są zakodowane (pole „sb”), żeby automaty przeszukujące GitHuba nie zbierały klucza;
+// sam klucz „anon” jest publiczny z natury – bezpieczeństwo daje RLS i blokady w bazie (supabase.sql)
+const sbPack = (url, key) => btoa(unescape(encodeURIComponent(JSON.stringify([url, key])))).split('').reverse().join('');
+function sbUnpack(x) { if (!x || x.supabaseUrl || !x.sb) return x; try { const [u, k] = JSON.parse(decodeURIComponent(escape(atob(x.sb.split('').reverse().join(''))))); return { ...x, supabaseUrl: u, supabaseAnonKey: k }; } catch { return null; } }
 async function loadCloudConfig() {
   if (S.settings.sbUrl && S.settings.sbKey) return { url: S.settings.sbUrl, key: S.settings.sbKey, local: true };
   const get = url => fetch(url, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
   const repo = typeof hostRepo === 'function' ? hostRepo() : 'OskarZio/aa';
   const [a, b] = await Promise.all([get('assets/config.json?t=' + Date.now()), get(`https://raw.githubusercontent.com/${repo}/HEAD/assets/config.json?t=${Date.now()}`)]);
-  const c = [a, b].filter(x => x?.supabaseUrl && x?.supabaseAnonKey).sort((x, y) => (y.updated || 0) - (x.updated || 0))[0];
+  const c = [a, b].map(sbUnpack).filter(x => x?.supabaseUrl && x?.supabaseAnonKey).sort((x, y) => (y.updated || 0) - (x.updated || 0))[0];
   return c ? { url: c.supabaseUrl, key: c.supabaseAnonKey, owner: c.policyOwner || null } : null;
 }
 // 🔒 konto, ranking i czat działają tylko w oficjalnej aplikacji – skopiowana strona na innym adresie zostaje bez chmury

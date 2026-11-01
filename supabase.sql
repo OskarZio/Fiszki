@@ -817,5 +817,13 @@ end $$;
 revoke all on function public.admin_ban(text, boolean, text) from public, anon;
 grant execute on function public.admin_ban(text, boolean, text) to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01g'::text $$;
+-- 🔒 klucz „anon” jest publiczny z natury (musi być w aplikacji) – dlatego sam w sobie nic nie daje:
+-- niezalogowany (anon) nie ma dostępu do żadnej tabeli poza listą wyłączonych funkcji; resztę i tak pilnuje RLS
+revoke all on all tables in schema public from anon;
+revoke all on all sequences in schema public from anon;
+alter default privileges in schema public revoke all on tables from anon;
+alter default privileges in schema public revoke all on sequences from anon;
+grant select on public.app_flags to anon;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01h'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

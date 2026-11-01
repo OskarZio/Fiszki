@@ -197,7 +197,7 @@ Object.assign(ACTIONS, {
     try {
       toast('Zapisuję…', 20000);
       const f = await ghRepo('assets/config.json');
-      const data = { ...(f ? JSON.parse(utf8b64(f.content)) : {}), supabaseUrl: cfg.url, supabaseAnonKey: cfg.key, updated: Date.now() };
+      const data = { ...(f ? JSON.parse(utf8b64(f.content)) : {}), sb: sbPack(cfg.url, cfg.key), updated: Date.now() }; delete data.supabaseUrl; delete data.supabaseAnonKey;
       await ghRepo('assets/config.json', { method: 'PUT', body: JSON.stringify({ message: 'Konfiguracja Supabase', content: b64utf8(JSON.stringify(data, null, 2)), ...(f ? { sha: f.sha } : {}) }) });
       delete S.settings.sbUrl; delete S.settings.sbKey; save();
       toast('Zapisano ✓ Łączę… (u innych po odświeżeniu aplikacji)', 5000); await initCloud(); render();
