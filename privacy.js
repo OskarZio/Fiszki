@@ -23,7 +23,7 @@ const POLICY_HTML = () => `
   <li><b>Profil publiczny dla znajomych</b>: nick, awatar, kod znajomego i statystyki nauki (liczba powtórek, seria, poziom, czas nauki, Elo, naklejki w gablocie). Widzą go osoby, które dodasz do znajomych (albo które dodały Ciebie kodem).</li>
   <li><b>Ranking wszystkich</b> – tylko jeśli sam/a go włączysz (domyślnie wyłączony). Wtedy nick, awatar i statystyki widzą wszyscy zalogowani użytkownicy.</li>
   <li><b>Ogłoszenia rzadkich przedmiotów prestiżu</b> – tylko jeśli je ogłosisz (albo masz włączony ranking wszystkich): nick i nazwa legendarnego/mitycznego przedmiotu są widoczne dla wszystkich zalogowanych (lista ostatnich dropów – 3 dni; tytuł „pierwszy w aplikacji” – do usunięcia konta).</li>
-  <li><b>Wiadomości</b> do znajomych (tekst, naklejki, GIF-y, zaproszenia, wspólne talie) – widzą je tylko nadawca i odbiorca.</li>
+  <li><b>Wiadomości</b> do znajomych (tekst, naklejki, zaproszenia, wspólne talie) – widzą je tylko nadawca i odbiorca.</li>
   <li><b>Bitwy i teleturniej na żywo</b> – nick, awatar i odpowiedzi przesyłane w czasie gry; nie są zapisywane na serwerze (wynik zostaje tylko u graczy).</li>
 </ul>
 <h3>4. Cel i podstawa prawna</h3>
@@ -50,7 +50,7 @@ const TERMS_HTML = () => `
 <ol>
   <li>Fiszki to bezpłatna aplikacja do nauki. Korzystanie bez konta nie wymaga podawania żadnych danych.</li>
   <li>Konto może założyć osoba, która ukończyła 16 lat (młodsza – za zgodą rodzica/opiekuna). Jedna osoba – jedno konto; nie udostępniaj hasła.</li>
-  <li><b>Kryształy, skrzynki, naklejki i GIF-y</b> to wyłącznie wirtualne elementy zabawy. Nie można ich kupić za prawdziwe pieniądze, wymienić na pieniądze ani sprzedać; nie mają wartości pieniężnej. Szanse w skrzynkach są jawne (przycisk „Zawartość i szanse”).</li>
+  <li><b>Kryształy, skrzynki i naklejki</b> to wyłącznie wirtualne elementy zabawy. Nie można ich kupić za prawdziwe pieniądze, wymienić na pieniądze ani sprzedać; nie mają wartości pieniężnej. Szanse w skrzynkach są jawne (przycisk „Zawartość i szanse”).</li>
   <li>Zabronione są: obraźliwe, nienawistne lub nielegalne treści (nick, awatar, wiadomości, wspólne talie), nękanie innych, podszywanie się, spam, próby włamania, oszukiwania w rankingu lub obchodzenia zabezpieczeń.</li>
   <li>Za treść fiszek i wiadomości odpowiada ich autor. Nie wrzucaj cudzych materiałów chronionych prawem autorskim bez zgody.</li>
   <li>Konto naruszające regulamin może zostać zablokowane lub usunięte.</li>

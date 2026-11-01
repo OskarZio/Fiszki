@@ -1,5 +1,5 @@
 'use strict';
-/* Panel hosta: po wpisaniu kodu hosta właściciel aplikacji może wgrać GIF-y reakcji, które dostaną wszyscy użytkownicy.
+/* Panel hosta: narzędzia właściciela aplikacji (konfiguracja, statystyki, testy).
    Plik trafia do repozytorium na GitHubie (assets/global/…) razem z listą assets/global.json – GitHub Pages
    udostępnia je każdemu, a aplikacja wczytuje przy starcie. Zapis wymaga tokenu GitHub z prawem zapisu do repozytorium,
    więc nawet ktoś, kto pozna kod, nie podmieni plików bez tokenu właściciela. */
@@ -58,7 +58,7 @@ async function checkHostToken() {
       const msg = (await r.json().catch(() => ({}))).message || '';
       return step(false, `3. Brak prawa zapisu (${r.status}${msg ? ': ' + msg : ''}). W tokenie ustaw Repository permissions → Contents: „Read and write”.`);
     }
-    step(true, '3. Zapis działa ✓ – możesz wgrywać GIF-y dla wszystkich.');
+    step(true, '3. Zapis działa ✓ – panel może zapisywać ustawienia dla wszystkich.');
   } catch (e) { step(false, 'Brak połączenia z GitHub: ' + e.message); }
   finally { HOST_CHECK.running = false; render(); }
 }
@@ -102,28 +102,7 @@ ROUTES.host = () => {
       <label class="field"><span>Klucz anon / publishable</span><input id="sb-key" placeholder="eyJhbGciOi… lub sb_publishable_…" autocapitalize="off" autocomplete="off"></label>
       <div class="row"><button class="primary grow" data-act="host-sb-save">💾 Zapisz dla wszystkich</button><button class="grow" data-act="host-sb-local">Tylko to urządzenie</button></div>
       <p class="small muted">Nie wklejaj klucza <b>service_role / secret</b> – on daje pełny dostęp do bazy.</p></div>
-    <div class="card"><h3 style="margin-top:0">🎬 GIF-y dla wszystkich</h3>
-      <p class="small muted">Wgrany GIF zobaczą wszyscy, którzy nie ustawili własnego. Po wgraniu GitHub Pages potrzebuje ok. 1–2 minut na publikację.</p>
-      ${Object.entries(REACT_SLOTS).map(([k, sl]) => { const g = globalSrcs(k); return `<div class="sndrow"><div class="row nowrap">
-          <img class="rx-thumb" src="${g[0] || REACT_DEFAULT}" data-alt="${esc(JSON.stringify([...g.slice(1), REACT_DEFAULT]))}" alt="">
-          <b class="grow">${sl.name}<br><small class="muted">${GLOBAL_RX[k]?.path ? 'globalny: ' + esc(GLOBAL_RX[k].name || '') : 'domyślny kot'}</small>
-</b></div>
-        <div class="row"><button class="sm primary" data-act="host-upload" data-k="${k}">📤 Wgraj dla wszystkich</button>
-          ${GLOBAL_RX[k]?.path ? `<button class="sm" data-act="rx-test" data-k="${k}">▶ Podgląd</button><button class="sm ghost" data-act="host-clear" data-k="${k}">Przywróć kota</button>` : ''}</div></div>`; }).join('')}
-    </div>
     ${betaCardHTML()}
-    <div class="card"><h3 style="margin-top:0">🎞️ Skrzynka z GIF-ami</h3>
-      <p class="small muted">Dodaj GIF-y, które gracze mogą wylosować (skrzynka pojawi się w sklepie, gdy będzie choć jeden). Rzadkość decyduje o szansie:
-        ${Object.entries(CASES.gif.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name} ${p}%</span>`).join(' · ')}. Duplikat zamienia się w kryształy.</p>
-      <div class="gifgrid">${(typeof GIF_CASE !== 'undefined' ? GIF_CASE : []).map(g => `<div class="gifitem" style="--rc:${RARITY[g.r || 'common'].color}">${gifImg(g)}
-        <small><b>${esc(g.name || 'GIF')}</b></small>
-        <div class="row nowrap"><select class="grow" data-gcr="${g.id}">${Object.entries(RARITY).map(([r, x]) => `<option value="${r}" ${(g.r || 'common') === r ? 'selected' : ''}>${x.name}</option>`).join('')}</select>
-          <button class="sm ghost" data-act="host-gc-del" data-id="${g.id}" title="Usuń ze skrzynki">🗑</button></div></div>`).join('') || '<p class="small muted">Jeszcze pusto.</p>'}</div>
-      <div class="spacer"></div>
-      <div class="row nowrap"><input id="gc-name" class="grow" placeholder="Nazwa GIF-a, np. Tańczący kot" maxlength="40">
-        <select id="gc-r">${Object.entries(RARITY).map(([r, x]) => `<option value="${r}">${x.name}</option>`).join('')}</select></div>
-      <div class="spacer"></div>
-      <button class="primary block" data-act="host-gc-add">📤 Dodaj GIF do skrzynki</button></div>
     <div class="card"><h3 style="margin-top:0">🧪 Testowa skrzynka</h3>
       <p class="small muted">Pokaz otwierania – bez kosztu kryształów, nic nie trafia do albumu. Możesz wymusić rzadkość, np. legendarną.</p>
       <label class="field"><span>Wylosuj</span><select id="host-case-r"><option value="">losowo (normalne szanse)</option>${Object.entries(RARITY).map(([r, x]) => `<option value="${r}">Naklejka: ${x.name}</option>`).join('')}<option value="gems">💎 Kryształy</option><option value="jackpot">💰 Jackpot 1000 💎</option><option value="mega">🔴 Mega 10 000 💎 (0,1%)</option><option value="lgif">🎞️ GIF legendarny</option><option value="respin">🔁 Losuj jeszcze raz</option></select></label>
@@ -243,9 +222,6 @@ const BETA_VIS = {
   celebrate: ['🏆 Osiągnięcie', () => celebrate('💀 🗂️ Komplet albumu', 'Zdobądź wszystkie naklejki · +150 💎')],
   level: ['⭐ Nowy poziom', () => celebrate('⭐ Poziom 7!', levelTitle(7))],
   xp: ['+XP nad kartą', () => floatText('+3 XP  🔥×10', true)],
-  rxwin: ['🏆 GIF: wygrana', () => showReaction('win', true)],
-  rxsession: ['✅ GIF: zestaw', () => showReaction('session', true)],
-  rxgoal: ['🎯 GIF: cel dnia', () => showReaction('goal', true)],
   popup: ['🔔 Powiadomienie', () => typeof msgPopup === 'function' ? msgPopup({ id: 0, kind: 'nudge', from_id: 'x', body: {} }, '🔔 Kolega przypomina o nauce', 'Czas na fiszki! 📚') : toast('Brak modułu wiadomości')],
   toast: ['💬 Dymek (toast)', () => toast('To jest przykładowy komunikat ✓', 3000)],
 };

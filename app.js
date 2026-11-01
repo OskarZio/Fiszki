@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '306';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '307';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1660,7 +1660,7 @@ function viewMore() {
 
   <div class="card row nowrap"><span style="font-size:30px">🛡️</span><div class="grow"><b>Bezpieczeństwo danych</b><div class="small muted">Kopie, kosz, wersje w chmurze</div></div><button class="primary sm" data-go="#/safety">Otwórz</button></div>
 
-  <div class="card row nowrap"><span style="font-size:30px">🔑</span><div class="grow"><b>Panel hosta</b><div class="small muted">GIF-y dla wszystkich użytkowników (wymaga kodu hosta)</div></div><button class="sm" data-go="#/host">Otwórz</button></div>
+  <div class="card row nowrap"><span style="font-size:30px">🔑</span><div class="grow"><b>Panel hosta</b><div class="small muted">Konfiguracja, statystyki i narzędzia właściciela</div></div><button class="sm" data-go="#/host">Otwórz</button></div>
 
   ${typeof reactionsSectionHTML === 'function' ? reactionsSectionHTML() : ''}
 

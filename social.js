@@ -197,15 +197,14 @@ ROUTES.chat = parts => {
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><span class="av" data-act="pl-view-f" data-fid="${f.id}" role="button">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 36)}</span><h1 class="grow nm" style="font-size:24px" data-act="pl-view-f" data-fid="${f.id}" role="button">${esc(f.nick || 'Znajomy')}</h1></div>
   <div class="chat-tools">
-    <button class="${CHAT.pick === 'media' ? 'primary' : ''}" data-act="chat-media-pick">😀 GIF</button>
+    <button class="${CHAT.pick === 'media' ? 'primary' : ''}" data-act="chat-media-pick">😀 Emotki</button>
     <button class="${CHAT.pick === 'gift' ? 'primary' : ''}" data-act="chat-pick">🎁 Podaruj</button>
     <button data-act="chat-nudge">🔔 Przypomnij</button>
     <button data-act="chat-challenge">⚔️ Wyzwij</button></div>
   ${CHAT.pick === 'media' ? `<div class="card tight chat-media">
     <div class="emo-row">${QUICK_EMO.map(e => `<button data-act="chat-emo" data-e="${e}">${e}</button>`).join('')}</div>
     <b class="small">🃏 Naklejki</b><div class="st-row">${mySt.map(s => `<button class="${fxCls(shinyLv(s.id)).trim()}" data-act="chat-st" data-id="${s.id}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}">${stE(s)}</button>`).join('')}</div>
-    <b class="small">🎞️ GIF-y</b>${myGifs.length ? `<div class="gif-row">${myGifs.map(g => `<button data-act="chat-gif" data-id="${g.id}" style="--rc:${RARITY[g.r || 'common'].color}">${gifImg(g)}</button>`).join('')}</div>`
-      : '<p class="small muted" style="margin:4px 0 0">Nie masz jeszcze GIF-ów – zdobywa się je tylko w skrzynce z GIF-ami (<a href="#/inv">🎒 Ekwipunek</a>).</p>'}</div>` : ''}
+</div>` : ''}
   ${CHAT.pick === 'gift' ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
     ${gifts.length ? `<div class="gift-pick">${gifts.map(s => `<button data-act="chat-gift" data-id="${s.id}" style="--rc:${RARITY[s.r].color}"><span>${stE(s)}</span><small>${esc(s.name)}</small><em>×${itemCount('sticker', s.id)}</em></button>`).join('')}</div>`
       : '<p class="small">Nie masz jeszcze naklejek do podarowania – zdobądź je w <a href="#/shop">skrzynkach</a>. (Startowe 👋👍😅 nie są do oddania.)</p>'}</div>` : ''}

@@ -59,7 +59,8 @@ on('start', () => { for (const k of Object.keys(REACT_SLOTS)) DB.del('gif:' + k)
 const reactCfg = () => (S.settings.reactions = S.settings.reactions || {});
 const reactOn = k => (reactCfg()[k]?.on ?? REACT_SLOTS[k].def);
 
-function showReaction(k, test) {
+function showReaction(k, test) { return;   // 🎞️ reakcje GIF usunięte
+
   if (!test && !reactOn(k)) return;
   const cfg = reactCfg()[k] || {};
   rxOverlay(rxImg(k), esc(REACT_SLOTS[k].caption), cfg.dur);
@@ -85,7 +86,8 @@ on('battleWin', () => setTimeout(() => showReaction('win'), 400));
 on('sessionEnd', s => { if (s.done > 0) setTimeout(() => showReaction('session'), 250); });
 on('goal', () => setTimeout(() => showReaction('goal'), 600));
 
-function reactionsSectionHTML() {
+function reactionsSectionHTML() { return '';   // 🎞️ reakcje GIF usunięte
+
   const cfg = reactCfg();
   return `<div class="card"><h2 style="margin-top:0">🎬 Reakcje (GIF)</h2>
     <p class="small muted">Po wybranym zdarzeniu na ekranie pokaże się GIF. GIF-y zdobywasz tylko w 🎞️ skrzynce z GIF-ami i ustawiasz w 🎒 Ekwipunku. Twój GIF wygranej widzą też przeciwnicy.</p>

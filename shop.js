@@ -254,7 +254,7 @@ ROUTES.shop = () => {
         ${sh && lv < 2 ? `<button class="sm holo-btn" data-act="holo-up" data-id="${s.id}">🌈 Hologram · ${HOLO_COST[s.r]} 💎</button>` : ''}
         ${n > 1 ? `<div class="dup-row"><button class="sm ghost" data-act="sell-dup" data-id="${s.id}">×${n} · sprzedaj +${RARITY[s.r].sell}💎</button></div>` : ''}</div>`; }).join('')}</div></div>
   <div class="card row nowrap inv-cta" data-go="#/inv"><span style="font-size:34px">🎒</span><div class="grow"><b>Ekwipunek</b>
-    <div class="small muted">GIF-y (${typeof GIF_CASE !== 'undefined' ? GIF_CASE.filter(g => hasItem('gif', g.id)).length : 0}), naklejki (${owned}/${STICKERS.length}), skrzynki do otwarcia</div></div><span style="font-size:22px">›</span></div>
+    <div class="small muted">Naklejki (${owned}/${STICKERS.length}), skrzynki do otwarcia</div></div><span style="font-size:22px">›</span></div>
   <div class="card"><h2 style="margin-top:0">Efekty zwycięstwa</h2><div class="effects">${EFFECTS.map(e => {
     const own = !e.price || hasItem('effect', e.id), on = (S.settings.effect || 'classic') === e.id;
     return `<button class="eff${on ? ' on' : ''}" data-act="effect" data-id="${e.id}"><span>${e.icon}</span><b>${e.name}</b><small>${on ? '✓ aktywny' : own ? 'wybierz' : e.price + ' 💎'}</small></button>`; }).join('')}</div></div>
@@ -387,8 +387,8 @@ Object.assign(ACTIONS, {
   },
 });
 
-// ---------- 🎒 Ekwipunek: GIF-y (tylko ze skrzynki), naklejki, nieotwarte skrzynki
-function gifCollectionHTML() {
+// ---------- 🎒 Ekwipunek: naklejki, nieotwarte skrzynki
+let gifCollectionHTML = function () {
   const all = typeof GIF_CASE !== 'undefined' ? GIF_CASE : [], own = all.filter(g => hasItem('gif', g.id)), cfg = S.settings.reactions || {};
   const ready = gifCaseReady();
   return `<div class="card"><div class="row nowrap"><h2 class="grow" style="margin:0">🎞️ GIF-y</h2><span class="small muted">${own.length}/${all.length}</span></div>
@@ -441,3 +441,7 @@ on('start', () => {
   if (n > 0) { S.wallet.push({ id: 'copy-refund', n, why: 'refund', t: Date.now() }); setTimeout(() => toast(`💎 +${n} – zwrot za wycofane naklejki i GIF-y`, 5000), 1500); }
   save();
 });
+
+// 🎞️ GIF-y, skrzynka z GIF-ami i reakcje GIF zostały całkowicie usunięte (prawa autorskie do memów)
+delete CASES.gif;
+gifCollectionHTML = () => '';
