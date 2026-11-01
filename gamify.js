@@ -307,7 +307,22 @@ ROUTES.ach = () => {
 // ============================================================ Ranking
 const PROFILE_DESC = 'Fiszki – profil do rankingu';
 const APP_URL = () => location.href.split('#')[0];
-let FRIEND_DATA = {}, publishAt = 0;
+let FRIEND_DATA = {}, publishAt = 0, PL_ROWS = [];
+// 👤 podgląd profilu gracza (z rankingu): poziom, Elo, minuty w tygodniu, gablota, aktywność
+const liveTag = p => { const t = p.updated || p.t || 0; return t && Date.now() - t < 5 * 60e3 ? '<span class="live-dot">● aktywny teraz</span>' : t ? `<span class="muted small">ostatnio ${new Date(t).toLocaleString('pl-PL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>` : ''; };
+function playerView(p) {
+  document.querySelector('.pl-ov')?.remove(); const ov = document.createElement('div'); ov.className = 'dmenu-ov pl-ov';
+  const kv = (l, v) => v != null && v !== '' ? `<div><b>${v}</b><small>${l}</small></div>` : '';
+  ov.innerHTML = `<div class="dmenu pl-card" role="dialog"><div class="row nowrap" style="gap:12px">${avatarHTML(p, 64)}<div class="grow"><b style="font-size:20px">${typeof nickHTML === 'function' ? nickHTML(p.nick, p.cos, false) : esc(p.nick)}</b><div>${p.me ? '<span class="live-dot">● to Ty</span>' : liveTag(p)}</div></div></div>
+    <div class="time-kpis">${kv('poziom', p.level)}${kv('Elo', p.elo)}${kv('min w tygodniu', p.weekMin)}${kv('seria dni', p.streak)}</div>
+    ${typeof showcaseHTML === 'function' && p.showcase?.length ? `<div class="small muted">Gablota</div><div>${showcaseHTML(p.showcase)}</div>` : ''}
+    <button class="ghost" data-x="1">Zamknij</button></div>`;
+  ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-x]')) ov.remove(); }); document.body.append(ov);
+}
+setTimeout(() => { if (typeof ACTIONS !== 'undefined') ACTIONS['pl-view'] = el => { const p = PL_ROWS[+el.dataset.i]; if (p) playerView(p); }; }, 0);
+// 🟢 status online: w trakcie gry (jajko, walka, nauka) profil odświeża się co 2 min – znajomi widzą „aktywny teraz” (nie w poczekalniach)
+setInterval(() => { if (document.visibilityState !== 'visible') return; const playing = (typeof eggRun === 'function' && eggRun()) || (typeof BOSS !== 'undefined' && BOSS?.phase === 'fight') || (typeof SESSION !== 'undefined' && SESSION?.card);
+  if (playing && typeof publishCloudProfile === 'function' && typeof cloudOn === 'function' && cloudOn()) { publishAt = 0; publishCloudProfile().catch(() => {}); } }, 120e3);
 
 function myProfile() {
   const perDay = {}, perMin = {}; const since = addDays(dayStart(), -13);
@@ -395,8 +410,8 @@ ROUTES.rank = () => {
   return { tab: 'home', html: `
   <div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Ranking</h1>${hasToken ? '<button class="iconbtn" data-act="rank-refresh">🔄</button>' : ''}</div>
   <div class="seg rank-tabs">${tabs.map(([k, l]) => `<button class="${RANK_TAB === k ? 'on' : ''}" data-act="rank-tab" data-k="${k}">${l}</button>`).join('')}</div>
-  <div class="card">${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}">
-      <span class="medal">${medal(i)}</span><span class="av">${avatarHTML(r, 34)}</span>
+  <div class="card">${(PL_ROWS = rows, '')}${rows.map((r, i) => `<div class="rankrow${r.me ? ' me' : ''}" data-act="pl-view" data-i="${i}" role="button">
+      <span class="medal">${medal(i)}</span><span class="av">${avatarHTML(r, 34)}${!r.me && r.updated && Date.now() - r.updated < 5 * 60e3 ? '<i class="live-mini" title="aktywny teraz"></i>' : ''}</span>
       <div class="grow"><div class="row nowrap"><b class="grow nickrow"><span class="nm">${typeof nickHTML === 'function' ? nickHTML(r.nick, r.cos, false) : esc(r.nick)}</span>${r.me ? '<span>(Ty)</span>' : ''}${typeof showcaseHTML === 'function' ? `<span>${showcaseHTML(r.showcase)}</span>` : ''}</b><span>${val(r)}</span></div>
         ${RANK_TAB === 'today' ? progress(r.today / maxToday, true) : ''}
         <div class="small muted">${typeof cosTitleHTML === 'function' ? cosTitleHTML(sCos(r.cos)).replace('class="ttl', 'class="ttl ttl-l') : ''}${r.err ? '⚠️ ' + esc(r.err) : r.me ? `poziom ${r.level} · 🔥 ${r.streak} · ${r.total} powtórek łącznie` : `poziom ${r.level} · 🔥 ${r.streak} · aktualizacja ${ago(r.updated)}`}</div></div>

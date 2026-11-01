@@ -3088,3 +3088,6 @@ input[type=range]::-moz-range-progress { height: 8px; border-radius: 99px; backg
 .hc-banner { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 10px 0; border-radius: 12px; background: #3b0d0d; border: 2px solid #dc2626; color: #fecaca; }
 .hc-banner b { color: #fff; letter-spacing: 1px; } .hc-banner small { color: #fca5a5 !important; }
 .cr-big .cr-pet, .hatch-cr .cr-pet { width: 160px; height: 160px; } .cr-big { display: grid; place-items: center; }
+.rankrow[data-act] { cursor: pointer; } .live-dot { color: #22c55e; font-weight: 800; font-size: 13px; }
+.pl-card { display: grid; gap: 14px; } .pl-card .time-kpis { margin: 0; }
+.rankrow .av { position: relative; } .live-mini { position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 2px var(--card); }

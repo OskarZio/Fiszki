@@ -181,7 +181,9 @@ ROUTES.chat = parts => {
   const me = myId(), list = MSGS.filter(m => !m.body?.sd && ((m.from_id === me && m.to_id === fid) || (m.from_id === fid && m.to_id === me))).slice(-120);
   onMount(() => {
     markRead(fid); clearTimeout(inboxTimer); inboxTimer = setTimeout(inboxTick, 4000);
-    const box = $('#chat-list'); if (box) box.scrollTop = box.scrollHeight;
+    // przewijaj na dół tylko przy otwarciu albo gdy byłeś na dole – czytanie starszych wiadomości nie skacze
+    const box = $('#chat-list'); if (box) { const n = list.length; if (CHAT.atEnd !== false || CHAT.n == null) box.scrollTop = box.scrollHeight; else box.scrollTop = CHAT.top || 0; CHAT.n = n;
+      box.addEventListener('scroll', () => { CHAT.top = box.scrollTop; CHAT.atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 60; }, { passive: true }); }
     const inp = $('#chat-in'); if (!inp) return;
     inp.value = CHAT.draft;
     inp.addEventListener('input', () => { CHAT.draft = inp.value; });
