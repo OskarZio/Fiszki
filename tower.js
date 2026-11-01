@@ -1,5 +1,5 @@
 'use strict';
-/* 🗼 Wieża (hardcore) – jak wieża w Mortal Kombat: piętro za piętrem, coraz trudniejsi bossowie, ❤️ przechodzi dalej
+/* 🗼 Wieża (hardcore) – piętro za piętrem, coraz trudniejsi bossowie, ❤️ przechodzi dalej
    (po piętrze wraca część). Po każdym piętrze 1 z 3 błogosławieństw. Podwójne XP i 🪙 dostajesz od razu za każde piętro.
    Śmierć albo ucieczka = GAME OVER: wspinaczka, piętro i błogosławieństwa przepadają – zostaje tylko rekord.
    Serca nie giną. Walczysz wszystkimi nauczonymi fiszkami. Co 5. piętro – strażnik (mocniejszy boss). */

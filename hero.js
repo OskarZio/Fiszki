@@ -163,7 +163,7 @@ function lives() {
   const k = Math.floor((Date.now() - L.t) / LIFE_MS); if (k > 0) { L.n = Math.min(LIVES_MAX, L.n + k); L.t += k * LIFE_MS; }
   return L;
 }
-// 8-bitowe serce w stylu Minecrafta (siatka 9×9, ostre piksele)
+// 8-bitowe serce (siatka 9×9, ostre piksele)
 const HEART_PX = ['.XX...XX.', 'XRRX.XRRX', 'XRWRXRRRX', 'XRRRRRRRX', 'XRRRRRRDX', '.XRRRRDX.', '..XRRDX..', '...XDX...', '....X....'];
 const heartPX = (full = true, cls = '') => { const c = full ? { X: '#2b0606', R: '#e3262b', W: '#ffd1d1', D: '#9c1015' } : { X: '#1a1a1a', R: '#4a4a4a', W: '#6b6b6b', D: '#363636' };
   return `<svg class="px-heart ${cls}" viewBox="0 0 9 9" shape-rendering="crispEdges" aria-hidden="true">${HEART_PX.map((r, y) => [...r].map((k, x) => c[k] ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${c[k]}"/>` : '').join('')).join('')}</svg>`; };
@@ -276,7 +276,7 @@ function heroSVG(cls = '', pr, h = hero()) {
   const body = line === 'beast' && !isPixelLine('beast') ? creatureSVG(h.look, ['rare', 'epic', 'legendary', 'mythic'][Math.min(3, p)], { label: 'Bohater' }) : heroArt(line, heroForm(h, p), h.g === 'm' ? 'm' : 'w');
   return `<div class="hero-fig ${cls} pr-${Math.min(6, p)} ln-${line}${typeof spriteVars === 'function' ? spriteVars(line, heroForm(h, p)) : ''}">${p ? '<i class="hero-aura"></i>' : ''}${body}</div>`;
 }
-// 🎒 mini ekwipunek jak pasek w Minecrafcie: 4 sloty (broń, hełm, pancerz, talizman) zamiast przedmiotów latających wokół bohatera
+// 🎒 mini ekwipunek jak pasek szybkiego dostępu: 4 sloty (broń, hełm, pancerz, talizman) zamiast przedmiotów latających wokół bohatera
 const SLOT_PH = { w: '⚔️', h: '⛑️', a: '🛡️', c: '💍' };
 function heroHotbar(h = hero(), cls = '') {
   return `<div class="mc-bar ${cls}" data-go="#/hero" role="group" aria-label="Ekwipunek">${['w', 'h', 'a', 'c'].map(sl => { const id = h.eq?.[sl], g = id && GEAR[id], f = g ? (h.forge?.[id] || 0) : 0;

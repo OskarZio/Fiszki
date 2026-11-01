@@ -75,7 +75,12 @@ async function writeGlobalJson(data, sha, msg) {
 
 // 📊 statystyki aplikacji (tylko liczby) – pierwsze zalogowane konto, które otworzy Panel hosta, zostaje właścicielem
 let HOST_ST = null, HOST_CHK = 0;
-setTimeout(() => { ACTIONS['host-recheck'] = () => { HOST_CHK = 0; render(); }; }, 0);
+setTimeout(() => { ACTIONS['host-recheck'] = () => { HOST_CHK = 0; render(); };
+  ACTIONS['host-ban'] = async el => { const on = el.dataset.on === '1', code = el.dataset.code;
+    if (on && !confirm(`🚫 Wyzerować i zablokować kryształy, złoto i przedmioty gracza ${code}?\nMożesz to potem cofnąć (Odblokuj), ale wyzerowanych rzeczy to nie przywróci.`)) return;
+    const r = await SB.rpc('admin_ban', { p_code: code, p_on: on });
+    if (r.error) return toast(/function|schema cache|does not exist/i.test(r.error.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy)' : 'Błąd: ' + r.error.message, 4000);
+    toast(on ? `🚫 Zablokowano ${code}` : `✅ Odblokowano ${code}`); hostStatsLoad(); }; }, 0);
 async function hostStatsLoad() {
   HOST_ST = { loading: true };
   if (!(typeof cloudOn === 'function' && cloudOn())) { HOST_ST = { err: 'Zaloguj się na swoje konto, żeby zobaczyć statystyki.' }; return render(); }
@@ -94,7 +99,8 @@ function hostStatsHTML() {
     ${!H || H.loading ? '<p class="small muted">Ładuję…</p>' : H.err ? `<p class="small muted">${esc(H.err)}</p>` : `
     <h4>👥 Konta</h4><div class="time-kpis">${tile(d.users, 'wszystkie')}${tile(d.new_today, 'nowe dziś')}${tile(d.new_7d, 'nowe 7 dni')}${tile(d.active_today, 'aktywne dziś')}</div>
     <h4>🔗 Linki do talii</h4><div class="time-kpis">${tile(d.links, 'udostępnione')}${tile(d.link_opens, 'otwarcia')}${tile(d.link_opens_today, 'otwarte dziś')}${tile(d.active_7d, 'aktywne 7 dni')}</div>
-    ${H.audit ? `<h4>🛡️ Najbogatsi gracze</h4><div class="small">${(H.audit.rich || []).map(x => `<div class="row nowrap" style="justify-content:space-between"><span>${esc(x.nick || '?')} <span class="muted">${esc(x.code || '')}</span></span><b>${n(x.gems)} 💎 · ${n(x.items)} przedm.</b></div>`).join('') || '—'}</div>
+    ${H.audit ? `<h4>🛡️ Najbogatsi gracze</h4><div class="small">${(H.audit.rich || []).map(x => `<div class="row nowrap" style="justify-content:space-between"><span>${esc(x.nick || '?')} <span class="muted">${esc(x.code || '')}</span></span><b>${n(x.gems)} 💎 · ${n(x.items)} przedm.${x.reviews != null ? ` · ${n(x.reviews)} powt.` : ''}</b>${x.code ? `<button class="sm ${x.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(x.code)}" data-on="${x.banned ? 0 : 1}" title="${x.banned ? 'Odblokuj' : 'Wyzeruj i zablokuj kryształy/przedmioty'}">${x.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button>` : ''}</div>`).join('') || '—'}</div>
+      <p class="small muted">🚫 Zablokuj = kryształy, złoto i przedmioty gracza znikają i nie da się ich odbudować (każdy zapis jest czyszczony), dopóki nie odblokujesz.</p>
       <h4>🚨 Wykryte próby oszustwa</h4><div class="small">${(H.audit.cheats || []).map(x => `<div>${esc(x.nick || '?')}: ${esc(x.what)} <span class="muted">${new Date(x.t).toLocaleString('pl-PL')}</span></div>`).join('') || 'brak'}</div>` : ''}
     ${(d.top_links || []).length ? `<div class="small" style="margin-top:10px">${d.top_links.map(x => `<div class="row nowrap" style="justify-content:space-between"><span>${esc(x.name)}</span><b>${n(x.opens)}×</b></div>`).join('')}</div>` : ''}
     <p class="small muted" style="margin:10px 0 0">Same liczby – bez e-maili i nazw użytkowników. Odświeżone ${new Date(H.t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}.</p>`}</div>`;

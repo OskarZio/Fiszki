@@ -817,8 +817,8 @@ ROUTES.boss = parts => {
   ${(() => { const wb = bossFor('weekly'), n = Object.keys(bk()).length;
     return `<div class="card row nowrap weekly-cta" data-act="boss-sel" data-kind="weekly" data-id="weekly" data-i=""><span class="wk-art">${bossArt(wb)}</span><div class="grow"><b>🏆 Boss tygodnia: ${esc(wb.name)}</b><div class="small muted">Ten sam dla wszystkich do niedzieli · Twój rekord: ${weeklyBest().toLocaleString('pl')} obrażeń · ranking znajomych</div></div><span>›</span></div>
     <div class="card row nowrap bestiary-cta" data-go="#/bestiary"><span style="font-size:30px">📖</span><div class="grow"><b>Kronika bossów ${n}/50</b><div class="pbar"><i style="width:${n * 2}%"></i></div></div><span>›</span></div>`; })()}
-  ${S.settings.hardcore ? `<div class="hc-banner"><img src="assets/ui8b/skull.webp" alt=""><div class="grow"><b>ŚWIAT HARDCORE</b><small>Osobny bohater, kryształy i przedmioty · jedna śmierć = koniec świata · śmierci: ${S.stats.hcDeaths || 0}</small></div><button class="sm" data-act="boss-hardcore">Wyjdź</button></div>`
-    : `<button class="card row nowrap hc-cta" data-act="boss-hardcore"><img src="assets/ui8b/skull.webp" alt=""><div class="grow"><b>Świat hardcore</b><small>Jak w Minecrafcie: osobna postać od zera, osobne kryształy i ekwipunek, bossowie +50%. Jedna śmierć kasuje cały świat. Nagrody ×1,5.</small></div><span>›</span></button>`}
+  ${S.settings.hardcore ? `<div class="hc-banner"><img src="assets/ui8b/skull.webp" alt=""><div class="grow"><b>TRYB HARDCORE</b><small>Osobny bohater, kryształy i przedmioty · jedna śmierć = start od zera · śmierci: ${S.stats.hcDeaths || 0}</small></div><button class="sm" data-act="boss-hardcore">Wyjdź</button></div>`
+    : `<button class="card row nowrap hc-cta" data-act="boss-hardcore"><img src="assets/ui8b/skull.webp" alt=""><div class="grow"><b>Tryb hardcore</b><small>Osobna postać od zera, osobne kryształy i ekwipunek, bossowie +50%. Jedna śmierć kasuje cały postęp w tym trybie. Nagrody ×1,5.</small></div><span>›</span></button>`}
   <h2 class="bm-h">📚 Twoje talie <small class="muted">rozdziały po ${CH_SIZE} fiszek · finał = cała talia</small></h2>
   ${decks.filter(x => !x.d.done).map(({ d, chs }, k) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars || Object.values(mastery(b) || {}).some(v => v > 0)).length;
     return `<details class="card bregion"${k < 2 ? ' open' : ''}><summary class="row nowrap"><b class="grow">${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} ${plural(chs.length, 'rozdział', 'rozdziały', 'rozdziałów')}${fin?.stars ? ' · 👑' : ''}</span></summary>
@@ -965,8 +965,8 @@ Object.assign(ACTIONS, {
   'boss-check': () => bossCheck(),
   'done-beaten': el => { const d = deckById(el.dataset.id); if (!d) return; const r = deckRec(d); if (r.noAuto) delete r.noAuto; else r.noAuto = 1; touch(d); save(); render(); },
   'boss-prestige': el => bossPrestige(el.dataset.kind, el.dataset.id, el.dataset.i === '' ? undefined : +el.dataset.i),
-  'boss-hardcore': () => { const on = !S.settings.hardcore; if (on && !confirm('💀 Świat hardcore (jak w Minecrafcie):\n• osobny bohater od poziomu 1 i osobne puchary bossów\n• bossowie +50% silniejsi, poziomy 2× wolniej\n• jedna śmierć = cały świat hardcore od zera\n• Twój główny profil zostaje nietknięty\n• nagrody 💎 ×1,5\n\nWejść?')) return; hcSwap();   // 💀 osobne kryształy i przedmioty gry (ekwipunek, mikstury, boostery, cegły)
-    S.settings.hardcore = on; save(); toast(on ? '💀 Wchodzisz do świata hardcore' : 'Wracasz do zwykłego świata'); render(); },
+  'boss-hardcore': () => { const on = !S.settings.hardcore; if (on && !confirm('💀 Tryb hardcore:\n• osobny bohater od poziomu 1 i osobne puchary bossów\n• bossowie +50% silniejsi, poziomy 2× wolniej\n• jedna śmierć = cały hardcore od zera\n• Twój główny profil zostaje nietknięty\n• nagrody 💎 ×1,5\n\nWejść?')) return; hcSwap();   // 💀 osobne kryształy i przedmioty gry (ekwipunek, mikstury, boostery, cegły)
+    S.settings.hardcore = on; save(); toast(on ? '💀 Wchodzisz w tryb hardcore' : 'Wracasz do zwykłej gry'); render(); },
   'boss-pick': el => bossPick(+el.dataset.k),
   'boss-next': () => bossNext(),
   'boss-ult': () => useUlt(),

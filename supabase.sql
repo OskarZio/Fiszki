@@ -501,5 +501,62 @@ end $$;
 revoke all on function public.admin_audit() from public, anon;
 grant execute on function public.admin_audit() to authenticated;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01a'::text $$;
+-- 🚫 blokada ekonomii oszusta: każdy zapis jego danych czyści kryształy i przedmioty (odblokowuje tylko właściciel)
+create table if not exists public.econ_bans (user_id uuid primary key references auth.users on delete cascade, t timestamptz not null default now(), why text);
+alter table public.econ_bans enable row level security;
+create or replace function public.data_guard() returns trigger language plpgsql security definer set search_path = '' as $$
+declare w jsonb; it jsonb; bad int; tot numeric;
+begin
+  if exists (select 1 from public.econ_bans where user_id = new.user_id) then
+    new.data := new.data || jsonb_build_object('wallet', '[]'::jsonb, 'items', '[]'::jsonb, 'hcWallet', '[]'::jsonb, 'hcItems', '[]'::jsonb, 'econBan', true);
+    return new;
+  end if;
+  new.data := new.data - 'econBan';
+  w := coalesce(new.data->'wallet', '[]'::jsonb); it := coalesce(new.data->'items', '[]'::jsonb);
+  select count(*) into bad from jsonb_array_elements(w) e where jsonb_typeof(e->'n') <> 'number' or (e->>'n')::numeric > 20000;
+  if bad > 0 then
+    insert into public.cheat_log(user_id, what) values (new.user_id, 'wallet: ' || bad || ' wpisów > 20000 lub błędnych');
+    new.data := jsonb_set(new.data, '{wallet}', coalesce((select jsonb_agg(e) from jsonb_array_elements(w) e where jsonb_typeof(e->'n') = 'number' and (e->>'n')::numeric <= 20000), '[]'::jsonb));
+  end if;
+  select count(*) into bad from jsonb_array_elements(it) e where jsonb_typeof(e->'q') <> 'number' or abs((e->>'q')::numeric) > 500;
+  if bad > 0 then
+    insert into public.cheat_log(user_id, what) values (new.user_id, 'items: ' || bad || ' przedmiotów > 500 szt.');
+    new.data := jsonb_set(new.data, '{items}', coalesce((select jsonb_agg(e) from jsonb_array_elements(it) e where jsonb_typeof(e->'q') = 'number' and abs((e->>'q')::numeric) <= 500), '[]'::jsonb));
+  end if;
+  -- podejrzanie bogaty przy małej liczbie powtórek → wpis do dziennika (raz na dobę), decyzja należy do właściciela
+  select coalesce(sum((e->>'n')::numeric), 0) into tot from jsonb_array_elements(coalesce(new.data->'wallet', '[]'::jsonb)) e where jsonb_typeof(e->'n') = 'number';
+  if tot > 50000 + 100 * jsonb_array_length(coalesce(new.data->'log', '[]'::jsonb))
+     and not exists (select 1 from public.cheat_log where user_id = new.user_id and t > now() - interval '1 day') then
+    insert into public.cheat_log(user_id, what) values (new.user_id, 'podejrzane: ' || tot || ' 💎 przy ' || jsonb_array_length(coalesce(new.data->'log', '[]'::jsonb)) || ' powtórkach');
+  end if;
+  return new;
+end $$;
+create or replace function public.admin_ban(p_code text, p_on boolean) returns boolean language plpgsql security definer set search_path = '' as $$
+declare uid uuid;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  select id into uid from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  if p_on then
+    insert into public.econ_bans(user_id, why) values (uid, 'admin') on conflict (user_id) do nothing;
+    insert into public.cheat_log(user_id, what) values (uid, 'zablokowano ekonomię (właściciel)');
+  else delete from public.econ_bans where user_id = uid; end if;
+  update public.user_data set data = data where user_id = uid;   -- trigger od razu czyści / zdejmuje znacznik
+  return p_on;
+end $$;
+revoke all on function public.admin_ban(text, boolean) from public, anon;
+grant execute on function public.admin_ban(text, boolean) to authenticated;
+create or replace function public.admin_audit() returns json language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  return json_build_object(
+    'rich', (select coalesce(json_agg(x), '[]') from (select p.nick, p.code, (select coalesce(sum((e->>'n')::numeric), 0) from jsonb_array_elements(coalesce(d.data->'wallet', '[]')) e where jsonb_typeof(e->'n') = 'number') as gems,
+        jsonb_array_length(coalesce(d.data->'items', '[]')) as items, jsonb_array_length(coalesce(d.data->'log', '[]')) as reviews, d.updated_at,
+        exists (select 1 from public.econ_bans b where b.user_id = d.user_id) as banned
+        from public.user_data d join public.profiles p on p.id = d.user_id order by 3 desc nulls last limit 15) x),
+    'cheats', (select coalesce(json_agg(x), '[]') from (select p.nick, c.what, c.t from public.cheat_log c left join public.profiles p on p.id = c.user_id order by c.t desc limit 30) x));
+end $$;
+revoke all on function public.admin_audit() from public, anon;
+grant execute on function public.admin_audit() to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01b'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '259';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '260';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1769,6 +1769,8 @@ async function gistText(f) {
 }
 function exportData() { const { settings, ...rest } = S; return { ...rest, exportedAt: Date.now() }; }
 function mergeState(R) {
+  // 🚫 właściciel zablokował ekonomię tego konta (oszustwo) – kryształy i przedmioty znikają też na urządzeniu
+  if (R.econBan) { for (const k of ['wallet', 'items', 'hcWallet', 'hcItems']) { S[k] = []; R[k] = []; } }
   // 💀 portfel i przedmioty świata hardcore są osobne – kopia z innego urządzenia mogła być akurat w drugim świecie
   if (!!R.settings?.hardcore !== !!S.settings?.hardcore) { [R.wallet, R.hcWallet] = [R.hcWallet || [], R.wallet || []]; { const K = ['gear', 'potion', 'boost', 'forgemat', 'egg'], it = R.items || []; [R.items, R.hcItems] = [[...it.filter(i => !K.includes(i?.kind)), ...(R.hcItems || [])], it.filter(i => K.includes(i?.kind))]; } }
   const tomb = { ...S.tomb };
