@@ -201,8 +201,19 @@ let BOSS = null, BOSS_PICK = { mode: 'flip' }, BOSS_SEL = null, LESSON_RUN = fal
 on('sessionEnd', s => { if (LESSON_RUN && s.cram && S.stats.lesson) { const n = S.stats.lesson.name; delete S.stats.lesson; LESSON_RUN = false; save(); toast(`✅ Lekcja odrobiona – rewanż z ${n} odblokowany!`, 3500); } });
 try { Object.assign(BOSS_PICK, JSON.parse(localStorage.getItem('bossPick') || '{}')); } catch { /* */ }
 const bossPickSave = () => { try { localStorage.setItem('bossPick', JSON.stringify(BOSS_PICK)); } catch { /* */ } };
+// 💀 teksty bossów w trybie hardcore
+const HC_TALK = {
+  sel: ['Hardcore? Tu nie ma drugiej szansy. Jedna śmierć i zaczynasz od zera.', 'Czuję zapach strachu. I świeżego bohatera z poziomem 1.', 'W tym trybie nie ma zapisów gry. Jest tylko Twoja pamięć.',
+    'Plus 50% do mojej siły. Minus 100% do Twoich wymówek.', 'Odważny… albo bardzo nierozsądny. Zaraz sprawdzimy.', 'Każdy błąd tu boli podwójnie. Uczyłeś się, prawda?', 'Hardcore to nie tryb. To wyrok.'],
+  start: ['Witaj w hardcore. Stąd wraca się tylko z wiedzą… albo wcale.', 'Jedno życie. Jedna szansa. Zero litości.', 'Twój bohater od zera, a ja od razu na maksa. Fair?'],
+  hit: ['Grr… w hardcore też umiesz?', 'Nie ciesz się. Jedno pudło i po Tobie.'], miss: ['W hardcore pomyłki się nie wybacza!', 'Czujesz to? To zapach restartu.'],
+  attack: ['W tym trybie bolę mocniej!', 'Hardcore = podwójny ból!'], meLow: ['Jeszcze jeden cios i cały postęp przepada!', 'Słyszysz? To Twój bohater zaczyna od poziomu 1…'],
+  low: ['Nie… nie w hardcore… nie ze mną!', 'Jeśli wygrasz, przyznam: masz charakter.'], crit: ['Krytyk w hardcore?! Kim Ty jesteś?!']
+};
+const bossLines = k => S.settings?.hardcore && HC_TALK[k] && Math.random() < .65 ? HC_TALK[k] : null;
 function bossSay(k) {
   const B = BOSS; if (!B) return;
+  const hc = bossLines(k); if (hc) { B.say = { txt: hc[Math.random() * hc.length | 0], t: Date.now(), k }; return; }
   const own = B.b.persona?.[k], l = own && (Math.random() < .7 || !BOSS_TALK[k]) ? own : BOSS_TALK[k] || [];
   if (l.length) B.say = { txt: l[Math.random() * l.length | 0], t: Date.now(), k };
 }
@@ -791,6 +802,7 @@ function setupSheetHTML() {
     <div class="row nowrap" style="gap:12px">${bossArt(b, 'sheet')}<div class="grow"><b style="font-size:18px">${esc(b.name)}</b><div class="small muted">${esc(b.title)}</div><div class="small">${esc(b.desc)}</div>
       <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : ['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) + (masterKey(b) ? medalsHTML(b) : '') : starsHTML(b.stars)}<span class="small muted">trudność ${b.diff + 1}${b.stars ? ` · ${CUP_N[Math.min(4, b.stars)]}: boss silniejszy` : ''}</span></div></div>
       <button class="iconbtn" data-act="boss-sel-close">✕</button></div>
+    ${s.say ? `<div class="boss-say sel${S.settings.hardcore ? ' hc' : ''}">${esc(s.say)}</div>` : ''}
     ${['ch', 'fin', 'cat'].includes(b.kind) && b.stars >= 4 ? `<button class="block bprest" data-act="boss-prestige" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">⭐ Prestiż bossa → P${(b.bp || 0) + 1}: medale i puchary od nowa, boss +35% silniejszy i z turbo-przeszkadzajkami, nagrody +25%</button>` : ''}
     ${b.weak ? `<div class="weak-tag">🎯 Słabość: <b>${WEAK_NAME[b.weak]}</b> – cios ×${String(WEAK_M).replace('.', ',')} · przy 50% i 25% ❤️ boss wpada w szał (fazy)</div>` : ''}
     <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : '<span>⏱️ bez limitu</span>'}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
@@ -955,7 +967,7 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'u') useUlt();
 });
 Object.assign(ACTIONS, {
-  'boss-sel': el => { BOSS_SEL = { kind: el.dataset.kind, id: el.dataset.id, i: el.dataset.i === '' ? null : +el.dataset.i }; render(); },
+  'boss-sel': el => { const pool = S.settings.hardcore ? HC_TALK.sel : BOSS_TALK.start || []; BOSS_SEL = { kind: el.dataset.kind, id: el.dataset.id, i: el.dataset.i === '' ? null : +el.dataset.i, say: pool[Math.random() * pool.length | 0] }; render(); },
   'boss-sel-close': () => { BOSS_SEL = null; render(); },
   'weekly-start': () => { BOSS = null; bossStart('weekly', 'weekly', null); },
   'boss-start': el => bossStart(el.dataset.kind, el.dataset.id, el.dataset.i === '' ? null : +el.dataset.i),

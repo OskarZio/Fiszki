@@ -10,7 +10,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
-const APP_VERSION = '264';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '265';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -617,8 +617,18 @@ function parseRoute() {
 }
 function go(hash) { if (location.hash === hash) render(); else location.hash = hash; }
 
+// 💀 tryb hardcore: krwistoczerwona aplikacja + okrągły przycisk wyjścia z boku
+function hcChrome() {
+  const on = !!S.settings?.hardcore; document.documentElement.classList.toggle('hc-mode', on);
+  let f = document.getElementById('hc-fab');
+  if (on && !f) { f = document.createElement('button'); f.id = 'hc-fab'; f.title = 'Wyjdź z trybu hardcore'; f.setAttribute('aria-label', 'Wyjdź z trybu hardcore'); f.dataset.act = 'boss-hardcore';
+    f.innerHTML = '<img src="assets/ui8b/skull.webp" alt=""><small>wyjdź</small>'; document.body.append(f); }
+  if (!on && f) f.remove();
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) { if (!m.dataset.orig) m.dataset.orig = m.content; m.content = on ? '#2a0606' : m.dataset.orig; }
+}
 function render() {
   if (!S) return;
+  hcChrome();
   const { parts, q } = parseRoute();
   MOUNT = [];
   const r = parts[0] || '';

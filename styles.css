@@ -3150,3 +3150,22 @@ body.admin-flip #app, body.admin-flip main { transform: rotate(180deg); transiti
 .adm-pop .dmenu { max-height: 88vh; overflow-y: auto; gap: 12px; }
 .adm-data { display: flex; flex-direction: column; gap: 2px; background: var(--card2); border-radius: 14px; padding: 8px 12px; }
 .adm-log { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; }
+/* v265: 💀 tryb hardcore – krwistoczerwona aplikacja */
+:root.hc-mode, :root.hc-mode[data-theme] { --bg: #170404; --card: #260808; --card2: #360c0c; --text: #f7e4e4; --muted: #c99a9a; --line: #4d1414;
+  --accent: #e5172b; --accent2: #e5172b; --accent-soft: #4a0d12; color-scheme: dark; }
+:root.hc-mode body { background: radial-gradient(120% 60% at 50% 0%, #3a0707 0%, #170404 60%) fixed, #170404 !important; color: var(--text); }
+:root.hc-mode #tabs { background: color-mix(in srgb, #260808 94%, transparent) !important; border-top-color: #5c1616; }
+:root.hc-mode .hubnav { background: #170404 !important; border-bottom-color: #4d1414; }
+:root.hc-mode button.primary, :root.hc-mode .primary { background: #c8102e; border-color: #c8102e; color: #fff; }
+:root.hc-mode .card { border-color: #4d1414; }
+#hc-fab { position: fixed; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 25; width: 58px; height: 58px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center; align-content: center; gap: 0; background: #8b0a1a; border: 3px solid #ff4d5e; box-shadow: 0 4px 16px rgba(229,23,43,.55); color: #fff; min-height: 0;
+  animation: hcPulse 2.4s ease-in-out infinite; }
+#hc-fab img { width: 30px; height: 30px; image-rendering: pixelated; } #hc-fab small { font-size: 9.5px; font-weight: 800; line-height: 1; letter-spacing: .3px; }
+@keyframes hcPulse { 50% { box-shadow: 0 4px 26px rgba(229,23,43,.9); } }
+body.focus #hc-fab { display: none; }
+.boss-say.sel { position: static; margin: 12px 0 4px; animation: none; transform: none; }
+.boss-say.sel.hc { background: #3a0a0e; color: #ffd6d9; border-color: #e5172b; }
+.boss-say.sel { max-width: 100%; width: auto; margin-left: 0; text-align: left; }
+.boss-say.sel::after { bottom: auto; top: -7px; left: 36px; border-top: 0; border-bottom: 8px solid #1f2937; }
+.boss-say.sel.hc::after { border-bottom-color: #e5172b; }
