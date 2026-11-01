@@ -10,6 +10,7 @@ const EMO8 = {
   '🧛': 'ui8b/vamp', '💨': 'ui8b/dodge',
   '🔤': 'ui8b/m_abcd', '⌨️': 'ui8b/m_type', '⌨': 'ui8b/m_type', '🏅': 'ui8b/p_ach', '🎒': 'ui8b/p_coll',
   '🪙': 'ui8b/gold',
+  '👾': 'e8/invader', '✅': 'e8/check', '💪': 'e8/muscle', '📤': 'e8/outbox', '🤖': 'e8/robot', '🎞️': 'e8/film', '🎞': 'e8/film', '📥': 'e8/inbox', '🏷️': 'e8/tag', '🏷': 'e8/tag', '🔑': 'e8/key', '☁️': 'e8/cloud', '☁': 'e8/cloud', '❌': 'e8/cross', '⚠️': 'e8/warn', '⚠': 'e8/warn', '📦': 'e8/box', '🥇': 'e8/medal', '👋': 'e8/wave',
   '📈': 'ui8/chart', '🌍': 'ui8/globe', '🌎': 'ui8/globe', '🌏': 'ui8/globe', '🧱': 'mat8/gray', '🐛': 'bugs8/caterpillar', '🐞': 'bugs8/ladybug', '🦋': 'bugs8/butterfly', '🐌': 'bugs8/snail', '🕷️': 'bugs8/spider', '🐝': 'bugs8/bee', '🦊': 'ui8/paw', '🎭': 'ui8/tab_postac', '🌳': 'ui8/tab_drzewko', '🎒': 'ui8/tab_plecak', '🔨': 'ui8/tab_kowal',
   '⚔️': 'px8/b_swords', '⚔': 'px8/b_swords', '🎯': 'px8/b_target', '🛡️': 'px8/b_shield', '🛡': 'px8/b_shield', '🔥': 'px8/b_fire', '⚡': 'px8/b_bolt',
   '👑': 'px8/b_crown2', '🧪': 'px8/b_potion', '⭐': 'px8/e_star', '✨': 'px8/b_sparkle', '💯': 'px8/e_hundred', '🔮': 'px8/b_orb', '📜': 'px8/b_scroll',
