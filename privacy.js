@@ -234,3 +234,10 @@ homeExtrasHTML = function () {
   if (host && SB && DB_STATE === null) dbCheck(true).then(() => DB_STATE === 'old' && rerenderIf(['']));
   return (host && DB_STATE === 'old' ? `<div class="banner row nowrap"><span class="grow">🛠️ Baza Supabase wymaga aktualizacji (zabezpieczenia).</span><button class="primary sm" data-go="#/host">Zaktualizuj</button></div>` : '') + prHome0();
 };
+// 📄 link do polityki/regulaminu zawsze otwiera świeży dokument: zamyka nakładki i przewija na górę (też gdy to ten sam adres)
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href="#/privacy"], a[href="#/terms"], [data-go="#/privacy"], [data-go="#/terms"]'); if (!a || a.closest('.wl-docs')) return;
+  e.preventDefault(); document.querySelectorAll('.dmenu-ov, .drops-ov, .cos-ov, .bsheet-ov').forEach(x => x.remove());
+  const h = a.getAttribute('href') || a.dataset.go; if (location.hash !== h) location.hash = h; else { render(); }
+  setTimeout(() => window.scrollTo(0, 0), 30);
+}, true);

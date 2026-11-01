@@ -4,7 +4,7 @@
    akceptacja Regulaminu i Polityki (potrzebna do konta – formularz rejestracji ma ją wtedy zaznaczoną) i publiczny ranking
    (opcjonalny, domyślnie wyłączony). Instrukcję można otworzyć ponownie w Ustawieniach. */
 let WL = null;
-const WL_MODES = [['full', '🎮', 'Pełny', 'nauka jako gra: bohater, bossowie, pojedynki, skrzynki, ranking'], ['minimal', '🧘', 'Skupienie', 'fiszki, materiały i metody – bez grywalizacji'], ['zen', '🎯', 'Pełne skupienie', 'tylko nauka: zero liczników i dodatków']];
+const WL_MODES = [['full', '🎮', 'Normalny', 'nauka jako gra: bohater, bossowie, pojedynki, skrzynki, ranking'], ['minimal', '🧘', 'Skupienie', 'fiszki, materiały i metody – bez grywalizacji'], ['zen', '🎯', 'Pełne skupienie', 'tylko nauka: zero liczników i dodatków']];
 const wlReqIdx = () => WL_PAGES.findIndex(p => p.req);   // { i: strona, acc: chce konto po zakończeniu }
 const WL_PAGES = [
   { ic: '👋', t: 'Cześć! To są Fiszki', body: () => `
@@ -24,7 +24,7 @@ const WL_PAGES = [
     <p class="center small" style="margin:0 0 10px"><b>Ważne – wybierz tryb.</b> Od niego zależy, co widzisz w aplikacji. Zmienisz go w każdej chwili jednym stuknięciem (Ty → Tryb).</p>
     <div class="wl-modes">${WL_MODES.map(([m, ic, n, d]) => `<button class="wl-mode${S.stats.modeChosen && appMode() === m ? ' on' : ''}" data-act="wl-mode" data-m="${m}"><span>${ic}</span><div><b>${n}</b><small>${d}</small></div></button>`).join('')}</div>
     ${S.stats.modeChosen ? '' : '<p class="center small muted" style="margin:8px 0 0">👆 Stuknij jeden tryb, żeby przejść dalej</p>'}`,
-    more: `<p><b>🎮 Pełny</b> – wszystko: bohater, bossowie, pojedynki, skrzynki, ranking, prestiż. Nauka jest grą.</p>
+    more: `<p><b>🎮 Normalny</b> – wszystko: bohater, bossowie, pojedynki, skrzynki, ranking, prestiż. Nauka jest grą.</p>
       <p><b>🧘 Skupienie</b> – fiszki, materiały i metody nauki, bez grywalizacji (bez skrzynek, bitew, liczników nagród). Dobre na sesję przed kolokwium.</p>
       <p><b>🎯 Pełne skupienie</b> – tylko nauka: zero liczników, statystyk i dodatków. Otwierasz i od razu powtarzasz.</p>
       <p>Dane i postęp są te same w każdym trybie – zmiana niczego nie kasuje.</p>` },
@@ -93,7 +93,7 @@ document.addEventListener('change', e => {
 Object.assign(ACTIONS, {
   'wl-next': () => { if (WL_PAGES[WL.i]?.req && !S.stats.modeChosen) return; showWelcome(Math.min(WL_PAGES.length - 1, WL.i + 1)); },
   'wl-mode': el => { const m = el.dataset.m; S.settings.mode = m; S.settings.minimal = m !== 'full'; S.stats.modeChosen = Date.now(); save(); render(); showWelcome(WL.i);
-    toast({ full: '🎮 Tryb pełny', minimal: '🧘 Tryb skupienia', zen: '🎯 Pełne skupienie – tylko nauka' }[m], 1500); },
+    toast({ full: '🎮 Tryb normalny', minimal: '🧘 Tryb skupienia', zen: '🎯 Pełne skupienie – tylko nauka' }[m], 1500); },
   'wl-prev': () => showWelcome(Math.max(0, WL.i - 1)),
   'wl-skip': () => { if (!S.stats.modeChosen && WL.i < wlReqIdx()) return showWelcome(wlReqIdx()); closeWelcome(); },
   'wl-done': () => { if (!S.stats.modeChosen) return showWelcome(wlReqIdx()); closeWelcome(); },

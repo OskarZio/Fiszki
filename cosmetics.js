@@ -90,13 +90,14 @@ const COS_IMG = {
 for (const c of COS) if (COS_IMG[c.id]) c.img = `assets/px8/${COS_IMG[c.id]}.webp`;
 const cosPic = (c, cls = '') => c.img ? `<img class="px8 ${cls}" src="${c.img}" alt="" draggable="false">` : `<span class="${cls}">${c.e || COS_T[c.t][0]}</span>`;
 // 🎀 dodatki bohatera wycofane (będą skiny postaci) – zdjęte z katalogu; kto je miał, dostaje zwrot w 💎 (raz)
-const COS_GONE = COS.filter(c => c.t === 'skin' || c.t === 'aura');
-for (let i = COS.length - 1; i >= 0; i--) if (COS[i].t === 'skin' || COS[i].t === 'aura') COS.splice(i, 1);
-delete COS_T.skin; delete COS_T.aura;
+const COS_GONE_T = ['skin', 'aura', 'frame', 'fx', 'react'];   // wycofane: dodatki, aury, ramki, efekty pojedynku, reakcje (zwrot 💎)
+const COS_GONE = COS.filter(c => COS_GONE_T.includes(c.t));
+for (let i = COS.length - 1; i >= 0; i--) if (COS_GONE_T.includes(COS[i].t)) COS.splice(i, 1);
+for (const t of COS_GONE_T) delete COS_T[t];
 on('start', () => {
   let n = 0; for (const c of COS_GONE) { const k = itemCount('cos', c.id); if (k > 0) { addItem('cos', c.id, -k, 'cosgone-' + c.id); n += COS_R[c.r].dup; } }
-  for (const t of ['skin', 'aura']) if (S.profile.cos?.[t]) { delete S.profile.cos[t]; S.profile.mod = Date.now(); }
-  if (n) { S.wallet.push({ id: 'cosgone-refund-' + uid(), n, why: 'cos-refund', t: Date.now() }); setTimeout(() => toast(`🎀 Dodatki i aury bohatera wycofane – zwrot +${n} 💎`, 4500), 1500); }
+  for (const t of COS_GONE_T) if (S.profile.cos?.[t]) { delete S.profile.cos[t]; S.profile.mod = Date.now(); }
+  if (n) { S.wallet.push({ id: 'cosgone-refund-' + uid(), n, why: 'cos-refund', t: Date.now() }); setTimeout(() => toast(`🎀 Ramki, efekty i reakcje wycofane – zwrot +${n} 💎`, 4500), 1500); }
   if (n || COS_GONE.length) save();
 });
 const COS_BY = Object.fromEntries(COS.map(c => [c.id, c]));
@@ -273,7 +274,7 @@ function cosDuelWin(d) {
 function cosReactHTML(b) { const c = cosById(b.rx); return c?.t === 'react' ? `<div class="rx rx-${c.id} r-${c.r}" style="--rc:${COS_R[c.r].c}"><span>${cosPic(c)}</span><small>${esc(c.n)}</small></div>` : '💥'; }
 
 // ---------- 👑 Garderoba prestiżu
-let COS_TAB = 'frame';
+let COS_TAB = 'title';
 function cosSlotHTML(c) {
   const own = cosOwned(c.id), on = myCos()?.[c.t] === c.id, R = COS_R[c.r], sc = (S.profile.showcase || []).includes(c.id);
   const prog = c.feat && !own && !c.feat.special ? c.feat.p() : null;

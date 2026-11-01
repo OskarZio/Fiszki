@@ -8,15 +8,15 @@ const todayPoints = () => Math.floor(todayLog().reduce((a, l) => a + studyPoints
 const todayGood = () => todayLog().filter(l => l.m === 'type' && l.v === 'ok').length + (S.stats['quizok_' + dayKey(Date.now())] || 0);
 const todayOf = arr => { const t0 = dayStart(); return (arr || []).filter(x => (x.t || x.created || 0) >= t0); };
 const QUESTS = [
-  { id: 'rev20', icon: '🔁', name: 'Zdobądź 20 pkt nauki', goal: 20, reward: 15, v: todayPoints },
-  { id: 'rev50', icon: '🔥', name: 'Zdobądź 50 pkt nauki', goal: 50, reward: 30, v: todayPoints },
-  { id: 'good15', icon: '✅', name: '15 poprawnie wpisanych lub w teście', goal: 15, reward: 15, v: todayGood },
-  { id: 'new5', icon: '🌱', name: 'Naucz się 5 nowych kart', goal: 5, reward: 15, v: () => todayLog().filter(l => l.n).length },
-  { id: 'add5', icon: '➕', name: 'Dodaj 5 nowych fiszek', goal: 5, reward: 15, v: () => todayOf(S.notes).length },
-  { id: 'game', icon: '🧠', name: 'Zagraj w grę pamięciową', goal: 1, reward: 10, v: () => todayOf(S.games).length },
-  { id: 'battle', icon: '⚔️', name: 'Stocz bitwę (może być z botem)', goal: 1, reward: 15, v: () => todayOf(S.battles).length },
-  { id: 'win', icon: '🏆', name: 'Wygraj bitwę', goal: 1, reward: 25, v: () => todayOf(S.battles).filter(b => b.won === 1).length },
-  { id: 'social', icon: '💬', name: 'Wyślij znajomemu przypomnienie lub prezent', goal: 1, reward: 10, v: () => S.stats['soc_' + dayKey(Date.now())] || 0,
+  { id: 'rev20', icon: '🔁', name: 'Zdobądź 20 pkt nauki', goal: 20, reward: 30, v: todayPoints },
+  { id: 'rev50', icon: '🔥', name: 'Zdobądź 50 pkt nauki', goal: 50, reward: 60, v: todayPoints },
+  { id: 'good15', icon: '✅', name: '15 poprawnie wpisanych lub w teście', goal: 15, reward: 30, v: todayGood },
+  { id: 'new5', icon: '🌱', name: 'Naucz się 5 nowych kart', goal: 5, reward: 30, v: () => todayLog().filter(l => l.n).length },
+  { id: 'add5', icon: '➕', name: 'Dodaj 5 nowych fiszek', goal: 5, reward: 30, v: () => todayOf(S.notes).length },
+  { id: 'game', icon: '🧠', name: 'Zagraj w grę pamięciową', goal: 1, reward: 20, v: () => todayOf(S.games).length },
+  { id: 'battle', icon: '⚔️', name: 'Stocz bitwę (może być z botem)', goal: 1, reward: 30, v: () => todayOf(S.battles).length },
+  { id: 'win', icon: '🏆', name: 'Wygraj bitwę', goal: 1, reward: 50, v: () => todayOf(S.battles).filter(b => b.won === 1).length },
+  { id: 'social', icon: '💬', name: 'Wyślij znajomemu przypomnienie lub prezent', goal: 1, reward: 20, v: () => S.stats['soc_' + dayKey(Date.now())] || 0,
     ok: () => typeof cloudOn === 'function' && cloudOn() && CLOUD_FRIENDS.length > 0 },
 ];
 const QUEST_BONUS = 25;

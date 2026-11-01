@@ -407,7 +407,7 @@ ROUTES.rank = () => {
     <div class="row nowrap"><span class="av-big">${avatarHTML(S.profile, 56)}</span>
       <button class="sm" data-act="avatar-photo">📷 Zdjęcie</button>${S.profile.avatarImg ? '<button class="sm ghost" data-act="avatar-clear">Użyj emoji</button>' : ''}</div>
     <div class="spacer"></div>
-    <div class="row nowrap"><input id="pr-avatar" value="${esc(S.profile.avatar)}" style="width:64px;text-align:center;font-size:24px" maxlength="4" title="Emoji (gdy nie masz zdjęcia)">
+    <div class="row nowrap">
       <input id="pr-nick" class="grow" value="${esc(S.profile.nick)}" placeholder="Twój nick" maxlength="24"></div>
     ${hasToken ? `
       <div class="spacer"></div>
@@ -445,11 +445,11 @@ function profileCardHTML() {
     <div class="spacer"></div>
     <div class="row"><button class="primary sm" data-act="avatar-photo">📷 ${S.profile.avatarImg ? 'Zmień zdjęcie' : 'Dodaj zdjęcie'}</button>
       ${S.profile.avatarImg ? '<button class="sm ghost" data-act="avatar-clear">Usuń zdjęcie</button>' : ''}
-      <span class="grow"></span><label class="small muted">emoji <input id="pr-avatar" value="${esc(S.profile.avatar)}" style="width:56px;text-align:center;font-size:20px;padding:6px" maxlength="4"></label></div>
+      <span class="grow"></span></div>
     <p class="small muted">Awatar widać na stronie głównej, w rankingu i w bitwach. Zdjęcie jest przycinane do kwadratu.</p></div>`;
 }
 function mountRank() {
-  const upd = () => { S.profile.nick = $('#pr-nick').value.trim(); const av = $('#pr-avatar').value.trim() || '🦊'; if (av !== S.profile.avatar) S.profile.imgMod = Date.now(); S.profile.avatar = av; S.profile.mod = Date.now(); save(); publishAt = 0; };
+  const upd = () => { S.profile.nick = $('#pr-nick').value.trim(); const av = S.profile.avatar || '🦊'; if (av !== S.profile.avatar) S.profile.imgMod = Date.now(); S.profile.avatar = av; S.profile.mod = Date.now(); save(); publishAt = 0; };
   $('#pr-nick')?.addEventListener('change', upd); $('#pr-avatar')?.addEventListener('change', upd);
 }
 const _rankRoute = ROUTES.rank;

@@ -171,7 +171,6 @@ function profilePopHTML() {
     <div class="pp-stats"><div><b>💎 ${typeof coins === 'function' ? coins() : 0}</b><small>kryształy</small></div><div><b>🔥 ${streak()}</b><small>seria</small></div>
       <div><b>⚔️ ${elo}</b><small>Elo</small></div><div><b>🏅 ${Object.keys(S.ach).length}</b><small>osiągnięcia</small></div></div>
     <div class="small muted" style="margin:12px 0 6px">Zmień awatar:</div>
-    <div class="pp-emojis">${AVATAR_EMOJI.map(e => `<button class="${!p.avatarImg && p.avatar === e ? 'on' : ''}" data-act="pp-emoji" data-e="${e}">${e}</button>`).join('')}</div>
     <div class="row" style="margin-top:10px"><button class="grow" data-act="pp-photo">📷 Własne zdjęcie</button>${p.avatarImg ? '<button class="grow" data-act="pp-photo-del">Usuń zdjęcie</button>' : ''}</div>
     <div class="spacer"></div><button class="primary block" data-act="pp-goto">👤 Otwórz profil</button></div>`;
 }
