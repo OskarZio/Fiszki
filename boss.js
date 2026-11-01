@@ -260,7 +260,7 @@ function bossBegin(b, extra = {}, p0 = null) {
     verQ: [], pendIce: false, pendBugs: 0, log: [], pool, poolAll, missed: [], dealt: {}, startedAt: now,
     weakIds: weakCards(b), lastParry: null, phaseN: 0, spd: 0, speedHits: 0, parryN: 0, parryOk: 0, ev: null, triple: false, gaunt: null, petUsed: false, dmgTotal: 0, ...extra };
   BOSS.move = pickMove(BOSS.b); BOSS_SEL = null;
-  presentCard(); bossSay('start');
+  presentCard(); bossSay('start'); bossCP();
   go('#/boss/fight'); render();
 }
 // 🔁 boss używa WSZYSTKICH swoich mocy po kolei (potasowana kolejka), przeplatając je ciosami – nie losuje w kółko jednej
@@ -562,7 +562,7 @@ function afterTurn(g, isVer) {
   checkPhase(B);
   B.log = B.log.slice(0, 4);
   if (B.coop && typeof coopSync === 'function') coopSync();
-  save();
+  save(); bossCP();
   if (!bossAlive(B)) return bossEnd(true);
   if (B.me <= 0 && !B.coop) return bossEnd(false, 'dead');
   if (B.coop && typeof coopLost === 'function' && coopLost()) return bossEnd(false, 'dead');
@@ -724,7 +724,7 @@ const chestSVG = () => `<svg viewBox="0 0 120 100"><defs><linearGradient id="chw
   <rect x="14" y="40" width="92" height="50" rx="6" fill="url(#chw)" stroke="#451a03" stroke-width="3"/><path d="M54 40V90M66 40V90" stroke="#fbbf24" stroke-width="4"/><rect x="52" y="48" width="16" height="16" rx="3" fill="#fde047" stroke="#92400e" stroke-width="2.5"/></svg>`;
 
 function bossEnd(won, why) {
-  const B = BOSS, b = B.b, hs = B.hs; if (B.phase !== 'fight') return;
+  const B = BOSS, b = B.b, hs = B.hs; if (B.phase !== 'fight') return; bossCPClear();
   if (b.kind === 'tower' && typeof towerEnd === 'function') { B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); bossSay(won ? 'down' : 'win'); bossSfx(won ? 'win' : 'lose'); if (won) { bestiaryAdd(b); B.badges = styleBadges(B); } towerEnd(B, won); save(); return render(); }
   B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); B.why = why; bossSay(won ? 'down' : 'win');
   if (b.kind === 'weekly') return weeklyEnd(B);
@@ -1047,7 +1047,7 @@ Object.assign(ACTIONS, {
     if (!confirm(B.coop ? 'Opuścić walkę? Kolega walczy dalej sam.' : cost ? `🏃 Uciec z walki?\nUcieczka liczy się jak porażka: tracisz 🖤 serce${B.tower ? ', a bieg w wieży się kończy' : ''}${S.settings.hardcore ? ' – w hardcore to śmierć bohatera' : ''}. Odpowiedzi do tej pory są zapisane.` : 'Wyjść z walki? Nie odpowiedziałeś jeszcze na nic – wychodzisz bez kary.')) return;
     if (B.coop && typeof coopLeave === 'function') coopLeave();
     if (cost && B.phase === 'fight') { B.fled = true; B.me = 0; return bossEnd(false, 'dead'); }
-    BOSS = null; go('#/boss'); },
+    bossCPClear(); BOSS = null; go('#/boss'); },
   'boss-again': () => { const b = BOSS?.b; BOSS = null; if (!b) return go('#/boss'); const nb = bossFor(b.kind, b.id, b.i); BOSS_SEL = nb ? { kind: b.kind, id: b.id, i: b.i ?? null } : null; go('#/boss'); render(); },
   'boss-map': () => { BOSS = null; go('#/boss'); },
   'boss-lesson': () => { const L = S.stats.lesson; if (!L) return; BOSS = null; BOSS_SEL = null; SESSION = null; LESSON_RUN = true; go(`#/study/all/flip?cram=list&ids=${L.ids.join(',')}`); },
@@ -1079,3 +1079,27 @@ setInterval(() => { const B = BOSS; if (!B || B.phase !== 'fight' || document.hi
   const active = (B.rolls || []).some(r => now - r.t < ROLL_MS + 800) || (B.learnFx && now - B.learnFx.t < 2600);
   const shown = !!document.querySelector('.roll-ov'), due = (B.rolls || []).some(r => now >= r.t && now - r.t <= ROLL_MS + 800);
   if (el.classList.contains('rolling') !== active || shown !== due) render(); }, 500);
+
+// 💾 ciche checkpointy walki solo: po każdej turze stan walki zapisuje się na urządzeniu. Gdy aplikacja się zamknie,
+// przy ponownym otwarciu walka wraca od checkpointu – ale z innym pytaniem. Gracz nie dostaje o tym żadnego komunikatu.
+const BOSS_CP_SKIP = ['pool', 'poolAll', 'rolls', 'fx', 'fxMe', 'say', 'ev', 'cur', 'picked', 'qte', 'pendQte', 'ice', 'bugs', 'qLock', 'ultFx', 'phaseFx', 'syncFx', 'learnFx', 'bossAct', 'shown', 'qAt'];
+function bossCP() {
+  const B = BOSS; if (!B || B.coop || B.phase !== 'fight') return;
+  try { const o = {}; for (const k in B) if (!BOSS_CP_SKIP.includes(k)) o[k] = B[k];
+    o.b = { ...B.b, cards: undefined, cardIds: (B.b.cards || []).map(c => c.id) }; localStorage.setItem('bossCP', JSON.stringify({ t: Date.now(), B: o })); } catch { /* */ }
+}
+function bossCPClear() { try { localStorage.removeItem('bossCP'); } catch { /* */ } }
+function bossCPRestore() {
+  if (BOSS) return false;
+  let cp; try { cp = JSON.parse(localStorage.getItem('bossCP') || 'null'); } catch { cp = null; }
+  if (!cp?.B || Date.now() - cp.t > 24 * 3600e3) { bossCPClear(); return false; }
+  const B = cp.B, b = B.b; b.cards = (b.cardIds || B.ids || []).map(id => bossCardById(id)).filter(Boolean); delete b.cardIds;
+  if (!b.cards.length || !(B.ids || []).some(id => bossCardById(id))) { bossCPClear(); return false; }
+  const decks = new Set(b.cards.map(c => c.deckId)), ent = c => distractorEntry(c), okA = x => x.a && x.a.trim() && x.a.length <= ABCD_MAX;
+  const pool = S.cards.filter(c => (b.kind === 'world' ? mixFightable(c) : decks.has(c.deckId) && fightable(c))).map(ent).filter(okA);
+  Object.assign(B, { pool, poolAll: pool.length >= 12 ? pool : S.cards.filter(mixFightable).map(ent).filter(okA), rolls: [], bugs: [], log: (B.log || []).slice(0, 2), cur: null, picked: null, qLock: 0 });
+  B.i = (B.i || 0) + 1;   // inne pytanie niż to, przy którym wyszedłeś
+  BOSS = B; presentCard(); if (!BOSS.cur) { BOSS = null; bossCPClear(); return false; }
+  return true;
+}
+on('start', () => setTimeout(() => { try { if (bossCPRestore()) { go('#/boss/fight'); render(); } } catch (e) { console.warn('cp', e); bossCPClear(); BOSS = null; } }, 300));
