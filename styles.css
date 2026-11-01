@@ -3240,3 +3240,6 @@ body.photo-bg .card, body.photo-bg .tile, body.photo-bg .mtile { background: col
   box-shadow: inset 0 0 40px rgba(229, 23, 43, .25), 0 0 0 1px #5c1616; }
 :root.hc-mode .hero-card .hero-fig, :root.hc-mode .hero-fig { filter: drop-shadow(0 0 14px rgba(229, 23, 43, .7)) drop-shadow(0 6px 0 rgba(0, 0, 0, .35)); }
 :root.hc-mode .hero-card .lvl, :root.hc-mode .hero-card [class*="lv"] { border-color: #e5172b; }
+/* v287: szkło górnego paska kończy się równo z panelem (bez rozmytego pasa pod spodem) */
+.hubnav::after, :root.hc-mode .hubnav::after { content: none !important; display: none !important; }
+.hubnav::before { bottom: 0 !important; }
