@@ -69,14 +69,14 @@ const BOSS_ABIL = { heal: ['💚', 'Regeneracja', 'leczy się'], shield: ['🛡�
   bugs: ['🐛', 'Robaczki', 'oblepia odpowiedzi robakami – zabij je, zanim odpowiesz'], poison: ['☠️', 'Trucizna', '−4 ❤️ przez 3 tury'], silence: ['🔇', 'Cisza', 'blokuje mikstury i supercios na 2 tury'], rage: ['😡', 'Szał', 'poniżej połowy ❤️ bije mocniej'],
   fog: ['🌫️', 'Mgła', 'pytanie jest zamglone i powoli się przejaśnia – tracisz czas'], mirror: ['🪞', 'Krzywe zwierciadło', 'pytanie odbite lustrzanie'],
   whirl: ['🌀', 'Wir', 'odpowiedzi ABCD wirują i zmieniają miejsca'], eclipse: ['🌑', 'Zaćmienie', 'pytanie znika po 2,5 s – odpowiadasz z pamięci'],
-  scramble: ['🔀', 'Rozsypanka', 'słowa pytania pomieszane'], reverse: ['⏪', 'Wspak', 'pytanie zapisane od tyłu'], bomb: ['💣', 'Bomba', 'następny cios bossa podwójny'],
+  scramble: ['🔀', 'Rozsypanka', 'słowa pytania pomieszane'], wind: ['🌪️', 'Wichura', 'wiatr miota odpowiedziami od boku do boku – trudniej trafić'], reverse: ['⏪', 'Wspak', 'pytanie zapisane od tyłu'], bomb: ['💣', 'Bomba', 'następny cios bossa podwójny'],
   flip: ['🙃', 'Do góry nogami', 'pytanie odwrócone do góry nogami'], shake: ['🌋', 'Trzęsienie ziemi', 'karta trzęsie się jak szalona'],
   tiny: ['🔍', 'Pomniejszenie', 'pytanie maleńkie i powoli rośnie'], ink: ['🦑', 'Atrament', 'plamy atramentu zalewają pytanie i powoli schodzą'],
   blind: ['🙈', 'Zasłona', 'odpowiedzi rozmazane przez 2,5 s'], spot: ['🔦', 'Ciemność', 'widać tylko to, co oświetla wędrująca latarka'],
   weak: ['🥀', 'Osłabienie', 'Twoje ciosy −30% przez 3 tury'], drain: ['🩸', 'Wysysanie', 'boss leczy się Twoimi ciosami przez 3 tury'], haste: ['⏳', 'Pośpiech', 'połowa czasu na 3 pytania'] };
 // przeszkadzajki odblokowują się z poziomem bossa (★): wyższy poziom = więcej i dziwniejszych
-const ABIL_TIER = { shield: 0, heal: 0, ice: 1, bugs: 1, fog: 1, flip: 1, shake: 1, weak: 1, poison: 2, mirror: 2, tiny: 2, ink: 2, blind: 2, drain: 2, haste: 2, silence: 3, whirl: 3, eclipse: 3, spot: 3 };
-const DISRUPT = ['fog', 'mirror', 'whirl', 'eclipse', 'flip', 'shake', 'tiny', 'ink', 'blind', 'spot', 'scramble', 'reverse'];
+const ABIL_TIER = { shield: 0, heal: 0, ice: 1, bugs: 1, fog: 1, flip: 1, shake: 1, weak: 1, poison: 2, mirror: 2, tiny: 2, ink: 2, blind: 2, drain: 2, haste: 2, silence: 3, whirl: 3, eclipse: 3, spot: 3, wind: 2 };
+const DISRUPT = ['fog', 'mirror', 'whirl', 'eclipse', 'flip', 'shake', 'tiny', 'ink', 'blind', 'spot', 'scramble', 'reverse', 'wind'];
 const ABIL_ORDER = ['shield', 'ice', 'heal', 'bugs', 'weak', 'poison', 'drain', 'haste', 'silence', 'rage'];
 const BUG8 = ['ladybug', 'bee', 'caterpillar', 'spider', 'snail', 'worm', 'butterfly', 'firefly'];   // 🐞 8-bitowe robaczki przeszkadzajki
 const BOSS_MOVES = ['Cios zapomnienia', 'Fala prokrastynacji', 'Podchwytliwe pytanie', 'Pustka w głowie', 'Atak terminu', 'Wir notatek'];
@@ -730,7 +730,7 @@ const chestSVG = () => `<svg viewBox="0 0 120 100"><defs><linearGradient id="chw
 function bossEnd(won, why) {
   const B = BOSS, b = B.b, hs = B.hs; if (B.phase !== 'fight') return; bossCPClear();
   if (b.kind === 'tower' && typeof towerEnd === 'function') { B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); bossSay(won ? 'down' : 'win'); bossSfx(won ? 'win' : 'lose'); if (won) { bestiaryAdd(b); B.badges = styleBadges(B); } towerEnd(B, won); save(); return render(); }
-  B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); B.why = why; bossSay(won ? 'down' : 'win');
+  B.phase = won ? 'won' : 'lost'; B.me = Math.max(0, B.me); B.why = why; bossSay(won ? 'down' : 'win'); if (!won && why === 'dead') B.deadT = Date.now();
   if (b.kind === 'weekly') return weeklyEnd(B);
   if (won) { bestiaryAdd(b); B.badges = styleBadges(B); }
   const flawless = won && B.lostHp === 0, total = B.ok + B.bad, acc = total ? B.ok / total : 0, modeR = MODE_REWARD[B.mode] || 1, rep = masterKey(b) ? mastery(b, B.mode) >= 4 : b.repeat; B.rep = won && rep;
@@ -984,6 +984,7 @@ function endView() {
   return { tab: 'arena', focus: true, html: `
   <div class="card center boss-end ${won ? 'won' : 'lost'}">
     <div class="boss-stage ${won ? 'dead' : 'gloat'}">${bossArt(b)}${won ? '<div class="boss-boom"></div>' : ''}</div>
+    ${!won && B.why === 'dead' && B.deadT ? deathFxHTML(B) : ''}
     ${B.say?.txt ? `<div class="boss-say end">${esc(B.say.txt)}</div>` : ''}
     <h2 style="margin:6px 0">${won ? `🏆 ${esc(b.name)} pokonany!` : `💀 ${esc(b.name)} wygrywa…`}</h2>
     <p class="small muted">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best}${B.verOk ? ` · 🔍 ${B.verOk} sprawdzianów` : ''}${B.parryN ? ` · 🛡️ ${B.parryOk}/${B.parryN} sparowanych` : ''}${won && B.flawless ? ' · <b>bez straty ❤️</b>' : ''}</p>
@@ -1116,3 +1117,11 @@ function bossCPRestore() {
   return true;
 }
 on('start', () => setTimeout(() => { try { if (bossCPRestore()) { go('#/boss/fight'); render(); } } catch (e) { console.warn('cp', e); bossCPClear(); BOSS = null; } }, 300));
+
+// 💀 animacja śmierci bohatera: ekran szarzeje, postać pada („Poległeś”); w hardcore – krew, pęknięty ekran i czaszka
+function deathFxHTML(B) {
+  const el = ((Date.now() - B.deadT) / 1000).toFixed(2), hc = S.settings.hardcore;
+  if (el > 4.5) return '';
+  return `<div class="death-fx${hc ? ' hc' : ''}" style="--el:${el}s" aria-hidden="true"><i class="df-veil"></i>${hc ? '<i class="df-blood"></i><i class="df-crack"></i>' : ''}
+    <div class="df-hero">${typeof heroIcon === 'function' ? heroIcon() : ''}</div><b class="df-txt">${hc ? '💀 Bohater poległ' : 'Poległeś…'}</b><small class="df-sub">${hc ? 'Hardcore nie wybacza' : 'Wstań i spróbuj jeszcze raz'}</small></div>`;
+}
