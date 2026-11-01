@@ -3572,3 +3572,43 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 /* ekran porażki: przyciski zawijają się zamiast ucinać tekst */
 .boss-end > .row { flex-wrap: wrap; } .boss-end > .row > button { min-width: 0; white-space: normal; line-height: 1.2; }
 .boss-end > .row > button.primary { flex: 1 1 100%; }
+/* 🩸 v318: hardcore – horror: boss przebija bohatera mieczem, pikselowa krew (bez okrągłych plam i linii pęknięć) */
+.dcut.hc { background: #0b0203; }
+.dcut.hc .dc-veil { background: rgba(0,0,0,.55); --d: 2.4s; }
+.dc-vig { position: absolute; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse 60% 45% at 50% 62%, transparent 30%, rgba(0,0,0,.94) 78%); --d: .1s; animation: dcVeil 1.2s ease-out; opacity: 0; }
+.dc-flash { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: #b4000c; --d: .95s; animation: dcFlash .7s ease-out; opacity: 0; }
+@keyframes dcFlash { 0% { opacity: 0; } 12% { opacity: .55; } 100% { opacity: 0; } }
+.dcut.hc .dc-stage { --d: .95s; animation: dcShake .5s linear; }
+@keyframes dcShake { 0%, 100% { transform: translateY(-60px); } 15% { transform: translate(-10px, -52px); } 30% { transform: translate(9px, -66px); } 45% { transform: translate(-6px, -56px); } 60% { transform: translate(5px, -63px); } 80% { transform: translate(-2px, -59px); } }
+.dcut.hc .dc-boss { --d: 0s; animation: dcBossHc 5s ease-in-out; }
+.dcut.hc .dc-boss .boss-art { filter: brightness(.55) saturate(1.3) drop-shadow(0 0 22px #7f0008) !important; }
+@keyframes dcBossHc { 0% { transform: translateX(-50%) scale(.92); } 16% { transform: translateX(-50%) translateY(56px) scale(1.2); } 30%, 100% { transform: translateX(-50%) translateY(38px) scale(1.16); } }
+.dcut.hc .dc-say { background: #000; color: #ff3b47; border: 2px solid #5c0008; font-family: 'Pixelify Sans', 'Rubik', sans-serif; letter-spacing: .5px; --d: 2.6s; animation: dcSay 2.6s ease-out; z-index: 4; }
+.dc-sword { position: absolute; left: 50%; bottom: 112px; width: 150px; height: 150px; margin-left: -62px; z-index: 3; image-rendering: pixelated; pointer-events: none;
+  --d: .2s; animation: dcSword 3.4s cubic-bezier(.6,0,.4,1); opacity: 0; filter: drop-shadow(0 0 8px #7f0008); }
+@keyframes dcSword { 0% { opacity: 0; transform: translate(40px, -380px) rotate(140deg); } 14% { opacity: 1; transform: translate(40px, -380px) rotate(140deg); }
+  22% { opacity: 1; transform: translate(0, 0) rotate(140deg); } 60% { opacity: 1; transform: translate(0, 4px) rotate(140deg); }
+  74% { opacity: 1; transform: translate(14px, -150px) rotate(140deg); } 86%, 100% { opacity: 0; transform: translate(30px, -420px) rotate(140deg); } }
+.dcut.hc .dc-hero { --d: 0s; animation: dcHeroImp 3.8s ease-in; z-index: 2; }
+@keyframes dcHeroImp { 0%, 17% { transform: none; filter: none; } 20% { transform: translate(-6px, 2px) scale(1.06); filter: brightness(2.2) sepia(1) hue-rotate(-40deg) saturate(6); }
+  26% { transform: translate(2px, 8px) rotate(-5deg); filter: saturate(.6) brightness(.85); } 58% { transform: translate(0, 12px) rotate(-9deg); filter: grayscale(.6) brightness(.7); }
+  66% { transform: translate(-4px, 16px) rotate(-14deg); } 100% { transform: translate(0, 46px) rotate(-96deg); filter: grayscale(1) brightness(.4); opacity: .75; } }
+.dc-spray, .dc-drips { position: absolute; left: 50%; bottom: 106px; width: 0; height: 0; z-index: 3; }
+.dc-spray i { position: absolute; width: var(--s); height: var(--s); background: #a3000e; box-shadow: 1px 1px 0 #4a0006; opacity: 0; animation: dcSpray 1.3s cubic-bezier(.2,.7,.4,1); }
+@keyframes dcSpray { 0% { opacity: 1; transform: translate(0, 0); } 35% { opacity: 1; transform: translate(var(--dx), var(--dy)); } 100% { opacity: 0; transform: translate(calc(var(--dx) * 1.25), calc(var(--dy) + 150px)); } }
+.dc-drips i { position: absolute; left: var(--x); top: 0; width: 5px; height: 9px; background: #8b0010; box-shadow: inset -1px 0 0 #4a0006; opacity: 0; animation: dcDrip 1.1s cubic-bezier(.55,0,1,.5) 2; }
+@keyframes dcDrip { 0% { opacity: 0; transform: translateY(-4px) scaleY(.4); } 15% { opacity: 1; transform: translateY(0) scaleY(1); } 100% { opacity: 1; transform: translateY(62px) scaleY(1.3); } }
+.dc-pool { position: absolute; left: 50%; bottom: 36px; width: 230px; height: 16px; margin-left: -115px; z-index: 1; background: #6b000b; box-shadow: inset 0 3px 0 #9b0012;
+  clip-path: polygon(6% 50%, 12% 18%, 26% 6%, 44% 0, 62% 4%, 78% 10%, 90% 26%, 96% 54%, 88% 82%, 70% 96%, 48% 100%, 26% 94%, 12% 80%); transform-origin: 46% 50%;
+  --d: 1.3s; animation: dcPool 3.2s cubic-bezier(.2,.6,.3,1); transform: scaleX(0); }
+@keyframes dcPool { 0% { transform: scale(.05, .4); } 100% { transform: scale(1, 1); } }
+.dcut.hc .dc-ground { background: #2a0306; }
+.dcut.hc .dc-txt { --d: 2.6s; animation: dcTxtHc 1.4s ease-out; }
+.dcut.hc .dc-txt b { color: #d1000f; font-size: 42px; letter-spacing: 3px; text-shadow: 0 3px 0 #2a0004, 0 0 18px rgba(209,0,15,.5); }
+.dcut.hc .dc-txt small { color: #9b6b6e; letter-spacing: .5px; }
+@keyframes dcTxtHc { from { opacity: 0; letter-spacing: 14px; filter: blur(2px); } to { opacity: 1; filter: none; } }
+.dcut.hc .dc-stage { position: relative; z-index: 2; }
+.dcut.hc .dc-flash { z-index: 3; } .dcut.hc .dc-txt { z-index: 4; } .dcut.hc .dc-skip { z-index: 5; }
+.dc-sword { bottom: 64px; }
+.dcut.hc .dc-txt b { font-size: 34px; letter-spacing: 2px; }
+.dcut.hc .dc-boss .boss-art { filter: brightness(.5) saturate(1.3) drop-shadow(0 0 22px #7f0008) !important; }

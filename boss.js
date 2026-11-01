@@ -1125,16 +1125,21 @@ on('start', () => setTimeout(() => { try { if (bossCPRestore()) { go('#/boss/fig
 
 // 🎬 cutscenka śmierci: gra od razu w walce, przed bossem – boss uderza, bohater pada, dopiero potem ekran porażki.
 // Hardcore: czerwień, krew, pęknięty ekran i mocniejszy cios. --el = sekundy od śmierci (przerysowanie nie restartuje animacji).
-const deathCutMs = () => S.settings.hardcore ? 4600 : 3800;
+const deathCutMs = () => S.settings.hardcore ? 5400 : 3800;
 function deathCutHTML(B) {
   const el = Math.max(0, (Date.now() - B.deadT) / 1000).toFixed(2), hc = S.settings.hardcore, say = B.say?.txt || (hc ? 'Nie ma powrotu.' : 'Następnym razem…');
   return `<div class="dcut${hc ? ' hc' : ''}" style="--el:${el}s">
     <div class="dc-stage"><div class="dc-boss">${bossArt(B.b)}</div><div class="dc-say">${esc(say)}</div>
-      <div class="dc-slash"></div><div class="dc-hero">${typeof heroIcon === 'function' ? heroIcon() : ''}</div><i class="dc-ground"></i></div>
-    <i class="dc-veil"></i>${hc ? '<i class="df-blood dc-b"></i><i class="df-crack dc-c"></i>' : ''}
+      ${hc ? dcGoreHTML() : '<div class="dc-slash"></div>'}<div class="dc-hero">${typeof heroIcon === 'function' ? heroIcon() : ''}</div>${hc ? '<img class="dc-sword" src="assets/gear8/sword7.webp" alt="">' : ''}<i class="dc-ground"></i></div>
+    ${hc ? '<i class="dc-vig"></i><i class="dc-flash"></i>' : ''}
+    <i class="dc-veil"></i>
     <div class="dc-txt"><b>${hc ? '💀 Bohater poległ' : 'Poległeś…'}</b><small>${hc ? `${esc(B.b.name)} nie zna litości` : `${esc(B.b.name)} tym razem wygrywa`}</small></div>
     <button class="ghost dc-skip" data-act="dcut-skip">Pomiń ›</button></div>`;
 }
+// 🩸 hardcore: pikselowa krew – rozprysk przy ciosie, krople kapiące z bohatera i kałuża, która powoli się rozlewa (stały wzór – bez losowania przy przerysowaniu)
+const DC_SPRAY = [[-70, -60], [-46, -88], [-20, -70], [12, -96], [38, -74], [66, -58], [84, -24], [-88, -20], [-30, -40], [26, -44], [52, -100], [-60, -104]];
+const dcGoreHTML = () => `<div class="dc-spray">${DC_SPRAY.map(([x, y], i) => `<i style="--dx:${x}px;--dy:${y}px;--d:${(.98 + i % 3 * .03).toFixed(2)}s;--s:${4 + i % 3 * 2}px"></i>`).join('')}</div>
+  <div class="dc-drips">${[-14, 6, 20, -4].map((x, i) => `<i style="--x:${x}px;--d:${(1.4 + i * .45).toFixed(2)}s"></i>`).join('')}</div><i class="dc-pool"></i>`;
 ACTIONS['dcut-skip'] = () => { if (BOSS) { BOSS.cutSkip = 1; render(); } };
 
 // 💀 animacja śmierci bohatera: ekran szarzeje, postać pada („Poległeś”); w hardcore – krew, pęknięty ekran i czaszka
