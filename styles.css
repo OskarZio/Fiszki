@@ -3225,3 +3225,7 @@ main > .hubnav { margin-top: 0 !important; padding-top: calc(10px + var(--sat)) 
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
 :root.hc-mode .hubnav::before { background: color-mix(in srgb, #1c0505 50%, transparent) !important; }
 @media (min-width: 700px) { main > .hubnav { padding-top: calc(14px + var(--sat)) !important; } }
+/* v281: pasek pasuje do każdego motywu – samo rozmycie tła (kolor i poświata motywu prześwitują), bez przyciemniania */
+.hubnav::before { background: color-mix(in srgb, var(--bg) 12%, transparent) !important; backdrop-filter: blur(24px) saturate(1.6) !important; -webkit-backdrop-filter: blur(24px) saturate(1.6) !important; }
+.hubnav::after { background: transparent !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+:root.hc-mode .hubnav::before { background: color-mix(in srgb, #1c0505 15%, transparent) !important; }
