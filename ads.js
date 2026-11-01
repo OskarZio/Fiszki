@@ -39,4 +39,5 @@ ACTIONS['ad-heart'] = async () => {
 };
 // przycisk przy sercach (Przygoda / Bohater) – tylko gdy brakuje serc
 setTimeout(() => { if (typeof livesHTML !== 'function') return; const lh0 = livesHTML;
-  livesHTML = () => lh0() + (adCanHeart() ? `<button class="sm ad-heart-btn" data-act="ad-heart" title="Obejrzyj krótką reklamę">📺 +1 ❤️ <small>${AD_CFG.perDay - adToday()}/${AD_CFG.perDay}</small></button>` : ''); }, 0);
+  // przycisk reklamy siedzi pod sercami (w tej samej kolumnie) – nie rozpycha karty bohatera
+  livesHTML = () => { const h = lh0(); if (!adCanHeart()) return h; const b = `<button class="sm ad-heart-btn" data-act="ad-heart" title="Obejrzyj krótką reklamę">📺 +1 ❤️ <small>${AD_CFG.perDay - adToday()}/${AD_CFG.perDay}</small></button>`, i = h.lastIndexOf('</span>'); return i > 0 ? h.slice(0, i) + b + h.slice(i) : h + b; }; }, 0);
