@@ -3118,3 +3118,13 @@ img.charpx, .skin-pic img, .char-cr img { object-fit: contain !important; max-wi
 /* v253: bez przypadkowego powiększania (double-tap) na iOS */
 html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .rankrow[data-act], [data-act="pl-view-f"] { cursor: pointer; }
+/* v261: stół kuźni widziany z góry – przedmiot leży na blacie, więcej oddechu */
+.fj-bench { height: auto; display: block; width: min(300px, 100%); margin: 6px auto 14px; }
+.fj-bench .fb-table { width: 100%; display: block; }
+.fj-bench .fb-item { left: 42%; top: 34%; bottom: auto; transform: translate(-50%, -50%) rotate(-35deg); width: 72px; height: 72px; }
+.fj-bench .fb-item .gear-img { width: 72px; height: 72px; filter: drop-shadow(3px 5px 0 rgba(0,0,0,.35)); }
+.fj-bench.working .fb-item { animation: forgeHit2 .7s ease-in-out infinite; } @keyframes forgeHit2 { 50% { transform: translate(-50%, -58%) rotate(-41deg); } }
+.fj-bench .fb-anvil { right: 8%; top: 8%; bottom: auto; width: 64px; filter: drop-shadow(2px 4px 0 rgba(0,0,0,.35)); }
+.fj.empty .fj-bench { height: auto; }
+.fj > b { display: block; margin-top: 4px; } .fj > small { display: block; margin-top: 6px; }
+.fj .pbar { margin: 14px 0 12px; } .fj .fj-task { margin-top: 12px; } .fj .fj-btns:not(:empty) { margin-top: 14px; }

@@ -67,14 +67,14 @@ function forgeHTML() {
   const h = hero(), J = forgeJobs(h), slots = forgeSlots(h), now = Date.now(), mats = matCount(), myMats = Object.keys(MATS).filter(k => matCount(k) > 0);
   const own = Object.keys(GEAR).filter(id => ownsGear(id)).sort((a, b) => (h.eq[GEAR[b].slot] === b) - (h.eq[GEAR[a].slot] === a) || (h.forge[b] || 0) - (h.forge[a] || 0));
   const jobHTML = j => { const g = GEAR[j.id], end = forgeEnd(j), dur = FORGE_T[j.to], left = Math.max(0, end - now), tl = forgeTaskLeft(j), T = j.task && FORGE_TASKS[j.task.k], ready = !left && !tl;
-    return `<div class="fj${ready ? ' ready' : ''}" style="--rc:${RARITY[g.r].color}"><div class="fj-bench${left ? ' working' : ''}"><img class="fb-table" src="assets/forge8/table.webp" alt=""><span class="fb-item">${gearImg(j.id)}</span><img class="fb-anvil" src="assets/forge8/anvil.webp" alt=""></div>
+    return `<div class="fj${ready ? ' ready' : ''}" style="--rc:${RARITY[g.r].color}"><div class="fj-bench${left ? ' working' : ''}"><img class="fb-table" src="assets/forge8/tabletop.webp" alt=""><span class="fb-item">${gearImg(j.id)}</span><img class="fb-anvil" src="assets/forge8/anvil.webp" alt=""></div>
       <div class="fj-top"><div class="grow"><b>${esc(g.name)} → Lv ${j.to}</b>
       <small class="fj-left" data-fend="${end}">${left ? 'zostało ' + fClock(left) : 'czas minął ✓'}</small></div></div>
       <div class="pbar"><i style="width:${(100 * Math.min(1, 1 - left / dur)).toFixed(1)}%"></i></div>
       ${T ? `<div class="fj-task${tl ? '' : ' ok'}">${tl ? '📋' : '✅'} ${T.txt(j.task.n)}${tl ? ` – zostało ${tl}` : ''}</div>` : ''}
       <div class="fj-btns">${ready ? `<button class="primary" data-act="forge-take" data-id="${j.id}">🎁 Odbierz Lv ${j.to}</button>`
         : myMats.filter(k => MATS[k].task ? tl : left).map(k => `<button class="mat-btn" data-act="forge-mat" data-id="${j.id}" data-k="${k}">${matImg(k)}<span><b>${MATS[k].d}</b><small>${MATS[k].n} · masz ${matCount(k)}</small></span></button>`).join('')}</div></div>`; };
-  const slotsHTML = [0, 1].map(i => i < slots ? (J[i] ? jobHTML(J[i]) : '<div class="fj empty"><div class="fj-bench"><img class="fb-table" src="assets/forge8/table.webp" alt=""></div><b>Wolne stanowisko</b><small>Wybierz przedmiot niżej i stuknij „Ulepsz”.</small></div>')
+  const slotsHTML = [0, 1].map(i => i < slots ? (J[i] ? jobHTML(J[i]) : '<div class="fj empty"><div class="fj-bench"><img class="fb-table" src="assets/forge8/tabletop.webp" alt=""></div><b>Wolne stanowisko</b><small>Wybierz przedmiot niżej i stuknij „Ulepsz”.</small></div>')
     : `<div class="fj empty locked"><b>🔒 2. stanowisko</b><small>Dwa ulepszenia naraz.</small><button class="sm" data-act="forge-slot">Odblokuj · ${FORGE_SLOT2} 🪙</button></div>`).join('');
   const rows = own.map(id => { const g = GEAR[id], f = h.forge[id] || 0, to = f + 1, busy = J.some(j => j.id === id), on = h.eq[g.slot] === id;
     return `<div class="fi" style="--rc:${RARITY[g.r].color}"><div class="fi-top">${gearImg(id)}<div class="grow"><b>${esc(g.name)}${f ? ` · Lv ${f}` : ''}${on ? ' <small class="fi-on">założone</small>' : ''}</b>
