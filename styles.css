@@ -3518,3 +3518,9 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .drops-crate .crate-img { width: 44px; height: 44px; object-fit: contain; display: block; }
 .cr-what { margin: 2px 0 6px; line-height: 1.35; }
 .drop-row > .grow { min-width: 0; } .drop-row > .grow b { overflow-wrap: anywhere; }
+.uptok-list { display: grid; gap: 10px; }
+.uptok { gap: 12px; padding: 10px 12px; border-radius: 14px; border-left: 4px solid var(--rc); background: color-mix(in srgb, var(--rc) 8%, var(--card)); }
+.uptok .st-img { width: 40px; height: 40px; flex: none; }
+.uptok small { display: block; line-height: 1.35; margin-top: 2px; }
+.uptok-box { margin-bottom: 16px; }
+.cr-btns button.primary.gold-btn { background: #ca8a04 !important; border-color: #a16207 !important; box-shadow: 0 4px 0 #854d0e !important; }

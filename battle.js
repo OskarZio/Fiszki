@@ -291,7 +291,7 @@ function finishBattle() {
   if (B.role !== 'bot' && Number.isFinite(B.opp?.elo)) { rec.oppElo = B.opp.elo; rec.elo = eloDelta(myElo(), clamp(B.opp.elo, 100, 3000), won, S.battles.filter(b => b.elo != null).length); }
   S.battles.push(rec);
   if (won === 1) {
-    addItem('case', B.setup.mode === 'cards' && sc.n >= 10 && B.role !== 'bot' ? 'epic' : 'basic', 1, 'case-' + B.id);
+    addItem('case', 'basic', 1, 'case-' + B.id);
     S.stats.battleWins = (S.stats.battleWins || 0) + 1;
     const streakNow = (() => { let n = 0; for (let i = S.battles.length - 1; i >= 0 && S.battles[i].won === 1; i--) n++; return n; })();
     S.stats.winStreak = Math.max(S.stats.winStreak || 0, streakNow);

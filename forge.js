@@ -111,7 +111,7 @@ setInterval(() => {
 }, 1000);
 
 // ⚔️ Skrzynia z bronią (🪙 złoto): losuje przedmiot do ekwipunku – duplikat = cegła do kuźni
-const WCASE = { price: 400, odds: { common: 42, rare: 33, epic: 18, legendary: 6, mythic: 1 } };
+const WCASE = { price: 2000, odds: { common: 42, rare: 33, epic: 18, legendary: 6, mythic: 1 } };
 function weaponCaseOpen() {
   if (!spend(WCASE.price, 'weapon-case')) return;
   const roll = () => { const r = rollTier(WCASE.odds), pool = Object.keys(GEAR).filter(id => GEAR[id].r === r); return { k: 'gear', id: pool[Math.random() * pool.length | 0], r }; };
@@ -125,3 +125,8 @@ function weaponCaseOpen() {
 }
 ACTIONS['weapon-case'] = () => weaponCaseOpen();
 const weaponCaseHTML = () => `<div class="card row nowrap wcase"><img class="crate-img" src="assets/crates/bc_fire.webp" alt=""><div class="grow"><b>Skrzynia z bronią</b><small class="muted">${Object.entries(WCASE.odds).map(([r, p]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name} ${p}%</span>`).join(' · ')}<br>Duplikat = cegła do kuźni</small></div><button class="primary" data-act="weapon-case">${WCASE.price} 🪙</button></div>`;
+
+// ⬆️ żetony ulepszeń na górze Kuźni; skrzynia z bronią otwiera się w sklepowej ruletce (z pełnymi szansami)
+const forgeHTML0 = forgeHTML;
+forgeHTML = function () { return (typeof upTokHTML === 'function' ? upTokHTML(true) : '') + forgeHTML0(); };
+ACTIONS['weapon-case'] = () => { if (typeof CASES !== 'undefined' && CASES.weapon) { SPIN = null; go('#/case/weapon'); } else weaponCaseOpen(); };

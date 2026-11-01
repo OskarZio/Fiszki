@@ -21,7 +21,7 @@ const stE = s => s?.img ? `<img class="st-img" src="${s.img}" alt="${s.e}" dragg
   : !s ? '' : stStyle() === 'svg' && typeof stickerArt === 'function' && stickerArt(s) ? stickerArt(s)
   : stStyle() !== 'emoji' && FLUENT_ST.has(s.id) ? `<img class="st-img fl" src="assets/fluent/${s.id}.webp" alt="${s.e}" draggable="false">` : (s.e || '');
 // 📦 skrzynki 8-bit (assets/crates): każdy rodzaj ma własną; boss, łup PvP i skrzynka do złapania w walce też
-const CRATE_OF = { prest: 'gem', forge: 'bc_fire', skin: 'magic', basic: 'basic', epic: 'epic', daily: 'daily', cats: 'cats', animals: 'animals', food: 'food', magic: 'magic', gif: 'gif', hero: 'hero', boss: 'boss', pvp: 'ice', grab: 'gem' };
+const CRATE_OF = { prest: 'gem', weapon: 'bc_fire', forge: 'basic', royal: 'bc_holy', skin: 'magic', basic: 'basic', epic: 'epic', daily: 'daily', cats: 'cats', animals: 'animals', food: 'food', magic: 'magic', gif: 'gif', hero: 'hero', boss: 'boss', pvp: 'ice', grab: 'gem' };
 const crateImg = (k, cls = '') => `<img class="crate-img ${cls}" src="assets/crates/${CRATE_OF[k] || 'basic'}.webp" alt="" draggable="false">`;
 const caseIco = k => crateImg(k, 'case-img');
 const STICKERS = [
@@ -61,17 +61,20 @@ const stickerById = id => STICKERS.find(s => s.id === id);
 // cele osiągnięć kolekcjonerskich = aktualna liczba naklejek
 if (typeof ACHIEVEMENTS !== 'undefined') for (const [id, n] of [['album_full', STICKERS.filter(x => !x.hatch && x.r !== 'divine').length], ['legends_all', STICKERS.filter(x => x.r === 'legendary' && !x.hatch).length], ['hatch_all', STICKERS.filter(x => x.hatch).length]]) { const a = ACHIEVEMENTS.find(x => x.id === id); if (a) a.goal = n; }
 const CASES = {
-  // 📦 skrzynki przedmiotów i skinów (dawne skrzynki z naklejkami). pool = szanse kategorii (%), gear/mat = rzadkość przedmiotu
-  basic: { name: 'Skrzynka zapasów', icon: '📦', price: 120, pool: { potion: 34, mat: 20, gold: 15, boost: 12, gems: 11, gear: 8 },
-    gear: { common: 60, rare: 32, epic: 7, legendary: 1 }, mat: { common: 55, rare: 30, epic: 12, legendary: 3 }, gold: [[40, 50], [80, 30], [160, 16], [400, 4]] },
-  forge: { name: 'Skrzynka kowala', icon: '⚒️', price: 200, pool: { gear: 45, mat: 40, gold: 15 },
-    gear: { common: 35, rare: 38, epic: 20, legendary: 6, mythic: 1 }, mat: { common: 28, rare: 32, epic: 22, legendary: 10, mythic: 4, ice: 2, void: 2 }, gold: [[60, 50], [120, 30], [250, 16], [600, 4]] },
-  epic: { name: 'Skrzynka bohatera', icon: '🎁', price: 350, pool: { gear: 50, potion: 12, boost: 10, mat: 10, gold: 10, skin: 8 },
-    gear: { common: 8, rare: 38, epic: 34, legendary: 16, mythic: 4 }, mat: { rare: 40, epic: 35, legendary: 18, mythic: 7 }, gold: [[100, 50], [200, 30], [400, 16], [1000, 4]] },
-  skin: { name: 'Skrzynka skinów', icon: '🎨', price: 500, pool: { skin: 100 } },
-  daily: { name: 'Codzienna skrzynka', icon: '🌞', price: 0, freeOnly: true, pool: { potion: 24, mat: 18, gold: 17, gear: 14, boost: 12, gems: 11, skin: 4 },
-    gear: { common: 30, rare: 40, epic: 22, legendary: 7, mythic: 1 }, mat: { common: 40, rare: 35, epic: 18, legendary: 7 }, gold: [[60, 50], [120, 30], [250, 16], [500, 4]] },
+  // 📦 skrzynki ulepszeń i skinów: tylko cegły do kuźni, żetony ulepszeń (poziom postaci, ulepszenie broni, wyższa rzadkość) i skiny.
+  // cur: 'gold' = płacisz 🪙 złotem (zarobione w walkach); bez cur = 💎 kryształy. Broń wypada tylko ze skrzyń z bronią.
+  weapon: { name: 'Skrzynia z bronią', icon: '⚔️', cur: 'gold', price: 2000, pool: { gear: 100 }, gear: { common: 42, rare: 33, epic: 18, legendary: 6, mythic: 1 } },
+  forge: { name: 'Skrzynka kowala', icon: '🛠️', cur: 'gold', price: 2500, pool: { mat: 72, wup: 18, lvl: 7, rar: 3 },
+    mat: { common: 30, rare: 30, epic: 20, legendary: 10, mythic: 4, ice: 3, void: 3 } },
+  epic: { name: 'Skrzynka mistrza', icon: '🎁', price: 3000, pool: { lvl: 28, wup: 25, mat: 22, skin: 15, rar: 10 },
+    mat: { rare: 30, epic: 30, legendary: 20, mythic: 10, ice: 5, void: 5 } },
+  skin: { name: 'Skrzynka skinów', icon: '🎨', price: 4000, pool: { skin: 100 } },
+  royal: { name: 'Skarbiec legend', icon: '👑', price: 6000, pool: { gear: 100 }, gear: { epic: 55, legendary: 35, mythic: 10 } },
+  basic: { name: 'Skrzynka zapasów', icon: '📦', price: 0, freeOnly: true, pool: { mat: 80, wup: 12, lvl: 6, rar: 2 }, mat: { common: 50, rare: 30, epic: 14, legendary: 6 } },
+  daily: { name: 'Codzienna skrzynka', icon: '🌞', price: 0, freeOnly: true, pool: { mat: 70, wup: 15, lvl: 12, rar: 3 }, mat: { common: 40, rare: 32, epic: 18, legendary: 8, ice: 2 } },
 };
+const caseCur = c => c.cur === 'gold' ? '🪙' : '💎';
+const casePriceTxt = c => `${c.price} ${caseCur(c)}`;
 // stare skrzynki tematyczne z naklejkami → zamieniają się w skrzynkę zapasów
 const CASE_OLD = { cats: 'basic', animals: 'basic', food: 'basic', magic: 'basic', gif: 'basic' };
 // Komplet naklejek danej rzadkości = jednorazowa premia
@@ -149,10 +152,14 @@ const mythicSt = () => { const L = STICKERS.filter(x => x.r === 'mythic' && !x.h
 const stPool = theme => STICKERS.filter(s => !s.hatch && (!theme || s.t === theme));
 const rollSticker = (odds, theme) => { const r = rollRarity(odds), all = r === 'divine' ? stPool() : stPool(theme), pool = all.filter(s => s.r === r); const src = pool.length ? pool : all; return src[Math.random() * src.length | 0]; };
 // 🎁 zawartość skrzynek: przedmioty bohatera, mikstury, boostery, cegły do kuźni, złoto, kryształy i skiny postaci
-const CASE_CAT = { gear: ['⚔️', 'Przedmiot bohatera', '#f59e0b'], potion: ['🧪', 'Mikstura', '#ef4444'], boost: ['⏱️', 'Booster 30 min', '#a855f7'], mat: ['🧱', 'Cegła do kuźni', '#64748b'],
-  gold: ['🪙', 'Złoto', '#eab308'], gems: ['💎', 'Kryształy', '#06b6d4'], skin: ['🎨', 'Skin postaci', '#ec4899'] };
-const CASE_EXTRA = { respin: 5 };   // % szans na darmowe ponowne losowanie (poza skrzynką skinów)
-const GEM_PRIZES = { basic: [[20, 50], [50, 30], [150, 17], [500, 3]], daily: [[30, 50], [60, 30], [150, 17], [500, 3]] };
+// ⬆️ żetony ulepszeń (8-bitowe ikony): używasz ich w Ekwipunku albo w zakładce Bohater
+const UPTOK = {
+  lvl: { n: 'Zwój poziomu', d: '+1 poziom postaci (i punkt umiejętności)', img: 'assets/e8/up.webp', r: 'legendary' },
+  wup: { n: 'Młot kowala', d: '+1 ulepszenie założonej broni od razu, bez czekania', img: 'assets/e8/tools.webp', r: 'epic' },
+  rar: { n: 'Gwiazda przemiany', d: 'zamienia założoną broń na wyższą rzadkość (ulepszenia zostają)', img: 'assets/e8/glowstar.webp', r: 'mythic' },
+};
+const CASE_CAT = { gear: ['⚔️', 'Broń i zbroja', '#f59e0b'], mat: ['🧱', 'Cegła do kuźni', '#64748b'], skin: ['🎨', 'Skin postaci', '#ec4899'],
+  lvl: ['⬆️', UPTOK.lvl.n, '#22c55e'], wup: ['🛠️', UPTOK.wup.n, '#3b82f6'], rar: ['💫', UPTOK.rar.n, '#a855f7'] };
 const it8 = src => `<img class="st-img it8" src="${src}" alt="" draggable="false">`;
 const RS5 = ['common', 'rare', 'epic', 'legendary', 'mythic'];
 const pickW = o => { const e = Object.entries(o).filter(([, p]) => p > 0), sum = e.reduce((a, [, p]) => a + p, 0); let y = Math.random() * sum; for (const [k, p] of e) { if (y < p) return k; y -= p; } return e[0]?.[0]; };
@@ -171,33 +178,26 @@ function casePrize(cat, c, k) {
   if (cat === 'gems') { const [n, r] = tierPick(GEM_PRIZES[k] || GEM_PRIZES.basic); return { kind: 'gems', id: 'gems' + n, n, r, e: '💎', name: `+${n} 💎`, img: GEM8 }; }
   if (cat === 'skin' && typeof skinRoll === 'function') { const w = skinRoll(); return { kind: 'skin', id: skinKey(w.line, w.r), line: w.line, r: w.r, e: '🎨', name: `${SKIN_NAME[w.r]} skin · ${CHAR_LINES[w.line]?.name || w.line}`,
     ico: `<img class="st-img it8 skin" src="${skinSrc(w.line, typeof heroForm === 'function' ? heroForm() : 3, w.r)}" alt="" draggable="false">` }; }
-  return casePrize('gold', c, k);
+  if (UPTOK[cat]) { const T = UPTOK[cat]; return { kind: 'tok', id: cat, r: T.r, e: CASE_CAT[cat][0], name: T.n, ico: it8(T.img) }; }
+  return casePrize('mat', { mat: { common: 100 } }, k);
 }
 function rollPrize(k, odds, force) {
   const c = CASES[k] || CASES.basic;
-  if (force === 'mega' || (!force && Math.random() * 100 < MEGA_GEMS_P)) return { kind: 'gems', img: GEM8, id: 'gems' + MEGA_GEMS, n: MEGA_GEMS, e: '💎', name: `+${MEGA_GEMS} 💎`, r: 'mythic' };
-  if (force === 'respin' || (!force && c.pool.skin !== 100 && Math.random() * 100 < CASE_EXTRA.respin)) return { kind: 'respin', id: 'respin', e: '🔁', name: 'Jeszcze raz!', r: 'epic' };
-  if (force === 'jackpot') return casePrize('gems', { }, 'basic');
-  if (force && CASE_CAT[force]) return casePrize(force, { ...CASES.epic, ...c }, k);
+  if (force && CASE_CAT[force]) return casePrize(force, { gear: { epic: 100 }, mat: { epic: 100 }, ...c }, k);
   if (force && RARITY[force] && typeof GEAR !== 'undefined') return casePrize('gear', { gear: { [force]: 100 } }, k);
   return casePrize(pickW(c.pool), c, k);
 }
 // ---------- zawartość skrzynki: dokładne szanse (te same reguły co rollPrize)
 function caseDrops(k) {
   const c = CASES[k], out = [], add = (p, x, group) => p > 0 && out.push({ p, x, group });
-  const resp = c.pool.skin === 100 ? 0 : CASE_EXTRA.respin, f = (100 - MEGA_GEMS_P) / 100;
-  add(MEGA_GEMS_P, { kind: 'gems', img: GEM8, e: '💎', name: `${MEGA_GEMS} kryształów`, r: 'mythic' }, 'ultra');
-  add(f * resp, { kind: 'respin', e: '🔁', name: 'Losuj jeszcze raz', r: 'epic' }, 'extra');
-  const rest = f * (100 - resp) / 100, sum = Object.values(c.pool).reduce((a, b) => a + b, 0);
+  const sum = Object.values(c.pool).reduce((a, b) => a + b, 0);
   for (const [cat, w] of Object.entries(c.pool)) {
-    const P = rest * w / sum * 100, [ic, nm] = CASE_CAT[cat];
+    const P = w / sum * 100, [ic] = CASE_CAT[cat];
     const byR = (odds, name, ico) => { const s = Object.values(odds).reduce((a, b) => a + b, 0); for (const [r, p] of Object.entries(odds)) add(P * p / s, { kind: cat, e: ic, name: name(r), r: RARITY[r] ? r : 'epic', ico: ico(r) }, cat); };
-    if (cat === 'gear') byR(c.gear, () => 'Losowy przedmiot', r => { const g = gearPool(r)[0]; return g ? it8(fsrc(GEAR[g].img)) : ic; });
-    else if (cat === 'mat') byR(c.mat, r => MATS[r].n, r => it8(`assets/mat8/${MATS[r].img}.webp`));
+    if (cat === 'gear') byR(c.gear, r => { const n = gearPool(r).length; return `Losowy przedmiot (${n} do zdobycia)`; }, r => { const g = gearPool(r)[0]; return g ? it8(fsrc(GEAR[g].img)) : ic; });
+    else if (cat === 'mat') byR(c.mat, r => MATS[r].n + ' · ' + MATS[r].d, r => it8(`assets/mat8/${MATS[r].img}.webp`));
     else if (cat === 'skin') byR(typeof SKIN_ODDS !== 'undefined' ? SKIN_ODDS : { rare: 100 }, r => `Skin ${(SKIN_NAME?.[r] || r).toLowerCase()}`, r => typeof skinSrc === 'function' ? `<img class="st-img it8 skin" src="${skinSrc(typeof heroLine === 'function' && hasSkins(heroLine()) ? heroLine() : 'cat', 3, r)}" alt="">` : ic);
-    else if (cat === 'gold' || cat === 'gems') (cat === 'gold' ? c.gold : GEM_PRIZES[k] || GEM_PRIZES.basic).forEach(([n, p], i) => add(P * p / 100, { kind: cat, e: ic, name: `${n} ${cat === 'gold' ? 'złota' : 'kryształów'}`, r: RS5[i], ico: cat === 'gold' ? it8('assets/ui8b/gold.webp') : it8(GEM8) }, cat));
-    else if (cat === 'potion') { const ks = Object.keys(POTIONS); ks.forEach(id => add(P / ks.length, { kind: cat, e: ic, name: POTIONS[id].name, r: id === 'phoenix' ? 'epic' : 'rare', ico: it8(fsrc(POTIONS[id].img)) }, cat)); }
-    else if (cat === 'boost') { const ks = Object.keys(BOOSTS); ks.forEach(id => add(P / ks.length, { kind: cat, e: ic, name: BOOSTS[id].name, r: 'epic', ico: it8(fsrc(BOOSTS[id].img)) }, cat)); }
+    else if (UPTOK[cat]) add(P, { kind: 'tok', e: ic, name: `${UPTOK[cat].n} – ${UPTOK[cat].d}`, r: UPTOK[cat].r, ico: it8(UPTOK[cat].img) }, cat);
   }
   return out;
 }
@@ -210,8 +210,8 @@ function caseDropsHTML(k) {
     <span class="grow"><b>${esc(x.name)}</b><small style="color:${RARITY[x.r].color}">${x.kind === 'respin' ? 'Darmowe losowanie' : RARITY[x.r].name}</small></span><b class="drop-p">${pctFmt(p)}</b></div>`;
   const sec = (g, title) => d.some(x => x.group === g) ? `<h3>${title} <small class="muted">${pctFmt(sum(g))}</small></h3>${d.filter(x => x.group === g).sort((a, b) => b.p - a.p).map(row).join('')}` : '';
   return `<div class="drops-box"><div class="row nowrap"><span class="drops-crate">${crateImg(k)}</span><div class="grow"><b style="font-size:18px">${c.name}</b><div class="small muted">Zawartość skrzynki i szanse na każdą nagrodę</div></div><button class="iconbtn" data-act="drops-close">✕</button></div>
-    <div class="drops-list">${sec('ultra', '🔴 Ultra rzadkie')}${Object.keys(CASE_CAT).map(g => sec(g, CASE_CAT[g][0] + ' ' + CASE_CAT[g][1])).join('')}${sec('extra', '🔁 Bonus')}</div>
-    <p class="small muted" style="margin:0">Szanse sumują się do 100%. Duplikat przedmiotu zamienia się w cegłę do kuźni, duplikat skinu – w kryształy.</p></div>`;
+    <div class="drops-list">${Object.keys(CASE_CAT).map(g => sec(g, CASE_CAT[g][0] + ' ' + CASE_CAT[g][1])).join('')}</div>
+    <p class="small muted" style="margin:0">Szanse sumują się do 100%. Duplikat przedmiotu zamienia się w cegłę do kuźni, duplikat skinu – w kryształy. Żetony ulepszeń używasz w Ekwipunku.</p></div>`;
 }
 function showCaseDrops(k) {
   document.querySelector('.drops-ov')?.remove();
@@ -230,6 +230,7 @@ function grantPrize(won, k) {
   else if (won.kind === 'potion') addItem('potion', won.id, won.n || 1, key);
   else if (won.kind === 'boost') addItem('boost', won.id, 1, key);
   else if (won.kind === 'mat') addItem('forgemat', won.id, won.n || 1, key);
+  else if (won.kind === 'tok') addItem('uptok', won.id, 1, key);
   else if (won.kind === 'skin') { if (skinOwned(won.line, won.r)) { won.dup = 1; S.wallet.push({ id: key, n: SKIN_DUP[won.r], why: 'skin-dup', t: Date.now() }); } else addItem('skin', won.id, 1, key); }
   if (['legendary', 'mythic'].includes(won.r) && won.kind !== 'gems') S.stats.legendary = 1;
   return !!won.dup;
@@ -239,7 +240,7 @@ const prizeMsg = won => won.kind === 'gems' ? 'Kryształy dodane do salda 💎' 
   : won.kind === 'gear' ? (won.dup ? `Masz już ten przedmiot – dostajesz ${MATS[won.matK]?.n || 'cegłę'} do kuźni 🧱.` : 'Nowy przedmiot w ekwipunku bohatera – załóż go w zakładce Bohater ⚔️.')
   : won.kind === 'skin' ? (won.dup ? `Masz już ten skin – dostajesz +${SKIN_DUP[won.r]} 💎.` : 'Nowy skin postaci – załóż go w Bohater → Postać 🎨.')
   : won.kind === 'potion' ? 'Mikstura czeka w plecaku na walkę z bossem 🧪.' : won.kind === 'boost' ? 'Booster czeka w zakładce Bohater – włącz go, kiedy chcesz ⏱️.'
-  : won.kind === 'mat' ? 'Cegła do kuźni – skraca ulepszanie broni 🧱.' : '';
+  : won.kind === 'mat' ? 'Cegła do kuźni – skraca ulepszanie broni 🧱.' : won.kind === 'tok' ? `${UPTOK[won.id].d}. Użyj go w Ekwipunku 🎒.` : '';
 
 // ---------- sklep
 ROUTES.shop = () => {
@@ -253,11 +254,11 @@ ROUTES.shop = () => {
   ${freeN ? `<div class="banner row nowrap"><span class="grow">🎁 Masz <b>${freeN}</b> darmowe ${plural(freeN, 'skrzynkę', 'skrzynki', 'skrzynek')}: ${freeKinds.map(k => `${crateImg(k, 'inline')} ${CASES[k].name} ×${itemCount('case', k)}`).join(', ')}</span>
     <button class="primary sm" data-go="#/case/${freeKinds[0]}?free=1">Otwórz</button></div>` : ''}
   <div class="card case-groups"><h2 style="margin-top:0">Skrzynki</h2>
-    <p class="small muted" style="margin:0 0 10px">Broń i zbroja dla bohatera, mikstury, boostery, cegły do kuźni, złoto i skiny postaci. Stuknij skrzynkę, żeby zobaczyć dokładne szanse.</p>
-    <div class="case-list">${['basic', 'forge', 'epic', 'skin'].filter(k => CASES[k]).map(k => { const c = CASES[k], sum = Object.values(c.pool).reduce((a, b) => a + b, 0);
+    <p class="small muted" style="margin:0 0 10px">Skiny postaci, cegły do kuźni i żetony ulepszeń: ⬆️ +1 poziom postaci, 🛠️ +1 ulepszenie broni, 💫 wyższa rzadkość broni. Broń wypada tylko ze skrzyń z bronią. Stuknij skrzynkę, żeby zobaczyć dokładne szanse.</p>
+    <div class="case-list">${['weapon', 'forge', 'epic', 'skin', 'royal'].filter(k => CASES[k]).map(k => { const c = CASES[k], sum = Object.values(c.pool).reduce((a, b) => a + b, 0);
       return `<div class="case-row ${k}"><div class="ci" data-act="case-drops" data-k="${k}" role="button" title="Zawartość i szanse">${caseIco(k)}</div>
         <div class="grow cr-mid"><b data-act="case-drops" data-k="${k}">${c.name}</b><div class="small muted cr-what">${Object.keys(c.pool).map(x => CASE_CAT[x][1]).join(' · ')}</div><div class="odds-bar" title="${Object.entries(c.pool).map(([x, p]) => `${CASE_CAT[x][1]} ${Math.round(p / sum * 100)}%`).join(' · ')}">${Object.entries(c.pool).map(([x, p]) => `<i style="flex:${p};background:${CASE_CAT[x][2]}"></i>`).join('')}</div></div>
-        <div class="cr-btns"><button class="sm ghost" data-act="case-drops" data-k="${k}" title="Zawartość i szanse">📋</button><button class="primary sm" data-go="#/case/${k}">${c.price} 💎</button></div></div>`; }).join('')}</div></div>
+        <div class="cr-btns"><button class="sm ghost" data-act="case-drops" data-k="${k}" title="Zawartość i szanse">📋</button><button class="primary sm${c.cur === 'gold' ? ' gold-btn' : ''}" data-go="#/case/${k}">${casePriceTxt(c)}</button></div></div>`; }).join('')}</div></div>
   <div class="card row nowrap inv-cta" data-go="#/inv"><span style="font-size:34px">🎒</span><div class="grow"><b>Ekwipunek</b>
     <div class="small muted">Skrzynki do otwarcia i naklejki do czatu</div></div><span style="font-size:22px">›</span></div>
   <div class="card"><h2 style="margin-top:0">Efekty zwycięstwa</h2><div class="effects">${EFFECTS.map(e => {
@@ -282,14 +283,13 @@ ROUTES.case = (parts, q) => {
   <div class="roulette"><div class="marker"></div><div class="strip" id="strip">${tiles}</div></div>
   ${SPIN.phase === 'done' && won ? `<div class="card center reveal" style="--rc:${RARITY[won.r].color}">
       <div class="big-st">${prIco(won)}</div><b style="font-size:22px">${won.kind === 'gems' ? `+${won.n} kryształów` : won.kind === 'gold' ? `+${won.n} złota` : won.kind === 'respin' ? 'Losuj jeszcze raz!' : esc(won.name)}</b>
-      <div style="color:${RARITY[won.r].color};font-weight:700">${won.kind === 'gems' ? (won.r === 'legendary' || won.r === 'mythic' ? '💰 JACKPOT' : 'Kryształy') : won.kind === 'respin' ? 'Darmowe losowanie' : `${CASE_CAT[won.kind]?.[1] || ''} · ${RARITY[won.r].name}`}</div>
+      <div style="color:${RARITY[won.r].color};font-weight:700">${won.kind === 'tok' ? `Żeton ulepszenia · ${RARITY[won.r].name}` : `${CASE_CAT[won.kind]?.[1] || ''} · ${RARITY[won.r].name}`}</div>
       <p class="small muted">${SPIN.test ? '🧪 Tryb testowy – nic nie trafia na konto.' : prizeMsg(won)}</p>
-      <div class="row"><button class="primary grow${won.kind === 'respin' ? ' pulse' : ''}" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">${won.kind === 'respin' ? '🔁 Losuj jeszcze raz' : 'Otwórz kolejną'}</button><button class="grow" data-go="${SPIN.test ? '#/host' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'boost' ? '#/hero' : '#/shop'}">${SPIN.test ? 'Panel hosta' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'boost' ? 'Do bohatera' : 'Sklep'}</button></div></div>`
-    : `<div class="odds center">${(() => { const sum = Object.values(c.pool).reduce((a, b) => a + b, 0); return Object.entries(c.pool).map(([x, p]) => `<span style="color:${CASE_CAT[x][2]}">${CASE_CAT[x][0]} ${CASE_CAT[x][1]} ${Math.round(p / sum * 100)}%</span>`).join(' '); })()}<br>
-       <span style="color:${RARITY.mythic.color}">🔴 ${MEGA_GEMS} 💎 ${pctFmt(MEGA_GEMS_P)}</span>${c.pool.skin === 100 ? '' : ` · <span>🔁 Jeszcze raz ${CASE_EXTRA.respin}%</span>`}</div>
+      <div class="row"><button class="primary grow${won.kind === 'respin' ? ' pulse' : ''}" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">${won.kind === 'respin' ? '🔁 Losuj jeszcze raz' : 'Otwórz kolejną'}</button><button class="grow" data-go="${SPIN.test ? '#/host' : won.kind === 'tok' ? '#/inv' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? '#/hero' : '#/shop'}">${SPIN.test ? 'Panel hosta' : won.kind === 'tok' ? 'Użyj żetonu' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? 'Do bohatera' : 'Sklep'}</button></div></div>`
+    : `<div class="odds center">${(() => { const sum = Object.values(c.pool).reduce((a, b) => a + b, 0); return Object.entries(c.pool).map(([x, p]) => `<span style="color:${CASE_CAT[x][2]}">${CASE_CAT[x][0]} ${CASE_CAT[x][1]} ${Math.round(p / sum * 100)}%</span>`).join(' '); })()}</div>
        <button class="ghost block" data-act="case-drops" data-k="${k}">📋 Zobacz cały drop i szanse</button>
        <button class="primary block" data-act="case-spin" data-k="${k}" data-free="${free ? 1 : ''}" data-test="${test}" ${SPIN.phase === 'spinning' ? 'disabled' : ''} style="min-height:58px;font-size:18px">
-       ${SPIN.phase === 'spinning' ? 'Losowanie…' : test ? '🧪 Otwórz testowo' : free ? '🎁 Otwórz za darmo' : c.freeOnly ? 'Brak skrzynki – ucz się codziennie 🌞' : `Otwórz za ${c.price} 💎`}</button>`}` };
+       ${SPIN.phase === 'spinning' ? 'Losowanie…' : test ? '🧪 Otwórz testowo' : free ? '🎁 Otwórz za darmo' : c.freeOnly ? 'Brak skrzynki – zdobywasz ją za naukę i wygrane 🌞' : `Otwórz za ${casePriceTxt(c)}`}</button>`}` };
 };
 let audioCtx;
 function tick(freq = 1400, dur = .03, vol = .08) {
@@ -306,7 +306,7 @@ function spinCase(k, free, test) {
   if (test) { /* pokaz: bez opłaty */ }
   else if (c.freeOnly && !free) return toast('Tę skrzynkę dostajesz za codzienną naukę');
   else if (free) { if (!hasItem('case', k)) return; addItem('case', k, -1); }
-  else if (!spend(c.price, 'case-' + k)) return;
+  else if (!spend(c.price, c.cur === 'gold' ? (k === 'weapon' ? 'weapon-case' : 'forge-case') : 'case-' + k)) return;
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch { /* */ }
   const sfx = typeof CASE_SFX !== 'undefined' ? CASE_SFX : null;
   if (sfx) { if (typeof fxUnlock === 'function') fxUnlock(); sfx.open(); }
@@ -406,6 +406,7 @@ ROUTES.inv = () => {
   const st = ownedStickers().map(stickerById).filter(Boolean);
   return { tab: 'profile', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/me">‹</button><h1 class="grow">🎒 Ekwipunek</h1>${coinsHTML()}</div>
     ${gifCollectionHTML()}
+    ${upTokHTML()}
     <div class="card"><h2 style="margin-top:0">🎁 Skrzynki do otwarcia</h2>
       ${cases.length ? cases.map(k => `<div class="row nowrap inv-case"><span class="inv-crate">${crateImg(k)}</span><b class="grow">${CASES[k].name} ×${itemCount('case', k)}</b><button class="primary sm" data-go="#/case/${k}?free=1">Otwórz</button></div>`).join('')
         : '<p class="small muted" style="margin:0">Brak – darmowe skrzynki dostajesz za wygrane bitwy, zestawy fiszek i nagrody dnia. <a href="#/shop">Sklep ›</a></p>'}</div>
@@ -473,3 +474,39 @@ on('start', () => {
   }
   if (ch) save();
 });
+
+// ⬆️ użycie żetonów ulepszeń
+function upTokUse(k) {
+  if (itemCount('uptok', k) < 1) return;
+  const h = hero(), w = h.eq?.w, g = GEAR[w];
+  if (k === 'lvl') {
+    const L = heroLvAt(h.xp); if (L.max) return toast('Bohater ma już maksymalny poziom');
+    addItem('uptok', k, -1); giveXP((L.need - L.cur + 1) / (S.settings.hardcore ? .5 : 1), UPTOK.lvl.n); save(); return render();
+  }
+  if (!g) return toast('Najpierw załóż broń (Bohater → Ekwipunek)');
+  if (typeof forgeJobs === 'function' && forgeJobs(h).some(j => j.id === w)) return toast('Ta broń jest teraz w kuźni – odbierz ją najpierw');
+  if (k === 'wup') {
+    const f = h.forge[w] || 0; if (f >= FORGE_MAX) return toast(`${g.name} ma już maksymalne ulepszenie +${FORGE_MAX}`);
+    addItem('uptok', k, -1); h.forge[w] = f + 1; h.mod = Date.now(); save();
+    celebrate(`🛠️ ${g.name} +${f + 1}!`, 'Kowal ulepszył broń od razu'); return render();
+  }
+  if (k === 'rar') {
+    let i = RS5.indexOf(g.r), pool = [];
+    while (!pool.length && ++i < RS5.length) pool = Object.keys(GEAR).filter(id => GEAR[id].slot === g.slot && GEAR[id].r === RS5[i]);
+    if (!pool.length) return toast('To już broń najwyższej rzadkości');
+    const fresh = pool.filter(id => !ownsGear(id)), nid = (fresh.length ? fresh : pool)[Math.random() * (fresh.length || pool.length) | 0], n = GEAR[nid];
+    if (!confirm(`${g.name} (${RARITY[g.r].name.toLowerCase()}) zamieni się w ${RARITY[n.r].name.toLowerCase()} broń. Ulepszenia z kuźni zostają. Użyć?`)) return;
+    addItem('uptok', k, -1); addItem('gear', nid, 1, 'rar-' + uid()); addItem('gear', w, -1, 'rarout-' + uid());
+    h.forge[nid] = Math.max(h.forge[nid] || 0, h.forge[w] || 0); h.eq.w = nid; h.mod = Date.now(); save();
+    celebrate(`💫 ${n.name}!`, `${RARITY[n.r].name} · ulepszenie +${h.forge[nid] || 0}`); if (['legendary', 'mythic'].includes(n.r)) confetti(160); return render();
+  }
+}
+ACTIONS['uptok-use'] = el => upTokUse(el.dataset.k);
+function upTokHTML(compact) {
+  const ks = Object.keys(UPTOK).filter(k => itemCount('uptok', k) > 0); if (compact && !ks.length) return '';
+  const w = typeof hero === 'function' ? GEAR[hero().eq?.w] : null;
+  return `<div class="${compact ? 'uptok-box' : 'card'}"><h2 style="margin-top:0">⬆️ Żetony ulepszeń</h2>
+    ${ks.length ? `<div class="uptok-list">${ks.map(k => { const T = UPTOK[k]; return `<div class="row nowrap uptok" style="--rc:${RARITY[T.r].color}">${it8(T.img)}<div class="grow"><b>${T.n} ×${itemCount('uptok', k)}</b><small class="muted">${T.d}</small></div><button class="primary sm" data-act="uptok-use" data-k="${k}">Użyj</button></div>`; }).join('')}</div>
+      <p class="small muted" style="margin:8px 0 0">${w ? `Założona broń: <b>${esc(w.name)}</b> · ${RARITY[w.r].name.toLowerCase()} · +${hero().forge[hero().eq.w] || 0}` : 'Młot i Gwiazda działają na założoną broń.'}</p>`
+      : '<p class="small muted" style="margin:0">Brak – wypadają ze Skrzynki kowala (🪙), Skrzynki mistrza i skrzynek za naukę. <a href="#/shop">Sklep ›</a></p>'}</div>`;
+}
