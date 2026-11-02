@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '319';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '320';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1677,6 +1677,11 @@ function viewMore() {
     <button class="block" data-act="badge">🔴 Pokazuj liczbę powtórek na ikonie aplikacji</button>
     <div class="spacer"></div><button class="block" data-go="#/widget">📲 Skróty i widżet na ekran początkowy</button>
     <p class="small muted">Liczba na ikonie działa po dodaniu aplikacji do ekranu początkowego (iOS 16.4+).</p>
+  </div>
+
+  <div class="card"><h2 style="margin-top:0">🏆 Ranking</h2>
+    <label class="check"><input type="checkbox" data-pers="rankAll" ${st.rankAll ? 'checked' : ''}> 🌍 Pokaż ranking „Wszyscy” (wszyscy gracze, nie tylko znajomi)</label>
+    <p class="small muted" style="margin:6px 0 0">Wyłączony – w rankingu widzisz tylko znajomych.</p>
   </div>
 
   <div class="card"><h2 style="margin-top:0">🎯 Nauka</h2>
