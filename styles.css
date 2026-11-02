@@ -3617,3 +3617,9 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .hero-bar > .grow b, .hero-bar > .grow small { overflow-wrap: normal; word-break: normal; }
 .lives .ad-heart-btn { margin: 6px 0 0 !important; white-space: nowrap; letter-spacing: 0; }
 .hero-bar > .lives { flex: none; }
+/* panel admina: lista wszystkich użytkowników */
+.adm-users { display: grid; gap: 8px; }
+.adm-urow { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--card) 85%, var(--line)); }
+.adm-urow.me { outline: 2px solid var(--accent); }
+.adm-uhead { flex: 1 1 auto; min-width: 0; cursor: pointer; line-height: 1.4; }
+.adm-ubtns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; flex: none; max-width: 48%; }

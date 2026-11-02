@@ -549,14 +549,29 @@ create or replace function public.admin_audit() returns json language plpgsql st
 begin
   if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
   return json_build_object(
-    'rich', (select coalesce(json_agg(x), '[]') from (select p.nick, p.code, (select coalesce(sum((e->>'n')::numeric), 0) from jsonb_array_elements(coalesce(d.data->'wallet', '[]')) e where jsonb_typeof(e->'n') = 'number') as gems,
-        jsonb_array_length(coalesce(d.data->'items', '[]')) as items, jsonb_array_length(coalesce(d.data->'log', '[]')) as reviews, d.updated_at,
-        exists (select 1 from public.econ_bans b where b.user_id = d.user_id) as banned
-        from public.user_data d join public.profiles p on p.id = d.user_id order by 3 desc nulls last limit 15) x),
+    -- wszyscy użytkownicy aplikacji (także bez profilu albo bez zapisanych danych), najbogatsi na górze
+    'rich', (select coalesce(json_agg(x), '[]') from (select u.id, p.nick, p.code, (select coalesce(sum((e->>'n')::numeric), 0) from jsonb_array_elements(coalesce(d.data->'wallet', '[]')) e where jsonb_typeof(e->'n') = 'number') as gems,
+        jsonb_array_length(coalesce(d.data->'items', '[]')) as items, jsonb_array_length(coalesce(d.data->'log', '[]')) as reviews, coalesce(d.updated_at, u.last_sign_in_at, u.created_at) as updated_at, u.created_at,
+        d.user_id is null as no_data, p.id is null as no_profile,
+        exists (select 1 from public.econ_bans b where b.user_id = u.id) as banned,
+        exists (select 1 from public.friends f where (f.user_id = auth.uid() and f.friend_id = u.id) or (f.user_id = u.id and f.friend_id = auth.uid())) as friend,
+        u.id = auth.uid() as me
+        from auth.users u left join public.user_data d on d.user_id = u.id left join public.profiles p on p.id = u.id order by 4 desc nulls last, u.created_at desc limit 500) x),
     'cheats', (select coalesce(json_agg(x), '[]') from (select p.nick, c.what, c.t from public.cheat_log c left join public.profiles p on p.id = c.user_id order by c.t desc limit 30) x));
 end $$;
 revoke all on function public.admin_audit() from public, anon;
 grant execute on function public.admin_audit() to authenticated;
+-- 👥 admin: dodaj dowolnego użytkownika do znajomych (bez kodu); brak profilu = tworzy pusty profil z kodem
+create or replace function public.admin_add_friend(p_user uuid) returns boolean language plpgsql security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  if p_user is null or p_user = auth.uid() or not exists (select 1 from auth.users where id = p_user) then raise exception 'not found'; end if;
+  insert into public.profiles (id) values (p_user) on conflict (id) do nothing;
+  insert into public.friends (user_id, friend_id) values (auth.uid(), p_user) on conflict do nothing;
+  return true;
+end $$;
+revoke all on function public.admin_add_friend(uuid) from public, anon;
+grant execute on function public.admin_add_friend(uuid) to authenticated;
 
 -- 🛡️ kary właściciela: zabranie kryształów / przedmiotów / naklejek, klaun, wiadomość, ekran do góry nogami
 create table if not exists public.admin_actions (id bigserial primary key, user_id uuid not null references auth.users on delete cascade, what text not null, msg text, t timestamptz not null default now());
@@ -1108,5 +1123,5 @@ end $$;
 revoke all on function public.admin_premium_grant(text, int, text) from public, anon; grant execute on function public.admin_premium_grant(text, int, text) to authenticated;
 revoke all on public.premium_wallet, public.premium_ledger, public.premium_items, public.premium_owned from anon;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-01m'::text $$;
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-02a'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

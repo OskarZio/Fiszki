@@ -4,6 +4,11 @@ let HOST_ST = null;
 {
   ACTIONS['adm-pick'] = el => { const i = $('#adm-code'); if (i) { i.value = el.dataset.code; i.scrollIntoView({ block: 'center', behavior: 'smooth' }); } };
   ACTIONS['adm-player'] = el => admPlayerPopup(el.dataset.code);
+  ACTIONS['adm-friend'] = async el => { const id = el.dataset.id; if (!id) return; el.disabled = true;
+    const r = await SB.rpc('admin_add_friend', { p_user: id });
+    if (r.error) { el.disabled = false; return toast(/function|schema cache|does not exist/i.test(r.error.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy)' : 'Błąd: ' + r.error.message, 4000); }
+    const x = (HOST_ST?.audit?.rich || []).find(u => u.id === id); if (x) x.friend = true;
+    toast('👥 Dodano do znajomych – widać go w rankingu', 3000); if (typeof loadCloudFriends === 'function') loadCloudFriends().catch?.(() => {}); render(); };
   ACTIONS['prem-grant'] = async el => { const n = parseInt(prompt('Ile 💠 dodać (ujemna liczba odejmuje)?') || '', 10); if (!n) return; const pass = admPass(); if (!pass) return;
     const r = await SB.rpc('admin_premium_grant', { p_code: el.dataset.code, p_amount: n, p_pass: pass }); if (admPassErr(r)) return;
     toast(r.error ? 'Błąd: ' + r.error.message : `💠 Saldo gracza: ${r.data}`, 3500); };
@@ -39,7 +44,10 @@ function admStatsHTML() {
     ${!H || H.loading ? '<p class="small muted">Ładuję…</p>' : H.err ? `<p class="small muted">${esc(H.err)}</p>` : `
     <h4>👥 Konta</h4><div class="time-kpis">${tile(d.users, 'wszystkie')}${tile(d.new_today, 'nowe dziś')}${tile(d.new_7d, 'nowe 7 dni')}${tile(d.active_today, 'aktywne dziś')}</div>
     <h4>🔗 Linki do talii</h4><div class="time-kpis">${tile(d.links, 'udostępnione')}${tile(d.link_opens, 'otwarcia')}${tile(d.link_opens_today, 'otwarte dziś')}${tile(d.active_7d, 'aktywne 7 dni')}</div>
-    ${H.audit ? `<h4>🛡️ Najbogatsi gracze</h4><div class="small">${(H.audit.rich || []).map(x => `<div class="row nowrap adm-row" data-act="adm-player" data-code="${esc(x.code || '')}" role="button" style="justify-content:space-between"><span>${esc(x.nick || '?')} <span class="muted">${esc(x.code || '')}</span></span><b>${n(x.gems)} 💎 · ${n(x.items)} przedm.${x.reviews != null ? ` · ${n(x.reviews)} powt.` : ''}</b>${x.code ? `<button class="sm ${x.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(x.code)}" data-on="${x.banned ? 0 : 1}" title="${x.banned ? 'Odblokuj' : 'Wyzeruj i zablokuj kryształy/przedmioty'}">${x.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button>` : ''}</div>`).join('') || '—'}</div>
+    ${H.audit ? `<h4>👥 Wszyscy użytkownicy <span class="muted">(${(H.audit.rich || []).length}) · najbogatsi na górze</span></h4><div class="small adm-users">${(H.audit.rich || []).map(x => `<div class="adm-urow${x.me ? ' me' : ''}">
+      <div class="adm-uhead" data-act="adm-player" data-code="${esc(x.code || '')}" role="button"><b>${esc(x.nick || (x.no_profile ? 'bez profilu' : 'bez nicku'))}${x.me ? ' · Ty' : ''}</b> <span class="muted">${esc(x.code || '')}</span>
+        <div class="muted">${x.no_data ? 'jeszcze nic nie zapisał' : `${n(x.gems)} 💎 · ${n(x.items)} przedm.${x.reviews != null ? ` · ${n(x.reviews)} powt.` : ''}`} · konto od ${x.created_at ? new Date(x.created_at).toLocaleDateString('pl-PL') : '?'}${x.updated_at ? ` · ostatnio ${new Date(x.updated_at).toLocaleDateString('pl-PL')}` : ''}</div></div>
+      <div class="adm-ubtns">${x.me ? '' : x.friend ? '<span class="muted">✓ znajomy</span>' : `<button class="sm" data-act="adm-friend" data-id="${esc(x.id || '')}">➕ Znajomy</button>`}${x.code && !x.me ? `<button class="sm ${x.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(x.code)}" data-on="${x.banned ? 0 : 1}" title="${x.banned ? 'Odblokuj' : 'Wyzeruj i zablokuj kryształy/przedmioty'}">${x.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button>` : ''}</div></div>`).join('') || '—'}</div>
       <p class="small muted">🚫 Zablokuj = kryształy, złoto i przedmioty gracza znikają i nie da się ich odbudować (każdy zapis jest czyszczony), dopóki nie odblokujesz.</p>
       <h4>🛡️ Kara dla gracza</h4><div class="adm-tools">
         <div class="row nowrap"><input id="adm-code" class="grow" placeholder="Kod gracza (np. A88BEB31)" maxlength="12" autocapitalize="characters" style="text-transform:uppercase;margin:0"><button class="primary" data-act="adm-show">🔎 Dane</button></div><div class="spacer"></div>
