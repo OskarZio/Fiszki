@@ -472,6 +472,7 @@ const minRead = c => { const v = cardView(c); return Math.min(2600, 600 + 25 * (
 function bossAnswer(g, how) {
   const B = BOSS, c = bossCard(), cur = B?.cur; if (!B || !c || B.phase !== 'fight' || B.ice || B.bugs?.length) return;
   const now = Date.now(), ms = Math.min(60000, now - B.qAt);
+  if (B.coop && !cur?.qte && typeof coopSend === 'function') coopSend({ t: 'ans', v: g >= 3 ? 1 : g === 2 ? 2 : 0 });   // 👥 drużyna widzi, czy odpowiedziałeś dobrze
   B.fx = null; B.fxMe = null; B.bossAct = null;
   if (cur.qte) return qteResult(g >= 3);
   if (cur.parry) return parryResult(cur.curse || cur.mask ? g >= 2 : g >= 3);

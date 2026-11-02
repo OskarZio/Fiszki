@@ -3623,3 +3623,15 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .adm-urow.me { outline: 2px solid var(--accent); }
 .adm-uhead { flex: 1 1 auto; min-width: 0; cursor: pointer; line-height: 1.4; }
 .adm-ubtns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; flex: none; max-width: 48%; }
+/* 👥 wieża online: kółeczko z wynikiem odpowiedzi kolegi */
+.mate-av { position: relative; display: inline-block; }
+.mate-ans { position: absolute; right: -6px; top: -4px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 14px; line-height: 1;
+  color: #fff; border: 2px solid var(--card); box-shadow: 0 2px 0 rgba(0,0,0,.25); z-index: 4; animation: mateAns .45s cubic-bezier(.3,1.6,.5,1) both; animation-delay: calc(var(--el, 9s) * -1); }
+.mate-ans.ok { background: #16a34a; } .mate-ans.bad { background: #dc2626; } .mate-ans.meh { background: #ca8a04; }
+.mate-ans.wait { background: #64748b; animation: none; font-size: 12px; }
+@keyframes mateAns { from { transform: scale(.2); } to { transform: none; } }
+.mate-tally { font-size: 11px; font-weight: 800; letter-spacing: .2px; } .mate-tally .good { color: #16a34a; } .mate-tally .bad { color: #dc2626; }
+.mate-av { width: 64px; height: 64px; } .mate-av > .hero-fig { display: block; }
+.mate-ans { right: -10px; top: -6px; }
+.mate > * { flex-shrink: 0; } .mate { height: auto !important; }
+.mate .hpbar { flex: none !important; height: 10px !important; margin-top: 4px; }

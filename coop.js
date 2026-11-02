@@ -87,6 +87,7 @@ function coopMsg(m0) {
   }
   if (m.t === 'start' && !C.host && (m.from === C.hostId || !C.hostId) && ['lobby', 'floor'].includes(C.phase) && m.heads) { C.hostId = m.from; }
   if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); if (m.bf) C.tw.buff = { ...m.bf }; C.gq = !!m.gq; C.gqi = m.gqi; if (m.gqi?.length && typeof gkCard === 'function') { C.gkCat = gkCard('gk:' + m.gqi[0])?.cat || null; if (m.fl === 1 && C.gkCat && typeof gkCatRoll === 'function') setTimeout(() => gkCatRoll(C.gkCat), 350); } } return coopBegin(m.heads, m.seed, m.set); }
+  if (m.t === 'ans' && p) { p.ans = { v: m.v === 1 ? 1 : m.v === 2 ? 2 : 0, t: Date.now() }; p.ansN = p.ansN || [0, 0]; p.ansN[p.ans.v === 0 ? 1 : 0]++; return softRender(); }
   if (m.t === 'ok' && p) { C.mateOk = { id: m.from, t: Date.now() }; return; }
   if (m.t === 'emo' && p && (m.emo != null || m.st)) { p.emo = { i: m.emo, st: m.st, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
   if (m.t === 'hit' && C.phase === 'fight') { const hd = C.heads.find(x => x.id === m.h); if (hd) { hd.hp = Math.max(0, hd.hp - m.n); syncMyHead(); if (BOSS?.phase === 'fight' && !coopAlive()) return bossEnd(true); softRender(); } return; }
@@ -165,9 +166,14 @@ function coopHeadsHTML(fx, act) {
     return `<div class="hhead${mine ? ' mine' : ''}${dead ? ' dead' : ''}${mine && fx ? ' hit' : ''}${act ? ' attack' : ''}"><div class="boss-art world"><img src="${BOSS?.b?.duo && BOSS.b.img ? (BOSS.b.img.includes('/') ? BOSS.b.img : `assets/fluent/${BOSS.b.img}.webp`) : 'assets/bosses/hydra.webp'}" alt=""></div>${mine && fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}</b>` : ''}
       <small>${dead ? (BOSS?.b?.duo ? '✓ rozbita' : '✓ ścięta') : mine ? (BOSS?.b?.duo ? 'Twoja tarcza bossa' : 'Twoja głowa') : esc(p?.nick || 'kolega')}</small>${HP_BAR(h.hp, h.max, 'boss')}</div>`; }).join('')}</div>`;
 }
+// ✓/✗ w kółeczku przy awatarze kolegi: ostatnia odpowiedź (zielone = dobrze, żółte = ledwo, czerwone = źle) + licznik
+const mateAnsHTML = p => { const a = p.ans; if (!a) return '<i class="mate-ans wait" title="Jeszcze nie odpowiadał">…</i>';
+  const el = ((Date.now() - a.t) / 1000).toFixed(2), [ok, bad] = p.ansN || [0, 0];
+  return `<i class="mate-ans ${['bad', 'ok', 'meh'][a.v]}" style="--el:${el}s" title="Dobrze ${ok} · źle ${bad}">${['✗', '✓', '≈'][a.v]}</i>`; };
+const mateTallyHTML = p => p.ansN ? `<small class="mate-tally"><span class="good">dobrze ${p.ansN[0]}</span> · <span class="bad">źle ${p.ansN[1]}</span></small>` : '';
 function coopMatesHTML() {
   const ms = coopMates(); if (!ms.length) return '';
-  return `<div class="mates">${ms.map(p => `<div class="mate${p.down ? ' down' : ''}">${p.emo && Date.now() - p.emo.t < 2500 ? `<span class="mate-emo">${p.emo.st && stickerById(p.emo.st) ? stE(stickerById(p.emo.st)) : DUO_EMO[p.emo.i] || ''}</span>` : ''}${pHero(p)}<b>${esc(p.nick)}</b>${p.max ? HP_BAR(p.hp || 0, p.max, 'me') : ''}${p.down ? `<small>💀 leży · reanimuj: ${(COOP.rev[p.id] || 0)}/3</small>` : p.combo >= 2 ? `<small>🔥 ${p.combo}</small>` : ''}</div>`).join('')}</div>
+  return `<div class="mates">${ms.map(p => `<div class="mate${p.down ? ' down' : ''}">${p.emo && Date.now() - p.emo.t < 2500 ? `<span class="mate-emo">${p.emo.st && stickerById(p.emo.st) ? stE(stickerById(p.emo.st)) : DUO_EMO[p.emo.i] || ''}</span>` : ''}<span class="mate-av">${pHero(p)}${mateAnsHTML(p)}</span><b>${esc(p.nick)}</b>${mateTallyHTML(p)}${p.max ? HP_BAR(p.hp || 0, p.max, 'me') : ''}${p.down ? `<small>💀 leży · reanimuj: ${(COOP.rev[p.id] || 0)}/3</small>` : p.combo >= 2 ? `<small>🔥 ${p.combo}</small>` : ''}</div>`).join('')}</div>
     <div class="emo-bar">${(typeof ownedStickers === 'function' ? ownedStickers() : []).slice(0, 7).map(id => stickerById(id)).filter(Boolean).map(st => `<button data-act="duo-st" data-id="${st.id}" aria-label="naklejka">${stE(st)}</button>`).join('') || '<small class="muted">Zdobądź naklejki, by je wysyłać</small>'}</div>
     <div class="mini-chat">${(COOP.chat || []).map(x => `<div><b>${esc(x.n)}:</b> ${esc(x.t)}</div>`).join('')}</div>
     <div class="row nowrap mini-chat-in"><input id="coop-say" class="grow" maxlength="80" placeholder="Napisz do drużyny…" autocomplete="off"><button class="sm" data-act="duo-say">Wyślij</button></div>`;
