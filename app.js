@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '340';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '341';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -742,25 +742,19 @@ function viewHome() {
   const sync = S.settings.sync.token ? `<button class="iconbtn" data-act="sync" title="Synchronizuj">🔄</button>` : '';
   return `
   <div class="row nowrap home-head"><div class="grow"><div class="greet">${greeting()}</div><h1>Fiszki</h1></div>${sync}${typeof homeChipHTML === 'function' ? homeChipHTML() : ''}</div>
-  <div class="card">
-    <div class="hero">
-      <div class="stat"><b>${st ? '🔥 ' + st : '0'}</b><small>${plural(st, 'dzień', 'dni', 'dni')} z rzędu</small></div>
-      <div class="stat"><b>${today}</b><small>powtórek dziś</small></div>
-      <div class="stat"><b>${all.total}</b><small>do zrobienia</small></div>
-    </div>
-    <div class="spacer"></div>
-    <div class="row small muted"><span class="grow">Postęp dnia</span><span>${Math.round(dayFrac * 100)}%</span></div>
-    ${progress(dayFrac)}
-    <div class="spacer"></div>
-    ${(() => { const pts = typeof studyPoints === 'function' ? Math.floor(S.log.filter(l => l.t >= dayStart()).reduce((a, l) => a + studyPoints(l), 0)) : today;
-      return `<div class="row small muted"><span class="grow">Cel dzienny (${goal} pkt nauki)</span><span>${Math.min(pts, goal)}/${goal}</span></div>
-    ${progress(pts / goal, true)}`; })()}
-    <div class="spacer"></div>
+  ${(() => { const pts = typeof studyPoints === 'function' ? Math.floor(S.log.filter(l => l.t >= dayStart()).reduce((a, l) => a + studyPoints(l), 0)) : today;
+    const mins = Math.max(1, Math.round(all.total * 8 / 60)), date = new Date().toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+    const gf = Math.min(1, pts / goal);
+    return `<section class="today-card" aria-label="Na dziś">
+    <div class="tc-top"><span class="tc-date">${date}</span><span class="tc-streak" title="Dni nauki z rzędu">${st ? '🔥 ' + st + ' ' + plural(st, 'dzień', 'dni', 'dni') : 'Zacznij serię'}</span></div>
     ${all.total
-      ? `<button class="primary block" data-go="#/study/all/flip">▶ Ucz się wszystkiego (${all.total})</button>`
-      : `<div class="center muted">${S.cards.length ? '🎉 Na dziś wszystko powtórzone!' + nextDueText() : 'Dodaj pierwsze fiszki, aby zacząć.'}</div>`}
-    ${(() => { const h = hiddenNew('all'); return h ? `<button class="ghost block all-new-link" data-go="#/study/all/flip?all=1">📚 Ucz się też wszystkich nowych naraz (+${h})</button>` : ''; })()}
-  </div>
+      ? `<div class="tc-main"><span class="tc-num">${all.total}</span><span class="tc-lbl"><b>${plural(all.total, 'fiszka', 'fiszki', 'fiszek')} na dziś</b><small>ok. ${mins} min</small></span></div>`
+      : `<div class="tc-done">${S.cards.length ? 'Na dziś wszystko powtórzone.' : 'Dodaj pierwsze fiszki, żeby zacząć.'}</div>${S.cards.length ? `<div class="muted">${nextDueText().replace('<br>', '')}</div>` : ''}`}
+    <div class="tc-meta"><span>Dziś: <b>${today}</b> ${plural(today, 'powtórka', 'powtórki', 'powtórek')}</span><span>Cel: <b>${Math.min(pts, goal)}/${goal}</b> pkt</span></div>
+    <div class="tc-goal${gf >= 1 ? ' full' : ''}" role="progressbar" aria-label="Cel dzienny" aria-valuenow="${Math.round(gf * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${(gf * 100).toFixed(0)}%"></i></div>
+    ${all.total ? `<button class="primary block" data-go="#/study/all/flip">Ucz się teraz</button>` : ''}
+    ${(() => { const h = hiddenNew('all'); return h ? `<button class="ghost block all-new-link" data-go="#/study/all/flip?all=1">Dołóż wszystkie nowe (+${h})</button>` : ''; })()}
+  </section>`; })()}
   ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
   ${typeof safetyBannerHTML === 'function' ? safetyBannerHTML() : ''}
   ${typeof homeExtrasHTML === 'function' ? homeExtrasHTML() : ''}

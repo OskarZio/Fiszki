@@ -3778,3 +3778,43 @@ html[data-ui="dark"] button.danger, html[data-ui="dark"] .btn.danger { color: #f
 html[data-ui="light"] .hubnav a:not(.on) { color: color-mix(in srgb, var(--muted) 82%, var(--text)); }
 /* tekst w kolorze akcentu (linki, aktywne zakładki, postęp) – wersja o pełnym kontraście */
 #view a:not(.btn):not([class*="primary"]), .hubnav a.on, .bn-prog, .muted b, #tabs a.on, #tabs button.on { color: var(--accent-text, var(--accent)); }
+/* v341 📓 motyw domyślny: zeszyt w kratkę (jasny) i szkolna tablica (ciemny). Płaskie kolory, kratka z cienkich linii.
+   Motywy wybrane w ustawieniach nadpisują to zmiennymi inline na <html>. */
+:root { --bg: #f7f8fa; --card: #ffffff; --card2: #eef1f6; --text: #1d2433; --muted: #5b6577; --line: #dde2ea;
+  --accent: #2f5bd3; --accent2: #2f5bd3; --accent-soft: #e3eafb; --hl: #ffe14d; --margin: #e5484d;
+  --shadow: 0 1px 0 rgba(29,36,51,.06); --r: 12px;
+  --bg-image: linear-gradient(rgba(47,91,211,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(47,91,211,.07) 1px, transparent 1px); }
+@media (prefers-color-scheme: dark) { :root { --bg: #18241f; --card: #21302a; --card2: #2a3b34; --text: #eef2ec; --muted: #a9b8af; --line: #34473f;
+  --accent: #ffd84d; --accent2: #ffd84d; --accent-soft: #3a3a22; --hl: #ffd84d; --margin: #f2777a;
+  --shadow: 0 1px 0 rgba(0,0,0,.3);
+  --bg-image: linear-gradient(rgba(238,242,236,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(238,242,236,.04) 1px, transparent 1px); } }
+html:not([style*="--bg-image"]) body { background-size: 22px 22px; }
+/* 🗂️ karta „na dziś” – wygląda jak prawdziwa fiszka: czerwona linia u góry, niebieskie linie, margines */
+.today-card { position: relative; background: #fffef9; color: #1d2433; border: 1px solid #e3e1d6; border-radius: 6px 6px 14px 6px;
+  padding: 22px 18px 16px 30px; margin-bottom: 14px; box-shadow: 0 2px 0 #e3e1d6, 0 3px 0 #d6d3c5;
+  background: linear-gradient(#e5484d, #e5484d) 0 46px / 100% 2px no-repeat,
+    linear-gradient(90deg, transparent 18px, rgba(229,72,77,.35) 18px 19px, transparent 19px) 0 0 / 100% 100% no-repeat,
+    repeating-linear-gradient(transparent 0 25px, #d8e3f5 25px 26px) 0 56px / 100% calc(100% - 56px) no-repeat, #fffef9; }
+.today-card .tc-top { display: flex; align-items: baseline; gap: 10px; min-height: 28px; margin-top: -8px; }
+.today-card .tc-date { font-size: 13px; color: #5b6577; flex: 1; }
+.today-card .tc-streak { font: 600 15px 'Pixelify Sans', ui-monospace, monospace; color: #1d2433; white-space: nowrap; }
+.today-card .tc-main { display: flex; align-items: flex-end; gap: 12px; margin: 18px 0 6px; }
+.today-card .tc-num { font: 700 64px/0.9 'Pixelify Sans', ui-monospace, monospace; color: #1d2433; letter-spacing: -1px;
+  background: linear-gradient(transparent 58%, #ffe14d 58%, #ffe14d 92%, transparent 92%); padding: 0 4px; }
+.today-card .tc-lbl { padding-bottom: 6px; line-height: 1.3; }
+.today-card .tc-lbl b { display: block; font-size: 17px; }
+.today-card .tc-lbl small { color: #5b6577; font-size: 13px; }
+.today-card .tc-done { font: 600 20px/1.3 'Pixelify Sans', ui-monospace, monospace; margin: 18px 0 8px; }
+.today-card .tc-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: #4a5468; margin: 10px 0 12px; }
+.today-card .tc-meta b { color: #1d2433; }
+.today-card .tc-goal { height: 8px; background: #e8ecf3; border-radius: 4px; overflow: hidden; margin: -4px 0 14px; }
+.today-card .tc-goal i { display: block; height: 100%; background: #2f5bd3; border-radius: 4px; }
+.today-card .tc-goal.full i { background: #1f9d55; }
+.today-card button.primary { background: #2f5bd3 !important; color: #fff !important; font-size: 17px; min-height: 48px; }
+.today-card .all-new-link { color: #2f5bd3 !important; margin-top: 6px; }
+.today-card .muted { color: #5b6577 !important; }
+html[data-ui="dark"] .today-card { box-shadow: 0 2px 0 #c9c6b8, 0 4px 0 rgba(0,0,0,.35); }
+html:not([style*="--bg-image"]) { --rev: #15803d; }
+@media (prefers-color-scheme: dark) { html:not([style*="--bg-image"]) { --rev: #4ade80; } }
+.char-pts { color: var(--on-accent, #fff); }
+.cr-btns button.primary.gold-btn { background: #a16207 !important; border-color: #854d0e !important; box-shadow: 0 4px 0 #713f12 !important; color: #fff !important; }

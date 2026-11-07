@@ -78,8 +78,8 @@ function applyTheme() {
     vars.forEach(v => root.removeProperty(v));
     const a = th.accent && th.accent !== '#4f46e5' ? th.accent : null;
     if (a) { root.setProperty('--accent', a); root.setProperty('--accent2', hueShift(a, 40)); }
-    else root.setProperty('--accent2', '#9333ea');
-    document.querySelector('meta[name=theme-color]')?.setAttribute('content', a || '#4f46e5');
+    else root.removeProperty('--accent2');
+    document.querySelector('meta[name=theme-color]')?.setAttribute('content', a || (matchMedia('(prefers-color-scheme: dark)').matches ? '#18241f' : '#f7f8fa'));
     return;
   }
   const bg = th.bg, accent = th.accent || '#4f46e5', dark = lum(bg) < 0.18;
