@@ -315,8 +315,6 @@ function accountCardHTML() {
       <input id="acc-pass" type="password" placeholder="Hasło (min. 10 znaków, litery i cyfry)" autocomplete="current-password">
       <div class="spacer"></div>
       <div class="row"><button class="primary grow" data-act="acc-login">Zaloguj</button><button class="grow" data-act="acc-signup">Załóż konto</button></div>
-      <div class="or-sep"><span>albo</span></div>
-      <button class="block google-btn" data-act="acc-google"><span class="g-ic">G</span> Zaloguj przez Google</button>
       <p class="small muted">Twoje obecne fiszki zostaną dołączone do konta przy pierwszym logowaniu.</p>
       <button class="ghost sm" data-act="cloud-check">🩺 Sprawdź połączenie z bazą</button>${cloudCheckHTML()}</div>`;
   return `<div class="card"><h2 style="margin-top:0">☁️ Konto</h2>
@@ -392,11 +390,6 @@ Object.assign(ACTIONS, {
     if (error) return toast(authErr(error.message), 5000);
     if (!data.session) { AUTH_SENT = email; authGate(); toast('Konto utworzone ✓ Kliknij link w mailu (sprawdź też spam)', 7000); }
     else toast('Konto utworzone i zalogowano ✓');
-  },
-  'acc-google': async () => {
-    takeNick();
-    const { error } = await SB.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: APP_URL() } });
-    if (error) toast(/provider|not enabled|unsupported/i.test(error.message) ? 'Logowanie przez Google nie jest jeszcze włączone w Supabase (Authentication → Providers → Google)' : authErr(error.message), 6000);
   },
   'acc-resend': async () => { if (!AUTH_SENT) return; const { error } = await SB.auth.resend({ type: 'signup', email: AUTH_SENT, options: { emailRedirectTo: APP_URL() } }); toast(error ? authErr(error.message) : '📧 Wysłano ponownie – sprawdź skrzynkę i spam', 5000); },
   'acc-logout': async () => {
