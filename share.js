@@ -8,7 +8,7 @@
    Fiszki zachowują swoje id u wszystkich, więc zmiana jednej osoby nadpisuje starszą wersję (nowsze „mod” wygrywa).
    Zdjęcia nie są przesyłane (za duże na wiadomość) – tekst, luki, skojarzenia tak. */
 
-const SHARE_FIELDS = ['id', 'type', 'front', 'back', 'hint', 'extra', 'text', 'reverse', 'title', 'created', 'mod'];
+const SHARE_FIELDS = ['id', 'type', 'front', 'back', 'hint', 'extra', 'wrong', 'text', 'reverse', 'title', 'created', 'mod'];
 const sharedDecks = () => S.decks.filter(d => d.share?.id);
 const deckByShare = sid => S.decks.find(d => d.share?.id === sid);
 const shareNote = n => Object.fromEntries(SHARE_FIELDS.filter(k => n[k] !== undefined && n[k] !== '').map(k => [k, n[k]]));

@@ -282,6 +282,22 @@ begin
 end $$;
 revoke all on function public.join_class(text, text) from public, anon;
 grant execute on function public.join_class(text, text) to authenticated;
+-- 🏫 właściciel klasy dodaje od razu znajomego (admin – dowolnego użytkownika), bez wysyłania kodu
+create or replace function public.class_add_member(p_class uuid, p_user uuid) returns boolean language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  if not exists (select 1 from public.classes where id = p_class and owner = auth.uid()) then raise exception 'not owner'; end if;
+  if p_user is null or not exists (select 1 from auth.users where id = p_user) then raise exception 'not found'; end if;
+  if p_user = auth.uid() then return true; end if;
+  if not exists (select 1 from public.app_admins where user_id = auth.uid())
+     and not exists (select 1 from public.friends f where (f.user_id = auth.uid() and f.friend_id = p_user) or (f.user_id = p_user and f.friend_id = auth.uid())) then raise exception 'not friend'; end if;
+  if (select count(*) from public.class_members where class_id = p_class) >= 200 then raise exception 'class full'; end if;
+  insert into public.class_members (class_id, user_id, nick) values (p_class, p_user, left(coalesce((select nullif(trim(nick), '') from public.profiles where id = p_user), 'Gracz'), 24))
+    on conflict (class_id, user_id) do nothing;
+  return true;
+end $$;
+revoke all on function public.class_add_member(uuid, uuid) from public, anon;
+grant execute on function public.class_add_member(uuid, uuid) to authenticated;
 -- limity: 20 klas na osobę, 30 wiadomości na minutę, czas wiadomości ustawia serwer
 create or replace function public.class_guard() returns trigger language plpgsql security definer set search_path = '' as $$
 begin
@@ -1123,5 +1139,5 @@ end $$;
 revoke all on function public.admin_premium_grant(text, int, text) from public, anon; grant execute on function public.admin_premium_grant(text, int, text) to authenticated;
 revoke all on public.premium_wallet, public.premium_ledger, public.premium_items, public.premium_owned from anon;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-02a'::text $$;
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-07a'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

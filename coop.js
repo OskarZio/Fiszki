@@ -11,13 +11,13 @@ let COOP_V = new Map();
 const coopVCard = id => COOP_V.get(id) || null;
 function coopSetPack(d) {
   const cs = shuffle(S.cards.filter(c => c.deckId === d.id && fightable(c))).slice(0, 260);
-  return { name: d.name.replace(/^👥\s*/, '').slice(0, 60), cards: cs.map(c => { const v = cardView(c); return { n: c.noteId, o: String(c.ord), q: stripHtml(v.q).slice(0, 300), a: String(v.ans || '').slice(0, 300) }; }).filter(x => x.q && x.a) };
+  return { name: d.name.replace(/^👥\s*/, '').slice(0, 60), cards: cs.map(c => { const v = cardView(c); const w = typeof noteWrong === 'function' ? noteWrong(noteById(c.noteId)).slice(0, 4).map(x => x.slice(0, 120)) : []; return { n: c.noteId, o: String(c.ord), q: stripHtml(v.q).slice(0, 300), a: String(v.ans || '').slice(0, 300), ...(w.length ? { w } : {}) }; }).filter(x => x.q && x.a) };
 }
 function coopUseSet(set) {
   COOP_V = new Map(); const out = [], answers = [...new Set(set.cards.map(x => x.a))];
   set.cards.forEach((x, i) => {
     const own = S.cards.find(c => c.noteId === x.n && String(c.ord) === x.o && fightable(c)); if (own) return out.push(own);
-    const same = [...new Set(set.cards.filter(y => y.o === x.o).map(y => y.a))].filter(a => norm(a) !== norm(x.a)), w = shuffle(same.length >= 3 ? same : answers.filter(a => norm(a) !== norm(x.a))).slice(0, 3), id = 'cv:' + i;
+    const same = [...new Set(set.cards.filter(y => y.o === x.o).map(y => y.a))].filter(a => norm(a) !== norm(x.a)), w0 = shuffle(same.length >= 3 ? same : answers.filter(a => norm(a) !== norm(x.a))), w = [...new Set([...(x.w || []), ...w0])].slice(0, 3), id = 'cv:' + i;
     const c = { id, gk: true, coopv: true, deckId: 'coop', cat: '', q: x.q, a: x.a, w, srs: GK_SRS }; COOP_V.set(id, c); out.push(c);
   });
   COOP_LASTSET = set; return out;
@@ -40,7 +40,7 @@ function sCoopMsg(m) {
   if (m.gc != null && typeof GK_CAT !== 'undefined' && GK_CAT[m.gc]) o.gc = m.gc;
   if (m.v != null) o.v = sInt(m.v, 0, 2); if (m.at != null) o.at = sStr(m.at, 60);
   if (m.sm != null) o.sm = sStr(m.sm, 60); if (m.sn != null) o.sn = sInt(m.sn, 0, 1000);
-  if (m.set && typeof m.set === 'object' && Array.isArray(m.set.cards)) o.set = { name: sStr(m.set.name, 60), cards: m.set.cards.slice(0, 260).map(x => ({ n: sStr(x?.n, 64), o: sStr(x?.o, 8), q: sStr(x?.q, 300), a: sStr(x?.a, 300) })).filter(x => x.q && x.a) };
+  if (m.set && typeof m.set === 'object' && Array.isArray(m.set.cards)) o.set = { name: sStr(m.set.name, 60), cards: m.set.cards.slice(0, 260).map(x => ({ n: sStr(x?.n, 64), o: sStr(x?.o, 8), q: sStr(x?.q, 300), a: sStr(x?.a, 300), ...(Array.isArray(x?.w) ? { w: x.w.slice(0, 4).map(y => sStr(y, 120)).filter(Boolean) } : {}) })).filter(x => x.q && x.a) };
   if (Array.isArray(m.players)) o.players = m.players.slice(0, 4).map(p => ({ id: sStr(p?.id, 40), nick: sStr(p?.nick, 24), line: CHAR_LINES[p?.line] ? p.line : 'cat', g: p?.g === 'm' ? 'm' : 'w', pr: sInt(p?.pr, 0, 99), lv: sInt(p?.lv, 1, 99, 1), atk: sNum(p?.atk, .5, 10, 1), look: sInt(p?.look, 0, 1e7) }));
   if (Array.isArray(m.heads)) o.heads = m.heads.slice(0, 4).map(x => ({ id: sStr(x?.id, 40), max: sInt(x?.max, 50, 400000, 300), ...(x?.hp != null ? { hp: sInt(x.hp, 0, 400000) } : {}) }));
   if (Array.isArray(m.gqi)) o.gqi = m.gqi.slice(0, 40).map(x => sStr(x, 40)); if (Array.isArray(m.vo)) o.vo = m.vo.slice(0, 3).filter(k => DUO_BON[k]); if (m.vk != null) o.vk = DUO_BON[m.vk] ? m.vk : null;

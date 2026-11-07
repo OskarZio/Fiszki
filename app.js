@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '323';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '324';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1093,6 +1093,9 @@ function nearNumbers(a, n) {
   return [...out];
 }
 function pickDistractors(c, pool, n = 3) {
+  // własne błędne odpowiedzi z fiszki mają pierwszeństwo; brakujące dobieramy jak zwykle
+  if (c.w?.length) { const own = shuffle(c.w.filter(x => norm(x) !== norm(c.a))).slice(0, n); if (own.length >= n) return own;
+    return [...own, ...pickDistractors({ ...c, w: null }, pool.filter(x => !own.some(o => norm(o) === norm(x.a))), n - own.length)]; }
   const seen = new Set([norm(c.a)]), cand = [];
   // odrobina losowości tylko między podobnie ocenionymi – najbardziej podobne zawsze wygrywają
   for (const x of pool) { const k = norm(x.a); if (!k || seen.has(k)) continue; seen.add(k); cand.push({ x, s: similarity(c, x) + Math.random() * 1.5 }); }
@@ -1104,7 +1107,9 @@ function pickDistractors(c, pool, n = 3) {
   }
   return out;
 }
-const distractorEntry = c => { const v = cardView(c), n = noteById(c.noteId); return { a: v.ans, q: stripHtml(v.label || ''), ctx: n?.extra || '' }; };
+// 🎯 quiz z własnymi błędnymi odpowiedziami: fiszka może mieć pole „wrong” (np. „Paryż; Rzym; Madryt”) – ABCD bierze wtedy właśnie je (trudniej niż losowe z talii)
+const noteWrong = n => String(n?.wrong || '').split(/\n|;/).map(x => x.trim()).filter(Boolean).slice(0, 6);
+const distractorEntry = c => { const v = cardView(c), n = noteById(c.noteId); return { a: v.ans, q: stripHtml(v.label || ''), ctx: n?.extra || '', w: noteWrong(n) }; };
 
 function buildQuiz(deckId, type, count) {
   const cards = shuffle(S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && cardView(c).ans.trim()));
@@ -1185,7 +1190,7 @@ let DRAFT = null;
 function freshDraft(type, deckId) {
   return {
     editId: null, type: type || 'basic', deckId: deckId || S.settings.lastDeck || S.decks[0]?.id,
-    front: '', back: '', hint: '', hintImg: null, extra: '', reverse: false, text: '', imageId: null, boxes: [], title: '',
+    front: '', back: '', hint: '', hintImg: null, extra: '', wrong: '', reverse: false, text: '', imageId: null, boxes: [], title: '',
     hideAll: S.settings.hideAll, bulk: '', bulkSep: 'auto', bulkReverse: false, bulkSwap: false, sel: null, draw: true,
   };
 }
@@ -1252,6 +1257,9 @@ function formBasic(D) {
   ${field('💡 Skojarzenie / podpowiedź (opcjonalnie)', 'hint', D.hint, { ph: 'np. „FEMORIS – FEMme w RIS-ach” – pokazuje się na żądanie' })}
   ${hintImgToolsHTML(D.hintImg, 'draft')}
   ${field('Dodatkowe informacje (opcjonalnie)', 'extra', D.extra, { area: true, rows: 2 })}
+  <details class="adv wrong-opts"${D.wrong ? ' open' : ''}><summary>🎯 Quiz: własne błędne odpowiedzi ABCD (trudniej w hydrze i wieży)</summary>
+    ${field('Błędne odpowiedzi – oddziel średnikiem albo każda w nowej linii', 'wrong', D.wrong || '', { area: true, rows: 3, ph: 'np. Os tibiae; Os humeri; Os fibulae' })}
+    <p class="small muted" style="margin:0">ABCD (nauka, test, boss, hydra, wieża) pokaże właśnie te odpowiedzi zamiast losowych z talii. Podobne do prawdziwej = trudniej.</p></details>
   <label class="check"><input type="checkbox" data-bind="reverse" ${D.reverse ? 'checked' : ''}> Utwórz też kartę odwrotną (tył → przód)</label>`;
 }
 function clozePreview(text) {
@@ -1421,7 +1429,7 @@ async function saveDraft() {
   if (D.type === 'basic') {
     if (!D.front.trim() && !D.imageId) return toast('Uzupełnij przód fiszki');
     if (!D.back.trim()) return toast('Uzupełnij tył fiszki');
-    fields = { type: 'basic', front: D.front.trim(), back: D.back.trim(), hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim(), reverse: !!D.reverse, imageId: D.imageId };
+    fields = { type: 'basic', front: D.front.trim(), back: D.back.trim(), hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim(), wrong: String(D.wrong || '').trim().slice(0, 600), reverse: !!D.reverse, imageId: D.imageId };
   } else if (D.type === 'cloze') {
     if (!/\{\{c\d+::/.test(D.text)) return toast('Zrób przynajmniej jedną lukę');
     fields = { type: 'cloze', text: D.text.trim(), hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim() };
@@ -1819,6 +1827,13 @@ function adminOpFx(o) {
   ov.innerHTML = `<div class="dmenu center" role="dialog"><div style="font-size:54px">${T[0]}</div><b style="font-size:19px">Wiadomość od twórcy aplikacji</b>
     <p>${esc(o.msg || T[1])}</p>${['wallet', 'items', 'stickers', 'all'].includes(o.what) ? '<p class="small muted">Powód: nieuczciwa gra (dopisane kryształy lub przedmioty).</p>' : ''}<button class="primary" data-x="1">OK</button></div>`;
   ov.addEventListener('click', e => { if (e.target.closest('[data-x]')) ov.remove(); }); document.body.append(ov);
+}
+// to, co serwer usunął z właśnie wysłanych danych, usuwamy też lokalnie (bez tego telefon i komputer pokazywały różne saldo)
+function econReconcile(R) {
+  let ch = 0;
+  for (const k of ['wallet', 'hcWallet', 'items', 'hcItems']) { if (!Array.isArray(R[k]) || !Array.isArray(S[k])) continue;
+    const keep = new Set(R[k].map(x => x?.id)), before = S[k].length; S[k] = S[k].filter(x => keep.has(x.id)); if (S[k].length !== before) ch = 1; }
+  if (ch) { DB.set('state', S); if (typeof render === 'function') render(); }
 }
 function mergeState(R) {
   // 🚫 właściciel zablokował ekonomię tego konta (oszustwo) – kryształy i przedmioty znikają też na urządzeniu

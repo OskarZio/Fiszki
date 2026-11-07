@@ -90,7 +90,9 @@ async function cloudSync(manual) {
       const img = safeImg(pr.data?.avatar_img);
       if (img) { S.profile.avatarImg = img; if (pr.data.avatar) S.profile.avatar = String(pr.data.avatar).slice(0, 16); S.profile.imgMod = 1; }
     }
-    r = await SB.from('user_data').upsert({ user_id: uid, data: exportData(), updated_at: new Date().toISOString() }); if (r.error) throw r.error;
+    r = await SB.from('user_data').upsert({ user_id: uid, data: exportData(), updated_at: new Date().toISOString() }).select('data').maybeSingle(); if (r.error) throw r.error;
+    // 🔁 serwer może wyciąć wpisy (limit dzienny, kary, blokada) – bierzemy jego wersję portfela i przedmiotów, żeby każde urządzenie miało to samo saldo
+    if (r.data?.data) econReconcile(r.data.data);
     await publishCloudProfile();
     S.settings.lastSync = Date.now(); await DB.set('state', S); updateBadge();
     if (manual) toast('Zsynchronizowano z kontem ✓');

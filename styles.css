@@ -3649,3 +3649,6 @@ input, textarea, select { font-size: max(16px, 1em); }   /* iOS nie powiększa s
 .kw-meter { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 8px; padding: 8px 12px; border-radius: 12px; background: var(--card2, var(--card)); font-size: 14px; overflow: hidden; }
 .kw-meter > i { position: absolute; left: 0; bottom: 0; height: 4px; width: var(--p); background: #16a34a; transition: width .25s; }
 .kw-meter b { font-variant-numeric: tabular-nums; }
+.adm-pick-list { display: grid; gap: 8px; margin-bottom: 12px; max-height: 50vh; overflow-y: auto; }
+.adm-pick-it { display: grid; gap: 2px; text-align: left; padding: 12px 14px; }
+.cls-addlist { display: grid; gap: 8px; }

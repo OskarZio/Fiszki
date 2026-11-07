@@ -75,7 +75,7 @@ function sNote(x) {
   const id = sId(x.id, /^[A-Za-z0-9_-]{1,40}$/); if (!id) return null;
   const type = ['basic', 'cloze'].includes(x.type) ? x.type : null; if (!type) return null;
   const n = { id, type, mod: sNum(x.mod, 0, 1e13), created: sNum(x.created, 0, 1e13) };
-  for (const [k, max] of [['front', 2000], ['back', 2000], ['hint', 1000], ['extra', 2000], ['text', 4000], ['title', 200]]) if (typeof x[k] === 'string') n[k] = x[k].slice(0, max);
+  for (const [k, max] of [['front', 2000], ['back', 2000], ['hint', 1000], ['extra', 2000], ['wrong', 600], ['text', 4000], ['title', 200]]) if (typeof x[k] === 'string') n[k] = x[k].slice(0, max);
   if ('reverse' in x) n.reverse = sBool(x.reverse);
   return n;
 }

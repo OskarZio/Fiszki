@@ -4,6 +4,22 @@ let HOST_ST = null;
 {
   ACTIONS['adm-pick'] = el => { const i = $('#adm-code'); if (i) { i.value = el.dataset.code; i.scrollIntoView({ block: 'center', behavior: 'smooth' }); } };
   ACTIONS['adm-player'] = el => admPlayerPopup(el.dataset.code);
+  // 🏫 / 📤 wybór klasy albo talii w małym okienku
+  const admPick = (title, items, onPick) => { document.querySelector('.adm-pick')?.remove(); const ov = document.createElement('div'); ov.className = 'dmenu-ov adm-pick';
+    ov.innerHTML = `<div class="dmenu" role="dialog"><h3 style="margin-top:0">${esc(title)}</h3><div class="adm-pick-list">${items.map((it, i) => `<button class="adm-pick-it" data-i="${i}"><b>${esc(it.name)}</b>${it.sub ? `<small class="muted">${esc(it.sub)}</small>` : ''}</button>`).join('')}</div><button class="ghost" data-x="1">Anuluj</button></div>`;
+    ov.addEventListener('click', async e => { const b = e.target.closest('.adm-pick-it'); if (b) { ov.remove(); return onPick(items[+b.dataset.i]); } if (e.target === ov || e.target.closest('[data-x]')) ov.remove(); });
+    document.body.append(ov); };
+  ACTIONS['adm-cls'] = async el => { const uid = el.dataset.id; const r = await SB.from('classes').select('id,name').eq('owner', SB_USER.id).order('created_at');
+    if (r.error) return toast('Błąd: ' + r.error.message); if (!(r.data || []).length) return toast('Najpierw załóż klasę (Znajomi → Klasa)', 3500);
+    admPick('🏫 Do której klasy?', r.data.map(c => ({ id: c.id, name: c.name })), async c => { const a = await SB.rpc('class_add_member', { p_class: c.id, p_user: uid });
+      toast(a.error ? (/function|schema cache/i.test(a.error.message) ? 'Wgraj nowy supabase.sql (Aktualizacja bazy)' : 'Błąd: ' + a.error.message) : `🏫 Dodano do klasy „${c.name}”`, 3500); }); };
+  ACTIONS['adm-deck'] = el => { const uid = el.dataset.id, ds = S.decks.filter(d => S.notes.some(n => n.deckId === d.id));
+    if (!ds.length) return toast('Nie masz żadnej talii do wysłania');
+    admPick('📤 Którą talię wysłać?', ds.map(d => ({ id: d.id, name: d.name, sub: `${S.notes.filter(n => n.deckId === d.id).length} fiszek` })), async it => {
+      const d = S.decks.find(x => x.id === it.id); toast('Wysyłam…', 4000);
+      await SB.rpc('admin_add_friend', { p_user: uid });   // wiadomość można wysłać tylko znajomemu
+      const link = await deckLink(d), m = await sendMsg(uid, 'text', { text: `📚 Fiszki dla Ciebie: „${d.name}” – otwórz link, a talia od razu doda się do Twoich: ${link}` });
+      if (m) toast(`📤 Wysłano „${d.name}” na czat`, 3000); }); };
   ACTIONS['adm-friend'] = async el => { const id = el.dataset.id; if (!id) return; el.disabled = true;
     const r = await SB.rpc('admin_add_friend', { p_user: id });
     if (r.error) { el.disabled = false; return toast(/function|schema cache|does not exist/i.test(r.error.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy)' : 'Błąd: ' + r.error.message, 4000); }
@@ -47,7 +63,7 @@ function admStatsHTML() {
     ${H.audit ? `<h4>👥 Wszyscy użytkownicy <span class="muted">(${(H.audit.rich || []).length}) · najbogatsi na górze</span></h4><div class="small adm-users">${(H.audit.rich || []).map(x => `<div class="adm-urow${x.me ? ' me' : ''}">
       <div class="adm-uhead" data-act="adm-player" data-code="${esc(x.code || '')}" role="button"><b>${esc(x.nick || (x.no_profile ? 'bez profilu' : 'bez nicku'))}${x.me ? ' · Ty' : ''}</b> <span class="muted">${esc(x.code || '')}</span>
         <div class="muted">${x.no_data ? 'jeszcze nic nie zapisał' : `${n(x.gems)} 💎 · ${n(x.items)} przedm.${x.reviews != null ? ` · ${n(x.reviews)} powt.` : ''}`} · konto od ${x.created_at ? new Date(x.created_at).toLocaleDateString('pl-PL') : '?'}${x.updated_at ? ` · ostatnio ${new Date(x.updated_at).toLocaleDateString('pl-PL')}` : ''}</div></div>
-      <div class="adm-ubtns">${x.me ? '' : x.friend ? '<span class="muted">✓ znajomy</span>' : `<button class="sm" data-act="adm-friend" data-id="${esc(x.id || '')}">➕ Znajomy</button>`}${x.code && !x.me ? `<button class="sm ${x.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(x.code)}" data-on="${x.banned ? 0 : 1}" title="${x.banned ? 'Odblokuj' : 'Wyzeruj i zablokuj kryształy/przedmioty'}">${x.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button>` : ''}</div></div>`).join('') || '—'}</div>
+      <div class="adm-ubtns">${x.me ? '' : x.friend ? '<span class="muted">✓ znajomy</span>' : `<button class="sm" data-act="adm-friend" data-id="${esc(x.id || '')}">➕ Znajomy</button>`}${x.me ? '' : `<button class="sm" data-act="adm-cls" data-id="${esc(x.id || '')}">🏫 Do klasy</button><button class="sm" data-act="adm-deck" data-id="${esc(x.id || '')}">📤 Fiszki</button>`}${x.code && !x.me ? `<button class="sm ${x.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(x.code)}" data-on="${x.banned ? 0 : 1}" title="${x.banned ? 'Odblokuj' : 'Wyzeruj i zablokuj kryształy/przedmioty'}">${x.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button>` : ''}</div></div>`).join('') || '—'}</div>
       <p class="small muted">🚫 Zablokuj = kryształy, złoto i przedmioty gracza znikają i nie da się ich odbudować (każdy zapis jest czyszczony), dopóki nie odblokujesz.</p>
       <h4>🛡️ Kara dla gracza</h4><div class="adm-tools">
         <div class="row nowrap"><input id="adm-code" class="grow" placeholder="Kod gracza (np. A88BEB31)" maxlength="12" autocapitalize="characters" style="text-transform:uppercase;margin:0"><button class="primary" data-act="adm-show">🔎 Dane</button></div><div class="spacer"></div>

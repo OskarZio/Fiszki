@@ -139,7 +139,11 @@ function clsView(id) {
       <form class="gc-form" onsubmit="return false"><input id="cls-in" maxlength="1000" placeholder="Napisz do klasy…" autocomplete="off" enterkeyhint="send"><button class="primary" data-act="cls-send">➤</button></form></div>`;
     setTimeout(() => { const b = document.querySelector('.cls-chat .gc-list'); if (b) b.scrollTop = b.scrollHeight; }, 0);
   } else {
-    body = `<div class="card center"><div class="small muted">Kod klasy</div><div class="coop-code">${esc(c.code)}</div><button class="sm" data-act="cls-invite" data-link="${esc(link)}" data-code="${esc(c.code)}">📤 Zaproś do klasy</button></div>
+    const memIds = new Set(CLS.members.map(m => m.id)), canAdd = owner ? (CLOUD_FRIENDS || []).filter(f => !memIds.has(f.id)) : [];
+    body = `${owner ? `<div class="card"><h3 style="margin-top:0">➕ Zaproś znajomych</h3><p class="small muted" style="margin:0 0 10px">Stuknij „Dodaj” – osoba od razu jest w klasie, bez wpisywania kodu.</p>
+        ${canAdd.length ? `<div class="cls-addlist">${canAdd.map(f => `<div class="row nowrap cls-mem"><span class="g-av cls-av">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img }, 34)}</span><b class="grow">${esc(f.nick || 'Gracz')}</b><button class="sm primary" data-act="cls-addf" data-id="${esc(f.id)}">➕ Dodaj</button></div>`).join('')}</div>`
+          : `<p class="small muted" style="margin:0">${(CLOUD_FRIENDS || []).length ? 'Wszyscy Twoi znajomi już są w klasie 🎉' : 'Nie masz jeszcze znajomych – dodaj ich w rankingu albo wyślij kod niżej.'}</p>`}</div>` : ''}
+      <div class="card center"><div class="small muted">Kod klasy</div><div class="coop-code">${esc(c.code)}</div><button class="sm" data-act="cls-invite" data-link="${esc(link)}" data-code="${esc(c.code)}">📤 Wyślij kod (dla osób spoza znajomych)</button></div>
       <div class="card"><h3 style="margin-top:0">Członkowie (${CLS.members.length})</h3>${CLS.members.map(m => `<div class="row nowrap cls-mem"><span class="g-av cls-av">${clsAv(m.id, 34)}</span><b class="grow">${typeof nickHTML === 'function' ? nickHTML(m.nick, clsCos(m.id)) : esc(m.nick)}${m.id === myId() ? ' <small>(Ty)</small>' : ''}${m.id === c.owner ? ' 👑' : ''}</b>${owner && m.id !== myId() ? `<button class="sm ghost" data-act="cls-kick" data-id="${esc(m.id)}">Usuń</button>` : ''}</div>`).join('')}</div>
       <button class="ghost block" data-act="cls-leave">${owner ? '🗑️ Usuń klasę' : '🚪 Opuść klasę'}</button>`;
   }
@@ -165,6 +169,9 @@ Object.assign(ACTIONS, {
   'cls-send': () => { const i = $('#cls-in'); if (!i) return; const v = i.value; i.value = ''; clsSend(v); },
   'cls-quick': el => clsSend(el.dataset.q),
   'cls-invite': el => { const t = `🏫 Dołącz do mojej klasy w Fiszkach – kod: ${el.dataset.code}`; if (navigator.share) navigator.share({ title: 'Fiszki – klasa', text: t, url: el.dataset.link }).catch(() => {}); else { navigator.clipboard?.writeText(`${t} ${el.dataset.link}`); toast('📋 Skopiowano zaproszenie'); } },
+  'cls-addf': async el => { el.disabled = true; const r = await SB.rpc('class_add_member', { p_class: CLS.cur, p_user: el.dataset.id });
+    if (r.error) { el.disabled = false; return toast(/not friend/.test(r.error.message) ? 'Najpierw dodajcie się do znajomych' : clsErr(r.error)); }
+    toast('🏫 Dodano do klasy', 2000); clsOpen(CLS.cur); },
   'cls-kick': async el => { if (!confirm('Usunąć tę osobę z klasy?')) return; const r = await SB.from('class_members').delete().eq('class_id', CLS.cur).eq('user_id', el.dataset.id); if (r.error) return toast(clsErr(r.error)); clsOpen(CLS.cur); },
   'cls-leave': async () => {
     const c = (CLS.list || []).find(x => x.id === CLS.cur); if (!c) return; const own = c.owner === myId();

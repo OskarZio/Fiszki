@@ -113,7 +113,9 @@ function earnedCoins() {
   let c = Object.keys(S.ach).reduce((a, id) => a + (typeof achReward === 'function' ? achReward(id) : 30), 0);   // trudne osiągnięcia: 150
   const perDay = {}; let study = 0;
   for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); study += studyGems(l); }
-  c += Object.values(perDay).filter(n => n >= (S.settings.goal || 50)).length * 20 + Math.floor(study);
+  // dni z celem dziennym: liczone od wpisów 'goal-<dzień>' w portfelu (te same na każdym urządzeniu); stare – według celu z tego urządzenia, tylko jeśli wpisu brak
+  const goalDone = new Set(S.wallet.filter(w => /^goal-/.test(w.id)).map(w => w.id.slice(5)));
+  c += Object.entries(perDay).filter(([k, n]) => !goalDone.has(k) && n >= (S.settings.goal || 50)).length * 20 + Math.floor(study);
   for (const g of S.games) if (!g.practice) c += Math.floor((g.correct || 0) / 4);
   for (const b of S.battles) c += battleReward(b);
   if (!S.stats?.stRetired) for (const r in SET_BONUS) if (setComplete(r)) c += SET_BONUS[r];   // po wycofaniu albumu premia jest w portfelu (st-set-bonus)
@@ -510,3 +512,13 @@ function upTokHTML(compact) {
       <p class="small muted" style="margin:8px 0 0">${w ? `Założona broń: <b>${esc(w.name)}</b> · ${RARITY[w.r].name.toLowerCase()} · +${hero().forge[hero().eq.w] || 0}` : 'Młot i Gwiazda działają na założoną broń.'}</p>`
       : '<p class="small muted" style="margin:0">Brak – wypadają ze Skrzynki kowala (🪙), Skrzynki mistrza i skrzynek za naukę. <a href="#/shop">Sklep ›</a></p>'}</div>`;
 }
+
+// 🎯 cel dzienny zapisany w portfelu (stałe id = dzień): po synchronizacji każde urządzenie liczy go tak samo, niezależnie od własnego ustawienia celu
+function goalWallet() {
+  const perDay = {}; for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); }
+  let ch = 0; const have = new Set(S.wallet.map(w => w.id));
+  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
+  if (ch) save();
+}
+on('start', () => setTimeout(goalWallet, 1200));
+on('review', () => { clearTimeout(goalWallet.t); goalWallet.t = setTimeout(goalWallet, 1500); });
