@@ -3431,7 +3431,7 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .prem-list { display: flex; flex-direction: column; } .prem-it { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
 .prem-it:first-child { border-top: 0; } .prem-bal { color: #38bdf8 !important; }
 /* 🎲 losowanie kategorii Wieży wiedzy – nakładka na środku ekranu */
-.cat-roll { position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; background: rgba(0,0,0,.55); padding: 16px; }
+.cat-roll { position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; background: transparent; padding: 16px; }
 .cat-roll .roll-ov { position: relative !important; inset: auto !important; top: auto !important; width: min(520px, 100%); border-radius: 16px; border: 2px solid #f59e0b; background: color-mix(in srgb, var(--card) 96%, #000); padding: 16px 0 14px; display: grid; gap: 10px; }
 /* v310: bez migania – animacje przeszkadzajek kontynuują od miejsca, w którym były (odświeżenie ekranu ich nie restartuje) */
 .bf .boss-q[class*="dis-"] .bq-in, .bf .boss-q[class*="dis-"]::before { animation-delay: calc(var(--el, 0s) * -1) !important; }
@@ -3712,3 +3712,5 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
 .tower-hp { width: 100%; align-self: stretch; margin: 12px 0 6px; }
 .tower-hp .hpbar { width: 100% !important; max-width: none !important; height: 26px !important; border-radius: 13px; flex: none !important; }
 .tower-hp .hpbar span { display: flex !important; align-items: center; justify-content: center; height: 100%; font-size: 15px; line-height: 1; }
+.msg-del { background: transparent !important; border: 0 !important; box-shadow: none !important; min-height: 0 !important; padding: 0 0 0 6px !important; font-size: 12px; color: inherit; opacity: .75; cursor: pointer; }
+.msg-del .emo8 { width: 14px !important; height: 14px !important; }

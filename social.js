@@ -208,7 +208,7 @@ ROUTES.chat = parts => {
   ${CHAT.pick === 'gift' && false ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
     ${gifts.length ? `<div class="gift-pick">${gifts.map(s => `<button data-act="chat-gift" data-id="${s.id}" style="--rc:${RARITY[s.r].color}"><span>${stE(s)}</span><small>${esc(s.name)}</small><em>×${itemCount('sticker', s.id)}</em></button>`).join('')}</div>`
       : '<p class="small">Nie masz jeszcze naklejek do podarowania – zdobądź je w <a href="#/shop">skrzynkach</a>. (Startowe 👋👍😅 nie są do oddania.)</p>'}</div>` : ''}
-  <div class="chat-list" id="chat-list">${list.length ? list.map(m => { const mine = m.from_id === me; return `<div class="msg ${mine ? 'me' : 'them'} k-${msgKind(m)}">${msgBodyHTML(m, mine)}<small>${hhmm(m.created_at)}${mine && m.read_at ? ' · ✓✓' : ''}</small></div>`; }).join('')
+  <div class="chat-list" id="chat-list">${list.length ? list.map(m => { const mine = m.from_id === me; return `<div class="msg ${mine ? 'me' : 'them'} k-${msgKind(m)}">${msgBodyHTML(m, mine)}<small>${hhmm(m.created_at)}${mine && m.read_at ? ' · ✓✓' : ''}${mine ? ` <button class="msg-del" data-act="msg-del" data-id="${m.id}" title="${m.body?.fun ? 'Cofnij zaczepkę' : 'Usuń u obu osób'}" aria-label="Usuń">${m.body?.fun && !m.read_at ? '↩️ cofnij' : '🗑️'}</button>` : ''}</small></div>`; }).join('')
     : `<p class="muted small center">Napisz pierwszą wiadomość, wyślij naklejkę albo wyzwij ${esc(f.nick || 'znajomego')} na bitwę 👋</p>`}</div>
   <div class="chat-input row nowrap"><input id="chat-in" class="grow" maxlength="${MSG_TEXT_MAX}" placeholder="Wiadomość…" autocomplete="off" enterkeyhint="send"><button class="primary" data-act="chat-send">➤</button></div>
   ${notifBtnHTML()}` };
@@ -358,3 +358,14 @@ ACTIONS['bt-challenge-friend'] = el => { CHAT = { fid: el.dataset.fid, pick: fal
 // 👤 profil znajomego (lista znajomych, nagłówek czatu)
 ACTIONS['pl-view-f'] = el => { const id = el.dataset.fid, r = (typeof rankRows === 'function' ? rankRows() : []).find(x => String(x.id).replace('sb:', '') === String(id));
   const f = friendById(id); if (r) return playerView(r); if (f) playerView({ id: f.id, nick: f.nick, avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos, ...(f.stats || {}), updated: f.updated_at ? +new Date(f.updated_at) : 0 }); };
+
+// 🗑️ usuwanie wiadomości u obu osób (reguła bazy pozwala nadawcy i odbiorcy); zaczepka cofnięta zanim ją zobaczył = zwrot kryształów
+ACTIONS['msg-del'] = async el => {
+  const id = +el.dataset.id, m = MSGS.find(x => x.id === id); if (!m || m.from_id !== myId()) return;
+  const fun = m.body?.fun && typeof FUN !== 'undefined' ? FUN[m.body.fun] : null, refund = fun && !m.read_at;
+  const ok = typeof askBox === 'function' ? await askBox({ icon: fun ? '↩️' : '🗑️', title: fun ? 'Cofnąć zaczepkę?' : 'Usunąć wiadomość?', intro: fun ? (refund ? `Znajomy jeszcze jej nie widział – odzyskasz ${fun.price} 💎.` : 'Znajomy już ją widział – kryształy nie wracają.') : 'Zniknie u Ciebie i u znajomego.', ok: fun ? 'Cofnij' : 'Usuń', danger: true }) : confirm('Usunąć wiadomość u obu osób?');
+  if (!ok) return;
+  const r = await SB.from('messages').delete().eq('id', id); if (r.error) return toast('Błąd: ' + r.error.message);
+  if (refund && !S.wallet.some(w => w.id === 'funref-' + id)) { S.wallet.push({ id: 'funref-' + id, n: fun.price, why: 'fun-refund', t: Date.now() }); save(); }
+  MSGS = MSGS.filter(x => x.id !== id); toast(fun ? (refund ? `↩️ Cofnięto · +${fun.price} 💎` : '↩️ Cofnięto') : '🗑️ Usunięto u obu osób', 2500); render();
+};

@@ -10,7 +10,7 @@ const TOMATO8 = px8(['....gg....', '...gGGg...', '..rrgrrr..', '.rRRrrrrr.', 'rR
 const SPLAT8 = px8(['..r....r..r.', '.rrr..rrr...', 'r.rrrrrrrr.r', '..rrRrrrrr..', '.rrrrrrrRrr.', 'rrrRrrrrrrrr', '.rrrrrrrrrr.', '..rrrrRrrr..', 'r.rrrrrrrr.r', '.r..rrr..r..', '....r..r....'],
   { r: '#dc2626', R: '#f87171' });
 const FUN = {
-  tomato: { n: 'Pomidor', ic: () => TOMATO8, price: 25, txt: '🍅 Rzucam w Ciebie pomidorem!', say: n => `${n} rzucił(a) w Ciebie pomidorem!` },
+  tomato: { n: 'Pomidor', ic: () => '<img class="emo8 px" src="assets/e8/tomato.webp" alt="">', price: 25, txt: '🍅 Rzucam w Ciebie pomidorem!', say: n => `${n} rzucił(a) w Ciebie pomidorem!` },
   flower: { n: 'Kwiatek', ic: () => '<img class="emo8" src="assets/e8/sunflower.webp" alt="">', price: 25, txt: '🌻 Kwiatek dla Ciebie!', say: n => `${n} daje Ci kwiatka` },
   hug: { n: 'Przytulas', ic: () => '<img class="emo8" src="assets/e8/teddy.webp" alt="">', price: 25, txt: '🧸 Przytulas!', say: n => `${n} Cię przytula` },
   party: { n: 'Konfetti', ic: () => '<img class="emo8" src="assets/e8/popper.webp" alt="">', price: 40, txt: '🎉 Gratulacje!', say: n => `${n} świętuje z Tobą!` },
@@ -40,9 +40,11 @@ const FUN_SEEN = () => { try { return new Set(JSON.parse(localStorage.getItem('f
 let FUN_Q = [], FUN_ON = false;
 function funShowNext() {
   if (FUN_ON || !FUN_Q.length) return; const m = FUN_Q.shift(), f = FUN[m.body.fun]; if (!f) return funShowNext(); FUN_ON = true;
+  // obejrzana = przeczytana (nadawca nie cofnie jej już ze zwrotem kryształów)
+  try { if (typeof SB !== 'undefined' && SB && m.id) SB.from('messages').update({ read_at: new Date().toISOString() }).eq('id', m.id).then(() => {}, () => {}); } catch { /* */ }
   const fr = (typeof CLOUD_FRIENDS !== 'undefined' ? CLOUD_FRIENDS : []).find(x => x.id === m.from_id), nick = fr?.nick || 'Znajomy';
   const ov = document.createElement('div'); ov.className = `fun-ov fun-${m.body.fun}`;
-  ov.innerHTML = `${m.body.fun === 'tomato' ? `<div class="fun-fly">${TOMATO8}</div><div class="fun-splat">${SPLAT8}</div>` : `<div class="fun-big">${f.ic()}</div>`}
+  ov.innerHTML = `${m.body.fun === 'tomato' ? `<div class="fun-fly"><img class="px" src="assets/e8/tomato.webp" alt="" style="width:100%;height:100%;image-rendering:pixelated"></div><div class="fun-splat">${SPLAT8}</div>` : `<div class="fun-big">${f.ic()}</div>`}
     <div class="fun-card"><b>${esc(f.say(nick))}</b>${m.body.fun === 'shout' ? `<p class="fun-msg">${esc((m.body.text || '').replace(/^📣\s*/, ''))}</p>` : ''}<button class="primary" data-x="1">${m.body.fun === 'tomato' ? '🧻 Wytrzyj się' : 'OK'}</button></div>`;
   const done = () => { ov.remove(); FUN_ON = false; setTimeout(funShowNext, 300); };
   ov.addEventListener('click', e => { if (e.target.closest('[data-x]')) done(); });
