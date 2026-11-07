@@ -3688,6 +3688,7 @@ body.auth-locked { overflow: hidden; } body.auth-locked #tabs { display: none; }
 body.nest-dragging .meadow .mw-egg { touch-action: none; }
 .lg-prizes { display: grid; gap: 4px; margin: 6px 0 4px; font-size: 13px; font-weight: 700; }
 /* v328: wąskie telefony – przyciski w segmentach i wierszach zawijają tekst zamiast go ucinać */
-.seg > button, .row > button.grow { min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 1.2; text-overflow: clip; }
+.seg > button, .row > button.grow { min-width: 0; white-space: normal; overflow-wrap: break-word; line-height: 1.2; text-overflow: clip; }
 @media (max-width: 380px) { .seg > button { font-size: 13px; padding-left: 6px; padding-right: 6px; } }
 .row > button.grow, .seg > button { white-space: normal !important; overflow: visible; }
+.aiw-prog { display: grid; gap: 8px; } .aiw-card .row { margin-top: 6px; }

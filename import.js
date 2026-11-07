@@ -22,7 +22,10 @@ function parsePack(text) {
     let parts = line.split(/\s+\|\s+|\t/);
     if (parts.length < 2) { const m = line.match(/^(.+?)\s+[-–—]\s+(.+)$/); if (m) parts = [m[1], m[2]]; }   // eksport Quizletu z „ - ” jako separatorem
     if (parts.length < 2 || !parts[0].trim() || !parts[1].trim()) { out.bad++; out.loose.push(line); continue; }
-    out.items.push({ front: parts[0].trim().slice(0, 2000), back: parts[1].trim().replace(/\\n/g, '\n').slice(0, 2000), hint: (parts[2] || '').trim().slice(0, 1000) });
+    // kolumna z błędnymi odpowiedziami ABCD: „✗ źle1; źle2; źle3” (albo „źle: …”) – w dowolnym miejscu po odpowiedzi
+    const wi = parts.findIndex((x, i) => i >= 2 && /^\s*(✗|źle\s*:|zle\s*:|wrong\s*:)/i.test(x)), wrong = wi >= 0 ? parts[wi].replace(/^\s*(✗|źle\s*:|zle\s*:|wrong\s*:)\s*/i, '').trim().slice(0, 600) : '';
+    const hint = (parts.find((x, i) => i >= 2 && i !== wi) || '').trim().slice(0, 1000);
+    out.items.push({ front: parts[0].trim().slice(0, 2000), back: parts[1].trim().replace(/\\n/g, '\n').slice(0, 2000), hint, ...(wrong ? { wrong } : {}) });
   }
   // skopiowana lista ze strony Quizletu: pojęcie i definicja w kolejnych liniach, bez separatora
   const QL_NOISE = /^(pojęcia w tym zestawie|terms in this set|\d+\s*\/\s*\d+|ucz się|fiszki|test|dopasowania|zagraj|udostępnij|zapisz|flashcards|learn|match|share|save)\b/i;
@@ -41,7 +44,7 @@ function importPack(P) {
     const key = (x.cloze || x.front).trim().toLowerCase(); if (have.has(key)) { skip++; continue; } have.add(key);
     const created = Date.now() + n;
     if (x.cloze) addNote({ deckId: d.id, created, type: 'cloze', text: x.cloze, extra: '', hint: '' });
-    else addNote({ deckId: d.id, created, type: 'basic', front: x.front, back: x.back, hint: x.hint, extra: '', reverse: P.reverse });
+    else addNote({ deckId: d.id, created, type: 'basic', front: x.front, back: x.back, hint: x.hint, extra: '', ...(x.wrong ? { wrong: x.wrong } : {}), reverse: P.reverse });
     n++;
   }
   save(); emit('cardsAdded', n); IMPORT_TXT = '';
@@ -58,7 +61,7 @@ function deckPackText(d) {
   const cl = t => String(t || '').replace(/\s*\|\s*/g, ' / ').replace(/\r?\n/g, '\\n').trim();
   const ns = S.notes.filter(n => n.deckId === d.id), rev = ns.some(n => n.reverse);
   return ['#fiszki', `#talia: ${d.name.replace(/^(👥|🏫)\s*/, '')}`, ...(d.subject ? [`#przedmiot: ${d.subject}`] : []), ...(rev ? ['#odwrotne: tak'] : []),
-    ...ns.map(n => n.type === 'cloze' ? cl(n.text) : n.front && n.back ? [cl(n.front), cl(n.back), ...(n.hint ? [cl(n.hint)] : [])].join(' | ') : '').filter(Boolean)].join('\n');
+    ...ns.map(n => n.type === 'cloze' ? cl(n.text) : n.front && n.back ? [cl(n.front), cl(n.back), ...(n.hint ? [cl(n.hint)] : []), ...(n.wrong ? ['✗ ' + cl(n.wrong).replace(/\\n/g, '; ')] : [])].join(' | ') : '').filter(Boolean)].join('\n');
 }
 async function deckLink(d) {
   const z = await packZip(deckPackText(d)), base = location.origin + location.pathname;
