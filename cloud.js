@@ -62,9 +62,15 @@ async function initCloud() {
     SB_CFG = cfg;
     await loadScript('vendor/supabase.js');
     SB = supabase.createClient(SB_CFG.url, SB_CFG.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
-    const { data } = await SB.auth.getSession();
+    let { data } = await SB.auth.getSession();
+    // 🔐 nie wylogowuj: kopia sesji w osobnym miejscu – gdy biblioteka zgubi sesję (np. błąd sieci przy odświeżaniu), przywracamy ją
+    if (!data?.session) data = { session: await sessRestore() };
     setCloudUser(data?.session?.user || null);
-    SB.auth.onAuthStateChange((_ev, session) => setCloudUser(session?.user || null));
+    SB.auth.onAuthStateChange(async (ev, session) => {
+      if (session) sessSave(session);
+      if (ev === 'SIGNED_OUT' && !SESS_MANUAL_OUT) { const back = await sessRestore(); if (back) return setCloudUser(back.user); }
+      setCloudUser(session?.user || null);
+    });
     await authReturn(); authGate();
     rerenderIf(['more', 'me', 'rank', '']);
   } catch (e) { console.warn('Supabase', e); SB = null; }
@@ -90,6 +96,14 @@ function setCloudUser(u) {
   authGate();
 }
 
+let SESS_MANUAL_OUT = false, SESS_NET_FAIL = false;
+const sessSave = ss => { try { if (ss?.refresh_token) localStorage.setItem('sbSessBak', JSON.stringify({ access_token: ss.access_token, refresh_token: ss.refresh_token })); } catch { /* */ } };
+async function sessRestore() {
+  let b = null; try { b = JSON.parse(localStorage.getItem('sbSessBak') || 'null'); } catch { /* */ }
+  if (!b?.refresh_token || !SB) return null;
+  try { const { data, error } = await SB.auth.setSession(b); if (error) throw error; SESS_NET_FAIL = false; return data.session; }
+  catch (e) { if (/fetch|network|load failed|timeout/i.test(e.message || '')) SESS_NET_FAIL = true; else { try { localStorage.removeItem('sbSessBak'); } catch { /* */ } } return null; }
+}
 // ---------- synchronizacja na koncie
 async function cloudSync(manual) {
   if (!cloudOn() || cloudBusy) return;
@@ -387,7 +401,7 @@ Object.assign(ACTIONS, {
   'acc-resend': async () => { if (!AUTH_SENT) return; const { error } = await SB.auth.resend({ type: 'signup', email: AUTH_SENT, options: { emailRedirectTo: APP_URL() } }); toast(error ? authErr(error.message) : '📧 Wysłano ponownie – sprawdź skrzynkę i spam', 5000); },
   'acc-logout': async () => {
     if (!confirm('Wylogować? Fiszki zostaną na tym urządzeniu.')) return;
-    await cloudSync(false); await SB.auth.signOut(); SB_USER = null; SB_PROFILE = null; CLOUD_FRIENDS = []; render();
+    await cloudSync(false); SESS_MANUAL_OUT = true; try { localStorage.removeItem('sbSessBak'); } catch { /* */ } await SB.auth.signOut(); SB_USER = null; SB_PROFILE = null; CLOUD_FRIENDS = []; render();
   },
   'cloud-rank-refresh': () => { cloudRankLoaded = 0; toast('Odświeżam…'); render(); },
   'cloud-friend-add': () => cloudAddFriend($('#friend-code').value),
@@ -410,7 +424,7 @@ Object.assign(ACTIONS, {
 // (gdy serwer jest niedostępny – np. brak internetu – nie blokujemy, żeby dało się uczyć offline)
 let AUTH_SENT = '';
 function authGate() {
-  const need = !!SB && !SB_USER, ov = document.getElementById('auth-gate');
+  const need = !!SB && !SB_USER && !SESS_NET_FAIL, ov = document.getElementById('auth-gate');   // bez internetu (a z zapisaną sesją) nie zasłaniamy aplikacji
   document.body.classList.toggle('auth-locked', need);
   if (!need) { ov?.remove(); return; }
   const html = `<div class="auth-box"><div class="auth-logo">🧠</div><h1>Fiszki</h1><p class="muted">Załóż konto albo zaloguj się, żeby zacząć. Fiszki, postęp i kryształy będą na każdym Twoim urządzeniu.</p>

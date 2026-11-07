@@ -1,5 +1,5 @@
 // Offline: aplikacja działa bez internetu. Zmień numer wersji przy każdej aktualizacji plików.
-const CACHE = 'fiszki-v335';
+const CACHE = 'fiszki-v336';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
@@ -69,6 +69,11 @@ self.addEventListener('fetch', e => {
   );
 });
 
+// 🔔 przypomnienie o nauce z serwera (push) – pokazujemy je nawet przy zamkniętej aplikacji
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data?.text() || '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Fiszki', { body: d.body || 'Czas na krótką naukę!', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: d.tag || 'remind', renotify: true, data: { url: d.url || '#/' } }));
+});
 // Kliknięcie w powiadomienie (np. nowa wiadomość od znajomego) otwiera aplikację na czacie
 self.addEventListener('notificationclick', e => {
   e.notification.close();

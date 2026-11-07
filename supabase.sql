@@ -1139,5 +1139,21 @@ end $$;
 revoke all on function public.admin_premium_grant(text, int, text) from public, anon; grant execute on function public.admin_premium_grant(text, int, text) to authenticated;
 revoke all on public.premium_wallet, public.premium_ledger, public.premium_items, public.premium_owned from anon;
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-07a'::text $$;
+-- 🔔 przypomnienia o nauce (push): adres powiadomień przeglądarki + godzina; wysyła je funkcja supabase/functions/reminders
+create table if not exists public.push_subs (
+  endpoint text primary key,
+  user_id uuid not null references auth.users on delete cascade,
+  p256dh text not null, auth text not null,
+  hour int not null default 18 check (hour between 0 and 23),
+  tz text not null default 'Europe/Warsaw',
+  last_sent date,
+  updated_at timestamptz not null default now());
+alter table public.push_subs enable row level security;
+alter table public.push_subs drop constraint if exists push_chk;
+alter table public.push_subs add constraint push_chk check (char_length(endpoint) < 1000 and char_length(p256dh) < 200 and char_length(auth) < 100 and char_length(tz) < 60) not valid;
+drop policy if exists "push_own" on public.push_subs;
+create policy "push_own" on public.push_subs for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+create index if not exists push_subs_user on public.push_subs (user_id);
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-08a'::text $$;
 grant execute on function public.db_version() to anon, authenticated;
