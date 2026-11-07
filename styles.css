@@ -3734,10 +3734,10 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
 @keyframes iceFall { 0% { transform: none; opacity: 1; } 15% { transform: translate(calc(var(--dx) * .15), -6px) rotate(calc(var(--r) * .2)); } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .ice-chip, .ice-shatter { display: none; } }
 .push-card select { width: 100%; }
-/* v337: komputer – nagroda dnia jako małe okienko w rogu, bez zasłaniania całego ekranu */
+/* v338: komputer – nagroda dnia jako małe okienko na środku (bez rozmycia tła, nie na cały ekran) */
 @media (min-width: 700px) and (pointer: fine) {
-  .dr-overlay { inset: auto 24px 92px auto; width: 360px; max-height: calc(100dvh - 116px); padding: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; display: block; overflow: visible; }
-  .dr-box { max-width: 360px; margin: 0; padding: 14px 14px 12px; max-height: calc(100dvh - 116px); overflow-y: auto; box-shadow: 0 14px 40px rgba(0,0,0,.35); border: 1px solid var(--line); }
+  .dr-overlay { inset: 0; padding: 24px; background: rgba(15,23,42,.28); backdrop-filter: none; -webkit-backdrop-filter: none; display: flex; align-items: center; justify-content: center; overflow: visible; }
+  .dr-box { max-width: 360px; margin: auto; padding: 14px 14px 12px; max-height: calc(100dvh - 48px); overflow-y: auto; box-shadow: 0 14px 40px rgba(0,0,0,.35); border: 1px solid var(--line); }
   .dr-gift { font-size: 32px; } .dr-gift .emo8 { width: 36px !important; height: 36px !important; }
   .dr-head h2 { font-size: 18px; margin: 2px 0 0; } .dr-head p { margin: 2px 0 0; }
   .dr-grid { gap: 6px; margin: 10px 0; }
@@ -3748,3 +3748,12 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
   .dr-got span { font-size: 40px; } .dr-got span .emo8 { width: 44px !important; height: 44px !important; } .dr-got b { font-size: 15px; }
   .dr-box > p:last-child { font-size: 11px; }
 }
+
+/* v338: komputer – profil gracza i inne okienka małe, na środku, z przewijaniem zamiast rozjeżdżania na cały ekran */
+@media (min-width: 700px) {
+  .dmenu { width: min(420px, calc(100% - 48px)); max-height: 82vh; overflow-y: auto; }
+  .pl-ov .pl-card { width: min(420px, calc(100% - 48px)); max-height: 82vh; overflow-y: auto; }
+  .pl-case { max-width: 100%; } .pl-case .st-img, .pl-case img { max-width: 72px; max-height: 72px; }
+}
+/* v338: komputer – profil („Ty”) węższy i wyśrodkowany, łatwiej czytać */
+@media (min-width: 900px) { body[data-route="me"] main#view { max-width: 680px !important; margin-left: auto; margin-right: auto; } }
