@@ -10,6 +10,10 @@
    Linie zaczynające się od „//” to komentarze. Import przez: Dodaj → 📥 Pakiet, link #/import?f=assets/imports/plik.txt
    albo wklejenie tekstu. Duplikaty (ta sama strona przednia w tej talii) są pomijane. */
 
+const PACK_IMG_RE = /\[\s*obraz\s*:\s*([^\]]+)\]/gi, PACK_IMG_OK = /^assets\/[\w\-\/.]+\.(webp|png|jpe?g)$/i;
+// pobiera obrazek pakietu (ta sama strona) i zapisuje go jak zdjęcie fiszki
+async function packImage(src) { try { const r = await fetch(src); if (!r.ok) return null; const b = await r.blob();
+  const url = await new Promise((ok, no) => { const f = new FileReader(); f.onload = () => ok(f.result); f.onerror = no; f.readAsDataURL(b); }); return await putImage(url); } catch { return null; } }
 function parsePack(text) {
   const out = { deck: '', subject: '', reverse: false, items: [], bad: 0, loose: [] };
   for (let line of String(text || '').split(/\r?\n/)) {
@@ -25,7 +29,11 @@ function parsePack(text) {
     // kolumna z błędnymi odpowiedziami ABCD: „✗ źle1; źle2; źle3” (albo „źle: …”) – w dowolnym miejscu po odpowiedzi
     const wi = parts.findIndex((x, i) => i >= 2 && /^\s*(✗|źle\s*:|zle\s*:|wrong\s*:)/i.test(x)), wrong = wi >= 0 ? parts[wi].replace(/^\s*(✗|źle\s*:|zle\s*:|wrong\s*:)\s*/i, '').trim().slice(0, 600) : '';
     const hint = (parts.find((x, i) => i >= 2 && i !== wi) || '').trim().slice(0, 1000);
-    out.items.push({ front: parts[0].trim().slice(0, 2000), back: parts[1].trim().replace(/\\n/g, '\n').slice(0, 2000), hint, ...(wrong ? { wrong } : {}) });
+    // obrazek z tej samej strony: „[obraz: assets/…/plik.webp]” na przodzie i/lub na tyle fiszki
+    const takeImg = t => { let src = ''; t = t.replace(PACK_IMG_RE, (m, u) => { if (!src && PACK_IMG_OK.test(u.trim())) src = u.trim(); return ''; }).trim(); return [t, src]; };
+    const [front, img] = takeImg(parts[0].trim()), [back, bimg] = takeImg(parts[1].trim());
+    if (!front && !img) { out.bad++; continue; }
+    out.items.push({ front: front.slice(0, 2000), back: back.replace(/\\n/g, '\n').slice(0, 2000), hint, ...(wrong ? { wrong } : {}), ...(img ? { img } : {}), ...(bimg ? { bimg } : {}) });
   }
   // skopiowana lista ze strony Quizletu: pojęcie i definicja w kolejnych liniach, bez separatora
   const QL_NOISE = /^(pojęcia w tym zestawie|terms in this set|\d+\s*\/\s*\d+|ucz się|fiszki|test|dopasowania|zagraj|udostępnij|zapisz|flashcards|learn|match|share|save)\b/i;
@@ -38,16 +46,20 @@ function importPack(P) {
   const name = P.deck || 'Nowa talia';
   const d = S.decks.find(x => x.name.trim().toLowerCase() === name.toLowerCase()) || newDeck(name);
   if (P.subject && !d.subject) { d.subject = P.subject; touch(d); }
-  const have = new Set(S.notes.filter(n => n.deckId === d.id).map(n => (n.type === 'cloze' ? n.text : n.front).trim().toLowerCase()));
+  const have = new Set(S.notes.filter(n => n.deckId === d.id).map(n => ((n.type === 'cloze' ? n.text : n.front).trim() + (n.imgSrc ? ' ' + n.imgSrc : '')).toLowerCase()));
+  const imgJobs = [];
   let n = 0, skip = 0;
   for (const x of P.items) {
-    const key = (x.cloze || x.front).trim().toLowerCase(); if (have.has(key)) { skip++; continue; } have.add(key);
+    const key = ((x.cloze || x.front).trim() + (x.img ? ' ' + x.img : '')).toLowerCase(); if (have.has(key)) { skip++; continue; } have.add(key);
     const created = Date.now() + n;
     if (x.cloze) addNote({ deckId: d.id, created, type: 'cloze', text: x.cloze, extra: '', hint: '' });
-    else addNote({ deckId: d.id, created, type: 'basic', front: x.front, back: x.back, hint: x.hint, extra: '', ...(x.wrong ? { wrong: x.wrong } : {}), reverse: P.reverse });
+    else { const note = addNote({ deckId: d.id, created, type: 'basic', front: x.front, back: x.back, hint: x.hint, extra: '', ...(x.wrong ? { wrong: x.wrong } : {}), reverse: P.reverse, ...(x.img ? { imgSrc: x.img } : {}) });
+      if (x.img || x.bimg) imgJobs.push([note, x.img, x.bimg]); }
     n++;
   }
   save(); emit('cardsAdded', n); IMPORT_TXT = '';
+  if (imgJobs.length) (async () => { for (const [note, a, b] of imgJobs) { if (a) note.imageId = await packImage(a); if (b) note.backImageId = await packImage(b); touch(note); }
+    save(); render(); })();
   toast(`📥 Dodano ${n} ${plural(n, 'fiszkę', 'fiszki', 'fiszek')} do „${d.name}”${skip ? ` · pominięto ${skip} powtórzonych` : ''}`, 4500);
   go('#/deck/' + d.id);
 }
