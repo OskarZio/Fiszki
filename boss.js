@@ -113,9 +113,10 @@ function bossReset(b) {
   if (b.kind === 'ch') { r.ch[b.i] = 0; if (r.chP) delete r.chP[b.i]; } else { r.fin = 0; delete r.finP; }
   if (r.m && k) delete r.m[k]; r.noAuto = 1; touch(d);
 }
-function bossPrestige(kind, id, i) {
+async function bossPrestige(kind, id, i) {
   const b = bossFor(kind, id, i); if (!b || b.stars < 4) return;
-  if (!confirm(`Prestiż bossa „${b.name}”?\n\nPuchary zaczynasz od nowa, a boss staje się o 35% silniejszy, z turbo-przeszkadzajkami. Nagrody +25% za każdy prestiż.`)) return;
+  if (!(await askBox({ icon: '⭐', title: `Prestiż: ${b.name}`, intro: `Boss wraca jako P${(b.bp || 0) + 1} – trudniejszy, ale bardziej opłacalny.`, ok: 'Biorę prestiż', cancel: 'Jeszcze nie',
+    steps: [['🏆', 'Medale i puchary zaczynasz <b>od nowa</b>'], ['⚔️', 'Boss jest o <b>35% silniejszy</b>'], ['🎰', 'Ma <b>turbo-przeszkadzajki</b>'], ['🪙', 'Nagrody <b>+25%</b> za każdy prestiż']] }))) return;
   if (kind === 'cat') { S.stats[HCP() + 'cbp_' + id] = (S.stats[HCP() + 'cbp_' + id] || 0) + 1; S.stats[HCP() + 'cb_' + id] = 0; }
   else { const d = deckById(id), r = deckRec(d); r.noAuto = 1; if (kind === 'ch') { r.chP = r.chP || {}; r.chP[i] = (r.chP[i] || 0) + 1; r.ch[i] = 0; } else { r.finP = (r.finP || 0) + 1; r.fin = 0; } if (r.m) delete r.m[kind === 'ch' ? 'ch' + i : 'fin']; touch(d); }
   S.stats.bossPrestige = (S.stats.bossPrestige || 0) + 1; save(); toast('⭐ Boss wszedł na wyższy poziom prestiżu!'); render();

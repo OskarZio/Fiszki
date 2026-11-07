@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '330';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '331';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -2270,3 +2270,21 @@ Object.assign(ACTIONS, {
 window.addEventListener('hashchange', () => { NOTE_SEL = null; });
 // 🔇 „Własne dźwięki” usunięte – czyścimy wgrane pliki z urządzenia (raz)
 on('start', () => { if (S.stats.sndGone) return; S.stats.sndGone = 1; for (const k of ['win', 'card', 'add', 'celebrate']) DB.del?.('snd:' + k)?.catch?.(() => {}); delete S.settings.sounds; save(); });
+// 💬 ładne okienko potwierdzenia (zamiast systemowego confirm): ikona, tytuł, kroki z 8-bitowymi ikonami, ostrzeżenie
+function askBox({ icon = '', title = '', intro = '', steps = [], warn = '', ok = 'OK', cancel = 'Anuluj', danger = false } = {}) {
+  return new Promise(res => {
+    document.querySelector('.ask-ov')?.remove();
+    const ov = document.createElement('div'); ov.className = 'dmenu-ov ask-ov';
+    ov.innerHTML = `<div class="dmenu ask-box" role="dialog" aria-modal="true">
+      ${icon ? `<div class="ask-ic">${icon}</div>` : ''}<h2 class="ask-t">${esc(title)}</h2>${intro ? `<p class="ask-intro">${esc(intro)}</p>` : ''}
+      ${steps.length ? `<ul class="ask-steps">${steps.map(([ic, t]) => `<li><span class="ask-si">${ic}</span><span>${t}</span></li>`).join('')}</ul>` : ''}
+      ${warn ? `<div class="ask-warn">${warn}</div>` : ''}
+      <div class="ask-btns"><button class="ghost" data-a="0">${esc(cancel)}</button><button class="${danger ? 'danger' : 'primary'}" data-a="1">${esc(ok)}</button></div></div>`;
+    const done = v => { ov.remove(); document.removeEventListener('keydown', key); res(v); };
+    const key = e => { if (e.key === 'Escape') done(false); if (e.key === 'Enter') done(true); };
+    ov.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b) { e.stopPropagation(); return done(b.dataset.a === '1'); } if (e.target === ov) done(false); });
+    document.addEventListener('keydown', key); document.body.append(ov);
+    if (typeof emo8Decorate === 'function') emo8Decorate(ov);
+    ov.querySelector('[data-a="1"]')?.focus({ preventScroll: true });
+  });
+}

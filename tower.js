@@ -62,11 +62,20 @@ function towerFloor() {
   const cap = BOSS.hs.ultNeed * (3 + (u.ultcap || 0)); BOSS.ult = u.crown ? cap : Math.min(cap, T.ult || 0);
   save(); towerIntro(BOSS, fresh);
 }
-function towerStart() {
+async function towerStart() {
   const twN = () => S.cards.filter(c => (TW_DECKS.length ? TW_DECKS.includes(c.deckId) && fightable(c) : mixFightable(c)) && c.srs.state !== 'new').length;
   if (!TW_GK && twN() < TOWER_REQ) return toast(`🗼 Wybrane talie mają ${twN()} nauczonych fiszek – potrzeba ${TOWER_REQ}`, 4000);
   if (!TW_GK && learnedAll() < TOWER_REQ) return toast(`🗼 Wieża otwiera się przy ${TOWER_REQ} nauczonych fiszkach (masz ${learnedAll()})`, 4000);
-  if (!confirm(TW_GK ? '🧠 Wieża wiedzy – quiz z wiedzy ogólnej.\n\nPiętro za piętrem coraz trudniejsze pytania ABCD: geografia, historia, nauka, kultura, sport… Po piętrze wraca 35% ❤️.\n\nŚmierć albo ucieczka = GAME OVER. Wchodzisz?' : '🗼 Wieża – tryb hardcore.\n\nPiętro za piętrem, coraz trudniej. Po piętrze wraca tylko 35% ❤️. Za każde piętro podwójne XP i 🪙.\n\nŚmierć albo ucieczka = GAME OVER – zaczynasz od parteru. Wchodzisz?')) return;
+  const best = towerBest(), ok = await askBox(TW_GK ? {
+    icon: '🧠', title: 'Wieża wiedzy', intro: 'Quiz z wiedzy ogólnej – nie potrzebujesz własnych fiszek.', ok: 'Wchodzę', cancel: 'Jeszcze nie',
+    steps: [['🎲', 'Na każdym piętrze losuje się <b>kategoria</b> – geografia, historia, nauka, kultura, sport…'], ['⚔️', 'Każde piętro to <b>boss</b> i seria pytań ABCD – coraz trudniejszych'],
+      ['🎰', 'Bossowie losują <b>przeszkadzajki</b> – z każdym piętrem więcej'], ['❤️', 'Po piętrze wraca <b>35% życia</b>, a Ty wybierasz błogosławieństwo'], ['🏆', best ? `Twój rekord: <b>piętro ${best}</b>` : 'Ustanów pierwszy rekord!']],
+    warn: '💀 Śmierć albo ucieczka = koniec wspinaczki. Zaczynasz od parteru.' } : {
+    icon: '🗼', title: 'Wieża', intro: 'Wspinaczka na Twoich fiszkach – tryb dla odważnych.', ok: 'Wchodzę', cancel: 'Jeszcze nie',
+    steps: [['⚔️', 'Każde piętro to <b>boss</b> – coraz silniejszy'], ['🎰', 'Bossowie losują <b>przeszkadzajki</b>, a ich moce się sumują'],
+      ['❤️', 'Po piętrze wraca tylko <b>35% życia</b>, a Ty wybierasz błogosławieństwo'], ['🪙', 'Za każde piętro <b>podwójne XP i złoto</b>'], ['🏆', best ? `Twój rekord: <b>piętro ${best}</b>` : 'Ustanów pierwszy rekord!']],
+    warn: '💀 Śmierć albo ucieczka = koniec wspinaczki. Zaczynasz od parteru.' });
+  if (!ok) return;
   const h = hero(); h[twKey()] = { floor: 1, used: [], mode: TW_GK ? 'abcd' : BOSS_PICK.mode, hp: heroStats().hp, bank: { xp: 0, gems: 0 }, buff: {}, decks: TW_GK ? [] : [...TW_DECKS], seed: Math.random() * 1000 | 0, t: Date.now() }; h.mod = Date.now(); save();
   towerFloor();
 }
@@ -141,8 +150,8 @@ ROUTES.boss = (...a) => BOSS?.b?.kind === 'tower' && BOSS.phase !== 'fight' && a
 const twQuit0 = ACTIONS['boss-quit'];
 ACTIONS['boss-quit'] = el => {
   if (BOSS?.b?.kind !== 'tower' || BOSS.phase !== 'fight') return twQuit0(el);
-  if (!confirm('Ucieczka z wieży = GAME OVER. Na pewno?')) return;
-  bossEnd(false, 'dead');
+  askBox({ icon: '🚪', title: 'Uciec z wieży?', intro: 'Ucieczka liczy się jak porażka.', warn: '💀 Wspinaczka się kończy – zaczniesz od parteru.', ok: 'Uciekam', cancel: 'Walczę dalej', danger: true })
+    .then(ok => { if (ok && BOSS?.phase === 'fight') bossEnd(false, 'dead'); });
 };
 // mapa bossów: karta wieży nad taliami
 const twMap0 = ROUTES.boss;
