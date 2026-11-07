@@ -1,5 +1,5 @@
 'use strict';
-/* Trening pamięci: gry w stylu Memory League (liczby, słowa, obrazy, karty),
+/* Trening pamięci: gry pamięciowe (liczby, słowa, obrazy, karty),
    fonetyczny system liczbowy 00–99 i wykorzystanie pałaców pamięci jako trasy do zapamiętywania. */
 
 // ============================================================ Dane
@@ -75,7 +75,7 @@ ROUTES.train = () => {
   <div class="card hero-card battle-cta" data-go="#/battles"><div class="row nowrap"><span style="font-size:44px">⚔️</span>
     <div class="grow"><b style="font-size:19px">Bitwy 1 na 1</b><div class="small">Rywalizuj ze znajomymi lub losowym graczem · ${w} ${plural(w, 'wygrana', 'wygrane', 'wygranych')} · 💎 ${coins()}</div></div><span style="font-size:22px">›</span></div></div>
   <div class="card"><h2 style="margin-top:0">🎮 Gry pamięciowe</h2>
-    <p class="small muted">Zapamiętaj jak najwięcej w krótkim czasie, potem odtwórz w tej samej kolejności – jak w Memory League.</p>
+    <p class="small muted">Zapamiętaj jak najwięcej w krótkim czasie, potem odtwórz w tej samej kolejności.</p>
     <div class="discs">${Object.entries(DISC).map(([k, d]) => {
       const [n] = levelNT(k), pb = personalBest(k, n);
       return `<button class="disc" data-go="#/game/${k}"><span class="di">${d.icon}</span><b>${d.name}</b>

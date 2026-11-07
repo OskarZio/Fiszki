@@ -337,7 +337,16 @@ Object.assign(ACTIONS, {
     if (acc) { const soft = get('--accent-soft') || card; let at = acc, k = 0; const darkC = L(card) < .2, tgt = darkC ? [255, 255, 255] : [0, 0, 0];
       while (Math.min(cr(at, card), cr(at, soft), cr(at, card2)) < 4.6 && k++ < 14) at = blend(at, tgt, .12); root.setProperty('--accent-text', toHex(at)); }
     const darkUI = L(card) < .2; document.documentElement.dataset.ui = darkUI ? 'dark' : 'light'; root.setProperty('--gold-text', darkUI ? '#fbbf24' : '#a15c07');
-  } catch { /* */ } };
+  } catch { /* */ } ftGo(); };
+  // kolory rzadkości wpisane w tekst (skiny, szanse w jajkach, poziomy) – na danym tle przyciemniamy/rozjaśniamy do 4.5:1
+  const RAR_SEL = '#view span[style*="color"], #view b[style*="color"], #view small[style*="color"], .skin-t b[style*="color"], .skin-case span[style*="color"], .egg-odds span[style*="color"], .char-tier, .hc-lv small, .hc-lv, .hardtag .gemw, .skin-case span';
+  const bgOf = e => { for (let x = e; x; x = x.parentElement) { const c = getComputedStyle(x).backgroundColor, m = c.match(/rgba?\(([^)]+)\)/); if (m) { const v = m[1].split(/[ ,/]+/).map(Number); if ((v[3] ?? 1) > .9) return v.slice(0, 3); } } return hex(getComputedStyle(document.documentElement).getPropertyValue('--bg')) || [255, 255, 255]; };
+  const fixText = () => { try { document.querySelectorAll(RAR_SEL).forEach(e => {
+    if (e.dataset.cg) e.style.color = ''; const c = hex(getComputedStyle(e).color); if (!c) return; const b = bgOf(e); if (cr(c, b) >= 4.8) return;
+    const tgt = L(b) < .2 ? [255, 255, 255] : [0, 0, 0]; let x = c, k = 0; while (cr(x, b) < 5 && k++ < 16) x = blend(x, tgt, .1);
+    e.dataset.cg = 1; e.style.setProperty('color', toHex(x), 'important'); }); } catch { /* */ } };
+  let ftT = 0; const ftGo = () => { clearTimeout(ftT); ftT = setTimeout(fixText, 40); };
+  addEventListener('DOMContentLoaded', () => { const v = document.getElementById('view'); if (v) try { new MutationObserver(ftGo).observe(v, { childList: true, subtree: true }); } catch { /* */ } });
   const ap0 = applyTheme; applyTheme = function (...a) { const r = ap0.apply(this, a); fix(); return r; }; applyTheme.early = ap0.early;
   // motyw zmieniany też z innych miejsc (podgląd, hardcore, start) – po każdej zmianie zmiennych na <html> poprawiamy kontrast
   let fixT = 0; try { new MutationObserver(() => { clearTimeout(fixT); fixT = setTimeout(fix, 30); }).observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] }); } catch { /* */ }

@@ -3818,3 +3818,25 @@ html:not([style*="--bg-image"]) { --rev: #15803d; }
 @media (prefers-color-scheme: dark) { html:not([style*="--bg-image"]) { --rev: #4ade80; } }
 .char-pts { color: var(--on-accent, #fff); }
 .cr-btns button.primary.gold-btn { background: #a16207 !important; border-color: #854d0e !important; box-shadow: 0 4px 0 #713f12 !important; color: #fff !important; }
+/* v342 📓 styl „zeszyt” na wszystkich ekranach (tylko motyw domyślny – wybrane motywy mają własny wygląd) */
+#view .card.battle-cta { background: var(--accent) !important; color: var(--on-accent, #fff) !important; }
+.card.battle-cta .small { color: inherit !important; opacity: .9; }
+/* fiszka do nauki = kartka z kartotekowego pudełka: kremowy papier, czerwona linia, niebieskie linie, margines.
+   Zmienne nadpisane lokalnie, żeby tekst, podpowiedzi i przyciski w środku miały kontrast także w ciemnym trybie. */
+.today-card, html:not([style*="--bg-image"]) body:not(.px-theme) .card.flash:not(.boss-q):not(.fog) {
+  --text: #1d2433; --muted: #5b6577; --line: #d8e3f5; --card2: #eef1f6; --accent: #2f5bd3; --accent-text: #2f5bd3; --accent-soft: #e3eafb; --on-accent: #fff;
+  --hb-bg: #fff4b0; --hb-line: #ecd76a; --hb-h: #8a5a00; --hb-t: #2b2410;
+  color: #1d2433; }
+/* skojarzenie na fiszce = żółta karteczka przyklejona do kartki */
+html:not([style*="--bg-image"]) body:not(.px-theme) .card.flash .hintbox { border-radius: 3px; box-shadow: 0 2px 0 #e2cc5c; transform: rotate(-.6deg); }
+html:not([style*="--bg-image"]) body:not(.px-theme) .card.flash:not(.boss-q):not(.fog) {
+  border: 1px solid #e3e1d6; border-radius: 6px 6px 14px 6px; box-shadow: 0 2px 0 #e3e1d6, 0 3px 0 #d6d3c5;
+  background: linear-gradient(#e5484d, #e5484d) 0 36px / 100% 2px no-repeat,
+    linear-gradient(90deg, transparent 18px, rgba(229,72,77,.3) 18px 19px, transparent 19px) 0 0 / 100% 100% no-repeat,
+    repeating-linear-gradient(transparent 0 29px, #e1e9f7 29px 30px) 0 38px / 100% calc(100% - 38px) no-repeat, #fffef9 !important; }
+html[data-ui="dark"]:not([style*="--bg-image"]) body:not(.px-theme) .card.flash:not(.boss-q):not(.fog) { box-shadow: 0 2px 0 #c9c6b8, 0 4px 0 rgba(0,0,0,.35); }
+html:not([style*="--bg-image"]) body:not(.px-theme) .card.flash hr { border-top: 2px solid rgba(229,72,77,.45); }
+/* tytuły stron podkreślone zakreślaczem (pod tekstem, nie zmienia układu) */
+html:not([style*="--bg-image"]) body:not(.px-theme) #view h1 { text-decoration: underline; text-decoration-color: var(--hl); text-decoration-thickness: .3em;
+  text-underline-offset: -.12em; text-decoration-skip-ink: none; }
+html[data-ui="dark"]:not([style*="--bg-image"]) body:not(.px-theme) #view h1 { text-decoration-color: rgba(255,216,77,.3); }
