@@ -3757,3 +3757,24 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
 }
 /* v338: komputer – profil („Ty”) węższy i wyśrodkowany, łatwiej czytać */
 @media (min-width: 900px) { body[data-route="me"] main#view { max-width: 680px !important; margin-left: auto; margin-right: auto; } }
+/* ♿ v340 UI/UX: kontrast, focus, rozmiary dotyku i tekstu (wg zasad ui-ux-pro-max: kontrast 4.5:1, cele ≥ 44 px, tekst ≥ 12 px) */
+button.primary, .btn.primary { color: var(--on-accent, #fff); }
+button.primary .emo8, .btn.primary .emo8 { filter: none; }
+.coins.gold, .gold-text { color: var(--gold-text, #a15c07) !important; }
+:where(button, a, [role="button"], summary, [tabindex]):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+:where(button, a, [role="button"]):focus:not(:focus-visible) { outline: none; }
+.iconbtn { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; }
+.gemw, .boss-tags span, .char-tier, .char-pts, .eff small, .tag, .hc-lv small, .atmodes small, .seg small, .dr-tile small, .dr-tile b, .lg-prizes, .mate-tally { font-size: max(12px, 1em) !important; }
+.gemw, .char-tier, .char-pts { font-size: 12px !important; }
+.boss-tags span { font-size: 12px !important; }
+/* tekst pomocniczy: wysokość linii dla czytelności dłuższych opisów */
+.small, small { line-height: 1.45; }
+.card p { line-height: 1.5; }
+/* kolory rzadkości w tekście (skiny, szanse, poziomy postaci) – ciemniejsze na jasnym tle, jaśniejsze na ciemnym */
+html[data-ui="light"] :is(.skin-t b, .odds span, .char-tier, .char-pts, small span[style*="color"], .gemw) { filter: brightness(.68) saturate(1.15); }
+html[data-ui="dark"] :is(.skin-t b, .odds span, .char-tier, .char-pts, small span[style*="color"]) { filter: brightness(1.35); }
+.mode-pick small, .tower-weapon small { font-size: 12px !important; }
+html[data-ui="dark"] button.danger, html[data-ui="dark"] .btn.danger { color: #fca5a5; }
+html[data-ui="light"] .hubnav a:not(.on) { color: color-mix(in srgb, var(--muted) 82%, var(--text)); }
+/* tekst w kolorze akcentu (linki, aktywne zakładki, postęp) – wersja o pełnym kontraście */
+#view a:not(.btn):not([class*="primary"]), .hubnav a.on, .bn-prog, .muted b, #tabs a.on, #tabs button.on { color: var(--accent-text, var(--accent)); }

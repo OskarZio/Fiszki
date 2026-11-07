@@ -317,3 +317,30 @@ Object.assign(ACTIONS, {
   'photo-change': async () => { if (await bgPhotoPick()) { applyTheme(); render(); toast('Tło zmienione ✓'); } },
   'photo-dim': () => { const L = [.2, .35, .45, .6, .75], cur = S.settings.photoDim ?? .45; S.settings.photoDim = L[(L.indexOf(cur) + 1) % L.length] ?? .45; applyTheme(); save(); render(); },
 });
+
+// ♿ v340: czytelność w każdym motywie – po nałożeniu motywu liczymy kontrast (WCAG 4.5:1) i poprawiamy:
+// tekst na przyciskach z kolorem akcentu (jasny akcent = ciemny tekst), szary tekst pomocniczy i kolor złota.
+(function contrastGuard() {
+  const hex = c => { const m = String(c).trim().match(/^#([\da-f]{3}|[\da-f]{6})$/i); if (m) { let h = m[1]; if (h.length === 3) h = [...h].map(x => x + x).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); }
+    const r = String(c).match(/rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/); return r ? [+r[1], +r[2], +r[3]] : null; };
+  const L = ([r, g, b]) => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+  const cr = (a, b) => { const x = L(a), y = L(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const toHex = a => '#' + a.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+  const blend = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  const fix = () => { try {
+    const cs = getComputedStyle(document.documentElement), get = v => hex(cs.getPropertyValue(v)), st = document.documentElement.style;
+    const root = { setProperty: (k, v) => { if (st.getPropertyValue(k) !== v) st.setProperty(k, v); } };   // bez zmian = bez zapisu (obserwator nie zapętla się)
+    const acc = get('--accent'), card = get('--card') || [255, 255, 255], card2 = get('--card2') || card, text = get('--text') || [27, 29, 41];
+    if (acc) root.setProperty('--on-accent', cr(acc, [255, 255, 255]) >= 4.5 || cr(acc, [255, 255, 255]) >= cr(acc, [18, 16, 28]) ? '#ffffff' : '#12101c');
+    const bg = get('--bg') || card;
+    let mu = get('--muted'); if (mu) { let k = 0; while (Math.min(cr(mu, card), cr(mu, card2), cr(mu, bg)) < 4.7 && k++ < 14) mu = blend(mu, text, .15); root.setProperty('--muted', toHex(mu)); }
+    if (acc) { const soft = get('--accent-soft') || card; let at = acc, k = 0; const darkC = L(card) < .2, tgt = darkC ? [255, 255, 255] : [0, 0, 0];
+      while (Math.min(cr(at, card), cr(at, soft), cr(at, card2)) < 4.6 && k++ < 14) at = blend(at, tgt, .12); root.setProperty('--accent-text', toHex(at)); }
+    const darkUI = L(card) < .2; document.documentElement.dataset.ui = darkUI ? 'dark' : 'light'; root.setProperty('--gold-text', darkUI ? '#fbbf24' : '#a15c07');
+  } catch { /* */ } };
+  const ap0 = applyTheme; applyTheme = function (...a) { const r = ap0.apply(this, a); fix(); return r; }; applyTheme.early = ap0.early;
+  // motyw zmieniany też z innych miejsc (podgląd, hardcore, start) – po każdej zmianie zmiennych na <html> poprawiamy kontrast
+  let fixT = 0; try { new MutationObserver(() => { clearTimeout(fixT); fixT = setTimeout(fix, 30); }).observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] }); } catch { /* */ }
+  if (document.readyState !== 'loading') setTimeout(fix, 0); else addEventListener('DOMContentLoaded', fix);
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(fix, 0)); } catch { /* */ }
+})();
