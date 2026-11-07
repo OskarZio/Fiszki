@@ -3844,3 +3844,10 @@ html[data-ui="dark"]:not([style*="--bg-image"]) body:not(.px-theme) #view h1 { t
 .pp-overlay .pp-box { max-width: 440px !important; margin: auto !important; }
 :is(.dr-overlay, .qr-overlay, .wl-overlay) > .card:not(.pp-box) { max-width: min(480px, 100%) !important; margin-left: auto !important; margin-right: auto !important; }
 .pp-overlay { background: rgba(8,12,10,.5) !important; }
+/* teleturniej: własna ciemna scena – zmienne lokalne, żeby ogólne reguły (.card tło !important, teksty w kolorze --text) nie dawały białego na białym */
+.sh-stage { --text: #f8fafc; --muted: rgba(248,250,252,.72); --card: rgba(255,255,255,.08); --card2: rgba(255,255,255,.12); --line: rgba(255,255,255,.16);
+  --accent-text: #facc15; --accent-soft: rgba(250,204,21,.14); color: #f8fafc; }
+.sh-stage .sh-src button.on { background: rgba(250,204,21,.12) !important; color: #f8fafc !important; }
+/* pływające przyciski (czas jajka, czat) nie zasłaniają końca strony */
+body:has(#egg-chip.floating, #gc-fab) main { padding-bottom: 88px !important; }
+img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline-block !important; vertical-align: -6px; }
