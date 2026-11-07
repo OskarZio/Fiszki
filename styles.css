@@ -3714,3 +3714,22 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
 .tower-hp .hpbar span { display: flex !important; align-items: center; justify-content: center; height: 100%; font-size: 15px; line-height: 1; }
 .msg-del { background: transparent !important; border: 0 !important; box-shadow: none !important; min-height: 0 !important; padding: 0 0 0 6px !important; font-size: 12px; color: inherit; opacity: .75; cursor: pointer; }
 .msg-del .emo8 { width: 14px !important; height: 14px !important; }
+/* ❓ lucky block w walce */
+.ev-lucky img { width: 56px; height: 56px; image-rendering: pixelated; display: block; animation: luckyBob 1s ease-in-out infinite alternate; }
+@keyframes luckyBob { to { transform: translateY(-4px); } }
+.lucky-fx { position: absolute; z-index: 16; left: 50%; top: 30%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 16px; font-size: 15px; white-space: nowrap; max-width: calc(100% - 24px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35); animation: luckyIn .35s cubic-bezier(.3,1.6,.5,1) both; animation-delay: calc(var(--el, 0s) * -1); pointer-events: none; }
+.lucky-fx b { white-space: normal; line-height: 1.3; } .lucky-fx span { font-size: 26px; } .lucky-fx .emo8 { width: 28px !important; height: 28px !important; }
+.lucky-fx.good { background: #166534; color: #fff; } .lucky-fx.bad { background: #7f1d1d; color: #fff; }
+@keyframes luckyIn { from { transform: translateX(-50%) scale(.4); opacity: 0; } }
+/* 🧊 rozbijanie lodu: pęknięcia, odpryski, rozpad na kawałki */
+.ice-cracks { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+.ice-cracks path { fill: none; stroke: #f0f9ff; stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: bevel; filter: drop-shadow(0 0 1px #0c4a6e); transition: opacity .12s; }
+.ice.ice-hit { animation: iceHit .16s ease-out; } @keyframes iceHit { 30% { transform: translate(-2px, 1px) scale(.99); } 70% { transform: translate(2px, -1px); } }
+.ice-chip { position: fixed; z-index: 400; width: 9px; height: 9px; margin: -4px 0 0 -4px; background: #e0f2fe; box-shadow: inset -2px -2px 0 #7dd3fc, 0 0 0 1px #0c4a6e; pointer-events: none;
+  animation: iceChip .55s cubic-bezier(.2,.7,.4,1) forwards; }
+@keyframes iceChip { to { transform: translate(var(--dx), calc(var(--dy) + 40px)) rotate(var(--r)); opacity: 0; } }
+.ice-shatter { position: fixed; z-index: 400; pointer-events: none; }
+.ice-shatter i { position: absolute; background-image: url(assets/dis8/icesheet.webp); image-rendering: pixelated; box-shadow: inset 0 0 0 1px rgba(255,255,255,.6); animation: iceFall .65s cubic-bezier(.4,0,.9,.6) forwards; }
+@keyframes iceFall { 0% { transform: none; opacity: 1; } 15% { transform: translate(calc(var(--dx) * .15), -6px) rotate(calc(var(--r) * .2)); } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ice-chip, .ice-shatter { display: none; } }

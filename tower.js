@@ -21,6 +21,9 @@ const BLESS = {
   exec: ['🪓', 'Egzekutor', 'boss < 25% ❤️ → +40% obrażeń'], abcd: ['🎯', 'Snajper', 'ABCD: cios +20%'], type: ['✍️', 'Pióro', 'wpisywanie: cios +25%'],
   steady: ['🧘', 'Zimna krew', '„Ledwo” nie przerywa serii', 0, 1], cleanse: ['🧹', 'Oczyszczenie', 'boss traci 1 moc wieży', 1],
   ultcap: ['🔋', 'Magazyn mocy', '+1 miejsce na zebrany supercios (sumuje się)'], echo: ['🔁', 'Echo', '+20% szansy, że supercios uderzy drugi raz (sumuje się)'],
+  armor: ['🛡️', 'Pancerz', '−8% obrażeń od bossa (sumuje się)'], ultpow: ['💥', 'Siła superciosu', 'supercios +25% obrażeń (sumuje się)'],
+  icebreak: ['🧊', 'Lodołamacz', 'lód i robaczki pękają od jednego stuknięcia', 1], loot: ['🎁', 'Szczęściarz', '+1 przedmiot w każdej skrzyni (sumuje się)'],
+  lucky: ['🍀', 'Fart', 'lucky blocki pojawiają się częściej i częściej są dobre (sumuje się)'],
   crown: ['👑', 'Korona mocy ★', 'każde piętro zaczynasz z pełnym magazynem superciosów', 1, 1], midas: ['💎', 'Dotyk Midasa ★', '+50% kryształów za piętra', 1, 1],
 };
 // perki się sumują (poziom = ile razy wzięty); jednorazowe (5. pole = 1) nie wracają po wzięciu
@@ -48,12 +51,13 @@ function towerFloor() {
   const b = towerBoss(T); if (!b.ok) return toast(`Wieża wymaga ${TOWER_REQ} nauczonych fiszek`);
   const hs = heroStats(), u = T.buff; hs.atk *= 1 + (u.dmg || 0); hs.crit = Math.min(.7, hs.crit + (u.crit || 0)); hs.hp += u.hp || 0;
   hs.dodge = Math.min(.5, hs.dodge + (u.dodge || 0)); hs.time *= 1 + (u.time || 0); hs.vamp += u.vamp || 0; hs.thorns += u.thorns || 0;
-  hs.combo *= 1 + (u.combo || 0); hs.first = Math.max(hs.first, u.first ? 1.5 + .5 * u.first : 1); hs.regen += u.regen || 0; hs.exec += u.exec || 0; hs.abcdM += u.abcdM || 0; hs.typeM += u.typeM || 0; if (u.steady) hs.steady = true; hs.ultNeed = Math.max(2, hs.ultNeed - (u.ult || 0)); if (u.phoenix && !T.phoenixUsed) hs.second = true;
+  hs.def = Math.min(.6, hs.def + (u.def || 0)); hs.ultPow *= 1 + (u.ultPow || 0); hs.loot += u.loot || 0; if (u.icebreak) hs.ice = true; hs.combo *= 1 + (u.combo || 0); hs.first = Math.max(hs.first, u.first ? 1.5 + .5 * u.first : 1); hs.regen += u.regen || 0; hs.exec += u.exec || 0; hs.abcdM += u.abcdM || 0; hs.typeM += u.typeM || 0; if (u.steady) hs.steady = true; hs.ultNeed = Math.max(2, hs.ultNeed - (u.ult || 0)); if (u.phoenix && !T.phoenixUsed) hs.second = true;
   if (!T.mode) T.mode = TW_GK ? 'abcd' : BOSS_PICK.mode;
   T.abil = Array.isArray(T.abil) ? T.abil.filter(a => BOSS_ABIL[a]) : [];
-  let fresh = null; if (T.abil.length < T.floor) { fresh = towerCurse(T.abil); if (fresh) T.abil.push(fresh); }
-  b.curses = true;
-  const p = bossParams(b, T.mode); p.abil = [...T.abil]; p.hp = Math.round(p.hp * (1 + .06 * T.floor) * (TW_GK ? 1.7 : 1)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
+  // 🎰 nowa moc bossa co 4 piętra (1., 5., 9.…), za to od 5. piętra przeszkadzajki są cięższe (turbo), a od 9. częstsze
+  let fresh = null; if (T.abil.length < Math.ceil(T.floor / 4)) { fresh = towerCurse(T.abil); if (fresh) T.abil.push(fresh); }
+  b.curses = true; b.luckyBoost = u.lucky || 0;
+  const p = bossParams(b, T.mode); p.abil = [...T.abil]; if (T.floor >= 5) { p.turbo = true; b.turbo = true; } if (T.floor >= 9) p.every = Math.max(1, (p.every || 3) - 1); p.hp = Math.round(p.hp * (1 + .06 * T.floor) * (TW_GK ? 1.7 : 1)); p.atk = Math.round(p.atk * (1 + .04 * T.floor));
   T.hp = Math.min(T.hp, hs.hp);
   bossBegin(b, { tower: true, hs, me: T.hp, meMax: hs.hp, guard: u.guard ? 2 * u.guard : 0, mode: T.mode }, p);
   if (u.phoenix && !T.phoenixUsed) BOSS.second = true;
@@ -68,11 +72,11 @@ async function towerStart() {
   if (!TW_GK && learnedAll() < TOWER_REQ) return toast(`🗼 Wieża otwiera się przy ${TOWER_REQ} nauczonych fiszkach (masz ${learnedAll()})`, 4000);
   const best = towerBest(), ok = await askBox(TW_GK ? {
     icon: '🧠', title: 'Wieża wiedzy', intro: 'Quiz z wiedzy ogólnej – nie potrzebujesz własnych fiszek.', ok: 'Wchodzę', cancel: 'Jeszcze nie',
-    steps: [['🎲', 'Na każdym piętrze losuje się <b>kategoria</b> – geografia, historia, nauka, kultura, sport…'], ['⚔️', 'Każde piętro to <b>boss</b> i seria pytań ABCD – coraz trudniejszych'],
-      ['🎰', 'Bossowie losują <b>przeszkadzajki</b> – z każdym piętrem więcej'], ['❤️', 'Po piętrze wraca <b>35% życia</b>, a Ty wybierasz błogosławieństwo'], ['🏆', best ? `Twój rekord: <b>piętro ${best}</b>` : 'Ustanów pierwszy rekord!']],
+    steps: [['🎲', 'Co 3 piętra losuje się <b>kategoria</b> – geografia, historia, nauka, kultura, sport…'], ['⚔️', 'Każde piętro to <b>boss</b> i seria pytań ABCD – coraz trudniejszych'],
+      ['🎰', 'Co 4 piętra boss dostaje <b>nową przeszkadzajkę</b> – od 5. piętra cięższe'], ['❤️', 'Po piętrze wraca <b>35% życia</b>, a Ty wybierasz ulepszenie (sumują się)'], ['🏆', best ? `Twój rekord: <b>piętro ${best}</b>` : 'Ustanów pierwszy rekord!']],
     warn: '💀 Śmierć albo ucieczka = koniec wspinaczki. Zaczynasz od parteru.' } : {
     icon: '🗼', title: 'Wieża', intro: 'Wspinaczka na Twoich fiszkach – tryb dla odważnych.', ok: 'Wchodzę', cancel: 'Jeszcze nie',
-    steps: [['⚔️', 'Każde piętro to <b>boss</b> – coraz silniejszy'], ['🎰', 'Bossowie losują <b>przeszkadzajki</b>, a ich moce się sumują'],
+    steps: [['⚔️', 'Każde piętro to <b>boss</b> – coraz silniejszy'], ['🎰', 'Co 4 piętra boss dostaje <b>nową przeszkadzajkę</b> – moce się sumują i od 5. piętra są cięższe'],
       ['❤️', 'Po piętrze wraca tylko <b>35% życia</b>, a Ty wybierasz błogosławieństwo'], ['🪙', 'Za każde piętro <b>podwójne XP i złoto</b>'], ['🏆', best ? `Twój rekord: <b>piętro ${best}</b>` : 'Ustanów pierwszy rekord!']],
     warn: '💀 Śmierć albo ucieczka = koniec wspinaczki. Zaczynasz od parteru.' });
   if (!ok) return;
@@ -105,6 +109,7 @@ function towerBless(k) {
   if (k === 'dmg') add('dmg', .12); if (k === 'crit') add('crit', .08); if (k === 'dodge') add('dodge', .1); if (k === 'time') add('time', .4);
   if (k === 'maxhp') { add('hp', 25); T.hp += 25; } if (k === 'vamp') add('vamp', .1); if (k === 'thorns') add('thorns', .25); if (k === 'combo') add('combo', 1);
   if (k === 'guard') add('guard', 1); if (k === 'first') add('first', 1); if (k === 'regen') add('regen', 2); if (k === 'exec') add('exec', .4);
+  if (k === 'armor') add('def', .08); if (k === 'ultpow') add('ultPow', .25); if (k === 'icebreak') u.icebreak = 1; if (k === 'loot') add('loot', 1); if (k === 'lucky') add('lucky', 1);
   if (k === 'abcd') add('abcdM', .2); if (k === 'type') add('typeM', .25); if (k === 'steady') u.steady = 1;
   if (k === 'cleanse' && T.abil?.length) { const x = T.abil.splice(Math.random() * T.abil.length | 0, 1)[0]; toast(`🧹 Boss traci moc: ${BOSS_ABIL[x]?.[1] || x}`, 3000); }
   T.blv = T.blv || {}; T.blv[k] = (T.blv[k] || 0) + 1;

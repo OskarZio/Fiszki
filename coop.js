@@ -88,7 +88,7 @@ function coopMsg(m0) {
     C.hostId = m.from; C.tower = !!m.tw; C.gq = !!m.gq; C.setInfo = m.sm ? { name: m.sm, n: m.sn || 0 } : null; for (const x of m.players) C.players[x.id] = { ...(C.players[x.id] || {}), ...x, seen: Date.now() }; return render();
   }
   if (m.t === 'start' && !C.host && (m.from === C.hostId || !C.hostId) && ['lobby', 'floor'].includes(C.phase) && m.heads) { C.hostId = m.from; }
-  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); if (m.bf) C.tw.buff = { ...m.bf }; C.gq = !!m.gq; if (m.gc) { C.gkCat = m.gc; if (typeof gkCatRoll === 'function') { GK_ROLL_UNTIL = Date.now() + GK_ROLL_GAP; setTimeout(() => gkCatRoll(m.gc), 350); } } C.gqi = m.gqi; if (m.gqi?.length && typeof gkCard === 'function') { C.gkCat = gkCard('gk:' + m.gqi[0])?.cat || null; if (m.fl === 1 && C.gkCat && typeof gkCatRoll === 'function') setTimeout(() => gkCatRoll(C.gkCat), 350); } } return coopBegin(m.heads, m.seed, m.set); }
+  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); if (m.bf) C.tw.buff = { ...m.bf }; C.gq = !!m.gq; if (m.gc && m.gc !== C.gkCat) { C.gkCat = m.gc; if (typeof gkCatRoll === 'function') { GK_ROLL_UNTIL = Date.now() + GK_ROLL_GAP; setTimeout(() => gkCatRoll(m.gc), 350); } } C.gqi = m.gqi; if (m.gqi?.length && typeof gkCard === 'function') { C.gkCat = gkCard('gk:' + m.gqi[0])?.cat || null; if (m.fl === 1 && C.gkCat && typeof gkCatRoll === 'function') setTimeout(() => gkCatRoll(C.gkCat), 350); } } return coopBegin(m.heads, m.seed, m.set); }
   if (m.t === 'ans' && p) { p.ans = { v: m.v === 1 ? 1 : m.v === 2 ? 2 : 0, at: m.at || '', t: Date.now() }; setTimeout(softRender, 2600); p.ansN = p.ansN || [0, 0]; p.ansN[p.ans.v === 0 ? 1 : 0]++; return softRender(); }
   if (m.t === 'ok' && p) { C.mateOk = { id: m.from, t: Date.now() }; return; }
   if (m.t === 'emo' && p && (m.emo != null || m.st)) { p.emo = { i: m.emo, st: m.st, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
@@ -115,7 +115,7 @@ function coopStartHost() {
   if (COOP_MODE === 'tower') { const fl = C.phase === 'floor' ? C.tw.floor : 1, keys = Object.keys(DUO_BON), bon = fl > 1 ? duoVoteWinner(C) || keys[Math.random() * keys.length | 0] : null;
     const tot = heads.reduce((a, h) => a + h.max, 0); heads.splice(0, heads.length, { id: 'boss', max: Math.round(tot * .9 * (1 + .2 * (fl - 1))) });   // 🐉 jeden wspólny boss z dużym ❤️
     const ab = [...(fl > 1 && C.tw?.abil || [])]; const nx = towerCurse(ab); if (nx) ab.push(nx);
-    let gqi; if (COOP_SRC === 'gk' && typeof gkPick === 'function') { const T0 = { floor: fl * 2, used: C.gkUsed || [], cat: undefined };   /* 🎲 nowa kategoria na każde piętro */ gqi = gkPick(T0, 30).map(c => String(c.id).slice(3)); C.gkUsed = T0.used; C.gkCat = T0.cat; }
+    let gqi; if (COOP_SRC === 'gk' && typeof gkPick === 'function') { const T0 = { floor: fl * 2, used: C.gkUsed || [], cat: (fl - 1) % 3 === 0 ? undefined : C.gkCat };   /* 🎲 nowa kategoria co 3 piętra */ gqi = gkPick(T0, 30).map(c => String(c.id).slice(3)); C.gkUsed = T0.used; C.gkCat = T0.cat; }
     duoPrep(fl, bon, ab); tw = { tw: true, fl, ab, bf: { ...(C.tw?.buff || {}) }, ...(bon ? { bon } : {}), ...(gqi ? { gq: true, gqi, ...(C.gkCat ? { gc: C.gkCat } : {}) } : {}) }; C.gq = COOP_SRC === 'gk'; C.gqi = gqi; }
   coopSend({ t: 'start', heads, seed, ...(set ? { set } : {}), ...tw }); coopBegin(heads, seed, set);
 }

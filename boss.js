@@ -620,7 +620,8 @@ function rollEvent(B) {
   // ⚡ QTE: szybka seria pytań – częściej u mocniejszych bossów
   if (!B.qte && !B.pendQte && B.i >= 3 && !B.down && !B.coop && Math.random() < .07 + .035 * B.b.diff) { B.pendQte = true; B.log.unshift('⚡ QTE nadchodzi – przygotuj się!'); return; }
   if (B.ev || B.triple || B.gaunt || B.i < 3 || B.down || Math.random() > .17) return;
-  const k = ['chest', 'chest', 'triple', 'gaunt'][Math.random() * 4 | 0];
+  const lb = B.b.luckyBoost || 0, k = [...['chest', 'chest', 'triple', 'gaunt', 'lucky'], ...Array(Math.min(3, lb)).fill('lucky')][Math.random() * (5 + Math.min(3, lb)) | 0];
+  if (k === 'lucky') { B.ev = { k, t: Date.now() }; setTimeout(() => { if (BOSS === B && B.ev?.k === 'lucky') { B.ev = null; B.log.unshift('❓ Lucky block zniknął…'); if (B.phase === 'fight') render(); } }, 4000); }
   if (k === 'chest') { B.ev = { k, t: Date.now() }; setTimeout(() => { if (BOSS === B && B.ev?.k === 'chest') { B.ev = null; B.log.unshift('📦 Skrzynka uciekła…'); if (B.phase === 'fight') render(); } }, 3600); }
   if (k === 'triple') { B.triple = true; B.log.unshift('💥 Następne pytanie za 3× – dobrze: mega cios, źle: podwójna kontra'); }
   if (k === 'gaunt') { B.gaunt = { n: 0 }; B.log.unshift('🎯 Wyzwanie: 3 dobre odpowiedzi z rzędu = nagroda'); }
@@ -636,6 +637,43 @@ function grabEvChest() {
   } else if (Math.random() < .6) { const ks = Object.keys(POTIONS).filter(k => k !== 'phoenix'), k = ks[Math.random() * ks.length | 0]; addItem('potion', k, 1); B.log.unshift(`📦 Złapane! ${POTIONS[k].name}`); }
   else { const n = 15 + 5 * B.b.diff; S.wallet.push({ id: 'evchest-' + uid(), n, why: 'boss-event', t: Date.now() }); B.log.unshift(`📦 Złapane! +${n} 💎`); }
   S.stats.evChests = (S.stats.evChests || 0) + 1; bossSfx('chest'); save(); render();
+}
+// 🧊 rozbijanie lodu: pęknięcia rosną z każdym stuknięciem, odpryski lecą spod palca, a na koniec tafla rozpada się na kawałki
+const ICE_CRACKS = ['M50 50 L38 30 L41 18 L33 2', 'M50 50 L66 36 L79 34 L98 18', 'M50 50 L62 64 L60 80 L71 98', 'M50 50 L34 60 L20 58 L2 72', 'M50 50 L54 30 L68 20 L70 2', 'M50 50 L42 70 L30 82 L26 98'];
+const iceCracksSVG = (st, max) => `<svg class="ice-cracks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${ICE_CRACKS.map((d, i) => `<path d="${d}" style="opacity:${i < Math.ceil(st / max * 6) ? 1 : 0}"/>`).join('')}</svg>`;
+function iceChips(x, y, n) { for (let i = 0; i < n; i++) { const c = document.createElement('i'); c.className = 'ice-chip'; const a = Math.random() * Math.PI * 2, d = 30 + Math.random() * 50;
+  c.style.cssText = `left:${x}px;top:${y}px;--dx:${(Math.cos(a) * d).toFixed(0)}px;--dy:${(Math.sin(a) * d - 20).toFixed(0)}px;--r:${(Math.random() * 360 - 180).toFixed(0)}deg`; document.body.append(c); setTimeout(() => c.remove(), 560); } }
+function iceShatter(r) {
+  const ov = document.createElement('div'); ov.className = 'ice-shatter'; ov.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
+  const C = 4, R = 3; let h = '';
+  for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) { const dx = (x - (C - 1) / 2) * (40 + Math.random() * 40), dy = (y - (R - 1) / 2) * 40 + 60 + Math.random() * 60;
+    h += `<i style="left:${x / C * 100}%;top:${y / R * 100}%;width:${100 / C + .5}%;height:${100 / R + .5}%;background-size:${C * 100}% ${R * 100}%;background-position:${x / (C - 1) * 100}% ${y / (R - 1) * 100}%;--dx:${dx.toFixed(0)}px;--dy:${dy.toFixed(0)}px;--r:${(Math.random() * 120 - 60).toFixed(0)}deg"></i>`; }
+  ov.innerHTML = h; document.body.append(ov); setTimeout(() => ov.remove(), 700);
+}
+// ❓ lucky block: złap, a los zdecyduje – coś dobrego albo złego (Fart z wieży przesuwa szanse na dobre)
+const LUCKY_GOOD = [
+  ['❤️', 'Leczenie! +30% ❤️', B => healMe(Math.round(B.meMax * .3))],
+  ['⚡', 'Pełny supercios!', B => { B.ult = Math.min(ultCap(B), B.ult + B.hs.ultNeed); }],
+  ['💥', 'Piorun w bossa: −12% jego ❤️', B => dealBoss(Math.round(B.max * .12), 'lucky')],
+  ['💪', 'Siła! 3 następne ciosy ×2', B => { B.power = (B.power || 0) + 3; }],
+  ['🧪', 'Darmowa mikstura!', B => { const ks = Object.keys(POTIONS).filter(k => k !== 'phoenix'), k = ks[Math.random() * ks.length | 0]; addItem('potion', k, 1); return POTIONS[k].name; }],
+  ['🪙', 'Worek złota!', B => { const n = 30 + 10 * (B.b.diff || 0); S.wallet.push({ id: 'lucky-' + uid(), n, why: 'boss-event', t: Date.now() }); return `+${n} 🪙`; }],
+];
+const LUCKY_BAD = [
+  ['💀', 'Pułapka! −15% ❤️', B => hurtMe(Math.round(B.meMax * .15), 'Pułapka')],
+  ['🩹', 'Boss się leczy: +10% ❤️', B => { B.hp = Math.min(B.max, B.hp + Math.round(B.max * .1)); }],
+  ['🧊', 'Zamrożenie! Następne pytanie pod lodem', B => { B.pendIce = true; }],
+  ['🐛', 'Robaczki! Wyskoczą przy następnym pytaniu', B => { B.pendBugs = 3; }],
+  ['🔋', 'Kradzież mocy: supercios −1', B => { B.ult = Math.max(0, B.ult - B.hs.ultNeed); }],
+];
+function grabLucky() {
+  const B = BOSS; if (B?.ev?.k !== 'lucky') return; B.ev = null;
+  const good = Math.random() < Math.min(.85, .55 + .08 * (B.b.luckyBoost || 0)), L = good ? LUCKY_GOOD : LUCKY_BAD, [ic, txt, fx] = L[Math.random() * L.length | 0];
+  const extra = fx(B); B.luckyFx = { good, ic, txt: txt + (typeof extra === 'string' ? ` (${extra})` : ''), t: Date.now() };
+  B.log.unshift(`❓ Lucky block: ${ic} ${B.luckyFx.txt}`); S.stats.luckyBlocks = (S.stats.luckyBlocks || 0) + 1;
+  try { bossSfx(good ? 'chest' : 'hit'); } catch { /* */ } if (good && typeof confetti === 'function') confetti(60);
+  setTimeout(() => { if (BOSS === B && B.luckyFx && Date.now() - B.luckyFx.t >= 2400) { B.luckyFx = null; if (B.phase === 'fight') render(); } }, 2500);
+  save(); if (B.me <= 0 && !B.coop) return bossEnd(false, 'dead'); render();
 }
 function gauntReward() { const B = BOSS, n = 20 + 5 * B.b.diff; S.wallet.push({ id: 'gaunt-' + uid(), n, why: 'boss-event', t: Date.now() }); B.ult = Math.min(ultCap(B), B.ult + 2); B.log.unshift(`🎯 Wyzwanie zaliczone! +${n} 💎 i ⚡ +2 do superciosu`); }
 // 🐾 pomocnik: stworek z inkubatora, raz na walkę – siła zależy od jego rzadkości
@@ -922,7 +960,9 @@ function fightView() {
     const r = rng => { let h = hashStr(String(cur.id) + B.i); return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0) / 4294967296); };
     const out = cur.dis === 'reverse' ? [...t].reverse().join('') : (() => { const R = r(), a = [...w]; for (let k = a.length - 1; k > 0; k--) { const j = R() * (k + 1) | 0; [a[k], a[j]] = [a[j], a[k]]; } return a.join(' '); })();
     q = `<div class="ctext">${esc(out)}</div>` + (cm === 'tf' ? `<div class="tf-claim">${esc(cur.claim)}</div>` : ''); }
-  const evChest = B.ev?.k === 'chest' ? `<button class="ev-chest" data-act="boss-evchest" aria-label="Złap skrzynkę">${crateImg('grab')}<small>Złap!</small></button>` : '';
+  const evChest = B.ev?.k === 'chest' ? `<button class="ev-chest" data-act="boss-evchest" aria-label="Złap skrzynkę">${crateImg('grab')}<small>Złap!</small></button>`
+    : B.ev?.k === 'lucky' ? `<button class="ev-chest ev-lucky" data-act="boss-evlucky" aria-label="Złap lucky block"><img src="assets/e8/lucky.webp" alt=""><small>Lucky block!</small></button>` : '';
+  const luckyFx = B.luckyFx && now - B.luckyFx.t < 2400 ? `<div class="lucky-fx ${B.luckyFx.good ? 'good' : 'bad'}" style="--el:${((now - B.luckyFx.t) / 1000).toFixed(2)}s"><span>${B.luckyFx.ic}</span><b>${esc(B.luckyFx.txt)}</b></div>` : '';
   let ctrl = B.down ? (B.coop ? '<div class="down-box dead"><b>💀 Nie żyjesz</b><small>Czekasz na reanimację – drużyna podnosi Cię 3 dobrymi odpowiedziami.</small></div>' : `<div class="down-box">💀 Leżysz! Odpowiedz dobrze 5×, żeby wstać (${B.selfRev || 0}/5)</div>`) : '';
   if (B.down && B.coop) { /* 💀 martwy: czeka na reanimację */ } else if (cm === 'abcd') ctrl += `<div class="abcd-grid${cur.dis === 'spot' && B.picked == null ? ' dark-arena' : ''}">${cur.opts.map((o, k) => { const hid = cur.hidden.includes(o), pk = B.picked != null, right = norm(o) === norm(cur.right ?? v.ans);
       const pos = cur.dis === 'spot' && !pk ? spotPos(cur, k) : '', ink = cur.dis === 'ink' && !pk && !(cur.inkClr || []).includes(k) ? `<span class="ink-blot" data-ink="${k}" style="--io:${(cur.inkO?.[k] ?? 1).toFixed(2)}"><b>🦑 Zmaż atrament</b></span>` : '';
@@ -956,7 +996,7 @@ function fightView() {
     ${fm?.k === 'hit' ? `<b class="dmg me">−${fm.n}</b><i class="claw"></i>` : fm?.k === 'dodge' ? '<b class="dmg me dodge">Unik!</b>' : fm?.k === 'block' ? '<b class="dmg me dodge">Blok!</b>' : ''}
     ${B.coop && typeof coopMatesHTML === 'function' ? coopMatesHTML() : ''}
     ${B.log.length ? `<div class="boss-log">${B.log.slice(0, 2).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
-    ${ultFx ? `<div class="ult-show" aria-hidden="true"><i class="us-flash"></i><i class="us-rays"></i><div class="us-hero">${typeof heroIcon === 'function' ? heroIcon() : ''}</div>${'<b class="us-spark"></b>'.repeat(10)}</div><div class="ult-banner" style="animation-delay:-${((now - ultFx.t) / 1000).toFixed(2)}s">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner" style="animation-delay:-${((now - B.phaseFx.t) / 1000).toFixed(2)}s">🔥 Faza ${B.phaseFx.n} · szał bossa!</div>` : ''}${B.syncFx && now - B.syncFx < 1400 ? '<div class="ult-banner sync-banner">⚡ SYNCHRO! ⚡</div>' : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}
+    ${ultFx ? `<div class="ult-show" aria-hidden="true"><i class="us-flash"></i><i class="us-rays"></i><div class="us-hero">${typeof heroIcon === 'function' ? heroIcon() : ''}</div>${'<b class="us-spark"></b>'.repeat(10)}</div><div class="ult-banner" style="animation-delay:-${((now - ultFx.t) / 1000).toFixed(2)}s">⚡ ${esc(ultFx.name)}!</div>` : ''}${B.phaseFx && now - B.phaseFx.t < 1600 ? `<div class="ult-banner phase-banner" style="animation-delay:-${((now - B.phaseFx.t) / 1000).toFixed(2)}s">🔥 Faza ${B.phaseFx.n} · szał bossa!</div>` : ''}${B.syncFx && now - B.syncFx < 1400 ? '<div class="ult-banner sync-banner">⚡ SYNCHRO! ⚡</div>' : ''}${B.learnFx && now >= B.learnFx.t && now - B.learnFx.t < 2600 ? `<div class="learn-banner"><div class="lb-top"><img src="assets/ui8/chart.webp" alt=""><span>NOWA UMIEJĘTNOŚĆ BOSSA</span></div><div class="lb-main"><i>${BOSS_ABIL[B.learnFx.a][0]}</i><b>${esc(BOSS_ABIL[B.learnFx.a][1])}</b></div><small>${esc(BOSS_ABIL[B.learnFx.a][2])}</small></div>` : ''}${B.qteFx && now - B.qteFx.t < 1300 ? `<div class="ult-banner qte-banner">${B.qteFx.perfect ? '⚡⚡⚡ PERFEKCYJNY QTE!' : '⚡ QTE!'}</div>` : ''}${evChest}${luckyFx}
     <div class="card flash boss-q${fm?.k === 'hit' ? ' shake' : ''}${cur?.ver || cur?.parry ? ' ver' : ''}${cur?.qte ? ' qte' : ''}${B.qLock && now < B.qLock ? ' qlock' : ''}${cur?.dis && !B.shown ? ' dis-' + cur.dis : ''}" style="--eclipse:${cur?.dis === 'eclipse' ? Math.max(0, 2500 - (now - B.qAt)) : 0}ms">
       ${rollHTML(B, now)}
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}
@@ -966,7 +1006,7 @@ function fightView() {
       ${B.triple && !cur?.parry && !cur?.ver ? '<div class="ver-tag ev-tag">💥 Pytanie za 3×!</div>' : ''}${B.gaunt && !cur?.parry ? `<div class="ver-tag ev-tag">🎯 Wyzwanie: ${B.gaunt.n}/3 dobrych z rzędu</div>` : ''}
       ${cur?.runes ? runesHTML(cur.runes) : ''}
       <div class="bq-in">${cur?.runes ? '' : q}${cur?.hint && !B.shown ? `<div class="hintbox">🔮 ${esc(cur.hint)}</div>` : ''}</div>
-      ${B.ice ? `<button class="ice" data-act="boss-ice" style="--crack:${(1 - B.ice.n / B.ice.max).toFixed(2)}"><img src="assets/fluent/g_ice.webp" alt=""><b>❄️ Zamrożone! Stukaj, by rozbić (${B.ice.n})</b></button>` : ''}
+      ${B.ice ? `<button class="ice" data-act="boss-ice" style="--crack:${(1 - B.ice.n / B.ice.max).toFixed(2)}">${iceCracksSVG(B.ice.max - B.ice.n, B.ice.max)}<img src="assets/fluent/g_ice.webp" alt=""><b>❄️ Zamrożone! Stukaj, by rozbić (${B.ice.n})</b></button>` : ''}
       ${(B.bugs || []).map(g => `<button class="bug" data-act="boss-bug" data-k="${g.k}" style="left:${g.x}%;top:${g.y}%;--d:${g.d}s" aria-label="robak"><img src="${String(g.img).startsWith('g_') ? 'assets/fluent/' + g.img : 'assets/bugs8/' + g.img}.webp" alt=""></button>`).join('')}
     </div>
     ${B.bugs?.length ? `<p class="center small bad" style="margin:0">🐛 Zabij robaczki (${B.bugs.length}), żeby odpowiedzieć!</p>` : ''}
@@ -1056,12 +1096,18 @@ Object.assign(ACTIONS, {
   'boss-pair': el => pairTap(el.dataset.s, +el.dataset.i),
   'boss-tf': el => { const B = BOSS; if (!B?.cur || B.cur.cm !== 'tf' || B.picked != null || B.ice || B.bugs?.length) return; B.picked = +el.dataset.v; B.shown = true; B.pendingG = !!B.picked === B.cur.truth ? 3 : 1; render(); if (B.cur.qte) { const cur = B.cur; setTimeout(() => { if (BOSS === B && B.cur === cur) bossNext(); }, 450); } },
   'boss-evchest': () => grabEvChest(),
+  'boss-evlucky': () => grabLucky(),
   'boss-pet': () => usePet(),
   'boss-pot': el => usePotion(el.dataset.k),
   // ❄️🐛 zbijanie bez przerysowania całego ekranu (nic nie miga), pełne odświeżenie dopiero po ostatnim kliknięciu
-  'boss-ice': el => { const B = BOSS; if (!B?.ice) return; B.ice.n--; bossSfx('tick');
-    if (B.ice.n <= 0) { B.ice = null; B.log.unshift('🧊 Lód rozbity!'); return render(); }
-    const b = el.closest('.ice') || el; b.style.setProperty('--crack', (1 - B.ice.n / B.ice.max).toFixed(2)); const t = b.querySelector('b'); if (t) t.textContent = `❄️ Zamrożone! Stukaj, by rozbić (${B.ice.n})`; },
+  'boss-ice': (el, e) => { const B = BOSS; if (!B?.ice) return; B.ice.n--; bossSfx('tick');
+    const b = el.closest('.ice') || el, r = b.getBoundingClientRect(), px = e?.clientX ?? r.left + r.width / 2, py = e?.clientY ?? r.top + r.height / 2;
+    iceChips(px, py, B.ice.n <= 0 ? 0 : 7);
+    if (B.ice.n <= 0) { iceShatter(r); B.ice = null; B.log.unshift('🧊 Lód rozbity!'); return render(); }
+    const st = B.ice.max - B.ice.n; b.style.setProperty('--crack', (st / B.ice.max).toFixed(2));
+    b.querySelectorAll('.ice-cracks path').forEach((p, i) => { p.style.opacity = i < Math.ceil(st / B.ice.max * 6) ? 1 : 0; });
+    b.classList.remove('ice-hit'); void b.offsetWidth; b.classList.add('ice-hit');
+    const t = b.querySelector('b'); if (t) t.textContent = `❄️ Zamrożone! Stukaj, by rozbić (${B.ice.n})`; },
   'boss-bug': el => { const B = BOSS; if (!B) return; B.bugs = B.bugs.filter(g => g.k !== +el.dataset.k); bossSfx('tick');
     if (!B.bugs.length) return render();
     el.remove(); const p = document.querySelector('.bf p.bad'); if (p) p.textContent = `🐛 Zabij robaczki (${B.bugs.length}), żeby odpowiedzieć!`; },
