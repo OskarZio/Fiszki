@@ -3708,3 +3708,7 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
 .ask-box > * { flex-shrink: 0; }
 .cat-roll, .cat-roll * { pointer-events: none !important; }
 .bf.rolling .boss-q > .roll-wait { visibility: visible !important; position: absolute; inset: 0; display: grid; place-content: center; gap: 6px; text-align: center; padding: 16px; } .roll-wait small { color: var(--muted); }
+/* v333: pasek życia po piętrze wieży – pełna szerokość karty i grubszy, liczby czytelne */
+.tower-hp { width: 100%; align-self: stretch; margin: 12px 0 6px; }
+.tower-hp .hpbar { width: 100% !important; max-width: none !important; height: 26px !important; border-radius: 13px; flex: none !important; }
+.tower-hp .hpbar span { display: flex !important; align-items: center; justify-content: center; height: 100%; font-size: 15px; line-height: 1; }
