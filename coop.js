@@ -37,6 +37,8 @@ function sCoopMsg(m) {
   if (m.down != null) o.down = !!m.down; if (m.won != null) o.won = !!m.won;
   if (m.h != null) o.h = sStr(m.h, 40);
   if (m.tw != null) o.tw = !!m.tw; if (m.gq != null) o.gq = !!m.gq; if (m.fl != null) o.fl = sInt(m.fl, 1, 999, 1); if (m.emo != null) o.emo = sInt(m.emo, 0, DUO_EMO.length - 1); if (m.bon != null) o.bon = DUO_BON[m.bon] ? m.bon : null; if (Array.isArray(m.ab)) o.ab = m.ab.slice(0, 25).filter(a => typeof a === 'string' && BOSS_ABIL[a]);
+  if (m.gc != null && typeof GK_CAT !== 'undefined' && GK_CAT[m.gc]) o.gc = m.gc;
+  if (m.v != null) o.v = sInt(m.v, 0, 2); if (m.at != null) o.at = sStr(m.at, 60);
   if (m.sm != null) o.sm = sStr(m.sm, 60); if (m.sn != null) o.sn = sInt(m.sn, 0, 1000);
   if (m.set && typeof m.set === 'object' && Array.isArray(m.set.cards)) o.set = { name: sStr(m.set.name, 60), cards: m.set.cards.slice(0, 260).map(x => ({ n: sStr(x?.n, 64), o: sStr(x?.o, 8), q: sStr(x?.q, 300), a: sStr(x?.a, 300) })).filter(x => x.q && x.a) };
   if (Array.isArray(m.players)) o.players = m.players.slice(0, 4).map(p => ({ id: sStr(p?.id, 40), nick: sStr(p?.nick, 24), line: CHAR_LINES[p?.line] ? p.line : 'cat', g: p?.g === 'm' ? 'm' : 'w', pr: sInt(p?.pr, 0, 99), lv: sInt(p?.lv, 1, 99, 1), atk: sNum(p?.atk, .5, 10, 1), look: sInt(p?.look, 0, 1e7) }));
@@ -86,8 +88,8 @@ function coopMsg(m0) {
     C.hostId = m.from; C.tower = !!m.tw; C.gq = !!m.gq; C.setInfo = m.sm ? { name: m.sm, n: m.sn || 0 } : null; for (const x of m.players) C.players[x.id] = { ...(C.players[x.id] || {}), ...x, seen: Date.now() }; return render();
   }
   if (m.t === 'start' && !C.host && (m.from === C.hostId || !C.hostId) && ['lobby', 'floor'].includes(C.phase) && m.heads) { C.hostId = m.from; }
-  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); if (m.bf) C.tw.buff = { ...m.bf }; C.gq = !!m.gq; C.gqi = m.gqi; if (m.gqi?.length && typeof gkCard === 'function') { C.gkCat = gkCard('gk:' + m.gqi[0])?.cat || null; if (m.fl === 1 && C.gkCat && typeof gkCatRoll === 'function') setTimeout(() => gkCatRoll(C.gkCat), 350); } } return coopBegin(m.heads, m.seed, m.set); }
-  if (m.t === 'ans' && p) { p.ans = { v: m.v === 1 ? 1 : m.v === 2 ? 2 : 0, t: Date.now() }; p.ansN = p.ansN || [0, 0]; p.ansN[p.ans.v === 0 ? 1 : 0]++; return softRender(); }
+  if (m.t === 'start' && !C.host && m.from === C.hostId && ['lobby', 'floor'].includes(C.phase) && m.heads) { if (m.tw) { duoPrep(m.fl, m.bon, m.ab); if (m.bf) C.tw.buff = { ...m.bf }; C.gq = !!m.gq; if (m.gc) { C.gkCat = m.gc; if (typeof gkCatRoll === 'function') { GK_ROLL_UNTIL = Date.now() + GK_ROLL_GAP; setTimeout(() => gkCatRoll(m.gc), 350); } } C.gqi = m.gqi; if (m.gqi?.length && typeof gkCard === 'function') { C.gkCat = gkCard('gk:' + m.gqi[0])?.cat || null; if (m.fl === 1 && C.gkCat && typeof gkCatRoll === 'function') setTimeout(() => gkCatRoll(C.gkCat), 350); } } return coopBegin(m.heads, m.seed, m.set); }
+  if (m.t === 'ans' && p) { p.ans = { v: m.v === 1 ? 1 : m.v === 2 ? 2 : 0, at: m.at || '', t: Date.now() }; setTimeout(softRender, 2600); p.ansN = p.ansN || [0, 0]; p.ansN[p.ans.v === 0 ? 1 : 0]++; return softRender(); }
   if (m.t === 'ok' && p) { C.mateOk = { id: m.from, t: Date.now() }; return; }
   if (m.t === 'emo' && p && (m.emo != null || m.st)) { p.emo = { i: m.emo, st: m.st, t: Date.now() }; setTimeout(softRender, 2600); return softRender(); }
   if (m.t === 'hit' && C.phase === 'fight') { const hd = C.heads.find(x => x.id === m.h); if (hd) { hd.hp = Math.max(0, hd.hp - m.n); syncMyHead(); if (BOSS?.phase === 'fight' && !coopAlive()) return bossEnd(true); softRender(); } return; }
@@ -113,8 +115,8 @@ function coopStartHost() {
   if (COOP_MODE === 'tower') { const fl = C.phase === 'floor' ? C.tw.floor : 1, keys = Object.keys(DUO_BON), bon = fl > 1 ? duoVoteWinner(C) || keys[Math.random() * keys.length | 0] : null;
     const tot = heads.reduce((a, h) => a + h.max, 0); heads.splice(0, heads.length, { id: 'boss', max: Math.round(tot * .9 * (1 + .2 * (fl - 1))) });   // 🐉 jeden wspólny boss z dużym ❤️
     const ab = [...(fl > 1 && C.tw?.abil || [])]; const nx = towerCurse(ab); if (nx) ab.push(nx);
-    let gqi; if (COOP_SRC === 'gk' && typeof gkPick === 'function') { if (fl === 1) C.gkCat = undefined; const T0 = { floor: fl * 2, used: C.gkUsed || [], cat: C.gkCat }; gqi = gkPick(T0, 30).map(c => String(c.id).slice(3)); C.gkUsed = T0.used; C.gkCat = T0.cat; }
-    duoPrep(fl, bon, ab); tw = { tw: true, fl, ab, bf: { ...(C.tw?.buff || {}) }, ...(bon ? { bon } : {}), ...(gqi ? { gq: true, gqi } : {}) }; C.gq = COOP_SRC === 'gk'; C.gqi = gqi; }
+    let gqi; if (COOP_SRC === 'gk' && typeof gkPick === 'function') { const T0 = { floor: fl * 2, used: C.gkUsed || [], cat: undefined };   /* 🎲 nowa kategoria na każde piętro */ gqi = gkPick(T0, 30).map(c => String(c.id).slice(3)); C.gkUsed = T0.used; C.gkCat = T0.cat; }
+    duoPrep(fl, bon, ab); tw = { tw: true, fl, ab, bf: { ...(C.tw?.buff || {}) }, ...(bon ? { bon } : {}), ...(gqi ? { gq: true, gqi, ...(C.gkCat ? { gc: C.gkCat } : {}) } : {}) }; C.gq = COOP_SRC === 'gk'; C.gqi = gqi; }
   coopSend({ t: 'start', heads, seed, ...(set ? { set } : {}), ...tw }); coopBegin(heads, seed, set);
 }
 const coopSetInfo = () => { const d = COOP_SHARED && deckById(COOP_SRC), tw = COOP_MODE === 'tower' ? { tw: true, ...(COOP_SRC === 'gk' ? { gq: true } : {}) } : {}; return d ? { ...tw, sm: d.name.replace(/^👥\s*/, '').slice(0, 60), sn: S.cards.filter(c => c.deckId === d.id && fightable(c)).length } : tw; };
@@ -167,10 +169,9 @@ function coopHeadsHTML(fx, act) {
       <small>${dead ? (BOSS?.b?.duo ? '✓ rozbita' : '✓ ścięta') : mine ? (BOSS?.b?.duo ? 'Twoja tarcza bossa' : 'Twoja głowa') : esc(p?.nick || 'kolega')}</small>${HP_BAR(h.hp, h.max, 'boss')}</div>`; }).join('')}</div>`;
 }
 // ✓/✗ w kółeczku przy awatarze kolegi: ostatnia odpowiedź (zielone = dobrze, żółte = ledwo, czerwone = źle) + licznik
-const mateAnsHTML = p => { const a = p.ans; if (!a) return '<i class="mate-ans wait" title="Jeszcze nie odpowiadał">…</i>';
-  const el = ((Date.now() - a.t) / 1000).toFixed(2), [ok, bad] = p.ansN || [0, 0];
-  return `<i class="mate-ans ${['bad', 'ok', 'meh'][a.v]}" style="--el:${el}s" title="Dobrze ${ok} · źle ${bad}">${['✗', '✓', '≈'][a.v]}</i>`; };
-const mateTallyHTML = p => p.ansN ? `<small class="mate-tally"><span class="good">dobrze ${p.ansN[0]}</span> · <span class="bad">źle ${p.ansN[1]}</span></small>` : '';
+const mateAnsHTML = p => { const a = p.ans, cls = a ? ['bad', 'ok', 'meh'][a.v] : 'wait', fresh = a && Date.now() - a.t < 2500;
+  return `<span class="mate-sq ${cls}${fresh ? ' lit' : ''}" title="${a ? ['źle', 'dobrze', 'ledwo'][a.v] : 'jeszcze nie odpowiadał'}"></span>`; };
+const mateTallyHTML = p => `${p.ans?.at ? `<small class="mate-at ${['bad', 'ok', 'meh'][p.ans.v]}">„${esc(p.ans.at)}”</small>` : ''}${p.ansN ? `<small class="mate-tally"><span class="good">✓ ${p.ansN[0]}</span> <span class="bad">✗ ${p.ansN[1]}</span></small>` : ''}`;
 function coopMatesHTML() {
   const ms = coopMates(); if (!ms.length) return '';
   return `<div class="mates">${ms.map(p => `<div class="mate${p.down ? ' down' : ''}">${p.emo && Date.now() - p.emo.t < 2500 ? `<span class="mate-emo">${p.emo.st && stickerById(p.emo.st) ? stE(stickerById(p.emo.st)) : DUO_EMO[p.emo.i] || ''}</span>` : ''}<span class="mate-av">${pHero(p)}${mateAnsHTML(p)}</span><b>${esc(p.nick)}</b>${mateTallyHTML(p)}${p.max ? HP_BAR(p.hp || 0, p.max, 'me') : ''}${p.down ? `<small>💀 leży · reanimuj: ${(COOP.rev[p.id] || 0)}/3</small>` : p.combo >= 2 ? `<small>🔥 ${p.combo}</small>` : ''}</div>`).join('')}</div>

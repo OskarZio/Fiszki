@@ -7,8 +7,18 @@
   const vv = window.visualViewport; if (!vv) return;
   const isField = el => el && el.matches?.('input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), textarea, [contenteditable="true"]');
   let raf = 0, open = false;
+  // ekrany pełnoekranowe (nauka, walka): strona stoi w miejscu (bez zjeżdżania w dół), a przewija się tylko widok nad klawiaturą
+  const pinFocus = () => {
+    if (!document.body.classList.contains('focus')) return false;
+    const el = document.activeElement, main = document.querySelector('main#view'); if (!main) return false;
+    if (window.scrollY) window.scrollTo(0, 0);
+    if (isField(el)) { const box = el.closest('.type-row, .row.nowrap, .hint-edit') || el, b = box.getBoundingClientRect(), m = main.getBoundingClientRect();
+      if (b.bottom > m.bottom - 6) main.scrollTop += b.bottom - m.bottom + 10; else if (b.top < m.top) main.scrollTop -= m.top - b.top + 10; }
+    return true;
+  };
   const reveal = () => {
     const el = document.activeElement; if (!open || !isField(el)) return;
+    if (pinFocus()) return;
     const r = el.getBoundingClientRect(), top = vv.offsetTop + 8, bottom = vv.offsetTop + vv.height - 12;
     // pole + przycisk obok/pod nim mają być widoczne nad klawiaturą
     const box = el.closest('.type-row, .gc-form, .row.nowrap, .hint-edit') || el, b = box.getBoundingClientRect();

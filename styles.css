@@ -3449,7 +3449,6 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 @keyframes windL { 0% { transform: translateX(-34%) rotate(-2deg); } 100% { transform: translateX(30%) rotate(2deg); } }
 @keyframes windR { 0% { transform: translateX(32%) rotate(2deg); } 100% { transform: translateX(-36%) rotate(-2deg); } }
 .bf:has(.boss-q.dis-wind) .bf-ctrl > button, .bf:has(.boss-q.dis-wind) .boss-grades { animation: windL 2s ease-in-out infinite alternate; animation-delay: calc(var(--el, 0s) * -1); }
-.bf:has(.boss-q.dis-wind) .boss-me .hero-fig { animation: windL 1.7s ease-in-out infinite alternate; }
 .bf { overflow-x: clip; }
 /* 💀 animacja śmierci (start liczony od chwili śmierci – odświeżenie ekranu jej nie restartuje) */
 .death-fx { position: fixed; inset: 0; z-index: 60; pointer-events: none; display: grid; place-items: center; align-content: center; gap: 8px;
@@ -3495,19 +3494,7 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .bf:has(.boss-q.dis-shake) .abcd-grid .abcd, .bf:has(.boss-q.dis-shake) .bf-ctrl > button { animation: quake .2s linear infinite; }
 .bf:has(.boss-q.dis-shake) .abcd-grid .abcd:nth-child(2n) { animation-duration: .17s; animation-direction: reverse; }
 /* 🧍 Twoja postać reaguje na przeszkadzajki */
-.bf:has(.boss-q.dis-shake) .boss-me .hero-fig { animation: quake .18s linear infinite; }
-.bf:has(.boss-q.dis-ink) .boss-me .hero-fig { filter: drop-shadow(0 0 0 #000) brightness(.55) saturate(.4); }
-.bf:has(.boss-q.dis-ink) .boss-me .hero-fig::after { content: ''; position: absolute; inset: 20% 15% 30% 25%; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #0b0b16 0 45%, transparent 47%), radial-gradient(circle at 70% 65%, #0b0b16 0 30%, transparent 32%); pointer-events: none; }
-.bf:has(.boss-q.dis-spot) .boss-me .hero-fig, .bf:has(.boss-q.dis-eclipse) .boss-me .hero-fig { filter: brightness(.35); }
-.bf:has(.boss-q.dis-fog) .boss-me .hero-fig { filter: blur(2px) opacity(.7); }
-.bf:has(.boss-q.dis-tiny) .boss-me .hero-fig { transform: scale(.55); transform-origin: 50% 90%; transition: transform .4s; }
-.bf:has(.boss-q.dis-flip) .boss-me .hero-fig { transform: rotate(180deg); transition: transform .4s; }
-.bf:has(.boss-q.dis-mirror) .boss-me .hero-fig { transform: scaleX(-1); }
-.bf:has(.boss-q.dis-whirl) .boss-me .hero-fig { animation: heroSpin 1.4s linear infinite; } @keyframes heroSpin { to { transform: rotate(360deg); } }
-.bf:has(.boss-q.dis-blind) .boss-me .hero-fig { filter: blur(3px); }
-.bf:has(.boss-q.dis-scramble) .boss-me .hero-fig, .bf:has(.boss-q.dis-reverse) .boss-me .hero-fig { animation: heroDizzy 1.2s ease-in-out infinite; } @keyframes heroDizzy { 25% { transform: rotate(-10deg) translateX(-3px); } 75% { transform: rotate(10deg) translateX(3px); } }
 .bf .boss-me .hero-fig { position: relative; }
-.bf:has(.boss-q[class*="dis-"]) .boss-me .hero-fig { animation-delay: calc(var(--el, 0s) * -1); }
 @media (prefers-reduced-motion: reduce) { .bf:has(.boss-q[class*="dis-"]) .boss-me .hero-fig, .bf:has(.boss-q.dis-shake) .abcd-grid .abcd { animation: none !important; } }
 .abcd .ink-blot { width: auto !important; height: auto !important; margin: 0 !important; padding: 0 !important; font-style: normal; }
 /* 📦 skrzynki przedmiotów i skinów */
@@ -3635,3 +3622,30 @@ button.primary, .btn.primary, .progress > div, .xpbar > div, .ult-fill, .think-b
 .mate-ans { right: -10px; top: -6px; }
 .mate > * { flex-shrink: 0; } .mate { height: auto !important; }
 .mate .hpbar { flex: none !important; height: 10px !important; margin-top: 4px; }
+/* v323: wynik kolegi – mały kwadracik (zapala się na chwilę po odpowiedzi) zamiast kółka */
+.mate-ans { display: none !important; }
+.mate-sq { position: absolute; right: -8px; top: -4px; width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--card); box-shadow: 0 0 0 1px rgba(0,0,0,.25); background: #475569; opacity: .55; transition: opacity .25s, box-shadow .25s; z-index: 4; }
+.mate-sq.ok { background: #16a34a; } .mate-sq.bad { background: #dc2626; } .mate-sq.meh { background: #ca8a04; }
+.mate-sq.lit { opacity: 1; box-shadow: 0 0 0 1px rgba(0,0,0,.25), 0 0 12px currentColor; }
+.mate-sq.ok.lit { color: #22c55e; } .mate-sq.bad.lit { color: #ef4444; } .mate-sq.meh.lit { color: #eab308; }
+.mate-at { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; } .mate-at.ok { color: #16a34a; } .mate-at.bad { color: #dc2626; } .mate-at.meh { color: #ca8a04; }
+/* v323: losowanie przeszkadzajki w walce – przerysowanie nie restartuje animacji (bez mrugania), wynik pokazuje się raz */
+.roll-ov.bossroll { animation: rollIn .25s ease-out both; animation-delay: calc(var(--el) * -1); }
+.roll-ov.bossroll .roll-strip2 { animation: rollSpin2 2.4s cubic-bezier(.15,.8,.2,1) both; animation-delay: calc(var(--el) * -1); }
+.roll-ov.bossroll.done { animation: rollOut .45s ease-in forwards; animation-delay: calc(2.9s - var(--el)); }
+.roll-ov.bossroll .roll-res { transition: none; }
+.roll-ov.bossroll.done .roll-it.hit { animation: none; }
+/* zaćmienie: odliczanie od pokazania pytania – przerysowanie nie pokazuje pytania od nowa (koniec z mruganiem na ciemno) */
+.bf .boss-q.dis-eclipse .bq-in { animation-delay: calc(var(--eclipse, 2500ms) - var(--el, 0s)) !important; }
+
+/* v323: przeszkadzajki działają tylko na pytanie i odpowiedzi – postać już nie reaguje */
+/* v323: klawiatura w nauce/walce – ekran nie zjeżdża: widok ma wysokość widocznej części, przewija się tylko on */
+body.kb-open.focus main#view { height: var(--vvh, 100dvh) !important; max-height: var(--vvh, 100dvh); overflow-y: auto !important; padding-bottom: 12px !important; overscroll-behavior: contain; }
+body.kb-open.focus { overflow: hidden; }
+input, textarea, select { font-size: max(16px, 1em); }   /* iOS nie powiększa strony przy wpisywaniu */
+.miss { margin-top: 8px; font-size: 14px; line-height: 1.45; color: var(--muted); } .miss b { color: #ca8a04; }
+/* ✍️ długie definicje: pole na kilka linijek + licznik kluczowych pojęć */
+.type-row textarea#typein { flex: 1; min-height: 52px; max-height: 180px; resize: none; line-height: 1.4; padding: 12px 14px; border-radius: 14px; }
+.kw-meter { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 8px; padding: 8px 12px; border-radius: 12px; background: var(--card2, var(--card)); font-size: 14px; overflow: hidden; }
+.kw-meter > i { position: absolute; left: 0; bottom: 0; height: 4px; width: var(--p); background: #16a34a; transition: width .25s; }
+.kw-meter b { font-variant-numeric: tabular-nums; }

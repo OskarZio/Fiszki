@@ -233,16 +233,20 @@ function gkCatRoll(cat) {
   for (let i = 0; i < strip.length; i++) if (i !== AT && (strip[i] === cat && Math.abs(i - AT) <= 2 || (i && strip[i] === strip[i - 1]))) strip[i] = others[(others.indexOf(strip[i - 1]) + 2 + i) % others.length];
   const split = k => { const v = GK_CAT[k], i = v.indexOf(' '); return [v.slice(0, i), v.slice(i + 1)]; };
   const ov = document.createElement('div'); ov.className = 'cat-roll';
-  ov.innerHTML = `<div class="roll-ov" style="--at:${AT};--ms:2200ms"><div class="roll-h">🎲 Losowanie kategorii wspinaczki…</div>
+  ov.innerHTML = `<div class="roll-ov" style="--at:${AT};--ms:2200ms"><div class="roll-h">🎲 Losowanie kategorii piętra…</div>
     <div class="roll-win"><div class="roll-strip2">${strip.map((k, i) => { const [ic, n] = split(k); return `<div class="roll-it${i === AT ? ' hit' : ''}"><i>${ic}</i><small>${n}</small></div>`; }).join('')}</div><span class="roll-mark"></span></div>
-    <div class="roll-res">Kategoria: <b>${GK_CAT[cat]}</b> – wszystkie pytania tej wspinaczki</div></div>`;
+    <div class="roll-res">Kategoria: <b>${GK_CAT[cat]}</b> – pytania na tym piętrze</div></div>`;
   document.body.append(ov); if (typeof emo8Decorate === 'function') emo8Decorate(ov);
   setTimeout(() => ov.querySelector('.roll-ov')?.classList.add('done'), 2300); setTimeout(() => ov.remove(), 4300);
   ov.addEventListener('click', () => ov.remove());
 }
-function gkRandCat() { const n = {}; for (const x of GK_ALL) n[x.cat] = (n[x.cat] || 0) + 1; const ok = Object.keys(GK_CAT).filter(k => (n[k] || 0) >= 60); return ok[Math.random() * ok.length | 0] || null; }
+function gkRandCat(prev) { const n = {}; for (const x of GK_ALL) n[x.cat] = (n[x.cat] || 0) + 1; let ok = Object.keys(GK_CAT).filter(k => (n[k] || 0) >= 60); if (ok.length > 1) ok = ok.filter(k => k !== prev); return ok[Math.random() * ok.length | 0] || null; }
+// ⏱️ do kiedy trwa pokaz losowania kategorii (+ chwila przerwy) – losowanie przeszkadzajki czeka na nie
+let GK_ROLL_UNTIL = 0;
+const GK_ROLL_GAP = 350 + 2300 + 1300;
 function gkPick(T, n) {
-  if (T.cat === undefined) { T.cat = gkRandCat(); if (T.cat) setTimeout(() => gkCatRoll(T.cat), 350); }
+  // 🎲 nowa kategoria na każde piętro (runda) wieży: najpierw losowanie kategorii, chwila przerwy, potem losowanie przeszkadzajki
+  if (T.cat === undefined || (T.catFl != null && T.catFl !== T.floor)) { T.cat = gkRandCat(T.cat); T.catFl = T.floor; if (T.cat) { GK_ROLL_UNTIL = Date.now() + GK_ROLL_GAP; setTimeout(() => gkCatRoll(T.cat), 350); } }
   const lv = T.floor <= 3 ? 1 : T.floor <= 7 ? 2 : 3;
   const used = new Set((T.used || []).map(String)), seen = gkSeen();
   // poziom wyczerpany? zapominamy tylko jego pytania (te z bieżącej wspinaczki dalej się nie powtórzą)

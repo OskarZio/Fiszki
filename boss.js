@@ -472,7 +472,7 @@ const minRead = c => { const v = cardView(c); return Math.min(2600, 600 + 25 * (
 function bossAnswer(g, how) {
   const B = BOSS, c = bossCard(), cur = B?.cur; if (!B || !c || B.phase !== 'fight' || B.ice || B.bugs?.length) return;
   const now = Date.now(), ms = Math.min(60000, now - B.qAt);
-  if (B.coop && !cur?.qte && typeof coopSend === 'function') coopSend({ t: 'ans', v: g >= 3 ? 1 : g === 2 ? 2 : 0 });   // 👥 drużyna widzi, czy odpowiedziałeś dobrze
+  if (B.coop && !cur?.qte && typeof coopSend === 'function') coopSend({ t: 'ans', v: g >= 3 ? 1 : g === 2 ? 2 : 0, at: String(B.typed ?? (B.picked != null && cur?.opts ? cur.opts[B.picked] ?? '' : '')).slice(0, 60) });   // 👥 drużyna widzi, czy odpowiedziałeś dobrze
   B.fx = null; B.fxMe = null; B.bossAct = null;
   if (cur.qte) return qteResult(g >= 3);
   if (cur.parry) return parryResult(cur.curse || cur.mask ? g >= 2 : g >= 3);
@@ -581,17 +581,19 @@ function afterTurn(g, isVer) {
 // 🎰 mini losowanie przeszkadzajki: pasek ikon przewija się i staje na wylosowanej (wynik znany wcześniej – to tylko pokaz)
 const ROLL_MS = 2400, ROLL_AT = 22;   // dłuższy pasek – więcej przeszkadzajek przewija się w losowaniu
 function rollFx(B, a, pool, learn = false) {
-  const P = [...new Set(pool.length ? pool : [a])], now = Date.now(), strip = [];
+  // nawet gdy boss ma 1–2 moce, pasek pokazuje losowanie spośród wielu (atrapy) – wynik i tak jest z góry znany
+  let P = [...new Set(pool.length ? pool : [a])]; const now = Date.now(), strip = [];
+  if (P.length < 6) P = [...new Set([...P, ...shuffle(Object.keys(BOSS_ABIL).filter(k => k !== 'rage' && !P.includes(k))).slice(0, 6 - P.length)])];
   // bez powtórek obok siebie: kolejne ikonki z przetasowanej puli, wygrana nie sąsiaduje z taką samą
   let bag = []; for (let i = 0; i < ROLL_AT + 3; i++) { if (i === ROLL_AT) { strip.push(a); continue; } if (!bag.length) bag = shuffle([...P]);
     let k = bag.findIndex(x => x !== strip[i - 1] && !(i === ROLL_AT - 1 && x === a) && !(i === ROLL_AT + 1 && x === a)); if (k < 0) k = 0; strip.push(bag.splice(k, 1)[0] ?? P[0]); }
   // kolejka: drugie losowanie startuje po pierwszym
-  B.rolls = (B.rolls || []).filter(r => now - r.t < ROLL_MS + 800); const t = B.rolls.length ? B.rolls[B.rolls.length - 1].t + ROLL_MS + 900 : now;
+  B.rolls = (B.rolls || []).filter(r => now - r.t < ROLL_MS + 800); const t = Math.max(B.rolls.length ? B.rolls[B.rolls.length - 1].t + ROLL_MS + 900 : now, typeof GK_ROLL_UNTIL !== 'undefined' ? GK_ROLL_UNTIL : 0);   /* najpierw kategoria, przerwa, potem przeszkadzajka */
   B.rolls.push({ a, strip, learn, t }); B.qAt = Math.max(B.qAt || 0, t + ROLL_MS + 800); /* zegar pytania startuje po losowaniu */ if (learn && B.learnFx) { B.learnFx.t = t + ROLL_MS + 500; B.qAt = Math.max(B.qAt, B.learnFx.t + 2700); setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, t - now + ROLL_MS + 3200); }
   for (const d of [t - now, t - now + ROLL_MS + 900]) setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, Math.max(0, d) + 20);
 }
 const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t && now - r.t <= ROLL_MS + 800); if (!R) return '';
-  return `<div class="roll-ov${now - R.t > ROLL_MS ? ' done' : ''}" style="--at:${ROLL_AT};--ms:${Math.max(0, ROLL_MS - (now - R.t))}ms"><div class="roll-h">${R.learn ? '📈 Boss uczy się nowej mocy…' : '🎰 Losowanie przeszkadzajki…'}</div>
+  return `<div class="roll-ov bossroll${now - R.t > ROLL_MS ? ' done' : ''}" style="--at:${ROLL_AT};--el:${((now - R.t) / 1000).toFixed(2)}s"><div class="roll-h">${R.learn ? '📈 Boss uczy się nowej mocy…' : '🎰 Losowanie przeszkadzajki…'}</div>
     <div class="roll-win"><div class="roll-strip2">${R.strip.map((k, i) => `<div class="roll-it${i === ROLL_AT ? ' hit' : ''}"><i>${BOSS_ABIL[k][0]}</i><small>${BOSS_ABIL[k][1]}</small></div>`).join('')}</div><span class="roll-mark"></span></div>
     <div class="roll-res">${BOSS_ABIL[R.a][0]} <b>${BOSS_ABIL[R.a][1]}</b> – ${BOSS_ABIL[R.a][2]}</div></div>`; };
 // 🗼 wieże: przed każdym piętrem boss losuje 1 nową przeszkadzajkę – moce się sumują (piętro 1 = 1 moc, piętro 5 = 5 mocy)
@@ -925,7 +927,7 @@ function fightView() {
       ${B.picked != null ? '<button class="primary block" data-act="boss-next">Dalej ›</button>' : ''}`;
   else if (cm === 'type' && !B.shown) ctrl += `<div class="row nowrap"><input id="boss-in" class="grow" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" ${dis}><button class="primary" data-act="boss-check" ${dis}>⚔️</button></div>
       <button class="ghost block small" data-act="boss-show" style="margin-top:4px" ${dis}>Nie wiem – pokaż</button>`;
-  else if (cm === 'type') ctrl += `<p class="center small ${B.verdict === 'wrong' ? 'bad' : 'good'}" style="margin:4px 0">${B.verdict === 'wrong' ? `✗ Poprawnie: <b>${esc(v.ans)}</b>` : B.verdict === 'close' ? '≈ Prawie – liczę jako „Ledwo”' : '✓ Dobrze! Mocny cios ×' + hs.typeM.toFixed(2).replace('.', ',')}</p><button class="primary block" data-act="boss-next">Dalej ›</button>`;
+  else if (cm === 'type') ctrl += `<p class="center small ${B.verdict === 'wrong' ? 'bad' : 'good'}" style="margin:4px 0">${B.verdict === 'wrong' ? `✗ Poprawnie: <b>${esc(v.ans)}</b>` : B.verdict === 'close' ? `≈ Prawie – liczę jako „Ledwo”${typeof missHTML === 'function' ? missHTML(B.typed || '', v.ans) : ''}` : '✓ Dobrze! Mocny cios ×' + hs.typeM.toFixed(2).replace('.', ',')}</p><button class="primary block" data-act="boss-next">Dalej ›</button>`;
   else if (cm === 'runes') ctrl += '';
   else if (cm === 'tf') ctrl += B.picked == null ? `<div class="tf-btns"><button class="tf-yes" data-act="boss-tf" data-v="1" ${dis}>✓ Prawda</button><button class="tf-no" data-act="boss-tf" data-v="0" ${dis}>✗ Fałsz</button></div>`
       : `<p class="center small ${B.pendingG >= 3 ? 'good' : 'bad'}" style="margin:4px 0">${B.pendingG >= 3 ? '✓ Przejrzałeś podstęp!' : '✗ Dałeś się nabrać.'} ${cur.truth ? '' : `Poprawnie: <b>${esc(v.ans)}</b>`}</p><button class="primary block" data-act="boss-next">Dalej ›</button>`;
@@ -1013,7 +1015,7 @@ const bossBlocked = () => { const B = BOSS; if (B && (B.ice || B.bugs?.length ||
 function bossCheck() {
   const B = BOSS, c = bossCard(); if (!B || !c || bossBlocked()) return;
   const given = ($('#boss-in')?.value || '').trim(); if (!given) return toast('Wpisz odpowiedź albo stuknij „Nie wiem”');
-  B.verdict = checkAnswer(given, cardView(c).ans); B.shown = true; B.pendingG = B.verdict === 'wrong' ? 1 : B.verdict === 'close' ? 2 : 3; render();
+  B.typed = given; B.verdict = checkAnswer(given, cardView(c).ans); B.shown = true; B.pendingG = B.verdict === 'wrong' ? 1 : B.verdict === 'close' ? 2 : 3; render();
 }
 function bossPick(k) {
   const B = BOSS, c = bossCard(); if (!B?.cur?.opts || B.picked != null || B.ice || B.bugs?.length) return;

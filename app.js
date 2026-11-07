@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '322';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '323';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -438,6 +438,14 @@ function meaningMatch(input, correct) {
 const EN_CONTR = [[/\bcant\b/gi, 'cannot'], [/\bwont\b/gi, 'will not'], [/\b(do|does|did|is|are|was|were|has|have|had|could|would|should|must|need)nt\b/gi, '$1 not'], [/\bcan['’]t\b/gi, 'cannot'], [/\bcan not\b/gi, 'cannot'], [/\bwon['’]t\b/gi, 'will not'], [/\bshan['’]t\b/gi, 'shall not'], [/\b(\w+)n['’]t\b/gi, '$1 not'],
   [/\b(i)['’]m\b/gi, '$1 am'], [/\b(\w+)['’]re\b/gi, '$1 are'], [/\b(\w+)['’]ve\b/gi, '$1 have'], [/\b(\w+)['’]ll\b/gi, '$1 will'], [/\b(it|he|she|that|there|what|who|where|here)['’]s\b/gi, '$1 is'], [/\blet['’]s\b/gi, 'let us']];
 const enExpand = t => EN_CONTR.reduce((a, [re, r]) => a.replace(re, r), String(t));
+// 🟡 „Prawie”: czego zabrakło – słowa kluczowe z poprawnej odpowiedzi, których nie ma we wpisanej (w oryginalnej pisowni)
+function missingWords(input, correct) {
+  const got = keyWords(canon(enExpand(input))), out = [];
+  for (const raw of String(correct).replace(/\([^)]*\)/g, ' ').split(/\s+/)) { const k = keyWords(canon(raw))[0]; if (k && !wordHit(k, got) && !out.includes(raw)) out.push(raw.replace(/[.,;:!?]+$/, '')); }
+  return out.slice(0, 8);
+}
+const missHTML = (input, correct, full = true) => { const m = missingWords(input, correct);
+  return `<div class="miss">${m.length ? `Zabrakło: ${m.map(w => `<b>${esc(w)}</b>`).join(', ')}` : 'Mała literówka'}${full ? ` · pełna odpowiedź: <b>${esc(String(correct).slice(0, 300))}</b>` : ''}</div>`; };
 function checkAnswer(input, correct, tol = S?.settings?.tolerance || 'normal') {
   input = enExpand(input); correct = enExpand(correct);
   const x = norm(input); if (!x) return 'wrong';
@@ -989,7 +997,7 @@ function viewStudy(deckId, mode, q) {
   if (s.shown && s.typed !== null) {
     const cls = { ok: 'ok', close: 'close', wrong: 'bad' }[s.verdict];
     const msg = { ok: '✅ Dobrze!', close: '🟡 Prawie dobrze', wrong: '❌ Źle' }[s.verdict];
-    typed = `<div class="typed">${msg}<br>Twoja odpowiedź: <span class="${cls}">${esc(s.typed || '(pusto)')}</span></div>`;
+    typed = `<div class="typed">${msg}<br>Twoja odpowiedź: <span class="${cls}">${esc(s.typed || '(pusto)')}</span>${s.verdict === 'close' ? missHTML(s.typed || '', stripHtml(v.ans ?? v.a), false) : ''}</div>`;
   }
   const tts = S.settings.tts && 'speechSynthesis' in window;
   if (tts && !s.spoken) { s.spoken = true; onMount(() => speak(s.shown ? stripHtml(v.a) : stripHtml(v.q))); }
@@ -1020,8 +1028,12 @@ function viewStudy(deckId, mode, q) {
   let bar;
   if (!s.shown) {
     if (mode === 'type' && v.ans.trim()) {
-      onMount(() => { const i = $('#typein'); i.focus({ preventScroll: true }); i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); act('check'); } }); });
-      bar = `<div class="type-row"><input id="typein" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+      // ✍️ długa definicja: większe pole (kilka linijek) i licznik kluczowych pojęć na żywo – wiesz, ile jeszcze brakuje, zanim sprawdzisz
+      const want = [...new Set(keyWords(canon(stripHtml(v.ans))))], long = want.length >= 6;
+      onMount(() => { const i = $('#typein'); i.focus({ preventScroll: true }); i.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); act('check'); } });
+        if (long) i.addEventListener('input', () => { const got = keyWords(canon(i.value)), n = want.filter(w => wordHit(w, got)).length, el = $('#kw-meter'); if (el) { el.querySelector('b').textContent = `${n}/${want.length}`; el.style.setProperty('--p', (n / want.length * 100).toFixed(0) + '%'); }
+          i.style.height = 'auto'; i.style.height = Math.min(180, i.scrollHeight) + 'px'; }); });
+      bar = `${long ? `<div class="kw-meter" id="kw-meter" style="--p:0%"><span>🔑 Kluczowe pojęcia</span><b>0/${want.length}</b><i></i></div>` : ''}<div class="type-row">${long ? `<textarea id="typein" rows="2" placeholder="Napisz swoimi słowami – liczą się kluczowe pojęcia…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"></textarea>` : `<input id="typein" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">`}
         <button class="primary type-go" data-act="check" aria-label="Sprawdź">✓</button></div><button class="ghost type-skip" data-act="show">Nie wiem – pokaż odpowiedź</button>`;
     } else bar = `<button class="primary block" data-act="${S.settings.flipCard === false ? 'show' : 'flip-card'}" style="min-height:56px">Pokaż odpowiedź</button>`;
   } else {
