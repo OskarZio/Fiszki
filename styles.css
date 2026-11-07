@@ -3652,3 +3652,13 @@ input, textarea, select { font-size: max(16px, 1em); }   /* iOS nie powiększa s
 .adm-pick-list { display: grid; gap: 8px; margin-bottom: 12px; max-height: 50vh; overflow-y: auto; }
 .adm-pick-it { display: grid; gap: 2px; text-align: left; padding: 12px 14px; }
 .cls-addlist { display: grid; gap: 8px; }
+/* 🚪 ekran logowania na start */
+#auth-gate { position: fixed; inset: 0; z-index: 900; overflow-y: auto; background: var(--bg); display: flex; justify-content: center; padding: max(24px, env(safe-area-inset-top)) 16px 32px; }
+body.auth-locked { overflow: hidden; } body.auth-locked #tabs { display: none; }
+.auth-box { width: min(440px, 100%); }
+.auth-box > h1 { text-align: center; margin: 4px 0 6px; } .auth-box > p { text-align: center; margin: 0 0 16px; line-height: 1.5; }
+.auth-logo { font-size: 54px; text-align: center; }
+.auth-box .card { margin-bottom: 14px; }
+.or-sep { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: var(--muted); font-size: 13px; } .or-sep::before, .or-sep::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff !important; color: #1f2937 !important; border: 1px solid #d1d5db !important; font-weight: 700; }
+.google-btn .g-ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; color: #fff; background: #4285f4; font-size: 13px; }

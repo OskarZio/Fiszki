@@ -6,6 +6,31 @@
    reguły RLS w bazie (supabase.sql). */
 
 let SB = null, SB_USER = null, SB_CFG = null, SB_PROFILE = null, CLOUD_FRIENDS = [], cloudBusy = false, cloudTimer;
+// 🔑 powrót z maila potwierdzającego / logowania Google: Supabase dokleja do adresu tokeny (#access_token=…) albo błąd (#error=…).
+// Zabieramy je z adresu, ZANIM zobaczy je router (wcześniej pokazywał wtedy błąd strony), i logujemy po załadowaniu Supabase.
+const AUTH_RET = (() => { try {
+  const h = location.hash.replace(/^#\/?/, ''), q = new URLSearchParams(location.search), hp = new URLSearchParams(h.includes('=') ? h : '');
+  const r = { at: hp.get('access_token'), rt: hp.get('refresh_token'), type: hp.get('type'), code: q.get('code'), err: hp.get('error_description') || q.get('error_description') || hp.get('error') || q.get('error'), errCode: hp.get('error_code') || q.get('error_code') };
+  if (r.at || r.code || r.err) { history.replaceState(null, '', location.pathname + '#/'); return r; }
+} catch { /* */ } return null; })();
+const authErr = m => { m = String(m || '');
+  return /rate limit|too many/i.test(m) ? 'Za dużo prób albo maili w krótkim czasie – odczekaj kilka minut i spróbuj ponownie'
+    : /confirm/i.test(m) ? 'Najpierw potwierdź e-mail (link w skrzynce – sprawdź też spam)'
+    : /invalid login|invalid credentials/i.test(m) ? 'Zły e-mail lub hasło'
+    : /already registered|already exists/i.test(m) ? 'To konto już istnieje – zaloguj się'
+    : /expired|otp/i.test(m) ? 'Link z maila wygasł albo był już użyty. Spróbuj się zalogować – konto mogło zostać już potwierdzone'
+    : /password/i.test(m) ? 'Hasło jest za słabe – min. 10 znaków, litery i cyfry'
+    : /fetch|network|load failed/i.test(m) ? 'Brak połączenia z serwerem – sprawdź internet i spróbuj jeszcze raz'
+    : 'Błąd: ' + m; };
+async function authReturn() {
+  const r = AUTH_RET; if (!r || !SB) return;
+  try {
+    if (r.err) return toast(authErr(r.errCode || r.err), 7000);
+    if (r.at && r.rt) { const { error } = await SB.auth.setSession({ access_token: r.at, refresh_token: r.rt }); if (error) throw error; }
+    else if (r.code) { const { error } = await SB.auth.exchangeCodeForSession(r.code); if (error) throw error; }
+    toast(r.type === 'signup' ? '✅ E-mail potwierdzony – jesteś zalogowany' : '✅ Zalogowano', 4000);
+  } catch (e) { toast(authErr(e.message), 6000); }
+}
 const cloudOn = () => !!(SB && SB_USER);
 
 // adres i klucz w config.json są zakodowane (pole „sb”), żeby automaty przeszukujące GitHuba nie zbierały klucza;
@@ -40,6 +65,7 @@ async function initCloud() {
     const { data } = await SB.auth.getSession();
     setCloudUser(data?.session?.user || null);
     SB.auth.onAuthStateChange((_ev, session) => setCloudUser(session?.user || null));
+    await authReturn(); authGate();
     rerenderIf(['more', 'me', 'rank', '']);
   } catch (e) { console.warn('Supabase', e); SB = null; }
 }
@@ -61,6 +87,7 @@ function setCloudUser(u) {
     cloudSync(false).then(loadCloudFriends);
   }
   if (changed) rerenderIf(['more', 'me', 'rank', '']);
+  authGate();
 }
 
 // ---------- synchronizacja na koncie
@@ -274,6 +301,8 @@ function accountCardHTML() {
       <input id="acc-pass" type="password" placeholder="Hasło (min. 10 znaków, litery i cyfry)" autocomplete="current-password">
       <div class="spacer"></div>
       <div class="row"><button class="primary grow" data-act="acc-login">Zaloguj</button><button class="grow" data-act="acc-signup">Załóż konto</button></div>
+      <div class="or-sep"><span>albo</span></div>
+      <button class="block google-btn" data-act="acc-google"><span class="g-ic">G</span> Zaloguj przez Google</button>
       <p class="small muted">Twoje obecne fiszki zostaną dołączone do konta przy pierwszym logowaniu.</p>
       <button class="ghost sm" data-act="cloud-check">🩺 Sprawdź połączenie z bazą</button>${cloudCheckHTML()}</div>`;
   return `<div class="card"><h2 style="margin-top:0">☁️ Konto</h2>
@@ -332,7 +361,7 @@ Object.assign(ACTIONS, {
     const email = $('#acc-email').value.trim(), password = $('#acc-pass').value;
     if (!email || !password) return toast('Wpisz e-mail i hasło');
     const { error } = await SB.auth.signInWithPassword({ email, password });
-    if (error) return toast(/confirm/i.test(error.message) ? 'Najpierw potwierdź e-mail (link w skrzynce)' : /invalid/i.test(error.message) ? 'Zły e-mail lub hasło' : 'Błąd: ' + error.message, 4500);
+    if (error) return toast(authErr(error.message), 5000);
     toast('Zalogowano ✓ Synchronizuję fiszki…');
   },
   'acc-nick': async () => {
@@ -346,10 +375,16 @@ Object.assign(ACTIONS, {
     if (!/^\S+@\S+\.\S+$/.test(email)) return toast('Wpisz poprawny e-mail');
     if (password.length < 6) return toast('Hasło musi mieć min. 6 znaków');
     const { data, error } = await SB.auth.signUp({ email, password, options: { emailRedirectTo: APP_URL() } });
-    if (error) return toast('Błąd: ' + error.message, 4500);
-    if (!data.session) toast('Konto utworzone ✓ Kliknij link w mailu, a potem zaloguj się tutaj', 6000);
+    if (error) return toast(authErr(error.message), 5000);
+    if (!data.session) { AUTH_SENT = email; authGate(); toast('Konto utworzone ✓ Kliknij link w mailu (sprawdź też spam)', 7000); }
     else toast('Konto utworzone i zalogowano ✓');
   },
+  'acc-google': async () => {
+    takeNick();
+    const { error } = await SB.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: APP_URL() } });
+    if (error) toast(/provider|not enabled|unsupported/i.test(error.message) ? 'Logowanie przez Google nie jest jeszcze włączone w Supabase (Authentication → Providers → Google)' : authErr(error.message), 6000);
+  },
+  'acc-resend': async () => { if (!AUTH_SENT) return; const { error } = await SB.auth.resend({ type: 'signup', email: AUTH_SENT, options: { emailRedirectTo: APP_URL() } }); toast(error ? authErr(error.message) : '📧 Wysłano ponownie – sprawdź skrzynkę i spam', 5000); },
   'acc-logout': async () => {
     if (!confirm('Wylogować? Fiszki zostaną na tym urządzeniu.')) return;
     await cloudSync(false); await SB.auth.signOut(); SB_USER = null; SB_PROFILE = null; CLOUD_FRIENDS = []; render();
@@ -370,3 +405,17 @@ Object.assign(ACTIONS, {
   },
   'copy-sql': async () => { const t = $('#sql-box'); try { await navigator.clipboard.writeText(t.value); toast('Skopiowano skrypt SQL ✓'); } catch { t.select(); document.execCommand('copy'); toast('Skopiowano'); } },
 });
+
+// 🚪 konto wymagane od początku: dopóki nie jesteś zalogowany, aplikację zasłania ekran logowania / rejestracji
+// (gdy serwer jest niedostępny – np. brak internetu – nie blokujemy, żeby dało się uczyć offline)
+let AUTH_SENT = '';
+function authGate() {
+  const need = !!SB && !SB_USER, ov = document.getElementById('auth-gate');
+  document.body.classList.toggle('auth-locked', need);
+  if (!need) { ov?.remove(); return; }
+  const html = `<div class="auth-box"><div class="auth-logo">🧠</div><h1>Fiszki</h1><p class="muted">Załóż konto albo zaloguj się, żeby zacząć. Fiszki, postęp i kryształy będą na każdym Twoim urządzeniu.</p>
+    ${AUTH_SENT ? `<div class="card auth-sent"><b>📧 Sprawdź skrzynkę</b><p class="small" style="margin:6px 0">Wysłaliśmy link na <b>${esc(AUTH_SENT)}</b>. Kliknij go na tym urządzeniu, a zalogujesz się automatycznie. Nie ma maila? Zajrzyj do spamu.</p><button class="sm" data-act="acc-resend">Wyślij ponownie</button></div>` : ''}
+    ${accountCardHTML()}</div>`;
+  if (ov) { if (!ov.contains(document.activeElement)) ov.innerHTML = html; return; }
+  const d = document.createElement('div'); d.id = 'auth-gate'; d.innerHTML = html; document.body.append(d);
+}
