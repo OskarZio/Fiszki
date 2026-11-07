@@ -3840,3 +3840,7 @@ html:not([style*="--bg-image"]) body:not(.px-theme) .card.flash hr { border-top:
 html:not([style*="--bg-image"]) body:not(.px-theme) #view h1 { text-decoration: underline; text-decoration-color: var(--hl); text-decoration-thickness: .3em;
   text-underline-offset: -.12em; text-decoration-skip-ink: none; }
 html[data-ui="dark"]:not([style*="--bg-image"]) body:not(.px-theme) #view h1 { text-decoration-color: rgba(255,216,77,.3); }
+/* v343 🖥️ okienka na komputerze: małe i na środku (reguła .card{max-width:100%} rozciągała je na cały ekran) */
+.pp-overlay .pp-box { max-width: 440px !important; margin: auto !important; }
+:is(.dr-overlay, .qr-overlay, .wl-overlay) > .card:not(.pp-box) { max-width: min(480px, 100%) !important; margin-left: auto !important; margin-right: auto !important; }
+.pp-overlay { background: rgba(8,12,10,.5) !important; }
