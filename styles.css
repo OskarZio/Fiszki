@@ -3734,3 +3734,17 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
 @keyframes iceFall { 0% { transform: none; opacity: 1; } 15% { transform: translate(calc(var(--dx) * .15), -6px) rotate(calc(var(--r) * .2)); } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .ice-chip, .ice-shatter { display: none; } }
 .push-card select { width: 100%; }
+/* v337: komputer – nagroda dnia jako małe okienko w rogu, bez zasłaniania całego ekranu */
+@media (min-width: 700px) and (pointer: fine) {
+  .dr-overlay { inset: auto 24px 92px auto; width: 360px; max-height: calc(100dvh - 116px); padding: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; display: block; overflow: visible; }
+  .dr-box { max-width: 360px; margin: 0; padding: 14px 14px 12px; max-height: calc(100dvh - 116px); overflow-y: auto; box-shadow: 0 14px 40px rgba(0,0,0,.35); border: 1px solid var(--line); }
+  .dr-gift { font-size: 32px; } .dr-gift .emo8 { width: 36px !important; height: 36px !important; }
+  .dr-head h2 { font-size: 18px; margin: 2px 0 0; } .dr-head p { margin: 2px 0 0; }
+  .dr-grid { gap: 6px; margin: 10px 0; }
+  .dr-tile { padding: 6px 3px; border-radius: 10px; } .dr-tile span { font-size: 18px; } .dr-tile.big span { font-size: 22px; }
+  .dr-tile span .crate-img, .dr-got span .crate-img { width: 26px; height: 26px; } .dr-tile span .emo8 { width: 22px !important; height: 22px !important; }
+  .dr-tile b { font-size: 10.5px; } .dr-tile small { font-size: 8.5px; }
+  .dr-claim { min-height: 42px; font-size: 15px; } .dr-box button.block { min-height: 38px; padding-top: 8px; padding-bottom: 8px; }
+  .dr-got span { font-size: 40px; } .dr-got span .emo8 { width: 44px !important; height: 44px !important; } .dr-got b { font-size: 15px; }
+  .dr-box > p:last-child { font-size: 11px; }
+}
