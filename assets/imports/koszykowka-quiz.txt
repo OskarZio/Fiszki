@@ -1,0 +1,178 @@
+#fiszki
+#talia: Koszykówka – przepisy (quiz)
+#przedmiot: wf
+// Wersja do grania (ABCD w hydrze, wieży, bossie, teście): krótka odpowiedź + 3 błędne, podobne do prawdziwej.
+
+// ---------- boisko i sprzęt
+Ilu zawodników jednej drużyny gra jednocześnie na boisku? | 5 | ✗ 6; 4; 7
+Oficjalna długość boiska do koszykówki | 28 m | ✗ 26 m; 30 m; 24 m
+Oficjalna szerokość boiska do koszykówki | 15 m | ✗ 14 m; 16 m; 18 m
+Dopuszczalne wymiary boiska w federacjach narodowych | 26 × 14 m | ✗ 24 × 13 m; 27 × 15 m; 25 × 12 m
+Wysokość sufitu nad boiskiem | 7 m | ✗ 6 m; 8 m; 5 m
+Szerokość linii boiska | 5 cm | ✗ 3 cm; 8 cm; 10 cm
+Minimalna odległość linii boiska od przeszkód | 2 m | ✗ 1 m; 1,5 m; 3 m
+O ile linia środkowa wychodzi za linie boczne? | 15 cm | ✗ 10 cm; 20 cm; 5 cm
+Do którego pola należy linia środkowa? | Do pola obrony | ✗ Do pola ataku; Do żadnego pola; Do obu pól
+Odległość linii rzutów wolnych od linii końcowej | 5,8 m | ✗ 4,6 m; 6,25 m; 5,2 m
+Długość linii rzutów wolnych | 3,6 m | ✗ 4,9 m; 3,0 m; 2,45 m
+Inna nazwa obszaru ograniczonego | Pole 3 sekund | ✗ Pole 5 sekund; Pole 8 sekund; Pole rzutów wolnych
+Odległość linii obszaru ograniczonego od środka linii końcowej | 2,45 m | ✗ 1,8 m; 3,6 m; 2,9 m
+Promień półkola rzutów wolnych | 1,80 m | ✗ 1,25 m; 2,45 m; 1,5 m
+Promień koła środkowego | 1,8 m | ✗ 1,25 m; 2,0 m; 3,6 m
+Promień łuku linii rzutów za 3 punkty | 6,75 m | ✗ 6,25 m; 7,24 m; 5,8 m
+Odległość punktu wykreślania łuku za 3 pkt od linii końcowej | 1,575 m | ✗ 1,25 m; 1,2 m; 2,45 m
+Czy linia rzutów za 3 punkty należy do pola za 3 punkty? | Nie | ✗ Tak; Tylko w narożnikach; Tylko przy rzucie wolnym
+Długość linii wyznaczających strefę ławki | 2 m | ✗ 1 m; 1,5 m; 5 m
+Odległość linii strefy ławki od linii środkowej | 5 m | ✗ 2 m; 8,325 m; 6,75 m
+Ilu osób towarzyszących może być w strefie ławki? | Maksymalnie 7 | ✗ Maksymalnie 5; Maksymalnie 12; Maksymalnie 3
+Długość linii wprowadzania | 0,15 m | ✗ 0,5 m; 2 m; 0,05 m
+Odległość linii wprowadzania od linii końcowej | 8,325 m | ✗ 6,75 m; 5,8 m; 14 m
+Promień obszaru półkola bez szarży | 1,25 m | ✗ 1,80 m; 1,575 m; 0,9 m
+Gdzie kończą się linie półkola bez szarży (od linii końcowej)? | 1,2 m | ✗ 1,25 m; 2 m; 0,9 m
+Czy linie półkoli bez szarży należą do tego obszaru? | Nie | ✗ Tak; Tylko dla obrońców; Tylko przy wsadzie
+Z czego są tablice do koszykówki? | Szkło hartowane | ✗ Pleksi barwione; Aluminium; Sklejka czarna
+Kolor linii na przezroczystej tablicy | Biały | ✗ Czarny; Pomarańczowy; Czerwony
+Wysokość dolnej krawędzi tablicy | 2,9 m | ✗ 3,05 m; 2,75 m; 2,6 m
+Wysokość górnej krawędzi obręczy | 3,05 m | ✗ 2,9 m; 3,15 m; 3,00 m
+Średnica wewnętrzna obręczy | 45 cm | ✗ 40 cm; 50 cm; 42 cm
+Materiał i kolor obręczy | Stal pomalowana na pomarańczowo | ✗ Aluminium pomalowane na czerwono; Stal pomalowana na czarno; Aluminium pomalowane na pomarańczowo
+Długość siatki kosza | 40–45 cm | ✗ 30–35 cm; 45–50 cm; 35–40 cm
+Kolor sznurka siatki | Biały | ✗ Pomarańczowy; Czerwony; Czarny
+Odległość konstrukcji tablicy za linią końcową | Co najmniej 2 m | ✗ Co najmniej 1 m; Co najmniej 1,2 m; Co najmniej 3 m
+Na ile sekund można ustawić urządzenie czasu akcji (oprócz 24)? | 14 s | ✗ 12 s; 10 s; 8 s
+Ile sygnałów dźwiękowych powinno być przy stoliku? | 2 | ✗ 1; 3; 4
+Czym daje się sygnały w warunkach szkolnych? | Gwizdkiem | ✗ Dzwonkiem; Syreną; Klaśnięciem
+Kolor numeru 5 na tabliczce fauli | Czerwony | ✗ Czarny; Żółty; Niebieski
+Co oznacza czerwona tabliczka GD? | Dyskwalifikację do końca meczu | ✗ Faul techniczny; Przerwę na żądanie; Limit fauli drużyny
+Kolor markerów fauli drużyny | Czerwony | ✗ Żółty; Biały; Niebieski
+Na jakiej liczbie zatrzymuje się wskaźnik fauli drużyny? | 5 | ✗ 4; 6; 10
+
+// ---------- sędziowie
+Strój sędziego koszykówki | Szara koszulka, czarne spodnie | ✗ Czarna koszulka, szare spodnie; Pasiasta koszulka, czarne spodnie; Biała koszulka, czarne spodnie
+Kto wykonuje rzut sędziowski na rozpoczęcie meczu? | Sędzia główny | ✗ Sędzia pomocniczy; Sekretarz; Komisarz
+Ilu sędziów pomocniczych może być na boisku? | Jeden lub dwóch | ✗ Zawsze dwóch; Zawsze jeden; Dwóch lub trzech
+Ile minut przed meczem sędziowie mogą wydawać decyzje? | 20 minut | ✗ 10 minut; 15 minut; 30 minut
+Kiedy kończą się uprawnienia sędziów? | Z upływem czasu gry | ✗ Po podpisaniu protokołu; Po zejściu drużyn do szatni; 20 minut po meczu
+Sygnał ręką sędziego przy błędzie | Uniesiona otwarta dłoń | ✗ Uniesiona zaciśnięta pięść; Wskazanie kosza; Skrzyżowane ręce
+Sygnał ręką sędziego przy faulu | Uniesiona zaciśnięta pięść | ✗ Uniesiona otwarta dłoń; Dwa palce w górę; Ręka wyciągnięta w bok
+Co robią sędziowie po decyzji o faulu? | Zamieniają się pozycjami | ✗ Zostają na swoich pozycjach; Podchodzą do stolika; Zatrzymują zegar 24 s
+Kto prowadzi protokół meczu? | Sekretarz | ✗ Asystent sekretarza; Mierzący czas gry; Sędzia główny
+Kto obsługuje tablicę wyników? | Asystent sekretarza | ✗ Sekretarz; Mierzący czas 24 s; Komisarz
+Po ilu sekundach przerwy na żądanie mierzący czas daje sygnał? | 50 s | ✗ 60 s; 45 s; 30 s
+Kiedy włącza się zegar przy rzucie sędziowskim? | Gdy zawodnik dotknie piłki w najwyższym punkcie | ✗ Gdy piłka opuści ręce sędziego; Gdy piłka spadnie na podłogę; Po gwizdku sędziego
+Czy zegar zatrzymuje się po koszu z gry w ostatnich 2 min 4 kwarty? | Tak | ✗ Nie; Tylko po rzucie za 3; Tylko na prośbę trenera
+
+// ---------- czas akcji 24 s
+Ile sekund ma drużyna na próbę rzutu? | 24 s | ✗ 30 s; 14 s; 20 s
+Zbiórka w ataku po dotknięciu obręczy – zegar akcji | 14 s | ✗ 24 s; Kontynuacja pomiaru; 8 s
+Zbiórka w obronie po dotknięciu obręczy – zegar akcji | 24 s | ✗ 14 s; Kontynuacja pomiaru; 8 s
+Faul drużyny z piłką, rywal wprowadza na polu ataku – zegar akcji | 14 s | ✗ 24 s; Kontynuacja pomiaru; 8 s
+Faul drużyny z piłką, rywal wprowadza na polu obrony – zegar akcji | 24 s | ✗ 14 s; Kontynuacja pomiaru; 8 s
+Aut tej samej drużyny na polu ataku, na zegarze 10 s – zegar akcji | Kontynuacja pomiaru (10 s) | ✗ 14 s; 24 s; 5 s
+Aut tej samej drużyny na polu ataku, na zegarze 18 s – zegar akcji | 14 s | ✗ Kontynuacja pomiaru (18 s); 24 s; 8 s
+Sygnał 24 s, piłka w locie wpada do kosza | Punkty się liczą | ✗ Punkty się nie liczą; Rzut sędziowski; Rzut wolny dla obrony
+Sygnał 24 s, piłka dotyka obręczy i nie wpada | Gra toczy się dalej | ✗ Błąd 24 s; Rzut sędziowski; Piłka dla obrony z autu
+
+// ---------- drużyna
+Ilu członków drużyny może grać w meczu? | 12 | ✗ 10; 14; 15
+Jakich numerów można używać w rozgrywkach krajowych? | 0, 00 i 1–99 | ✗ Tylko 4–15; 1–99 bez zera; 0–50
+Kolor koszulek gospodarzy | Jasne (najlepiej białe) | ✗ Ciemne (najlepiej czarne); Dowolne; Czerwone
+Kolor ściągaczy spod spodenek | Taki sam jak spodenki | ✗ Taki sam jak koszulka; Dowolny; Biały lub czarny
+Kiedy kapitan może zwracać się do sędziego? | Gdy zegar gry jest zatrzymany | ✗ W każdej chwili; Tylko w przerwie między kwartami; Tylko po faulu
+Ile minut przed meczem trener podaje skład? | 20 minut | ✗ 10 minut; 30 minut; 15 minut
+Ile minut przed meczem trener podaje pierwszą piątkę? | 10 minut | ✗ 20 minut; 5 minut; 15 minut
+Który trener jako pierwszy podaje pierwszą piątkę? | Trener gospodarzy | ✗ Trener gości; Ten, kto przegrał losowanie; Obaj naraz
+Kto zastępuje trenera, gdy nie ma asystenta? | Kapitan drużyny | ✗ Najstarszy zawodnik; Sekretarz; Lekarz drużyny
+
+// ---------- czas gry
+Ile kwart ma mecz? | 4 | ✗ 2; 3; 5
+Długość kwarty | 10 minut | ✗ 12 minut; 8 minut; 15 minut
+Przerwa między połowami meczu | 15 minut | ✗ 10 minut; 20 minut; 12 minut
+Przerwa między 1 a 2 kwartą | 2 minuty | ✗ 1 minuta; 5 minut; 3 minuty
+Długość dogrywki | 5 minut | ✗ 3 minuty; 10 minut; 4 minuty
+Przerwa między dogrywkami | 2 minuty | ✗ 1 minuta; 5 minut; 15 minut
+Kiedy drużyny zmieniają kosze? | Przed 3 kwartą | ✗ Przed 2 kwartą; Przed każdą kwartą; Przed dogrywką
+Jak rozpoczyna się mecz? | Rzutem sędziowskim w kole środkowym | ✗ Wprowadzeniem zza linii końcowej; Rzutem monetą; Wprowadzeniem z linii środkowej
+Minimalna liczba zawodników, by rozpocząć mecz | 5 | ✗ 4; 3; 6
+Po której stronie stolika ma ławkę gospodarz? | Po lewej | ✗ Po prawej; Naprzeciw stolika; Wybiera sędzia
+
+// ---------- rzut sędziowski i posiadanie
+Ile razy skaczący może dotknąć piłki przy rzucie sędziowskim? | 2 | ✗ 1; 3; Dowolnie
+Kto zastępuje kontuzjowanego skaczącego? | Tylko zmiennik | ✗ Kapitan; Dowolny zawodnik z boiska; Nikt – powtarza się rzut
+Jak wznawia się grę po piłce przetrzymanej? | Naprzemienne posiadanie (wprowadzenie z autu) | ✗ Rzut sędziowski w kole środkowym; Rzut wolny; Piłka dla obrony
+Kto zaczyna naprzemienne posiadanie? | Drużyna, która nie wygrała rzutu sędziowskiego | ✗ Drużyna, która wygrała rzut sędziowski; Gospodarze; Goście
+Kiedy przepada naprzemienne posiadanie? | Po błędzie wprowadzania piłki | ✗ Po faulu technicznym; Po przerwie na żądanie; Po zmianie zawodnika
+Czym gra się w koszykówce? | Rękami | ✗ Rękami i nogami; Rękami i głową; Całym ciałem
+Czy przypadkowe dotknięcie piłki nogą jest błędem? | Nie | ✗ Tak; Tylko w obronie; Tylko w obszarze ograniczonym
+
+// ---------- punkty i wprowadzenie
+Ile punktów za rzut wolny? | 1 | ✗ 2; 0,5; 3
+Ile punktów za rzut z pola za 3 punkty? | 3 | ✗ 2; 4; 1
+Komu zapisuje się punkty za samobójczy kosz? | Kapitanowi rywali na boisku | ✗ Zawodnikowi, który rzucił; Najlepszemu strzelcowi rywali; Nikomu
+Skąd wprowadza się piłkę po straconym koszu? | Zza linii końcowej | ✗ Z linii środkowej; Z linii bocznej; Z linii rzutów wolnych
+Ile sekund ma wprowadzający na podanie? | 5 s | ✗ 3 s; 8 s; 10 s
+Jak daleko w bok może przesunąć się wprowadzający? | Ok. 1 m | ✗ Ok. 2 m; Ok. 0,5 m; Dowolnie
+Kara za wystawianie rąk obrońcy za linię (drugi raz) | Faul techniczny | ✗ Faul osobisty; Ostrzeżenie; Faul niesportowy
+
+// ---------- przerwy i zmiany
+Ile trwa przerwa na żądanie? | 1 minuta | ✗ 30 sekund; 2 minuty; 50 sekund
+Ile przerw na żądanie w 1 połowie? | 2 | ✗ 3; 1; 4
+Ile przerw na żądanie w 2 połowie? | 3 | ✗ 2; 4; 5
+Ile przerw na żądanie w dogrywce? | 1 | ✗ 2; 0; 3
+Ile przerw zostaje, gdy do 2 min przed końcem 4 kwarty nie wzięto żadnej? | 2 | ✗ 3; 1; 0
+Czy niewykorzystane przerwy przechodzą na następną połowę? | Nie | ✗ Tak; Tylko jedna; Tylko do dogrywki
+Kto prosi o przerwę na żądanie? | Trener lub asystent | ✗ Kapitan; Każdy zawodnik; Sekretarz
+Kto może poprosić o zmianę zawodnika? | Tylko zmiennik | ✗ Kapitan; Zawodnik na boisku; Sędzia
+Wynik meczu wygranego walkowerem | 20:0 | ✗ 10:0; 2:0; 30:0
+Po ilu minutach spóźnienia drużyna bez 5 zawodników przegrywa walkowerem? | 15 minut | ✗ 10 minut; 20 minut; 30 minut
+Przy ilu zawodnikach na boisku drużyna przegrywa z braku zawodników? | Mniej niż 2 | ✗ Mniej niż 3; Mniej niż 5; Mniej niż 4
+Wynik przy przegranej z braku zawodników (gdy wygrany nie prowadził) | 2:0 | ✗ 20:0; 0:0; 10:0
+
+// ---------- błędy
+Kara za błąd w koszykówce | Utrata piłki | ✗ Rzut wolny dla rywala; Faul osobisty; Rzut sędziowski
+Ile sekund w obszarze ograniczonym rywala? | 3 s | ✗ 5 s; 8 s; 2 s
+Ile sekund ma szczelnie kryty zawodnik z piłką? | 5 s | ✗ 3 s; 8 s; 10 s
+Z jakiej odległości krycie jest „szczelne”? | Jednego kroku | ✗ Dwóch kroków; Wyciągniętej ręki; Jednego metra
+Ile sekund na przeprowadzenie piłki na pole ataku? | 8 s | ✗ 10 s; 5 s; 14 s
+Zatrzymanie na jedno tempo – która noga jest nogą obrotu? | Dowolna | ✗ Lewa; Postawiona pierwsza; Prawa
+Zatrzymanie na dwa tempa – która noga jest nogą obrotu? | Postawiona pierwsza | ✗ Postawiona druga; Dowolna; Ta bliżej kosza
+Zawodnik kończy kozłowanie i zaczyna kozłować ponownie | Błąd podwójnego kozłowania | ✗ Błąd kroków; Faul techniczny; Błąd 5 sekund
+Zawodnik siedzi z piłką i roluje się po boisku | Błąd kroków | ✗ Błąd podwójnego kozłowania; Piłka przetrzymana; Brak błędu
+Zawodnik wyskakuje z pola ataku, łapie piłkę i ląduje na polu obrony | Brak błędu | ✗ Błąd powrotu piłki; Błąd 8 sekund; Błąd kroków
+Obrońca dotyka piłki w locie opadającym nad obręczą – co z rzutem? | Zalicza się 2 lub 3 pkt | ✗ Punkty się nie liczą; Rzut sędziowski; Jeden rzut wolny
+Zawodnik ataku dotyka piłki w locie opadającym – co dalej? | Punkty nie liczą się, piłka dla rywala | ✗ Punkty się liczą; Rzut sędziowski; Rzut wolny dla obrony
+
+// ---------- faule
+Faul na rzucającym za 2, rzut celny | Kosz + 1 rzut wolny | ✗ Kosz + 2 rzuty wolne; Tylko kosz; 2 rzuty wolne
+Faul na rzucającym za 2, rzut niecelny | 2 rzuty wolne | ✗ 1 rzut wolny; 3 rzuty wolne; Piłka z autu
+Faul na rzucającym za 3, rzut celny | Kosz + 1 rzut wolny | ✗ Kosz + 2 rzuty wolne; Kosz + 3 rzuty wolne; Tylko kosz
+Faul na rzucającym za 3, rzut niecelny | 3 rzuty wolne | ✗ 2 rzuty wolne; 1 rzut wolny; 4 rzuty wolne
+Faul bez akcji rzutowej, drużyna nie przekroczyła limitu | Piłka z autu najbliżej faulu | ✗ 2 rzuty wolne; 1 rzut wolny; Rzut sędziowski
+Po ilu faulach drużyny w kwarcie każdy kolejny daje 2 rzuty wolne? | Po 4 | ✗ Po 5; Po 3; Po 6
+Ile fauli wyklucza zawodnika z meczu? | 5 | ✗ 4; 6; 3
+W ilu sekundach trzeba zmienić zawodnika z 5 faulami? | 30 s | ✗ 60 s; 15 s; 10 s
+Faul niesportowy bez akcji rzutowej – ile rzutów wolnych? | 2 + piłka | ✗ 1 + piłka; 3 + piłka; 2 bez piłki
+Skąd wprowadza się piłkę po faulu niesportowym? | Z linii wprowadzania na polu ataku | ✗ Z linii środkowej; Zza linii końcowej; Z miejsca faulu
+Kara za faul techniczny | 1 rzut wolny | ✗ 2 rzuty wolne; 1 rzut wolny + piłka; Utrata piłki
+Czy faul techniczny trenera liczy się do fauli drużyny? | Nie | ✗ Tak; Tylko w 4 kwarcie; Tylko w dogrywce
+Ile fauli technicznych dyskwalifikuje zawodnika? | 2 | ✗ 3; 1; 5
+Ile fauli niesportowych dyskwalifikuje zawodnika? | 2 | ✗ 3; 1; 4
+Faul techniczny + faul niesportowy u zawodnika | Dyskwalifikacja | ✗ Ostrzeżenie; Rzut wolny bez dyskwalifikacji; 5 minut kary
+Kara za bezpośredni faul dyskwalifikujący | 2 rzuty wolne + piłka z boku | ✗ 1 rzut wolny + piłka; 3 rzuty wolne; 2 rzuty wolne bez piłki
+Gdzie idzie zawodnik zdyskwalifikowany? | Do szatni | ✗ Na ławkę rezerwowych; Na trybuny; Do stolika sędziowskiego
+Zmiennik opuszcza ławkę podczas bójki | Automatyczna dyskwalifikacja | ✗ Faul techniczny; Ostrzeżenie; Faul niesportowy
+Kto może opuścić ławkę podczas bójki? | Trener i asystent | ✗ Kapitan i trener; Lekarz i masażysta; Nikt
+Faul obustronny, żadna drużyna nie miała piłki | Sytuacja rzutu sędziowskiego | ✗ Piłka dla gospodarzy; 2 rzuty wolne dla obu; Piłka dla gości
+Legalna pozycja obronna – ustawienie stóp | Obie stopy na podłożu w rozkroku | ✗ Jedna stopa w wyskoku; Stopy złączone; Stopa w półkolu bez szarży
+Krycie zawodnika bez piłki – ile kroków odstępu? | 1–2 kroki | ✗ 3–4 kroki; Pół kroku; Bez odstępu
+Zasłona poza polem widzenia – ile miejsca dać rywalowi? | Jeden krok | ✗ Dwa kroki; Pół kroku; Nie trzeba
+Legalna zasłona – zasłaniający… | Stoi nieruchomo | ✗ Porusza się w bok; Ma wyciągnięte ręce; Stoi tyłem
+
+// ---------- rzuty wolne
+Ile sekund na wykonanie rzutu wolnego? | 5 s | ✗ 8 s; 3 s; 10 s
+Kto wykonuje rzuty wolne? | Faulowany zawodnik | ✗ Kapitan; Najlepszy strzelec; Wybrany przez trenera
+Faulowany jest kontuzjowany – kto rzuca wolne? | Jego zmiennik | ✗ Kapitan; Trener wybiera dowolnego; Nikt – rzut przepada
+Rzut wolny celny, błąd obu drużyn | Kosz się liczy | ✗ Kosz się nie liczy; Rzut sędziowski; Powtórzenie rzutu
+Rzut wolny niecelny, błąd obu drużyn | Sytuacja rzutu sędziowskiego | ✗ Piłka dla obrony; Powtórzenie rzutu; Piłka dla ataku
+Rzut wolny niecelny, błąd obrońcy | Dodatkowy rzut wolny | ✗ Piłka dla obrony; Rzut sędziowski; Faul techniczny
+Kiedy zawodnicy przy polu rzutów wolnych mogą wejść w obszar ograniczony? | Gdy piłka opuści rękę rzucającego | ✗ Gdy piłka dotknie obręczy; Po gwizdku sędziego; Gdy sędzia poda piłkę

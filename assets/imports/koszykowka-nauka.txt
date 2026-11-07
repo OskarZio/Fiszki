@@ -1,0 +1,310 @@
+#fiszki
+#talia: Koszykówka – przepisy (nauka)
+#przedmiot: wf
+// Pełne przepisy gry w koszykówkę (WK 2026) – wszystkie informacje z pliku. Krótkie fiszki = jedna odpowiedź,
+// długie listy w osobnych liniach (te dzielą się na punkty pamiętam / nie pamiętam).
+
+// ---------- Przepis 1 – definicja
+Czym jest koszykówka? | Grą dwóch drużyn po pięciu zawodników, których celem jest zdobywanie punktów za celne rzuty do kosza przeciwnika.
+Która drużyna wygrywa mecz koszykówki? | Ta, która w czasie gry zdobędzie więcej punktów.
+
+// ---------- Przepis 2 – boisko
+Jaki kształt ma boisko do koszykówki i jakie linie je ograniczają? | Prostokąt ograniczony liniami bocznymi (dłuższymi) i końcowymi (krótszymi).
+Oficjalne wymiary boiska do koszykówki | 28 m długości i 15 m szerokości | 28 × 15 – „28 dni miesiąca, 15 minut przerwy”
+Jakie wymiary boiska dopuszcza się w federacjach narodowych? | 26 × 14 m, a nawet mniejsze, np. do rozgrywek młodzieżowych lub szkolnych.
+Jaka powinna być powierzchnia boiska? | Płaska, twarda, wolna od przeszkód i jednolicie oświetlona.
+Na jakiej wysokości powinien być sufit nad boiskiem? | 7 m od podłogi.
+Linie boiska – kolor, szerokość, odległość od przeszkód | Jednego koloru\nszerokość 5 cm\nco najmniej 2 m od wszelkich przeszkód (ściana, kibice, reklamy)
+Jak przebiega linia środkowa? | Przez środek boiska, równolegle do linii końcowych, i wychodzi 15 cm za linie boczne.
+Na co dzieli boisko linia środkowa? | Na pole obrony i pole ataku.
+Z czego składa się pole obrony drużyny? | Z własnego kosza\nz powierzchni jego tablicy od strony boiska\nz części boiska między linią końcową za własnym koszem, liniami bocznymi i linią środkową
+Z czego składa się pole ataku drużyny? | Z kosza przeciwników\nz powierzchni jego tablicy od strony boiska\nz części boiska między linią końcową za koszem przeciwników, liniami bocznymi i krawędzią linii środkowej bliższą kosza przeciwników
+Do którego pola należy linia środkowa? | Do pola obrony.
+Linie rzutów wolnych – odległość i długość | Leżą 5,8 m od linii końcowych (równolegle do nich) i mają 3,6 m długości.
+Jak wyznaczony jest obszar ograniczony (pole 3 sekund)? | Prostokąt między linią końcową a przedłużoną linią rzutów wolnych; jego boki zaczynają się na linii końcowej 2,45 m od jej środka.
+Jaki promień mają półkola rzutów wolnych i gdzie jest ich środek? | Promień 1,80 m, środek w punkcie środkowym linii rzutów wolnych.
+Co zaznacza się wzdłuż boków obszaru ograniczonego? | Miejsca dla zawodników podczas wykonywania rzutów wolnych.
+Koło środkowe – położenie i promień | W centralnej części boiska, na linii środkowej; promień 1,8 m.
+Linia rzutów za 3 punkty – promień łuku | 6,75 m
+Z jakiego punktu wykreśla się łuk linii za 3 punkty? | Z punktu dokładnie pod środkiem kosza – 1,575 m od wewnętrznej krawędzi linii końcowej na środku jej długości.
+Jak biegnie linia za 3 punkty w końcowym fragmencie? | Równolegle do linii bocznych.
+Czy linia rzutów za 3 punkty należy do pola rzutów za 3 punkty? | Nie – ogranicza to pole, ale do niego nie należy.
+Strefa ławki drużyny – po której stronie boiska? | Po tej samej stronie co stolik sekretarza i ławki drużyn.
+Czym wyznacza się strefę ławki drużyny? | Dwiema liniami po 2 m: przedłużeniem linii końcowej i linią prostopadłą do linii bocznej 5 m od linii środkowej.
+Kto może przebywać w strefie ławki? | Zmiennicy (5 lub 7)\ntrener\nasystent trenera\nmaksymalnie 7 osób towarzyszących z określonymi obowiązkami (lekarz, masażysta, statystyk)
+Czy obecność osób towarzyszących w strefie ławki jest prawem? | Nie, przywilejem – podlegają decyzjom sędziów przy niewłaściwym zachowaniu.
+Linie wprowadzania – gdzie są i jak wyglądają? | Przy liniach bocznych na zewnątrz boiska: dwie linie po 0,15 m; ich zewnętrzna krawędź jest 8,325 m od wewnętrznej krawędzi bliższej linii końcowej.
+Obszar półkola bez szarży – promień | 1,25 m od punktu na podłożu dokładnie pod środkiem kosza.
+Jak domknięty jest obszar półkola bez szarży? | Łuk przedłużają linie równoległe do linii bocznych kończące się 1,2 m od linii końcowej; całość zamyka wyimaginowana linia pod przednią krawędzią tablicy.
+Czy linie półkoli bez szarży należą do obszaru półkola bez szarży? | Nie.
+Z czego powinny być tablice i jakie mają linie? | Z przezroczystego materiału (szkło hartowane), linie białe; dopuszcza się tablice drewniane białe z czarnymi liniami.
+Na jakiej wysokości jest dolna krawędź tablicy? | 2,9 m nad podłożem, zabezpieczona osłonami.
+Gdzie stoją konstrukcje podtrzymujące tablice? | Co najmniej 2 m za liniami końcowymi, zabezpieczone osłonami z pianki.
+Z czego składają się kosze? | Z obręczy i siatek.
+Obręcz kosza – materiał, kolor, średnica | Stal pomalowana na pomarańczowo, średnica wewnętrzna 45 cm.
+Na jakiej wysokości jest górna krawędź obręczy? | 3,05 m (poziomo).
+Siatka kosza – materiał i długość | Biały sznurek; długość od 40 do 45 cm.
+Jaka musi być siatka kosza? | Taka, by przez chwilę zatrzymywała przechodzącą piłkę.
+
+// ---------- wyposażenie techniczne
+Wyposażenie techniczne boiska do koszykówki | Konstrukcja tablic (tablice, kosze z siatką, konstrukcja z osłoną)\npiłki\nzegar czasu gry\nurządzenie do pomiaru 24 sekund\nsygnały\ntablica wyników\nprotokół meczu\ntabliczki i markery fauli\nwskaźnik naprzemiennego posiadania piłki\npodłoże z boiskiem i oświetlenie
+Do czego służy zegar czasu gry? | Do mierzenia okresów meczu i przerw między nimi; mierzący czas ma też stoper do przerw na żądanie.
+Trzy funkcje urządzenia do pomiaru 24 sekund | Start od sekundy, w której zostało zatrzymane\nkasowanie i ustawienie na 14 sekund\nkasowanie i ustawienie na 24 sekundy
+Gdzie umieszcza się urządzenia 24 sekund? | Nad koszami lub na podłodze za liniami końcowymi, dobrze widoczne dla wszystkich.
+Ile sygnałów dźwiękowych powinno być przy stoliku? | Dwa, o wyraźnie różnym i donośnym brzmieniu.
+Sygnał mierzącego czas gry i sekretarza – kiedy działa? | Automatycznie na koniec okresów gry (kwarty, dogrywki) oraz ręcznie, np. o przerwie na żądanie lub zmianie.
+Drugi sygnał – czyj i kiedy? | Mierzącego czas 24 sekund; rozlega się automatycznie na koniec tego okresu.
+Czym daje się sygnały w warunkach szkolnych? | Gwizdkiem.
+Tablica wyników – jaka może być? | Świetlna albo (w szkole) tabliczki z cyframi zawieszanymi ręcznie; widoczna dla wszystkich.
+Czym jest protokół meczu? | Oficjalnym dokumentem rozegrania meczu.
+Tabliczki fauli zawodników – kolory i numery | Białe z numerami 1–5: numery 1–4 czarne, numer 5 czerwony; dodatkowo czerwona tabliczka GD (dyskwalifikacja do końca meczu).
+Markery fauli drużyny – kolor i miejsce | Czerwone, stoją na stoliku sekretarza, widoczne dla wszystkich.
+Na jakiej liczbie zatrzymują się wskaźniki fauli drużyny? | Na 5 (bez tablicy świetlnej – stojak z tabliczkami 1–5 przesuwany przez sekretarza).
+Wskaźnik naprzemiennego posiadania piłki | Elektroniczne lub ręczne urządzenie w widocznym miejscu.
+
+// ---------- Przepis 3 – sędziowie
+Ilu sędziów jest na boisku? | Sędzia główny i jeden lub dwóch sędziów pomocniczych.
+Sędziowie stolikowi | Sekretarz\nasystent sekretarza\nmierzący czas gry\nmierzący czas 24 sekund
+Kto jeszcze może siedzieć przy stoliku sędziowskim? | Komisarz.
+Strój sędziego | Szara koszulka, czarne spodnie i buty.
+Obowiązki sędziego głównego | Sprawdza wyposażenie\nsprawdza, czy zawodnicy nie noszą niebezpiecznych przedmiotów\nwykonuje rzut sędziowski na rozpoczęcie 1 kwarty\ndecyduje, gdy sędziowie nie są zgodni co do kosza\nmoże przerwać mecz w niebezpiecznej sytuacji\npo meczu sprawdza protokół i zatwierdza wynik\npodejmuje ostateczną decyzję po konsultacji z innymi
+Od kiedy sędziowie mogą wydawać decyzje? | Od przybycia na boisko – 20 minut przed rozpoczęciem meczu.
+Kiedy kończą się uprawnienia sędziów? | Z upływem czasu gry.
+Czy sędzia może uchylić decyzję drugiego sędziego? | Nie – żaden sędzia nie może uchylić ani zakwestionować decyzji drugiego.
+Czym jest naruszenie przepisów? | Każdy błąd lub faul zawodnika, zmiennika, trenera, asystenta trenera lub osoby towarzyszącej.
+Co robi sędzia po błędzie? | Gwizdek\nuniesiona otwarta dłoń (zatrzymanie zegara)\nsygnalizacja rodzaju błędu\nprzyznanie piłki drużynie przeciwnej do wprowadzenia
+Co robi sędzia po faulu? | Gwizdek\nuniesiona zaciśnięta pięść (zatrzymanie czasu)\nwskazanie faulującego\nzgłoszenie do stolika numeru zawodnika i rodzaju faulu\nwznowienie gry rzutami wolnymi lub wprowadzeniem spoza boiska
+Co robią sędziowie po każdej decyzji o faulu lub rzucie sędziowskim? | Zamieniają się pozycjami na boisku.
+Obowiązki sekretarza | Prowadzi protokół (wynik, faule)\nzawiadamia sędziów o 5 faulach\npowiadamia o prośbie o przerwę na żądanie\npokazuje liczbę fauli zawodnika\nuczestniczy w zmianach\nużywa sygnału tylko gdy piłka martwa i zegar zatrzymany
+Co robi asystent sekretarza? | Obsługuje tablicę wyników i pomaga sekretarzowi.
+Obowiązki mierzącego czas gry | Mierzy czas gry i przerw\npodczas przerwy na żądanie włącza stoper i po 50 sekundach daje sygnał
+Kiedy włącza się zegar czasu gry? | Przy rzucie sędziowskim – gdy zawodnik dotknie piłki w najwyższym punkcie\npo rzutach wolnych – gdy piłka dotknie pierwszego zawodnika na boisku\npo wprowadzeniu spoza boiska – gdy dotknie jej pierwszy zawodnik na boisku
+Kiedy wyłącza się zegar czasu gry? | Koniec kwarty lub dogrywki\ngwizdek sędziego\nsygnał 24 sekund przy żywej piłce\nkosz stracony przez drużynę, która prosiła o przerwę na żądanie\nkażdy kosz z gry w ostatnich 2 minutach 4 kwarty lub dogrywki
+
+// ---------- 24 sekundy
+Kiedy mierzący 24 s włącza zegar lub kontynuuje pomiar? | Gdy zawodnik wejdzie w posiadanie żywej piłki.
+Kiedy mierzący 24 s zatrzymuje zegar i ustawia nowe 24 s? | Po celnym rzucie z gry albo gdy piłkę przejmie drużyna przeciwna (zbiórka w obronie, przechwyt).
+Faul/błąd drużyny bez piłki, piłka wprowadzana na polu obrony tej samej drużyny – zegar akcji? | Zatrzymać i ustawić nowe 24 sekundy.
+Faul/błąd drużyny bez piłki, wprowadzenie na polu ataku, na zegarze 14 s lub więcej – zegar akcji? | Zatrzymać i kontynuować pomiar.
+Faul/błąd drużyny bez piłki, wprowadzenie na polu ataku, na zegarze 13 s lub mniej – zegar akcji? | Zatrzymać i ustawić 14 sekund.
+Faul lub błąd drużyny z piłką, piłkę dostaje rywal na polu obrony – zegar akcji? | 24 sekundy.
+Faul lub błąd drużyny z piłką, piłkę dostaje rywal na polu ataku – zegar akcji? | 14 sekund.
+Kiedy pomiar 24 s jest zatrzymany i kontynuowany (ta sama drużyna wprowadza piłkę)? | Wyjście piłki poza boisko\nsytuacja rzutu sędziowskiego\nkontuzja zawodnika drużyny z piłką\nfaul obustronny\nskasowanie równych kar obu drużyn
+Piłka dotknęła obręczy, zbiórka w obronie – zegar akcji? | 24 sekundy.
+Piłka dotknęła obręczy, zbiórka w ataku (ta sama drużyna) – zegar akcji? | 14 sekund.
+Piłka zatrzymała się między obręczą a tablicą – jak ustawić zegar akcji? | Tak jak po dotknięciu obręczy: 24 s dla rywala, 14 s dla tej samej drużyny.
+Przerwa na żądanie w ostatnich 2 min 4 kwarty, piłka na polu obrony – co decyduje trener? | Czy wprowadza piłkę z linii wprowadzania na polu ataku, czy z miejsca zatrzymania gry na polu obrony.
+Aut, ta sama drużyna, wprowadzenie na polu obrony – zegar akcji? | Zatrzymać i ustawić nowe 24 s albo kontynuować pomiar (zgodnie z zasadami pomiaru 24 s).
+Aut, ta sama drużyna, pole ataku, na zegarze 13 s lub mniej – zegar akcji? | Zatrzymać i kontynuować pomiar.
+Aut, ta sama drużyna, pole ataku, na zegarze 14 s lub więcej – zegar akcji? | Zatrzymać i ustawić 14 sekund.
+Wprowadzenie po innym błędzie, faulu lub zmianie posiadania – pole obrony / pole ataku | Pole obrony – 24 sekundy; pole ataku – 14 sekund.
+
+// ---------- Przepis 4 – drużyna
+Ilu członków drużyny może grać w meczu? | 12.
+Kto jeszcze jest członkiem drużyny poza zawodnikami? | Trener, asystent trenera i maksymalnie 7 osób towarzyszących z konkretnymi funkcjami.
+Kto pełni funkcję kapitana? | Jeden z członków drużyny uprawnionych do gry.
+Kim są zawodnicy, a kim zmiennicy? | Zawodnicy – pięciu członków drużyny na boisku; zmiennicy – pozostali na ławce rezerwowych.
+Kiedy zmiennik staje się zawodnikiem? | Gdy sędzia przywoła go na boisko.
+Strój zawodnika | Koszulka wsunięta do spodenek i spodenki; ściągacze spod spodenek w tym samym kolorze co spodenki.
+Gdzie zawodnik ma numer? | Z przodu i z tyłu koszulki.
+Jakie numery można stosować w rozgrywkach krajowych? | 0, 00 i od 1 do 99 (jedno- lub dwucyfrowe).
+Kolory koszulek gospodarzy i gości | Gospodarze – jasne (najlepiej białe); goście – ciemne.
+Czego nie wolno nosić zawodnikowi? | Twardych ochraniaczy i usztywnień na palce, rękę, nadgarstek, łokieć, przedramię (skóra, plastik, metal)\nsprzętu, który może zaciąć (paznokcie krótko obcięte)\nnakryć głowy, ozdób we włosach, biżuterii
+Kiedy i jak kapitan może zwracać się do sędziego? | Grzecznie i tylko wtedy, gdy zegar czasu gry jest zatrzymany.
+Czy kapitan może pełnić funkcję trenera? | Tak.
+Jak traktuje się członków drużyny uprawnionych do gry podczas przerwy meczu? | Jak zawodników.
+Obowiązki i uprawnienia trenera | Kontakt ze stolikiem tylko przy martwej piłce i zatrzymanym zegarze\n20 min przed meczem podaje skład\n10 min przed meczem podpisuje protokół i podaje pierwszą piątkę (najpierw gospodarze)\nmoże prosić o przerwę na żądanie\nmoże stać w strefie ławki (tylko on albo asystent)\ninformuje sędziego o nowym kapitanie na boisku
+Ile minut przed meczem trener podaje skład drużyny? | 20 minut.
+Ile minut przed meczem trener podpisuje protokół i podaje pierwszą piątkę? | 10 minut – jako pierwszy trener gospodarzy.
+Kto przejmuje funkcję trenera, gdy ten nie może jej pełnić? | Asystent, a gdy go nie ma – kapitan drużyny.
+
+// ---------- Przepis 5 – czas gry
+Z ilu kwart i jakiej długości składa się mecz? | 4 kwarty po 10 minut.
+Przerwy w meczu koszykówki | Między połowami – 15 minut\nmiędzy kwartami 1–2 i 3–4 – po 2 minuty
+Co przy remisie po czasie regulaminowym? | Dogrywka 5-minutowa lub kolejne dogrywki 5-minutowe aż do wyłonienia zwycięzcy.
+Przerwa między dogrywkami | 2 minuty.
+Na które kosze grają drużyny w dogrywkach? | Na te same, na które kończyły mecz w normalnym czasie.
+Kiedy mecz nie może się rozpocząć? | Gdy drużyna nie ma pięciu zawodników gotowych do gry.
+Jak rozpoczyna się mecz? | Rzutem sędziowskim w kole środkowym.
+Kiedy drużyny zmieniają kosze? | Przed trzecią kwartą.
+Gdzie ma ławkę i kosz gospodarz (pierwszy w protokole)? | Po lewej stronie stolika sędziowskiego, patrząc w kierunku boiska (można zmienić, jeśli obie drużyny się zgodzą).
+
+// ---------- piłka żywa i martwa
+Kiedy piłka staje się żywa? | Przy rzucie sędziowskim – gdy opuszcza ręce sędziego\nprzy rzucie wolnym – gdy sędzia poda ją zawodnikowi\nprzy wyrzucie spoza boiska – gdy ma ją zawodnik
+Kiedy piłka staje się martwa? | Po koszu z gry lub z rzutu wolnego\ngdy rozlegnie się gwizdek albo sygnał 24 s przy żywej piłce\ngdy słychać sygnał końca kwarty lub dogrywki
+Kiedy piłka NIE staje się martwa i celny rzut się liczy? | Jest w locie przy rzucie z gry, a sędzia gwiżdże lub brzmi sygnał 24 s\njest w locie przy rzucie wolnym, a sędzia gwiżdże za przewinienie innego zawodnika\nfaul popełniono, gdy piłkę ma zawodnik w akcji rzutowej
+Jak określa się miejsce zawodnika w wyskoku? | Tam, gdzie ostatnio dotykał podłogi – w momencie odbicia.
+Piłka odbiła się od sędziego – jak ją traktujemy? | Jakby odbiła się od podłogi.
+
+// ---------- rzut sędziowski
+Kiedy wykonuje się rzut sędziowski? | Tylko na rozpoczęcie meczu (kolejne części – wprowadzenie z przedłużenia linii środkowej, naprzeciw stolika, zgodnie ze strzałką).
+Na czym polega rzut sędziowski? | Sędzia podrzuca piłkę między dwoma zawodnikami rywali, którzy dłonią próbują zbić ją do partnerów.
+Ile razy skaczący może dotknąć piłki przy rzucie sędziowskim? | Dwa razy – nie może jej chwytać.
+Gdzie stoją pozostali zawodnicy przy rzucie sędziowskim? | Poza linią koła; nie mogą przekroczyć „cylindra”, aż jeden ze skaczących dotknie piłki.
+Czy dwóch zawodników jednej drużyny może stać obok siebie przy kole? | Nie, jeśli między nimi chce stanąć zawodnik rywali.
+Kto zastępuje kontuzjowanego skaczącego przy rzucie sędziowskim? | Tylko zmiennik.
+Sytuacje rzutu sędziowskiego | Piłka przetrzymana\naut, gdy sędziowie nie wiedzą, kto ostatni dotknął\nobie drużyny popełniają błąd przy niecelnym ostatnim rzucie wolnym\npiłka martwa, a nikt jej nie posiada ani nie ma do niej prawa\nskasowanie równych kar, brak dalszych kar\npiłka zatrzymała się między obręczą a tablicą\nrozpoczęcie części meczu innej niż 1 kwarta
+Czym jest naprzemienne posiadanie piłki? | Wznowieniem gry przez wprowadzenie spoza boiska zamiast rzutu sędziowskiego; drużyny dostają piłkę na zmianę.
+Skąd wprowadza się piłkę w naprzemiennym posiadaniu? | Z miejsca najbliższego sytuacji rzutu sędziowskiego.
+Która drużyna zaczyna naprzemienne posiadanie? | Ta, która nie wygrała rzutu sędziowskiego na rozpoczęcie – dostaje piłkę przy najbliższej sytuacji rzutu sędziowskiego.
+Jak działa wskaźnik naprzemiennego posiadania? | Wskazuje kosz przeciwnika drużyny, której należy się piłka; zmienia kierunek zaraz po wprowadzeniu piłki.
+Kiedy przepada naprzemienne posiadanie? | Gdy drużyna wprowadzająca popełni błąd wprowadzania (przemieszczanie się na aucie, 5 sekund).
+Jak wprowadza się piłkę na początek kolejnej części meczu? | Z przedłużenia linii środkowej naprzeciw stolika; stopy po obu stronach linii, podanie w dowolne miejsce boiska.
+
+// ---------- gra piłką i posiadanie
+Czym gra się w koszykówce? | Rękami.
+Co jest błędem w grze piłką? | Bieganie z piłką, kopanie (dotykanie nogą) i uderzanie pięścią.
+Czy przypadkowe dotknięcie piłki nogą jest błędem? | Nie.
+Kiedy zawodnik posiada piłkę? | Gdy trzyma lub kozłuje żywą piłkę albo trzyma ją do wrzutu z autu.
+Kiedy drużyna posiada piłkę? | Gdy ma ją jej zawodnik albo piłka jest podawana między jej zawodnikami.
+Do kiedy drużyna posiada piłkę? | Aż piłka stanie się martwa, przejmie ją rywal albo opuści ręce rzucającego.
+Od kiedy do kiedy trwa akcja rzutowa? | Od początku ruchu przed wypuszczeniem piłki do powrotu stóp na podłogę (dotyczy rzutu, wsadu i dobitki).
+Dlaczego ważna jest ocena akcji rzutowej? | Decyduje o przyznaniu rzutów wolnych.
+
+// ---------- punkty
+Kiedy kosz jest zdobyty? | Gdy piłka wpada do kosza z góry i zostaje w nim lub przez niego przechodzi.
+Wartość koszy | Rzut wolny – 1 pkt\nz pola za 2 punkty – 2 pkt\nz pola za 3 punkty – 3 pkt
+Zawodnik przypadkowo trafia do własnego kosza – komu zapisuje się punkty? | Kapitanowi drużyny przeciwnej, który jest na boisku.
+
+// ---------- wprowadzenie piłki
+Skąd wprowadza się piłkę po straconym koszu? | Zza linii końcowej, z dowolnego miejsca.
+Skąd wprowadza się piłkę po naruszeniu przepisów? | Spoza boiska, z miejsca wskazanego przez sędziego, najbliżej naruszenia (nie spod tablicy).
+Jak może poruszać się wprowadzający piłkę? | Jeden krok (ok. 1 m) w bok w jedną stronę lub kilka małych kroczków na 1 m; do tyłu – dowolnie, jeśli nie ma przeszkód.
+Ile czasu ma zawodnik na podanie przy wprowadzeniu? | 5 sekund od otrzymania piłki od sędziego.
+Po koszu z gry lub ostatnim celnym rzucie wolnym (2 ost. min, przerwa) – skąd wprowadza trener? | Z dowolnej strony boiska na polu ataku; po błędzie lub faulu – z tej strony, z której byłoby wprowadzenie z własnej połowy.
+Skąd wprowadza się piłkę po faulu niesportowym? | Z linii wprowadzania na polu ataku.
+Obrońca wystawia ręce za linię przy wprowadzeniu – kara? | Najpierw ostrzeżenie, przy ponownym naruszeniu faul techniczny.
+
+// ---------- przerwy na żądanie
+Ile trwa przerwa na żądanie? | Minutę – nie można jej skrócić.
+Ile przerw na żądanie przysługuje drużynie? | 2 w pierwszej połowie\n3 w drugiej połowie\n1 w każdej dogrywce
+Co się dzieje, gdy drużyna nie weźmie przerwy do 2 min przed końcem 4 kwarty? | Jedna z trzech przerw przepada – zostają dwie.
+Kiedy można otrzymać przerwę na żądanie? | Piłka martwa i zegar zatrzymany\nkosz z gry zdobyła drużyna przeciwna\npo ostatnim (celnym) rzucie wolnym za normalny faul\npo ostatnim rzucie wolnym, po którym jest wprowadzenie z linii wprowadzania
+Kiedy nie można dostać przerwy na żądanie? | Drużyna, która właśnie zdobyła kosz z gry (także w ostatnich 2 min) oraz między lub po rzutach wolnych.
+Kto prosi o przerwę na żądanie i jak? | Trener lub asystent – podchodzi do sekretarza, a ten zawiadamia sędziów.
+Kiedy zaczyna się i kończy przerwa na żądanie? | Zaczyna – gwizdek i sygnał rąk sędziego; kończy – gwizdek przywołujący drużyny.
+Czy niewykorzystane przerwy przechodzą na kolejną połowę? | Nie – ani na połowę, ani na dogrywkę.
+
+// ---------- zmiany
+Która drużyna może zmienić zawodników po faulu lub błędzie? | Obie.
+Kiedy można dokonać zmiany? | Gdy piłka jest martwa i zegar zatrzymany; także po ostatnim (celnym) rzucie wolnym za normalny faul.
+Kto ma prawo prosić o zmianę i jak? | Tylko zmiennik – podchodzi do sekretarza, sygnalizuje prośbę i siada na krześle zmian.
+Zmiana po straconym koszu w ostatnich 2 minutach | Może jej dokonać drużyna, która prosiła o zmianę i straciła kosz.
+
+// ---------- walkower i brak zawodników
+Kiedy drużyna przegrywa walkowerem? | Złym zachowaniem uniemożliwia grę\nodmawia gry mimo zachęty sędziego\n15 minut po terminie nie ma pięciu zawodników
+Wynik walkowera | 20:0 i 0 punktów w klasyfikacji.
+Dwa walkowery w turnieju | Drużyna jest dyskwalifikowana, a wyniki jej meczów anulowane.
+Kiedy drużyna przegrywa z powodu braku zawodników? | Gdy na boisku zostaje mniej niż dwóch jej zawodników.
+Wynik meczu przegranego przez brak zawodników | Jeśli wygrywający prowadził – wynik z boiska; inaczej 2:0 dla drużyny z kompletnym składem.
+
+// ---------- Przepis 6 – błędy
+Czym jest błąd i jaka jest jego kara? | Naruszeniem przepisów; konsekwencja to utrata piłki.
+Kiedy jest aut? | Zawodnik z piłką lub piłka dotyka:\nzawodnika lub osoby poza boiskiem\nlinii ograniczających boisko\nobiektów poza liniami\npodpór kosza lub tyłu tablicy
+Czym jest kozłowanie? | Rzuceniem, uderzeniem lub toczeniem piłki po podłodze przez jednego zawodnika.
+Kiedy kozłowanie jest zakończone? | Gdy zawodnik dotknie piłki oburącz albo ją chwyci (oburącz lub jednorącz).
+Czy poprawa chwytu (przypadkowa utrata i odzyskanie) jest kozłowaniem? | Nie.
+Błąd podwójnego kozłowania | Rozpoczęcie kozłowania ponownie po jego zakończeniu.
+Zawodnik umyślnie odbija piłkę o tablicę i łapie ją – co dalej? | Traktuje się to jak kozłowanie – nie może już kozłować ponownie.
+Błąd kroków | Poruszanie się z piłką po boisku bez kozłowania.
+Czym jest obrót i noga obrotu? | Odrywanie jednej nogi wiele razy w różnych kierunkach, gdy druga (noga obrotu) dotyka podłoża.
+Zatrzymanie na jedno tempo – która noga jest nogą obrotu? | Dowolna.
+Zatrzymanie na dwa tempa – która noga jest nogą obrotu? | Ta postawiona na ziemi jako pierwsza.
+Kiedy można oderwać nogę obrotu przy rozpoczęciu kozłowania? | Dopiero gdy piłka opuści rękę.
+Zawodnik z piłką leży lub siedzi i przesuwa się, roluje albo wstaje z piłką | Błąd kroków.
+Błąd 3 sekund | Zawodnik drużyny z piłką (przy włączonym zegarze) przebywa w obszarze ograniczonym rywala dłużej niż 3 sekundy; linie należą do obszaru.
+Błąd 5 sekund (szczelnie kryty zawodnik) | Zawodnik kryty z odległości kroku przez 5 sekund nie rzuca, nie podaje i nie kozłuje.
+Błąd 8 sekund | Drużyna nie przenosi piłki z pola obrony na pole ataku w ciągu 8 sekund.
+Od kiedy liczy się 8 sekund? | Od wejścia zawodnika drużyny w posiadanie żywej piłki.
+Kiedy piłka wchodzi na pole ataku? | Gdy dotyka pola ataku albo zawodnika lub sędziego, który styka się z polem ataku.
+Kiedy pomiar 8 sekund jest kontynuowany? | Ta sama drużyna wprowadza na polu obrony po: aucie, kontuzji swojego zawodnika, sytuacji rzutu sędziowskiego, faulu obustronnym, skasowaniu równych kar.
+Błąd 24 sekund | Drużyna nie wykonuje próby rzutu w ciągu 24 sekund od wejścia w posiadanie żywej piłki.
+Kiedy rzut jest ważny w kontekście 24 sekund? | Piłka opuszcza ręce przed sygnałem i potem dotyka obręczy.
+Sygnał 24 s podczas lotu piłki, piłka wpada – co z punktami? | Punkty są zaliczone.
+Sygnał 24 s, piłka dotyka obręczy, ale nie wpada | Gra toczy się dalej.
+Sygnał 24 s, piłka nie dotyka obręczy | Błąd, chyba że przeciwnicy od razu oczywiście przejmują piłkę.
+Powrót piłki na pole obrony | Drużyna z piłką na polu ataku nie może podać jej z powrotem na pole obrony.
+Kiedy piłka wchodzi na pole obrony? | Gdy dotyka pola obrony lub zawodnika, który się z nim styka.
+Kiedy kozłujący jest na polu ataku? | Gdy obie stopy i piłka mają styczność z polem ataku.
+Zawodnik wyskakuje z pola ataku, przechwytuje piłkę w powietrzu i ląduje na polu obrony | To nie jest błąd.
+Rzut, wsad i dobitka – definicje | Rzut – wrzucenie trzymanej piłki w kierunku kosza\nwsad – włożenie lub próba włożenia piłki do kosza\ndobitka – „dopchnięcie” piłki do kosza
+Kiedy nie wolno dotykać piłki po rzucie (zawodnikom ataku i obrony)? | Gdy jest w locie opadającym\ngdy jest całkowicie powyżej obręczy\ngdy odbiła się od tablicy powyżej obręczy
+Czego nie wolno obrońcom, gdy piłka jest w koszu w kontakcie z obręczą? | Dotykać piłki ani kosza.
+Kiedy wolno dotknąć piłki po rzucie? | Po odbiciu od obręczy albo gdy widać, że nie dotknie obręczy (niedolot).
+Czego nie wolno, gdy piłka styka się z obręczą przy rzucie? | Dotykać kosza ani tablicy (atak i obrona).
+Błąd przy rzucie popełnił zawodnik ataku | Punkty nie są liczone; piłka dla rywala z przedłużenia linii rzutów wolnych.
+Błąd przy rzucie popełnił zawodnik obrony | Rzucającemu zalicza się 2 lub 3 pkt; gra wznawiana zza linii końcowej jak po celnym rzucie.
+
+// ---------- Przepis 7 – faule
+Czym jest faul? | Naruszeniem przepisów przez kontakt z przeciwnikiem lub niesportowe zachowanie.
+Czym jest faul osobisty? | Faulem zawodnika związanym z nieprzepisowym kontaktem.
+Rodzaje fauli osobistych | Blokowanie\nszarżowanie\nkrycie od tyłu\ntrzymanie\nnieprzepisowe użycie rąk\npchanie\nnieprawidłowa zasłona
+Faul na zawodniku, który nie rzucał | Wprowadzenie piłki spoza boiska najbliżej faulu; po przekroczeniu limitu 4 fauli drużyny – kary dla tego przypadku (2 rzuty wolne).
+Kary za faul na rzucającym | Celny za 2 – kosz + 1 rzut wolny\nniecelny za 2 – 2 rzuty wolne\ncelny za 3 – kosz + 1 rzut wolny\nniecelny za 3 – 3 rzuty wolne
+Faul zawodnika drużyny atakującej | Grę wznawia drużyna poszkodowana, najbliżej miejsca naruszenia.
+Zasada pionowości | Zawodnik może zająć każdą wolną pozycję i przestrzeń „cylindra” do normalnej postawy – także nad sobą i pod sobą.
+Legalna pozycja obronna | Twarzą do przeciwnika i obie stopy na podłożu w normalnym rozkroku; ramiona w górę lub wyskok – w pionie, w ramach cylindra.
+Krycie zawodnika z piłką – czy liczy się czas i odległość? | Nie – zawodnik z piłką musi się spodziewać krycia, nawet w ostatniej chwili.
+Czego nie może obrońca w legalnej pozycji przy kozłującym? | Wyciągać ramion ani wystawiać barków, bioder czy nóg, by nie dać się minąć.
+Na co patrzymy przy ocenie blok czy szarża? | Czy obrońca był w legalnej postawie, czy pierwszy zajął pozycję i czy kontakt był w tors.
+Jak może poruszać się obrońca w legalnej pozycji? | W bok i w tył (krok obronny); może się odwrócić, by złagodzić zderzenie.
+Kto odpowiada za kontakt, gdy obrońca spełnia warunki legalnej pozycji? | Zawodnik ataku.
+Półkole bez szarży – kiedy kontakt ataku z obrońcą nie jest faulem? | Atakujący ma piłkę w wyskoku\npróbuje rzutu lub podania\nobrońca stoi jedną lub obiema stopami w półkolu
+Krycie zawodnika bez piłki – co obowiązuje? | Elementy czasu i odległości – obrońca daje 1–2 normalne kroki na zatrzymanie lub zmianę kierunku.
+Obrońca bez piłki porusza się do przodu i dochodzi do kontaktu | Odpowiada obrońca.
+Czym jest zasłona? | Uniemożliwieniem przeciwnikowi bez piłki zajęcia miejsca na boisku.
+Legalna i nielegalna zasłona | Legalna – zasłaniający stoi nieruchomo (obie stopy na boisku); nielegalna – porusza się.
+Zasłona w polu widzenia stojącego przeciwnika | Można ją postawić tak blisko, jak tylko nie ma nielegalnego kontaktu.
+Zasłona poza polem widzenia stojącego przeciwnika | Trzeba zostawić mu jeden krok.
+Zasłona na przeciwniku w ruchu | Obowiązują czas i odległość – 1–2 kroki.
+Nielegalne użycie rąk | Stałe dotykanie przeciwnika rękami, z piłką czy bez.
+Faule zawodnika atakującego z piłką | „Owinięcie” (założenie ręki)\nprzytrzymanie obrońcy ramieniem lub łokciem\nodepchnięcie dla zwiększenia odległości\nwyciąganie ręki w bok przy kozłowaniu
+Kiedy przypadkowe dotknięcie jest faulem? | Gdy dotykający uzyskał korzyść – ograniczył swobodę ruchu przeciwnika.
+Faule zawodnika bez piłki (odepchnięcie w celu…) | Uwolnienia się do podania\nprzeszkodzenia w zagraniu piłką\nzwiększenia odległości od przeciwnika
+Gra środkowego – co jest faulem? | Wypychanie barkiem lub biodrem, używanie łokci, ramion, kolan; obowiązuje zasada pionowości.
+Czym jest faul obustronny? | Dwóch zawodników rywali fauluje się nawzajem w tym samym czasie.
+Jak wznawia się grę po faulu obustronnym? | Drużyna z piłką – wprowadza spoza boiska\nnikt nie miał piłki – sytuacja rzutu sędziowskiego\njednocześnie kosz z gry – wprowadza drużyna, która straciła kosz, zza linii końcowej
+Czym jest faul niesportowy? | Nadmierny (ciężki) kontakt z przeciwnikiem – atak na zawodnika zamiast gry piłką.
+Kara za faul niesportowy | Faul zapisany zawodnikowi; poszkodowani dostają rzut(y) wolny(e) i posiadanie piłki.
+Faul niesportowy – ile rzutów wolnych? | Bez akcji rzutowej – 2\nrzut celny – kosz + 1\nrzut niecelny – 2 lub 3 (zależnie od miejsca rzutu)
+Faul niesportowy – ustawienie przy rzutach wolnych i wznowienie | Wszyscy poza przedłużeniem linii rzutów wolnych; potem poszkodowani wprowadzają z linii wprowadzania na polu ataku.
+Czym jest faul techniczny zawodnika? | Faulem bez kontaktu, z niesportowego zachowania.
+Za co można dostać faul techniczny? | Zaczepianie sędziów\ngesty podburzające publiczność\ndokuczanie przeciwnikowi\nobraźliwe słowa\nopóźnianie gry przy wprowadzaniu\nzmiana numeru\nwieszanie się na obręczy\nwywołanie wibracji kosza\nsymulowanie faulu
+Kiedy trener i osoby z ławki mogą opuścić strefę ławki? | Trener/asystent – pomoc kontuzjowanemu za zgodą sędziów\nprośba o przerwę na żądanie\nprośba o informację przy zatrzymanym zegarze\nlekarz – od razu do kontuzjowanego\nzmiennik – prośba o zmianę
+Faul techniczny trenera – czy wlicza się do fauli drużyny? | Nie.
+Kara za faul techniczny zawodnika i trenera | 1 rzut wolny; potem piłkę wprowadza drużyna, która ją miała lub miała do niej prawo, najbliżej miejsca zatrzymania gry.
+Co uważa się za przerwę meczu (faul techniczny w przerwie)? | 20 minut przed meczem oraz przerwy między kwartami, połowami i dogrywkami.
+Faul techniczny w przerwie – zawodnik | Faul zawodnika, 1 rzut wolny, liczy się do fauli drużyny.
+Faul techniczny w przerwie – trener lub osoba z ławki | Faul trenera, 1 rzut wolny, nie liczy się do fauli drużyny.
+Jak wznawia się grę po rzutach za faul techniczny w przerwie? | 1 kwarta – rzut sędziowski w kole środkowym; pozostałe części – wprowadzenie spoza boiska.
+Czym jest faul dyskwalifikujący? | Rażąco niesportowe naruszenie przepisów (faule osobiste, niesportowe, techniczne zawodników, trenerów i osób z ławki).
+Kiedy zawodnik jest dyskwalifikowany? | 2 faule techniczne\n1 techniczny i 1 niesportowy\n2 faule niesportowe
+Kiedy trener jest dyskwalifikowany? | 2 własne faule techniczne\n3 faule techniczne asystenta, zmienników lub osób towarzyszących\n3 faule techniczne: 1 własny i 2 osób z ławki
+Kto zastępuje zdyskwalifikowanego trenera? | Asystent, a gdy go nie ma – kapitan.
+Co dzieje się z ukaranym faulem dyskwalifikującym? | Idzie do szatni i nie może wrócić na salę.
+Kara za bezpośredni faul dyskwalifikujący | 2 rzuty wolne i piłka z boku dla drużyny wykonującej rzuty.
+Czym jest bójka? | Fizycznym starciem dwóch lub więcej osób (zawodnicy, zmiennicy, trenerzy, osoby z ławki).
+Osoba z ławki opuszcza strefę ławki podczas bójki | Zostaje automatycznie zdyskwalifikowana.
+Kto może opuścić ławkę podczas bójki? | Tylko trener i asystent – aby pomóc sędziom przywrócić porządek.
+
+// ---------- Przepis 8 – postanowienia ogólne
+Pięć fauli zawodnika | Musi opuścić boisko i być zmieniony w ciągu 30 sekund (liczą się faule osobiste i techniczne).
+Limit fauli drużyny | Po 4 faulach drużyny w kwarcie każdy kolejny faul karany jest 2 rzutami wolnymi (chyba że kara jest surowsza albo faulował zawodnik z piłką).
+Do której kwarty liczą się faule z dogrywek? | Do ostatniej (4) kwarty.
+Do której kwarty liczą się faule z przerwy w meczu? | Do kwarty po tej przerwie.
+Faule obu drużyn mniej więcej w tym samym czasie | Sędziowie ustalają kolejność; równe kary się znoszą (sytuacja rzutu sędziowskiego), różne – wykonuje się po kolei.
+Skąd wykonuje się rzuty wolne? | Z linii rzutów wolnych, wewnątrz półkola.
+Kto wykonuje rzuty wolne? | Faulowany zawodnik – a gdy jest kontuzjowany lub zdyskwalifikowany, jego zmiennik (bez zmiennika: kapitan lub osoba przez niego wskazana).
+Czy można zmienić zawodnika, który ma rzucać wolne? | Nie – dopiero po jego ostatnim celnym rzucie wolnym.
+Zasady dla rzucającego rzut wolny | 5 sekund na rzut\npiłka musi dotknąć obręczy\nnie dotyka linii ani boiska za nią, aż piłka dotknie obręczy\nnie wolno zwodu rzutem\nnie dotyka piłki w locie ani po odbiciu od obręczy i tablicy
+Rzucający łamie zasady rzutu wolnego | Błąd – punkty nie liczą się, piłka dla rywali (chyba że są kolejne rzuty wolne).
+Zawodnicy na miejscach przy polu rzutów wolnych nie mogą | Wchodzić do obszaru ograniczonego, aż piłka opuści rękę\ndotykać piłki w locie, zanim dotknie obręczy\ndotykać obręczy ani kosza
+Przeciwnik rzucającego wolne nie może | Dotykać piłki ani kosza, gdy piłka jest w koszu\nrozpraszać (straszyć) rzucającego
+Rzut wolny celny, błąd popełniły obrona i atak | Błąd się pomija, kosz się liczy.
+Rzut wolny niecelny – kto popełnił błąd i co dalej? | Atak – piłka dla rywali\nobrona – dodatkowy rzut wolny dla atakujących\nobie drużyny – sytuacja rzutu sędziowskiego
+Zawodnicy poza miejscami przy polu rzutów wolnych rozpraszają rzucającego | To błąd, karany tak samo jak błędy zawodników przy polu rzutów wolnych.
+
+// ---------- sygnalizacja (spis z końca pliku)
+Grupy sygnałów sędziowskich w przepisach | Zaliczanie punktów\nsygnały dotyczące zegara\nsygnały porządkowe\nbłędy\npoinformowanie stolika o faulu\nadministrowanie rzutów wolnych
+Trzy fazy informowania stolika o faulu | Faza 1 – numer zawodnika\nfaza 2 – rodzaj faulu\nfaza 3 – liczba rzutów wolnych lub kierunek gry
+Dwie fazy administrowania rzutów wolnych | Faza 1 – w obszarze ograniczonym\nfaza 2 – poza obszarem ograniczonym
