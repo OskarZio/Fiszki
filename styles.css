@@ -3682,3 +3682,12 @@ body.auth-locked { overflow: hidden; } body.auth-locked #tabs { display: none; }
 .fun-tomato .fun-card { margin-top: 52vh; }
 .fun-flower .fun-big { animation: funGrow 1s cubic-bezier(.3,1.4,.5,1) both; transform-origin: 50% 100%; } @keyframes funGrow { from { transform: scaleY(0); } }
 .deck-done-grp > summary { list-style: none; cursor: pointer; } .deck-done-grp > summary::-webkit-details-marker { display: none; }
+/* ✋ przestawianie stworków na łące (przeciąganie myszką / palcem) */
+.meadow .mw-egg { touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: grab; }
+.meadow .mw-egg.dragging { z-index: 999 !important; cursor: grabbing; filter: drop-shadow(0 8px 10px rgba(0,0,0,.35)); transition: none !important; scale: 1.15; }
+body.nest-dragging .meadow .mw-egg { touch-action: none; }
+.lg-prizes { display: grid; gap: 4px; margin: 6px 0 4px; font-size: 13px; font-weight: 700; }
+/* v328: wąskie telefony – przyciski w segmentach i wierszach zawijają tekst zamiast go ucinać */
+.seg > button, .row > button.grow { min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 1.2; text-overflow: clip; }
+@media (max-width: 380px) { .seg > button { font-size: 13px; padding-left: 6px; padding-right: 6px; } }
+.row > button.grow, .seg > button { white-space: normal !important; overflow: visible; }

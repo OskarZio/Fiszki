@@ -65,7 +65,7 @@ function eggStart() {
   if (eggRun()) return;
   const golden = EGG_PICK.golden && itemCount('egg', 'boss') > 0;
   if (golden) addItem('egg', 'boss', -1);   // 👑 złote jajo z bossa: stworek co najmniej epicki
-  const E = { id: uid(), min: EGG_PICK.min, mode: EGG_PICK.mode, cat: eggCat(EGG_PICK.cat).id, pomo: EGG_PICK.pomo && EGG_PICK.min >= 45, start: Date.now(), last: Date.now(), prog: 0, pomoN: 0, breakUntil: 0, hiddenAt: 0, saved: 0, golden };
+  const E = { id: uid(), min: EGG_PICK.min, mode: EGG_PICK.mode, cat: eggCat(EGG_PICK.cat).id, pomo: EGG_PICK.pomo && EGG_PICK.min >= 45, away: !!(EGG_PICK.away && eggDesk()), start: Date.now(), last: Date.now(), prog: 0, pomoN: 0, breakUntil: 0, hiddenAt: 0, saved: 0, golden };
   eggSave(E); EGG_LAST = null; eggInput = Date.now(); eggWake(E);
   toast(E.mode === 'phone' ? (E.cat === 'book' ? 'Czytaj! Telefon połóż ekranem w dół – nie wychodź z aplikacji' : `${eggCat(E.cat).n}: telefon połóż ekranem w dół – nie wychodź z aplikacji`) : '📚 Ucz się – jajko rośnie podczas nauki', 3500);
   if (E.mode === 'study') go('#/'); else render();
@@ -103,10 +103,12 @@ function eggPrize(min) {
   return pool[Math.random() * pool.length | 0];
 }
 
+// 🖥️ komputer: można zaznaczyć, że wolno przełączać się na inne okna/karty (np. materiały w przeglądarce) – jajko wtedy nie pęka
+const eggDesk = () => { try { return matchMedia('(pointer: fine)').matches && innerWidth >= 700; } catch { return false; } };
 // ---------- zegar (co sekundę) + wyjście z aplikacji
 function eggTick() {
   const E = eggRun(); if (!E) return eggChip(null);
-  const now = Date.now(), dt = Math.min(5000, Math.max(0, now - E.last)); E.last = now;
+  const now = Date.now(), dt = Math.min(E.away ? 600000 : 5000, Math.max(0, now - E.last)); E.last = now;   // karta w tle: przeglądarka rzadziej odpala zegar – w trybie „inne okna” liczymy cały czas
   if (E.breakUntil && now >= E.breakUntil) { E.brEnd = E.breakUntil; E.breakUntil = 0; eggInput = now; eggWake(E); toast('☕ Koniec przerwy – jajko znowu rośnie!'); eggSave(E); if (parseRoute().parts[0] === 'egg') render(); }
   if (eggGrowing(E)) E.prog += dt;
   if (E.pomo && !E.breakUntil) { const n = Math.floor(E.prog / EGG_POMO); if (n > E.pomoN) { E.pomoN = n; if (eggLeft(E) > EGG_BREAK) { E.breakUntil = now + EGG_BREAK; E.brEnd = E.breakUntil; toast('☕ 25 minut! 5 minut przerwy – możesz wyjść z aplikacji', 4000); } } }
@@ -118,6 +120,7 @@ function eggBack(E, away) {
   const be = E.breakUntil || E.brEnd || 0; if (be && E.hiddenAt && E.hiddenAt < be) away = Date.now() - be - 60000;
   if (E.breakUntil && Date.now() >= E.breakUntil) { E.brEnd = E.breakUntil; E.breakUntil = 0; }
   E.hiddenAt = 0; E.last = Date.now(); eggInput = Date.now();
+  if (E.away) { eggSave(E); eggWake(E); return render(); }   // 🖥️ inne okna dozwolone
   if (away > EGG_GRACE && !eggInBreak(E)) {
     if (useShield()) { E.saved++; eggSave(E); setTimeout(() => toast(`🛡️ Tarcza uratowała jajko! Zostało tarcz: ${shieldCount()}`, 4500), 300); }
     else return eggFinish(E, false, 'left');
@@ -229,6 +232,7 @@ ROUTES.egg = () => {
     <div class="seg egg-mode"><button class="${EGG_PICK.mode === 'study' ? 'on' : ''}" data-act="egg-mode" data-m="study">📚 Nauka w aplikacji</button><button class="${EGG_PICK.mode === 'phone' ? 'on' : ''}" data-act="egg-mode" data-m="phone">📵 Telefon odłożony</button></div>
     <p class="small muted" style="margin:6px 0">${EGG_PICK.mode === 'study' ? 'Czas leci tylko, gdy uczysz się w aplikacji (fiszki, testy, gry, bitwy, bossowie, wieże, pojedynki i walki online). Liczy się do czasu nauki w rankingu.' : (EGG_PICK.cat === 'book' ? 'Czytasz książkę. ' : 'Uczysz się z zeszytu, książki albo robisz coś poza telefonem. ') + 'Telefon leży ekranem w dół, ekran nie gaśnie, czas leci cały czas.'}</p>
     ${EGG_PICK.min >= 45 ? `<label class="row nowrap small" style="gap:8px;margin:6px 0"><input type="checkbox" data-act="egg-pomo" ${EGG_PICK.pomo ? 'checked' : ''}> ☕ Przerwy pomodoro (co 25 min – 5 min, wtedy można wyjść)</label>` : ''}
+    ${eggDesk() ? `<label class="row nowrap small" style="gap:8px;margin:6px 0"><input type="checkbox" data-act="egg-away" ${EGG_PICK.away ? 'checked' : ''}> 🖥️ Mogę przełączać się na inne okna i karty przeglądarki (jajko nie pęknie)</label>` : ''}
     ${itemCount('egg', 'boss') ? `<label class="row nowrap small golden-pick" style="gap:8px;margin:6px 0"><input type="checkbox" data-act="egg-golden" ${EGG_PICK.golden ? 'checked' : ''}> 👑 Użyj złotego jaja z bossa (masz ${itemCount('egg', 'boss')}) – stworek co najmniej epicki</label>` : ''}
     <button class="primary block" data-act="egg-start" style="min-height:56px;font-size:18px">🥚 Zacznij · ${esc(eggCat(EGG_PICK.cat).n)} · ${EGG_PICK.min} min</button>
     <div class="row nowrap small" style="margin-top:10px"><span class="grow">🛡️ Tarcze: <b>${shieldCount()}</b> <span class="muted">(1 darmowa dziennie, ratuje jajko po wyjściu)</span></span><button class="sm" data-act="egg-shield">+1 · ${SHIELD_PRICE} 💎</button></div>
@@ -284,7 +288,7 @@ function nestHTML() {
       return `<button class="mw-egg${x.cr ? ' cr' : ''}${MW_SEL === x.id ? ' sel' : ''}" data-act="${MW_EDIT ? 'mw-swap' : 'cr-open'}" data-id="${x.id}" style="left:${tx.toFixed(1)}%;top:${ty.toFixed(1)}%;z-index:${r * 10 + 5};--s:${x.cr ? 1.15 : (.85 + ti * .07).toFixed(2)}" title="${esc(x.cr?.n || eggCat(eggCatOf(x)).n)} · ${x.min} min">${pic}</button>`; }).join('')}
 </div>
     ${field.length ? '' : '<p class="mw-empty">Twoja łąka czeka na pierwsze jajko 🥚</p>'}</div>`;
-  return `<div class="card nest"><div class="row nowrap"><h2 class="grow" style="margin:0">🪺 Twoje gniazdo</h2><button class="sm${MW_EDIT ? ' primary' : ''}" data-act="mw-edit">${MW_EDIT ? '✓ Gotowe' : '↔️ Przestaw'}</button></div>${MW_EDIT ? '<p class="small muted" style="margin:6px 0 0">Stuknij jednego stworka, potem drugiego – zamienią się miejscami.</p>' : ''}
+  return `<div class="card nest"><div class="row nowrap"><h2 class="grow" style="margin:0">🪺 Twoje gniazdo</h2><button class="sm${MW_EDIT ? ' primary' : ''}" data-act="mw-edit">${MW_EDIT ? '✓ Gotowe' : '↔️ Przestaw'}</button></div><p class="small muted" style="margin:6px 0 0">${MW_EDIT ? 'Stuknij jednego stworka, potem drugiego – zamienią się miejscami.' : '✋ Przeciągnij stworka myszką (albo przytrzymaj palcem i przesuń), żeby go przestawić.'}</p>
     <div class="seg nest-seg">${seg}</div>
     <div class="nest-nav">${nav}</div>
     ${cats ? `<div class="nest-cats"><div class="small muted">Czas według kategorii${NEST.cat ? ' · <b>stuknij jeszcze raz, żeby pokazać wszystko</b>' : ' · stuknij, żeby filtrować'}</div>${cats}</div>` : ''}
@@ -334,6 +338,7 @@ Object.assign(ACTIONS, {
     if (eggs().some(x => x.cat === c.id)) toast('Kategoria zostanie w gnieździe, bo masz w niej jajka'); EGG_PICK.cat = 'cards'; EGG_PICK.mode = 'study'; eggPickSave(); save(); render(); },
   'nest-cat': el => { NEST.cat = NEST.cat === el.dataset.c ? '' : el.dataset.c; render(); },
   'egg-golden': el => { EGG_PICK.golden = el.checked; eggPickSave(); },
+  'egg-away': el => { EGG_PICK.away = el.checked; eggPickSave(); },
   'nest-range': el => { NEST = { range: el.dataset.k, off: 0, cat: NEST.cat }; render(); },
   'nest-off': el => { NEST.off = Math.min(0, NEST.off + +el.dataset.d); render(); },
   'nest-month': el => { const now = new Date(); NEST = { range: 'month', off: (+el.dataset.y - now.getFullYear()) * 12 + (+el.dataset.m - now.getMonth()), cat: NEST.cat }; render(); },
@@ -346,3 +351,34 @@ Object.assign(ACTIONS, {
   'egg-skipbreak': () => { const E = eggRun(); if (E) { E.breakUntil = 0; E.brEnd = Date.now(); eggInput = Date.now(); eggSave(E); render(); } },
   'egg-shield': () => { if (spend(SHIELD_PRICE, 'shield')) { addItem('shield', 'shield', 1); toast('🛡️ +1 tarcza'); render(); } },
 });
+
+// ✋ łąka w gnieździe: przytrzymaj stworka (palcem ~0,3 s, myszką – po prostu ciągnij) i upuść na inne miejsce
+(function meadowDrag() {
+  let drag = null;
+  const order = () => { const o = S.stats.meadow || []; const all = eggs().filter(x => x.ok).slice(-300); const p = q => { const k = o.indexOf(q.id); return k < 0 ? 1e9 : k; }; return all.sort((a, b) => p(a) - p(b) || a.end - b.end).map(x => x.id); };
+  document.addEventListener('pointerdown', e => { const t = e.target.closest('.meadow .mw-egg'); if (!t || e.button !== 0) return;
+    drag = { t, id: t.dataset.id, x0: e.clientX, y0: e.clientY, on: false, pid: e.pointerId, touch: e.pointerType !== 'mouse', at: Date.now() }; });
+  document.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (!drag.on) {
+      if (drag.touch && Date.now() - drag.at < 280) { if (Math.hypot(dx, dy) > 10) drag = null; return; }   // palcem najpierw przytrzymaj – inaczej to przewijanie strony
+      if (Math.hypot(dx, dy) < 6) return;
+      drag.on = true; drag.t.classList.add('dragging'); document.body.classList.add('nest-dragging');
+    }
+    e.preventDefault(); drag.t.style.translate = `${dx}px ${dy}px`;
+  }, { passive: false });
+  const end = e => {
+    if (!drag) return; const d = drag; drag = null; if (!d.on) return;
+    d.t.classList.remove('dragging'); d.t.style.translate = ''; document.body.classList.remove('nest-dragging');
+    const box = d.t.closest('.mw-in')?.getBoundingClientRect(), ids = order(); if (!box) return;
+    const cols = 5, rows = Math.max(1, Math.ceil(ids.length / cols));
+    const c = Math.max(0, Math.min(cols - 1, Math.floor((e.clientX - box.left) / box.width * cols))), r = Math.max(0, Math.min(rows - 1, Math.floor((e.clientY - box.top) / box.height * rows)));
+    const to = Math.min(ids.length - 1, r * cols + c), from = ids.indexOf(d.id); if (from < 0) return;
+    ids.splice(from, 1); ids.splice(to, 0, d.id); S.stats.meadow = ids; save(); render();
+    const block = ev => { ev.stopPropagation(); ev.preventDefault(); }; document.addEventListener('click', block, { capture: true, once: true });   // upuszczenie ≠ otwarcie stworka
+    setTimeout(() => document.removeEventListener('click', block, { capture: true }), 60);
+  };
+  document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
+  document.addEventListener('contextmenu', e => { if (e.target.closest('.meadow')) e.preventDefault(); });
+})();

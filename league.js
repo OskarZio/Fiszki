@@ -3,7 +3,10 @@
    Po zakończeniu tygodnia podium dostaje kryształy (raz, id tygodnia – bez dublowania między urządzeniami).
    Dane znajomych: perDay z ich profilu (ostatnie 14 dni), więc wynik poprzedniego tygodnia też da się policzyć. */
 
-const LEAGUE_PRIZE = [50, 30, 15];
+const LEAGUE_PRIZE = [300, 150, 75];
+// 🎁 nagrody skrzynkowe za podium (stałe id – bez dublowania między urządzeniami)
+const LEAGUE_CASES = [['epic', 'skin'], ['epic'], ['forge']];
+const leagueCaseTxt = i => LEAGUE_CASES[i].map(k => typeof CASES !== 'undefined' && CASES[k] ? CASES[k].name : k).join(' + ');
 const weekStart = (t = Date.now()) => { const d = new Date(dayStart(t)), dow = (d.getDay() + 6) % 7; return addDays(d.getTime(), -dow); };   // poniedziałek
 const weekKeyOf = t => dayKey(weekStart(t));
 const weekDays = ws => Array.from({ length: 7 }, (_, i) => dayKey(addDays(ws, i)));
@@ -32,9 +35,10 @@ function leagueAward() {
   if (tab.length >= 2 && place >= 0 && place < 3) {
     const n = LEAGUE_PRIZE[place], id = 'league-' + key;
     if (!S.wallet.some(w => w.id === id)) S.wallet.push({ id, n, why: 'league', t: Date.now() });
+    for (const k of LEAGUE_CASES[place]) if (typeof CASES !== 'undefined' && CASES[k]) addItem('case', k, 1, `league-${key}-${k}`);
     S.stats.leagueStreak = (S.stats.leagueLast === dayKey(addDays(prev, -7)) ? S.stats.leagueStreak || 0 : 0) + 1; S.stats.leagueLast = key;
     S.stats.leaguePodiums = (S.stats.leaguePodiums || 0) + 1;
-    setTimeout(() => { celebrate(`🏆 Liga: ${['🥇 1.', '🥈 2.', '🥉 3.'][place]} miejsce w zeszłym tygodniu!`, `+${n} 💎${S.stats.leagueStreak > 1 ? ` · seria podium: ${S.stats.leagueStreak} tyg.` : ''}`); confetti(140); }, 700);
+    setTimeout(() => { celebrate(`🏆 Liga: ${['🥇 1.', '🥈 2.', '🥉 3.'][place]} miejsce w zeszłym tygodniu!`, `+${n} 💎 · 🎁 ${leagueCaseTxt(place)}${S.stats.leagueStreak > 1 ? ` · seria podium: ${S.stats.leagueStreak} tyg.` : ''}`); confetti(140); }, 700);
   }
   save();
 }
@@ -43,8 +47,8 @@ function leagueCardHTML() {
   const dd = Math.floor(end / DAY), hh = Math.floor(end % DAY / HOUR);
   const prev = leagueTable(addDays(ws, -7)).filter(r => r.pts > 0).slice(0, 3);
   const solo = tab.length < 2;
-  return `<div class="card league"><div class="row nowrap"><h2 class="grow" style="margin:0">🏆 Liga tygodnia</h2><span class="small muted">koniec za ${dd ? dd + ' d ' : ''}${hh} h</span></div>
-    <p class="small muted" style="margin:4px 0 8px">Punkty = powtórki od poniedziałku. W niedzielę o północy podium dostaje ${LEAGUE_PRIZE.join(' / ')} 💎${S.stats.leagueStreak > 1 ? ` · Twoja seria podium: <b>${S.stats.leagueStreak} tyg.</b>` : ''}</p>
+  return `<div class="card league"><div class="row nowrap"><h2 class="grow" style="margin:0">🏆 Liga znajomych</h2><span class="small muted">koniec za ${dd ? dd + ' d ' : ''}${hh} h</span></div>
+    <p class="small muted" style="margin:4px 0 8px">Punkty = powtórki od poniedziałku. Grasz tylko ze znajomymi. W niedzielę o północy podium dostaje:</p><div class="lg-prizes">${[0, 1, 2].map(i => `<span>${['🥇', '🥈', '🥉'][i]} ${leagueCaseTxt(i)} + ${LEAGUE_PRIZE[i]} 💎</span>`).join('')}</div><p class="small muted" style="margin:4px 0 8px">${S.stats.leagueStreak > 1 ? ` · Twoja seria podium: <b>${S.stats.leagueStreak} tyg.</b>` : ''}</p>
     ${solo ? '<p class="small">Dodaj znajomych (kod albo zaproszenie), żeby rywalizować w lidze.</p>' : tab.map((r, i) => `<div class="lg-row${r.me ? ' me' : ''}"><span class="lg-pl">${i < 3 && r.pts ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>
       <span class="av">${avatarHTML({ avatar: r.avatar, avatarImg: r.avatarImg, cos: r.cos }, 30)}</span><b class="grow nm">${esc(r.nick)}${r.me ? ' (Ty)' : ''}</b><span class="lg-pts">${r.pts}</span></div>`).join('')}
     ${prev.length >= 2 ? `<p class="small muted" style="margin:8px 0 0">Zeszły tydzień: ${prev.map((r, i) => `${['🥇', '🥈', '🥉'][i]} ${esc(r.nick)} (${r.pts})`).join(' · ')}</p>` : ''}</div>`;

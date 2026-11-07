@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '327';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '328';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -2164,7 +2164,8 @@ document.addEventListener('click', e => {
   const g = e.target.closest('[data-go]'), a0 = e.target.closest('[data-act]');
   if (g && !(a0 && g.contains(a0) && a0 !== g)) { e.preventDefault(); go(g.dataset.go); return; }
   const a = a0;
-  if (a && !a.disabled) { e.preventDefault(); act(a.dataset.act, a, e); }
+  // checkbox / radio z data-act: nie blokujemy kliknięcia, bo wtedy znaczek się nie zaznacza (np. złote jajo, pomodoro)
+  if (a && !a.disabled) { if (!a.matches('input[type=checkbox], input[type=radio]')) e.preventDefault(); act(a.dataset.act, a, e); }
 });
 document.addEventListener('change', e => {
   const el = e.target;
