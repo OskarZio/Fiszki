@@ -593,7 +593,9 @@ function rollFx(B, a, pool, learn = false) {
   B.rolls.push({ a, strip, learn, t }); B.qAt = Math.max(B.qAt || 0, t + ROLL_MS + 800); /* zegar pytania startuje po losowaniu */ if (learn && B.learnFx) { B.learnFx.t = t + ROLL_MS + 500; B.qAt = Math.max(B.qAt, B.learnFx.t + 2700); setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, t - now + ROLL_MS + 3200); }
   for (const d of [t - now, t - now + ROLL_MS + 900]) setTimeout(() => { if (BOSS === B && parseRoute().parts[1] === 'fight') render(); }, Math.max(0, d) + 20);
 }
-const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t && now - r.t <= ROLL_MS + 800); if (!R) return '';
+const rollHTML = (B, now) => { const R = (B.rolls || []).find(r => now >= r.t && now - r.t <= ROLL_MS + 800);
+  // czekamy na losowanie (np. najpierw kategoria w wieży wiedzy): zamiast pustego pola – krótki napis, odpowiedzi chwilę schowane
+  if (!R) return (B.rolls || []).some(r => now < r.t) ? '<div class="roll-wait"><b>🎲 Za chwilę losowanie przeszkadzajki…</b><small>pytanie pojawi się zaraz potem</small></div>' : '';
   return `<div class="roll-ov bossroll${now - R.t > ROLL_MS ? ' done' : ''}" style="--at:${ROLL_AT};--el:${((now - R.t) / 1000).toFixed(2)}s"><div class="roll-h">${R.learn ? '📈 Boss uczy się nowej mocy…' : '🎰 Losowanie przeszkadzajki…'}</div>
     <div class="roll-win"><div class="roll-strip2">${R.strip.map((k, i) => `<div class="roll-it${i === ROLL_AT ? ' hit' : ''}"><i>${BOSS_ABIL[k][0]}</i><small>${BOSS_ABIL[k][1]}</small></div>`).join('')}</div><span class="roll-mark"></span></div>
     <div class="roll-res">${BOSS_ABIL[R.a][0]} <b>${BOSS_ABIL[R.a][1]}</b> – ${BOSS_ABIL[R.a][2]}</div></div>`; };

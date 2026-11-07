@@ -3706,3 +3706,5 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
 .ask-warn { padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, #dc2626 16%, var(--card)); color: var(--text); font-weight: 700; line-height: 1.4; text-align: center; }
 .ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 .ask-box > * { flex-shrink: 0; }
+.cat-roll, .cat-roll * { pointer-events: none !important; }
+.bf.rolling .boss-q > .roll-wait { visibility: visible !important; position: absolute; inset: 0; display: grid; place-content: center; gap: 6px; text-align: center; padding: 16px; } .roll-wait small { color: var(--muted); }
