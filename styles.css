@@ -3662,3 +3662,22 @@ body.auth-locked { overflow: hidden; } body.auth-locked #tabs { display: none; }
 .or-sep { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: var(--muted); font-size: 13px; } .or-sep::before, .or-sep::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff !important; color: #1f2937 !important; border: 1px solid #d1d5db !important; font-weight: 700; }
 .google-btn .g-ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; color: #fff; background: #4285f4; font-size: 13px; }
+/* 🍅 zaczepki */
+.px8 { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.fun-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.fun-it { display: grid; justify-items: center; gap: 4px; padding: 12px 6px; }
+.fun-ic { width: 44px; height: 44px; display: grid; place-items: center; } .fun-ic .emo8 { width: 44px !important; height: 44px !important; }
+.fun-it small { color: var(--muted); }
+.fun-shout { display: flex; gap: 8px; margin-bottom: 12px; } .fun-shout input { flex: 1; min-width: 0; }
+.fun-ov { position: fixed; inset: 0; z-index: 950; display: grid; place-items: center; background: rgba(10,10,16,.55); overflow: hidden; }
+.fun-card { position: relative; z-index: 3; width: min(360px, calc(100% - 32px)); background: var(--card); border-radius: 20px; padding: 18px 18px 16px; text-align: center; display: grid; gap: 12px; margin-top: 46vh; animation: funCard .4s ease-out .5s both; }
+.fun-card b { font-size: 18px; line-height: 1.35; } .fun-msg { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.35; overflow-wrap: anywhere; }
+@keyframes funCard { from { opacity: 0; transform: translateY(20px); } }
+.fun-big { position: absolute; top: 18%; width: 150px; height: 150px; animation: funPop .7s cubic-bezier(.3,1.6,.5,1) both; } .fun-big .emo8 { width: 150px !important; height: 150px !important; image-rendering: pixelated; }
+@keyframes funPop { from { transform: scale(.1) rotate(-20deg); opacity: 0; } }
+.fun-fly { position: absolute; top: 24%; left: 50%; width: 90px; height: 90px; margin-left: -45px; z-index: 2; animation: funFly .45s cubic-bezier(.5,0,1,.6) both; }
+@keyframes funFly { 0% { transform: translate(-60vw, -40vh) rotate(-200deg) scale(.6); } 100% { transform: none; opacity: 0; } }
+.fun-splat { position: absolute; top: 14%; left: 50%; width: 260px; height: 240px; margin-left: -130px; z-index: 1; animation: funSplat .35s ease-out .42s both; }
+@keyframes funSplat { from { transform: scale(.2); opacity: 0; } 70% { transform: scale(1.08); } to { opacity: .95; } }
+.fun-tomato .fun-card { margin-top: 52vh; }
+.fun-flower .fun-big { animation: funGrow 1s cubic-bezier(.3,1.4,.5,1) both; transform-origin: 50% 100%; } @keyframes funGrow { from { transform: scaleY(0); } }

@@ -198,6 +198,7 @@ ROUTES.chat = parts => {
   <div class="row nowrap"><button class="iconbtn" data-go="#/inbox">‹</button><span class="av" data-act="pl-view-f" data-fid="${f.id}" role="button">${avatarHTML({ avatar: f.avatar, avatarImg: f.avatar_img, cos: f.stats?.cos }, 36)}</span><h1 class="grow nm" style="font-size:24px" data-act="pl-view-f" data-fid="${f.id}" role="button">${esc(f.nick || 'Znajomy')}</h1></div>
   <div class="chat-tools">
     <button class="${CHAT.pick === 'media' ? 'primary' : ''}" data-act="chat-media-pick">😀 Emotki</button>
+    <button data-act="chat-fun">🍅 Zaczep</button>
     <button data-act="chat-nudge">🔔 Przypomnij</button>
     <button data-act="chat-challenge">⚔️ Wyzwij</button></div>
   ${CHAT.pick === 'media' ? `<div class="card tight chat-media">
