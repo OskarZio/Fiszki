@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '326';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '327';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -730,11 +730,14 @@ function viewHome() {
   const byName = (a, b) => a.name.localeCompare(b.name, 'pl');
   const cats = typeof topicDecks === 'function' && appMode() === 'full' ? S.topics.filter(t => !t.parentId).sort(byName) : [];
   const inCat = new Set();
-  const catHTML = cats.map(t => { const ds = topicDecks(t, true).sort(byName); ds.forEach(d => inCat.add(d.id)); const k = ds.reduce((a, d) => a + deckCounts(d.id).total, 0);
+  const catHTML = cats.map(t => { const ds = topicDecks(t, true).filter(d => !d.done).sort(byName); ds.forEach(d => inCat.add(d.id)); if (!ds.length) return ''; const k = ds.reduce((a, d) => a + deckCounts(d.id).total, 0);
     return `<div class="deck-cat" data-go="#/topic/${t.id}"><span class="dc-ic">${esc(t.emoji || '📁')}</span><b class="grow">${esc(t.name)}</b><small class="muted">${ds.length} ${plural(ds.length, 'talia', 'talie', 'talii')}${(t.items || []).length ? ` · ${(t.items || []).length} ${plural((t.items || []).length, 'materiał', 'materiały', 'materiałów')}` : ''}${k ? ` · <b class="c-new">${k}</b> na dziś` : ''}</small><span>›</span></div>
       ${ds.map(d => `<div class="deck-in">${deckRow(d)}</div>`).join('')}`; }).join('');
-  const rest = S.decks.filter(d => !inCat.has(d.id)).sort(byName).map(deckRow).join('');
-  const decks = catHTML + (catHTML && rest ? '<div class="deck-cat plain"><span class="dc-ic">🗂️</span><b class="grow">Bez kategorii</b></div>' : '') + rest;
+  const rest = S.decks.filter(d => !inCat.has(d.id) && !d.done).sort(byName).map(deckRow).join('');
+  // 🎓 opanowane / zdane talie: własna kategoria na dole (zwinięta), nie mieszają się z taliami do nauki
+  const doneDs = S.decks.filter(d => d.done).sort(byName);
+  const doneHTML = doneDs.length ? `<details class="deck-done-grp"><summary class="deck-cat plain"><span class="dc-ic">🎓</span><b class="grow">Opanowane / zdane</b><small class="muted">${doneDs.length} ${plural(doneDs.length, 'talia', 'talie', 'talii')}</small></summary>${doneDs.map(d => `<div class="deck-in">${deckRow(d)}</div>`).join('')}</details>` : '';
+  const decks = catHTML + (catHTML && rest ? '<div class="deck-cat plain"><span class="dc-ic">🗂️</span><b class="grow">Bez kategorii</b></div>' : '') + rest + doneHTML;
   const sync = S.settings.sync.token ? `<button class="iconbtn" data-act="sync" title="Synchronizuj">🔄</button>` : '';
   return `
   <div class="row nowrap home-head"><div class="grow"><div class="greet">${greeting()}</div><h1>Fiszki</h1></div>${sync}${typeof homeChipHTML === 'function' ? homeChipHTML() : ''}</div>
@@ -1724,17 +1727,10 @@ function viewMore() {
   </div>
 
   <div class="card"><h2 style="margin-top:0">🔄 Telefon ⇄ komputer</h2>
-    <p class="small muted">Dane są zapisywane na urządzeniu. Żeby mieć te same fiszki na iPhonie i komputerze, połącz oba z tym samym kontem GitHub – fiszki zapiszą się w Twoim prywatnym „Gist” i będą się same synchronizować.</p>
-    <ol class="steps small">
-      <li>Zaloguj się na <a href="https://github.com/settings/tokens/new?scopes=gist&description=Fiszki" target="_blank" rel="noopener">github.com → nowy token</a> (zaznaczony tylko zakres <code>gist</code>, ważność np. „No expiration”).</li>
-      <li>Skopiuj token i wklej poniżej – na każdym urządzeniu ten sam.</li>
-      <li>Naciśnij „Synchronizuj”. Gotowe – dalej dzieje się to samo.</li>
-    </ol>
-    <label class="field"><span>Token GitHub</span><input id="sync-token" type="password" value="${esc(st.sync.token)}" placeholder="ghp_…" autocomplete="off"></label>
-    <label class="check"><input type="checkbox" id="sync-auto" ${st.autoSync ? 'checked' : ''}> Synchronizuj automatycznie</label>
+    <p class="small muted">Fiszki, postęp i kryształy synchronizują się automatycznie na Twoim koncie – zaloguj się tym samym kontem na każdym urządzeniu.</p>
     <button class="primary block" data-act="sync">🔄 Synchronizuj teraz</button>
     <p class="small muted center">Ostatnio: ${ago(st.lastSync)}</p>
-    <h3>Kopia zapasowa (bez konta)</h3>
+    <h3>Kopia zapasowa w pliku</h3>
     <div class="row"><button class="grow" data-act="export">⬇️ Eksportuj plik</button><button class="grow" data-act="import">⬆️ Importuj plik</button></div>
     <p class="small muted">Plik możesz przesłać AirDropem / mailem i zaimportować na drugim urządzeniu – zmiany zostaną połączone.</p>
   </div>
@@ -2271,3 +2267,5 @@ Object.assign(ACTIONS, {
   },
 });
 window.addEventListener('hashchange', () => { NOTE_SEL = null; });
+// 🔇 „Własne dźwięki” usunięte – czyścimy wgrane pliki z urządzenia (raz)
+on('start', () => { if (S.stats.sndGone) return; S.stats.sndGone = 1; for (const k of ['win', 'card', 'add', 'celebrate']) DB.del?.('snd:' + k)?.catch?.(() => {}); delete S.settings.sounds; save(); });

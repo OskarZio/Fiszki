@@ -3681,3 +3681,4 @@ body.auth-locked { overflow: hidden; } body.auth-locked #tabs { display: none; }
 @keyframes funSplat { from { transform: scale(.2); opacity: 0; } 70% { transform: scale(1.08); } to { opacity: .95; } }
 .fun-tomato .fun-card { margin-top: 52vh; }
 .fun-flower .fun-big { animation: funGrow 1s cubic-bezier(.3,1.4,.5,1) both; transform-origin: 50% 100%; } @keyframes funGrow { from { transform: scaleY(0); } }
+.deck-done-grp > summary { list-style: none; cursor: pointer; } .deck-done-grp > summary::-webkit-details-marker { display: none; }
