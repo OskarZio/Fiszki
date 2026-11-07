@@ -3692,3 +3692,5 @@ body.nest-dragging .meadow .mw-egg { touch-action: none; }
 @media (max-width: 380px) { .seg > button { font-size: 13px; padding-left: 6px; padding-right: 6px; } }
 .row > button.grow, .seg > button { white-space: normal !important; overflow: visible; }
 .aiw-prog { display: grid; gap: 8px; } .aiw-card .row { margin-top: 6px; }
+/* v330: w przewijanych panelach (karta bossa, okienka) elementy nie są ściskane – tekst nie wychodzi poza przycisk */
+.bsheet > *, .dmenu > *, .drops-box > *, .auth-box > *, .fun-card > *, .cos-rev > *, .card > * { flex-shrink: 0; }
