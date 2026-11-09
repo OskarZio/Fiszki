@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '353';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '354';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1050,7 +1050,7 @@ function viewStudy(deckId, mode, q) {
       return `<button class="g${g}${suggest === g ? ' suggest' : ''}" data-act="grade" data-g="${g}">${labels[g - 1]}${S.settings.showIvl !== false ? `<small>${t}</small>` : ''}</button>`;
     }).join('')}</div>`;
   }
-  const susBar = s.shown && !s.cram ? `<div class="sus-bar"><button class="ghost sm" data-act="card-sus" data-k="known" title="Karta znika z powtórek, ale liczy się jako nauczona">✓ Umiem – bez powtórek</button><button class="ghost sm" data-act="card-sus" data-k="skip" title="Karta znika z nauki i walk z bossami">🚫 Niepotrzebna</button><button class="ghost sm card-del" data-act="card-del" title="Usuń fiszkę na zawsze">🗑 Usuń</button></div>` : '';
+  const susBar = s.shown && !s.cram ? `<div class="sus-bar"><button class="ghost sm" data-act="card-sus" data-k="known" title="Karta znika z powtórek, ale liczy się jako nauczona">✓ Umiem – bez powtórek</button><button class="ghost sm" data-act="card-sus" data-k="skip" title="Karta znika z nauki i walk z bossami">🚫 Niepotrzebna</button></div>` : '';
   return head + body + susBar + `<div class="answerbar">${bar}</div>`;
 }
 // ✓ nauczone / 🚫 niepotrzebne: karta wypada z powtórek (przywrócisz ją w widoku talii)
