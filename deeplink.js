@@ -9,7 +9,7 @@ const pendKey = p => p ? (p.t ? 't:' + p.t : p.f ? 'f:' + p.f : p.d ? 'd:' + p.d
 // konto potrzebne? (jest baza, brak zalogowanego, nie offline)
 const needLogin = () => typeof SB !== 'undefined' && !!SB && !SB_USER && !(typeof SESS_NET_FAIL !== 'undefined' && SESS_NET_FAIL);
 // czekamy, aż wystartuje połączenie z bazą (konfiguracja ładuje się chwilę po starcie)
-const sbReady = async () => { for (let i = 0; i < 60 && (typeof SB === 'undefined' || !SB); i++) await new Promise(r => setTimeout(r, 200)); };
+const sbReady = async () => { for (let i = 0; i < 75 && !CLOUD_READY; i++) await new Promise(r => setTimeout(r, 200)); };   // do odczytania zapisanej sesji
 
 async function pendText(p) {
   if (p.t) { const r = await SB.rpc('get_deck_link', { p_id: p.t }); if (r.error || !r.data) throw new Error('brak'); return packUnzip(r.data); }
@@ -46,7 +46,7 @@ const PEND_HTML = '<div class="card center" style="padding:40px 16px"><div style
 let SHARE_WAITED = false;
 // wspólna obsługa: baza się łączy → czekamy; brak konta → zapamiętaj i pokaż ekran konta; zalogowany → zwykły import
 function shareRoute(p, orig) {
-  if ((typeof SB === 'undefined' || !SB) && !SHARE_WAITED) { sbReady().then(() => { SHARE_WAITED = true; render(); }); return { tab: 'home', html: PEND_HTML.replace('Talia czeka na Ciebie', 'Otwieram talię…') }; }
+  if (!CLOUD_READY && !SHARE_WAITED) { sbReady().then(() => { SHARE_WAITED = true; render(); }); return { tab: 'home', html: PEND_HTML.replace('Talia czeka na Ciebie', 'Otwieram talię…') }; }
   if (needLogin()) { pendRemember(p); return { tab: 'home', html: PEND_HTML }; }
   return orig();
 }
@@ -61,3 +61,33 @@ ROUTES.import = (parts, q) => {
 // gdy ktoś zaloguje się później: dodaj czekającą talię po synchronizacji
 const shareSync0 = cloudSync;
 cloudSync = async function (...a) { const r = await shareSync0.apply(this, a); if (cloudOn() && (pendGet() || SB_USER?.user_metadata?.pending_deck)) setTimeout(pendProcess, 300); return r; };
+
+// 📱 iPhone: link otwiera się w Safari, a aplikacja z ekranu głównego ma osobne logowanie i dane.
+// W Safari: „Kopiuj link” + jak otworzyć w aplikacji / dodać skrót. W aplikacji: „Wklej link do talii”.
+const linkInApp = () => typeof isInstalled === 'function' && isInstalled();
+const pendUrl = p => location.origin + location.pathname + (p.t ? '#/t/' + p.t : p.f ? '#/import?f=' + p.f : p.d ? '#/import?d=' + p.d : '');
+function openInAppHTML() {
+  const p = pendGet(); if (!p || linkInApp()) return '';
+  const ios = typeof isIOSDev === 'function' && isIOSDev();
+  return `<details class="card open-app"><summary><b>📲 Masz Fiszki na ekranie głównym?</b></summary>
+    <p class="small" style="margin:8px 0">Aplikacja z ekranu głównego ma osobne logowanie niż przeglądarka. Skopiuj link, otwórz aplikację i stuknij <b>Dodaj → Wklej link do talii</b> – talia doda się bez ponownego logowania.</p>
+    <button class="block" data-act="link-copy">📋 Kopiuj link do talii</button>
+    ${ios ? `<p class="small muted" style="margin:10px 0 0">Nie masz aplikacji? Zaloguj się tutaj, a potem w Safari stuknij <b>Udostępnij ⬆️ → Do ekranu początkowego</b>.</p>` : ''}</details>`;
+}
+const dlGate0 = authGate;
+authGate = function (...a) { const r = dlGate0.apply(this, a); const box = document.querySelector('#auth-gate .auth-box'); if (box && !box.querySelector('.open-app')) { const h = openInAppHTML(); if (h) { const pc = box.querySelector('.auth-pend'); pc ? pc.insertAdjacentHTML('afterend', h) : box.insertAdjacentHTML('beforeend', h); } } return r; };
+// link z tekstu (wklejony z wiadomości): wyciągamy #/t/ID albo #/import?…
+function linkFromText(t) {
+  const m = String(t || '').match(/#\/t\/([A-Za-z0-9]{8})/) || String(t || '').match(/#\/import\?([^\s]+)/);
+  return m ? (m[0].startsWith('#/t/') ? m[0] : '#/import?' + m[1]) : '';
+}
+Object.assign(ACTIONS, {
+  'link-copy': async () => { const p = pendGet(); if (!p) return; const u = pendUrl(p);
+    try { await navigator.clipboard.writeText(u); toast('📋 Skopiowano – otwórz aplikację Fiszki i stuknij „Wklej link do talii”', 6000); } catch { prompt('Skopiuj link:', u); } },
+  'link-paste': async () => {
+    let t = ''; try { t = await navigator.clipboard.readText(); } catch { /* brak zgody */ }
+    if (!linkFromText(t)) t = prompt('Wklej link do talii od znajomego:') || '';
+    const h = linkFromText(t); if (!h) return t && toast('To nie wygląda na link do talii Fiszek', 4000);
+    SHARE_WAITED = false; PACK_DONE = ''; location.hash = h;
+  },
+});

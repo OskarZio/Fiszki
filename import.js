@@ -150,7 +150,7 @@ document.addEventListener('input', e => { if (e.target.id === 'pack-in') IMPORT_
 const impAdd0 = viewAdd;
 viewAdd = function (editId, ...a) {
   const h = impAdd0(editId, ...a);
-  return editId ? h : `<button class="card row nowrap pack-cta" data-go="#/import"><span class="pack-ic">📥</span><span class="grow"><b>Pakiet fiszek</b><small class="muted">Gotowa talia z tekstu – np. ze zdjęć slajdów przerobionych przez Claude</small></span><span>›</span></button>` + h;
+  return editId ? h : `<button class="card row nowrap pack-cta" data-act="link-paste"><span class="pack-ic">🔗</span><span class="grow"><b>Wklej link do talii</b><small class="muted">Znajomy wysłał Ci link? Skopiuj go i stuknij tutaj</small></span><span>›</span></button><button class="card row nowrap pack-cta" data-go="#/import"><span class="pack-ic">📥</span><span class="grow"><b>Pakiet fiszek</b><small class="muted">Gotowa talia z tekstu – np. ze zdjęć slajdów przerobionych przez Claude</small></span><span>›</span></button>` + h;
 };
 
 // jednorazowo: stare dopiski „literówka” z pakietu Angielski kolokwium → wyjaśnienia, na czym polegał błąd

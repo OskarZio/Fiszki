@@ -5,6 +5,7 @@
    więc każdy użytkownik łączy się automatycznie. Klucz „anon” jest publiczny z założenia; dane chronią
    reguły RLS w bazie (supabase.sql). */
 
+let CLOUD_READY = false;
 let SB = null, SB_USER = null, SB_CFG = null, SB_PROFILE = null, CLOUD_FRIENDS = [], cloudBusy = false, cloudTimer;
 // 🔑 powrót z maila potwierdzającego / logowania Google: Supabase dokleja do adresu tokeny (#access_token=…) albo błąd (#error=…).
 // Zabieramy je z adresu, ZANIM zobaczy je router (wcześniej pokazywał wtedy błąd strony), i logujemy po załadowaniu Supabase.
@@ -61,6 +62,7 @@ async function initCloud() {
     if (SB && SB_CFG && SB_CFG.url === cfg.url && SB_CFG.key === cfg.key) return;   // już połączone
     SB_CFG = cfg;
     await loadScript('vendor/supabase.js');
+    stayInCheck();
     SB = supabase.createClient(SB_CFG.url, SB_CFG.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
     let { data } = await SB.auth.getSession();
     // 🔐 nie wylogowuj: kopia sesji w osobnym miejscu – gdy biblioteka zgubi sesję (np. błąd sieci przy odświeżaniu), przywracamy ją
@@ -71,9 +73,10 @@ async function initCloud() {
       if (ev === 'SIGNED_OUT' && !SESS_MANUAL_OUT) { const back = await sessRestore(); if (back) return setCloudUser(back.user); }
       setCloudUser(session?.user || null);
     });
-    await authReturn(); authGate();
+    await authReturn(); CLOUD_READY = true; authGate();
     rerenderIf(['more', 'me', 'rank', '']);
   } catch (e) { console.warn('Supabase', e); SB = null; }
+  finally { CLOUD_READY = true; }
 }
 on('start', initCloud);
 function rerenderIf(routes) { if (routes.includes(parseRoute().parts[0] || '')) render(); }
@@ -97,6 +100,15 @@ function setCloudUser(u) {
 }
 
 let SESS_MANUAL_OUT = false, SESS_NET_FAIL = false;
+// 🔒 „Nie wylogowuj mnie”: domyślnie włączone. Wyłączone = po zamknięciu aplikacji / przeglądarki trzeba zalogować się znowu.
+function stayInCheck() {
+  try {
+    if (localStorage.getItem('stayIn') === '0' && !sessionStorage.getItem('sessAlive'))
+      Object.keys(localStorage).filter(k => k === 'sbSessBak' || /^sb-.*-auth-token$/.test(k)).forEach(k => localStorage.removeItem(k));
+    sessionStorage.setItem('sessAlive', '1');
+  } catch { /* */ }
+}
+const stayInSave = () => { try { localStorage.setItem('stayIn', document.getElementById('acc-stay')?.checked === false ? '0' : '1'); sessionStorage.setItem('sessAlive', '1'); } catch { /* */ } };
 const sessSave = ss => { try { if (ss?.refresh_token) localStorage.setItem('sbSessBak', JSON.stringify({ access_token: ss.access_token, refresh_token: ss.refresh_token })); } catch { /* */ } };
 async function sessRestore() {
   let b = null; try { b = JSON.parse(localStorage.getItem('sbSessBak') || 'null'); } catch { /* */ }
@@ -317,6 +329,7 @@ function accountCardHTML() {
       <div class="spacer"></div>
       <input id="acc-pass" type="password" placeholder="${reg ? 'Hasło (min. 10 znaków, litery i cyfry)' : 'Hasło'}" autocomplete="${reg ? 'new-password' : 'current-password'}">
       <div class="spacer"></div>
+      <label class="check small stay-in"><input type="checkbox" id="acc-stay" ${(() => { try { return localStorage.getItem('stayIn') === '0' ? '' : 'checked'; } catch { return 'checked'; } })()}> <span>Nie wylogowuj mnie</span></label>
       <button class="primary block" data-act="${reg ? 'acc-signup' : 'acc-login'}" style="min-height:50px">${reg ? 'Załóż konto' : 'Zaloguj się'}</button>
       <p class="center small" style="margin:12px 0 4px">${reg ? 'Masz już konto?' : 'Nie masz konta?'} <button class="ghost sm" data-act="acc-mode">${reg ? 'Zaloguj się' : 'Zarejestruj się'}</button></p>
       <button class="ghost sm" data-act="cloud-check">🩺 Sprawdź połączenie z bazą</button>${cloudCheckHTML()}</div>`;
@@ -379,7 +392,7 @@ Object.assign(ACTIONS, {
     if (!email || !password) return toast('Wpisz e-mail i hasło');
     const { error } = await SB.auth.signInWithPassword({ email, password });
     if (error) return toast(authErr(error.message), 5000);
-    try { localStorage.setItem('hadAcc', '1'); } catch { /* */ }
+    try { localStorage.setItem('hadAcc', '1'); } catch { /* */ } stayInSave();
     toast('Zalogowano ✓ Synchronizuję fiszki…');
   },
   'acc-nick': async () => {
@@ -394,7 +407,7 @@ Object.assign(ACTIONS, {
     if (password.length < 6) return toast('Hasło musi mieć min. 6 znaków');
     const pend = typeof pendGet === 'function' ? pendGet() : null, pd = pend && (pend.t || pend.f) ? { t: pend.t, f: pend.f, name: pend.name } : null;
     const { data, error } = await SB.auth.signUp({ email, password, options: { emailRedirectTo: APP_URL(), data: pd ? { pending_deck: pd } : {} } });
-    if (!error) try { localStorage.setItem('hadAcc', '1'); } catch { /* */ }
+    if (!error) { try { localStorage.setItem('hadAcc', '1'); } catch { /* */ } stayInSave(); }
     if (error) return toast(authErr(error.message), 5000);
     if (!data.session) { AUTH_SENT = email; authGate(); toast('Konto utworzone ✓ Kliknij link w mailu (sprawdź też spam)', 7000); }
     else toast('Konto utworzone i zalogowano ✓');
