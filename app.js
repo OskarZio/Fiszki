@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '352';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '353';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1943,7 +1943,11 @@ function scheduleSync() {
 const ACTIONS = {
   'new-deck': () => { const n = prompt('Nazwa nowej talii:'); if (n) { newDeck(n); render(); } },
   'rename-deck': el => { const d = deckById(el.dataset.id); const n = prompt('Nowa nazwa talii:', d.name); if (n) { d.name = n.trim(); touch(d); save(); render(); } },
-  'delete-deck': el => { const d = deckById(el.dataset.id); if (confirm(`Usunąć talię „${d.name}” razem ze wszystkimi fiszkami?`)) { deleteDeck(d); go('#/'); } },
+  'delete-deck': el => {
+    const d = deckById(el.dataset.id); if (!d) return; const n = S.notes.filter(x => x.deckId === d.id).length;
+    askBox({ icon: '🗑️', title: 'Usunąć całą talię?', intro: `„${d.name}” – ${n} ${plural(n, 'fiszka', 'fiszki', 'fiszek')}`, warn: 'Talia zniknie razem ze wszystkimi fiszkami i postępem nauki – na wszystkich Twoich urządzeniach.', ok: 'Usuń talię', cancel: 'Anuluj', danger: true })
+      .then(ok => { if (!ok || !deckById(d.id)) return; deleteDeck(d); toast(`🗑 Usunięto talię „${d.name}”`, 3000); go('#/'); });
+  },
   'reset-deck': el => {
     if (!confirm('Zresetować postęp nauki w tej talii? Fiszki zostaną, ale wszystkie będą znowu nowe.')) return;
     S.cards.filter(c => c.deckId === el.dataset.id).forEach(c => { c.srs = newSrs(); touch(c); }); save(); render();
@@ -2037,6 +2041,7 @@ const ACTIONS = {
       ${d.done ? `<button class="primary" data-act="deck-done" data-id="${d.id}" data-v="0">↩️ Przywróć do nauki</button>`
         : `<button class="primary" data-act="deck-done" data-id="${d.id}" data-v="1">🎓 Opanowane – zdałem, bez powtórek</button>`}
       <small class="muted">${d.done ? 'Talia wróci do powtórek (zaległe karty od razu).' : 'Wszystkie fiszki znikną z powtórek, a talia przestanie się liczyć do nauki na dziś. W każdej chwili przywrócisz.'}</small>
+      <button class="danger" data-act="delete-deck" data-id="${d.id}">🗑 Usuń talię</button>
       <button class="ghost" data-act="dmenu-close">Anuluj</button></div>`;
     ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-go],[data-act]')) setTimeout(() => ov.remove()); });
     document.body.append(ov);
