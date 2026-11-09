@@ -1,102 +1,94 @@
 #fiszki
 #talia: Tkanki – quiz trudny
 #przedmiot: medycyna
-// Wymagający quiz: złe odpowiedzi są bardzo podobne do dobrej (pomylone liczby, zamienione pojęcia, jeden fałszywy szczegół).
+// Pytania „myślące”: sytuacje, preparaty, przyczyny i skutki. Złe odpowiedzi to inne prawdziwe pojęcia z materiału – trzeba wiedzieć, nie wczytywać się.
 
 // ---------- nabłonek
-Która cecha NIE dotyczy tkanki nabłonkowej? | Jest bogato unaczyniona | ✗ Leży na błonie podstawnej; Ma biegunowość komórek; Ma bardzo mało substancji międzykomórkowej
-Skąd nabłonek dostaje składniki odżywcze? | Z naczyń, które dochodzą do błony podstawnej | ✗ Z naczyń wnikających między komórki nabłonka; Z naczyń w warstwie szczytowej; Z osocza przepływającego przez nabłonek
-Tkanka nabłonkowa pochodzi z | Wszystkich trzech listków zarodkowych | ✗ Tylko z ektodermy; Z ektodermy i endodermy; Tylko z mezodermy
-Co odróżnia nabłonek od wszystkich innych tkanek pod względem pochodzenia? | Tylko on powstaje ze wszystkich trzech listków | ✗ Tylko on powstaje z mezodermy; Tylko on powstaje z ektodermy; Tylko on nie powstaje z listków zarodkowych
-Rzęski zbudowane są z | Mikrotubul | ✗ Mikrofilamentów aktynowych; Filamentów pośrednich; Włókien kolagenowych
-Mikrokosmki służą głównie do | Zwiększania powierzchni wchłaniania | ✗ Przesuwania śluzu; Odbierania bodźców; Ochrony przed czynnikami mechanicznymi
-Nabłonek wielorzędowy to w rzeczywistości nabłonek | Jednowarstwowy | ✗ Wielowarstwowy; Dwuwarstwowy; Przejściowy
-Po czym poznać nabłonek wielorzędowy? | Wszystkie komórki dotykają błony podstawnej, jądra na różnych wysokościach | ✗ Tylko komórki podstawne dotykają błony podstawnej; Jądra leżą na jednej wysokości w kilku warstwach; Komórki szczytowe są dwujądrowe
-Gdzie występuje nabłonek wielorzędowy z rzęskami? | Układ oddechowy | ✗ Układ pokarmowy; Pęcherz moczowy; Naczynia krwionośne
-Nabłonek przejściowy – co jest prawdą? | Liczba warstw zmienia się, a komórki szczytowe mogą być dwujądrowe | ✗ Liczba warstw jest stała, komórki szczytowe dwujądrowe; Liczba warstw się zmienia, a komórki podstawne są dwujądrowe; Ma zawsze jedną warstwę komórek parasolowatych
-Błona komórkowa części szczytowej nabłonka przejściowego jest | Nieprzepuszczalna („pancerz”) | ✗ Bardzo przepuszczalna; Pofałdowana i zazębiona; Pokryta rzęskami
-Śródbłonek wyściela | Układ krążenia od serca do naczyń włosowatych | ✗ Tylko naczynia włosowate; Tylko serce; Układ oddechowy od tchawicy do pęcherzyków
-Pofałdowana błona komórek śródbłonka służy do | Zazębiania się komórek, by połączenie było mocniejsze | ✗ Zwiększania powierzchni wchłaniania; Przesuwania krwi; Rozciągania się przy wypełnieniu
-Wydzielanie jako funkcja – co jest prawdą? | Wydzielać mogą tylko komórki nabłonkowe | ✗ Wydzielać mogą tylko komórki tkanki łącznej; Wydzielają wszystkie tkanki po równo; Nabłonek nie wydziela, tylko wchłania
-Bariera krew–mózg to przykład funkcji nabłonka | Izolowania różnych środowisk | ✗ Wchłaniania; Odbierania bodźców; Wydzielania
-Kubki smakowe to przykład funkcji nabłonka | Odbierania bodźców | ✗ Wydzielania; Izolowania środowisk; Wchłaniania
-Pęcherzyki płucne to przykład funkcji nabłonka | Wymiany gazowej | ✗ Wydzielania; Odbierania bodźców; Ochrony mechanicznej
-Regeneracja nabłonka – co jest prawdą? | Jelito co ok. 3 dni, cały nabłonek ok. 30 dni | ✗ Jelito co ok. 30 dni, cały nabłonek ok. 3 dni; Jelito co ok. 3 dni, cały nabłonek ok. 120 dni; Jelito co ok. 7 dni, cały nabłonek ok. 30 dni
-Nabłonek wielowarstwowy płaski nierogowaciejący występuje w | Przełyku | ✗ Naskórku; Pęcherzu moczowym; Tchawicy
-Nabłonek wielowarstwowy płaski rogowaciejący występuje w | Naskórku | ✗ Przełyku; Jamie ustnej; Rogówce
-Tkanka nabłonkowa żaby na rysunku – jak wyglądają komórki? | Wielokątne, ściśle przylegające, po jednym jądrze | ✗ Okrągłe, luźno ułożone, po jednym jądrze; Wielokątne, ściśle przylegające, bez jąder; Wielokątne, ściśle przylegające, po dwa jądra
+Na preparacie widzisz ściśle przylegające wielokątne komórki z jednym jądrem, prawie bez substancji między nimi. Jaka to tkanka? | Nabłonkowa | ✗ Łączna luźna; Chrzęstna szklista; Kostna
+Komórki w preparacie mają jądra na różnych wysokościach, ale wszystkie dotykają błony podstawnej. To nabłonek | Wielorzędowy | ✗ Wielowarstwowy płaski; Przejściowy; Jednowarstwowy sześcienny
+Który nabłonek chroni ścianę pęcherza przed moczem? | Przejściowy | ✗ Wielorzędowy z rzęskami; Jednowarstwowy walcowaty; Śródbłonek
+Dlaczego nabłonek przejściowy ma zmienną liczbę warstw? | Bo pęcherz się rozciąga i kurczy | ✗ Bo komórki szybko obumierają; Bo ma bardzo dużo substancji międzykomórkowej; Bo komórki dzielą się tylko w nocy
+Komórki śródbłonka zazębiają się pofałdowaną błoną. Po co? | Żeby połączenie było mocniejsze (płynie krew pod ciśnieniem) | ✗ Żeby lepiej wchłaniać pokarm; Żeby przesuwać śluz; Żeby odbierać bodźce smakowe
+Gdzie szukasz śródbłonka? | W sercu i naczyniach krwionośnych | ✗ W pęcherzu moczowym; W tchawicy; W naskórku
+Która tkanka po uszkodzeniu odnowi się najszybciej? | Nabłonek jelita (ok. 3 dni) | ✗ Chrząstka stawowa; Kość po złamaniu; Chrząstka włóknista w dysku
+Jak nabłonek dostaje tlen i składniki odżywcze, skoro nie ma naczyń? | Przez dyfuzję z naczyń pod błoną podstawną | ✗ Z osocza krążącego między komórkami nabłonka; Z własnych naczyń włosowatych; Z płynu w jamce chrzęstnej
+Która tkanka powstaje ze wszystkich trzech listków zarodkowych? | Nabłonkowa | ✗ Łączna; Chrzęstna; Krew
+Funkcja nabłonka pęcherzyków płucnych | Wymiana gazowa | ✗ Wydzielanie śluzu; Odbieranie bodźców smakowych; Ochrona przed moczem
+Kubki smakowe na języku to przykład nabłonka, który | Odbiera bodźce | ✗ Wchłania; Wydziela hormony; Izoluje środowiska
+Bariera krew–mózg to przykład funkcji nabłonka | Izolowania środowisk | ✗ Wydzielania; Wymiany gazowej; Odbierania bodźców
+Którą funkcję pełnią WYŁĄCZNIE komórki nabłonkowe? | Wydzielanie | ✗ Ochrona; Transport tlenu; Podpora narządów
+Do czego służą rzęski w drogach oddechowych? | Przesuwają śluz z zanieczyszczeniami | ✗ Wchłaniają tlen; Wydzielają śluz; Odbierają zapachy
+Z czego zbudowane są rzęski? | Z mikrotubul | ✗ Z kolagenu; Z elastyny; Z keratyny
+Struktura nabłonka jelita zwiększająca powierzchnię wchłaniania | Mikrokosmki | ✗ Rzęski; Komórki dwujądrowe; Pofałdowana błona śródbłonka
+Nabłonek naskórka – co go wyróżnia? | Warstwa rogowa z martwych komórek | ✗ Rzęski na powierzchni; Komórki parasolowate; Mikrokosmki
+Nabłonek wielowarstwowy płaski nierogowaciejący znajdziesz w | Przełyku | ✗ Skórze; Tchawicy; Jelicie
+Nabłonek jednowarstwowy sześcienny – przykład | Kanaliki nerkowe | ✗ Tchawica; Naskórek; Pęcherz moczowy
 
 // ---------- krew
-Krew to tkanka łączna płynna, bo | Jej substancją międzykomórkową jest osocze | ✗ Jej komórki nie mają jąder; Nie ma w niej substancji międzykomórkowej; Jej substancją międzykomórkową są elementy morfotyczne
-Udział osocza i elementów morfotycznych we krwi | 55% osocze, 45% elementy | ✗ 45% osocze, 55% elementy; 60% osocze, 40% elementy; 50% osocze, 50% elementy
-Skład osocza – co jest prawdą? | 91–92% wody, 7–8% białek | ✗ 7–8% wody, 91–92% białek; 81–82% wody, 17–18% białek; 91–92% wody, 1–2% białek
-Inne składniki osocza (gazy, jony, produkty przemiany materii) to | 1–2% | ✗ 7–8%; 10–12%; 0,1%
-Białko osocza biorące udział w krzepnięciu | Fibrynogen | ✗ Albumina; Globulina; Hemoglobina
-Element morfotyczny, który NIE jest komórką | Trombocyt | ✗ Erytrocyt dojrzały; Monocyt; Limfocyt NK
-Erytrocyt ssaka – co jest prawdą? | Nie ma jądra – pozbywa się go w trakcie dojrzewania | ✗ Nigdy nie miał jądra; Ma jądro do końca życia; Ma jądro, ale nie ma organelli
-Erytrocyty żaby od erytrocytów ssaka różnią się tym, że | Mają jądro i są owalne | ✗ Nie mają jądra i są okrągłe; Mają jądro i są dwuwklęsłe; Nie mają hemoglobiny
-Średnica erytrocytu ssaka | Ok. 7 µm | ✗ Ok. 12 µm; Ok. 3 µm; Ok. 14 µm
-Czas życia erytrocytu | Ok. 120 dni | ✗ Ok. 12 dni; Ok. 210 dni; Ok. 30 dni
-Ilość erytrocytów u mężczyzny | Ok. 4,5–5,5 mln w 1 µl | ✗ Ok. 4,5–5,5 tys. w 1 µl; Ok. 45–55 mln w 1 µl; Ok. 150–400 tys. w 1 µl
-Kształt erytrocytu ssaka | Dwuwklęsła soczewka | ✗ Dwuwypukła soczewka; Owal z jądrem; Kula
-O grupie krwi decydują | Antygeny na powierzchni erytrocytu | ✗ Przeciwciała we wnętrzu erytrocytu; Rodzaj hemoglobiny; Wielkość erytrocytu
-Hemoglobina stanowi ok. | 90% masy erytrocytu | ✗ 9% masy erytrocytu; 55% masy erytrocytu; 90% masy krwi
-Część niebiałkowa hemoglobiny zawierająca żelazo to | Hem | ✗ Globina; Ferrytyna; Fibrynogen
-Hemoglobina dorosłego (HbA) zbudowana jest z | 2 łańcuchów α i 2 β | ✗ 2 łańcuchów α i 2 γ; 4 łańcuchów β; 2 łańcuchów α i 2 δ
-Hemoglobina płodowa (HbF) – co jest prawdą? | Mocniej wiąże tlen niż HbA | ✗ Słabiej wiąże tlen niż HbA; Nie wiąże tlenu; Wiąże trwale tlenek węgla
-Methemoglobina to hemoglobina | Z Fe³⁺, która nie przenosi tlenu | ✗ Z Fe²⁺, która przenosi tlen; Połączona z CO₂; Połączona z tlenkiem węgla
-Połączenie hemoglobiny z CO₂ | Karbaminohemoglobina (nietrwałe) | ✗ Karboksyhemoglobina (trwałe); Oksyhemoglobina (nietrwałe); Methemoglobina (trwałe)
-Połączenie hemoglobiny z czadem | Karboksyhemoglobina – trwałe | ✗ Karbaminohemoglobina – trwałe; Karboksyhemoglobina – nietrwałe; Oksyhemoglobina – trwałe
-Z tlenem hemoglobina łączy się | Nietrwale – dlatego może go oddać w tkankach | ✗ Trwale – dlatego go nie traci; Trwale – jak z czadem; Wcale – tlen płynie w osoczu
-Granulocyty – co jest prawdą? | Mają ziarnistości, segmentowane jądro i żyją krótko | ✗ Mają ziarnistości, jądro w całości i żyją długo; Nie mają ziarnistości, jądro segmentowane; Mogą się dzielić i żyją latami
-Agranulocyty – co jest prawdą? | Jądro w całości, mogą się dzielić, żyją długo | ✗ Jądro segmentowane, nie dzielą się, żyją krótko; Jądro w całości, nie dzielą się, żyją kilka dni; Mają liczne ziarnistości w cytoplazmie
-Neutrofile stanowią | 50–75% leukocytów | ✗ 25–30% leukocytów; 4–8% leukocytów; 75–90% leukocytów
-Limfocyty stanowią | 25–30% leukocytów | ✗ 50–75% leukocytów; 4–8% leukocytów; Do 5% leukocytów
-Monocyty stanowią | 4–8% leukocytów | ✗ 25–30% leukocytów; Do 1% leukocytów; 50–75% leukocytów
-Eozynofile stanowią | Max. 5% leukocytów | ✗ Do 1% leukocytów; 4–8% leukocytów; 25–30% leukocytów
-Bazofile stanowią | Do 1% leukocytów | ✗ Max. 5% leukocytów; 4–8% leukocytów; 10–15% leukocytów
-Eozynofil – jądro i funkcja | Dwupłatowe – niszczenie larw pasożytów | ✗ Segmentowane (3–5 płatów) – niszczenie larw pasożytów; Dwupłatowe – wydzielanie heparyny; Nerkowate – fagocytoza bakterii
-Bazofil wydziela | Heparynę i histaminę | ✗ Hemoglobinę i histaminę; Heparynę i fibrynogen; Przeciwciała
-Heparyna działa | Przeciwzakrzepowo | ✗ Krzepnąco; Przeciwbakteryjnie poprzez fagocytozę; Jako przeciwciało
-Limfocyty B – co jest prawdą? | Szpikozależne, odpowiedź humoralna | ✗ Grasicozależne, odpowiedź komórkowa; Szpikozależne, odpowiedź komórkowa; Niszczą komórki bez rozpoznawania (NK)
-Limfocyty T – co jest prawdą? | Odpowiedź typu komórkowego, np. przeciw nowotworom | ✗ Odpowiedź humoralna przez przeciwciała; Wydzielają heparynę; Są prekursorami makrofagów
-Monocyty są prekursorami | Makrofagów | ✗ Limfocytów; Trombocytów; Erytrocytów
-Największe komórki krwi | Monocyty | ✗ Limfocyty duże; Eozynofile; Neutrofile
-Płytki krwi – co jest prawdą? | 2–4 µm, fragmenty cytoplazmy, krzepnięcie | ✗ 7 µm, komórki z jądrem, krzepnięcie; 2–4 µm, komórki z jądrem, transport tlenu; 12 µm, fragmenty cytoplazmy, fagocytoza
-Wszystkie składniki krwi powstają z | Hemocytoblastu | ✗ Megakariocytu; Monocytu; Erytroblastu
+Dlaczego krew zaliczamy do tkanki łącznej? | Ma komórki i substancję międzykomórkową (osocze) | ✗ Bo powstaje w kościach; Bo ma bardzo mało substancji międzykomórkowej; Bo leży na błonie podstawnej
+Na rozmazie widzisz owalne krwinki czerwone Z JĄDREM. Czyja to krew? | Żaby | ✗ Człowieka; Psa; Konia
+Dlaczego erytrocyt ssaka może przenosić dużo tlenu? | Pozbył się jądra i organelli – jest miejsce na hemoglobinę | ✗ Ma bardzo duże jądro; Ma dużo mitochondriów; Ma ziarnistości z tlenem
+Erytrocyt żyje ok. | 120 dni | ✗ 3 dni; 1 rok; 10 lat
+Gdzie powstają krwinki czerwone? | W czerwonym szpiku kostnym | ✗ W śledzionie; W wątrobie u dorosłego; W węzłach chłonnych
+Ile jest erytrocytów u zdrowego mężczyzny? | Ok. 5 mln w 1 µl | ✗ Ok. 7 tys. w 1 µl; Ok. 250 tys. w 1 µl; Ok. 500 w 1 µl
+Co na powierzchni erytrocytu decyduje o grupie krwi? | Antygeny | ✗ Hemoglobina; Jądro; Fibrynogen
+Pacjent zatruł się czadem. Co się dzieje we krwi? | Hemoglobina trwale łączy się z tlenkiem węgla i nie przenosi tlenu | ✗ Erytrocyty tracą jądro; Fibrynogen przestaje działać; Leukocyty zaczynają przenosić tlen
+Dlaczego to dobrze, że hemoglobina łączy się z tlenem nietrwale? | Bo może go oddać w tkankach | ✗ Bo dzięki temu nie wiąże CO₂; Bo wtedy erytrocyt żyje dłużej; Bo tlen trafia od razu do osocza
+Hemoglobina płodowa (HbF) mocniej wiąże tlen. Po co? | Żeby płód mógł pobrać tlen z krwi matki | ✗ Żeby płód nie potrzebował płuc po urodzeniu; Żeby chronić płód przed czadem; Żeby erytrocyty płodu miały jądro
+Część hemoglobiny zawierająca żelazo | Hem | ✗ Globina; Albumina; Fibrynogen
+Białko osocza potrzebne do krzepnięcia krwi | Fibrynogen | ✗ Albumina; Hemoglobina; Heparyna
+Główny składnik osocza | Woda (ok. 91–92%) | ✗ Białka (ok. 91–92%); Sole mineralne (ok. 50%); Glukoza (ok. 30%)
+Który element krwi NIE jest komórką? | Płytka krwi | ✗ Limfocyt; Monocyt; Neutrofil
+Ostre zakażenie bakteryjne – której białej krwinki przybędzie najbardziej? | Neutrofili | ✗ Bazofili; Eozynofili; Erytrocytów
+Pacjent ma pasożyty (np. glisty). Których krwinek będzie więcej? | Eozynofili | ✗ Neutrofili; Bazofili; Płytek krwi
+Która krwinka wydziela heparynę i histaminę? | Bazofil | ✗ Eozynofil; Monocyt; Limfocyt T
+Najliczniejsze białe krwinki we krwi | Neutrofile | ✗ Limfocyty; Monocyty; Eozynofile
+Krwinka z jądrem dwupłatowym i dużymi ziarnistościami, niszcząca larwy pasożytów | Eozynofil | ✗ Neutrofil; Monocyt; Limfocyt
+Największa komórka krwi, z jądrem nerkowatym | Monocyt | ✗ Limfocyt; Bazofil; Erytrocyt
+Monocyt, który przejdzie do tkanek, staje się | Makrofagiem | ✗ Limfocytem B; Płytką krwi; Fibroblastem
+Które leukocyty mogą się dzielić i żyją długo? | Agranulocyty (limfocyty, monocyty) | ✗ Granulocyty (neutrofile, eozynofile); Tylko bazofile; Żadne
+Limfocyty, które niszczą komórki nowotworowe w odpowiedzi komórkowej | Limfocyty T | ✗ Limfocyty B; Bazofile; Erytrocyty
+Limfocyty wytwarzające przeciwciała (odpowiedź humoralna) | Limfocyty B | ✗ Limfocyty T; Monocyty; Neutrofile
+Pacjent ma mało płytek krwi. Czego się spodziewasz? | Problemów z krzepnięciem (krwawienia) | ✗ Niedotlenienia; Częstych zakażeń pasożytami; Braku przeciwciał
+Z jakiej komórki powstają wszystkie składniki krwi? | Z hemocytoblastu | ✗ Z fibroblastu; Z osteoblastu; Z chondroblastu
+Transport hormonów to funkcja krwi | Transportowa | ✗ Immunologiczna; Krzepnięcia; Wydzielnicza
+Utrzymywanie stałego pH i temperatury to funkcja krwi | Regulacyjna | ✗ Transportowa; Immunologiczna; Wchłaniająca
+Wytwarzanie przeciwciał i fagocytoza to funkcja krwi | Immunologiczna (obronna) | ✗ Regulacyjna; Transportowa; Oddechowa
 
 // ---------- tkanka łączna
-Tkanka łączna pochodzi z | Mezodermy | ✗ Ektodermy; Endodermy; Wszystkich trzech listków
-Istota podstawowa tkanki łącznej to | Bezpostaciowy żel | ✗ Sieć włókien sprężystych; Uporządkowane pęczki kolagenu; Płyn bez białek
-Włókna obecne we WSZYSTKICH tkankach łącznych | Kolagenowe | ✗ Sprężyste; Srebrochłonne; Mięśniowe
-Włókna sprężyste zbudowane są z | Elastyny | ✗ Kolagenu; Keratyny; Fibrynogenu
-Które włókna są odporne na gotowanie? | Sprężyste | ✗ Kolagenowe; Srebrochłonne; Żadne
-Włókna srebrochłonne zbudowane są z | Kolagenu | ✗ Elastyny; Srebra; Keratyny
-Funkcja włókien srebrochłonnych | Podpora komórek – zrąb narządów | ✗ Nadawanie sprężystości strunom głosowym; Wytrzymałość ścięgien; Krzepnięcie krwi
+Z którego listka zarodkowego pochodzi tkanka łączna? | Z mezodermy | ✗ Z ektodermy; Z endodermy; Ze wszystkich trzech
+Najważniejsza różnica między tkanką łączną a nabłonkiem | Łączna ma dużo substancji międzykomórkowej | ✗ Łączna nie ma komórek; Łączna leży na błonie podstawnej; Łączna nie ma włókien
+Które włókna nadają tkance wytrzymałość na rozciąganie (np. w ścięgnie)? | Kolagenowe | ✗ Sprężyste; Srebrochłonne; Mięśniowe
+Struny głosowe muszą się rozciągać i wracać do kształtu. Jakie włókna to zapewniają? | Sprężyste | ✗ Kolagenowe; Srebrochłonne; Nerwowe
+Które włókna tworzą rusztowanie (zrąb) narządów i podporę dla komórek? | Srebrochłonne | ✗ Sprężyste; Kolagenowe grube pęczki; Mięśniowe
+Białko, z którego zbudowane są włókna sprężyste | Elastyna | ✗ Kolagen; Keratyna; Hemoglobina
 
 // ---------- chrząstka
-Chondroblasty to komórki | Chrząstkotwórcze | ✗ Chrząstkogubne; Dojrzałe, w jamce chrzęstnej; Kościotwórcze
-Chondroklasty to komórki | Chrząstkogubne | ✗ Chrząstkotwórcze; Dojrzałe chrzęstne; Kościogubne
-Chondrocyty – co jest prawdą? | Dojrzałe komórki, zawsze w jamce chrzęstnej | ✗ Młode komórki, zawsze w jamce chrzęstnej; Dojrzałe komórki, zawsze w jamce kostnej; Dojrzałe komórki, leżą swobodnie bez jamek
-Grupa izogeniczna powstaje z | Jednego chondroblastu | ✗ Kilku chondroblastów; Jednego osteoblastu; Jednego chondroklastu
-Chrząstka – co jest prawdą? | Nie jest unaczyniona i słabo się regeneruje | ✗ Jest unaczyniona i dobrze się regeneruje; Nie jest unaczyniona, ale świetnie się regeneruje; Jest unaczyniona, ale słabo się regeneruje
-Chrząstka szklista występuje | W okresie embrionalnym, potem na powierzchni stawów | ✗ W uchu zewnętrznym i krtani; W dyskach i spojeniu łonowym; Tylko u dorosłych w więzadłach
-Chrząstka sprężysta występuje w | Uchu zewnętrznym i krtani | ✗ Powierzchniach stawowych; Krążkach międzykręgowych; Spojeniu łonowym
-Chrząstka włóknista występuje w | Dyskach, spojeniu łonowym, stawie skroniowo-żuchwowym | ✗ Uchu zewnętrznym i krtani; Na powierzchni stawów; Szkielecie zarodka
-Grupy izogeniczne w chrząstce sprężystej | Małe – najczęściej 2 chondrocyty albo 1 | ✗ Duże – po 6–8 chondrocytów; Nie ma grup izogenicznych; Zawsze po 4 chondrocyty
-Włókna kolagenowe w chrząstce włóknistej | Grube pęczki biegnące równolegle | ✗ Gęsta sieć biegnąca w różnych kierunkach; Brak włókien; Pojedyncze włókna sprężyste
-Chrząstka z gęstą siecią włókien sprężystych | Sprężysta | ✗ Szklista; Włóknista; Kostniejąca
+Dlaczego uszkodzona chrząstka stawowa bardzo słabo się goi? | Nie ma naczyń krwionośnych | ✗ Ma za dużo naczyń; Nie ma komórek; Jest zbudowana z kości
+Na preparacie widzisz chondrocyty w jamkach i gęstą sieć cienkich włókien. To chrząstka | Sprężysta | ✗ Szklista; Włóknista; Kość zbita
+Na preparacie chondrocyty leżą między grubymi równoległymi pęczkami kolagenu. To chrząstka | Włóknista | ✗ Sprężysta; Szklista; Kość gąbczasta
+Na preparacie widzisz grupy izogeniczne w gładkiej, jednolitej macierzy bez widocznych włókien. To chrząstka | Szklista | ✗ Sprężysta; Włóknista; Tkanka łączna luźna
+Małżowina uszna jest giętka, bo zbudowana jest z chrząstki | Sprężystej | ✗ Szklistej; Włóknistej; Kostnej
+Krążki międzykręgowe muszą wytrzymać duży nacisk. Jaka to chrząstka? | Włóknista | ✗ Sprężysta; Szklista; Siateczkowa
+Szkielet zarodka i powierzchnie stawów to chrząstka | Szklista | ✗ Sprężysta; Włóknista; Kostna
+Kilka chondrocytów powstałych z jednej komórki to | Grupa izogeniczna | ✗ Osteon; Blaszka systemowa; Jamka kostna
+Komórki, które budują chrząstkę | Chondroblasty | ✗ Chondroklasty; Osteoblasty; Fibroblasty
+Komórki, które rozkładają chrząstkę | Chondroklasty | ✗ Chondroblasty; Osteoklasty; Makrofagi
+Gdzie zawsze leży dojrzały chondrocyt? | W jamce chrzęstnej | ✗ W kanale Haversa; W jamce kostnej; Na błonie podstawnej
 
 // ---------- kość
-Za trwałość (twardość) kości odpowiadają | Sole mineralne w substancji międzykomórkowej | ✗ Włókna kolagenowe; Osteocyty; Szpik kostny
-Okostna – co jest prawdą? | Pokrywa kość, ma dużo osteoblastów, naczynia i nerwy | ✗ Wyściela jamę szpikową, ma dużo osteoklastów; Pokrywa chrząstkę, ma dużo chondroblastów; Pokrywa kość, nie ma naczyń ani nerwów
-Osteocyty – co jest prawdą? | Zawsze 1 w jamce kostnej, łączą się kanalikami | ✗ 2–4 w jamce (grupa izogeniczna); Zawsze 1 w jamce, bez połączeń z innymi; Leżą swobodnie w kanale Haversa
-Czym łączą się osteocyty? | Wypustkami cytoplazmatycznymi w kanalikach kostnych | ✗ Włóknami kolagenowymi w kanale Haversa; Rzęskami w jamkach kostnych; Wypustkami w kanałach Volkmanna
-Osteoklasty – co jest prawdą? | Rozkładają kość, mogą mieć kilka jąder | ✗ Budują kość, mogą mieć kilka jąder; Rozkładają kość, zawsze jedno jądro; Rozkładają chrząstkę, zawsze jedno jądro
-Osteoblasty to komórki | Kościotwórcze | ✗ Kościogubne; Dojrzałe, w jamce kostnej; Chrząstkotwórcze
-W środku osteonu biegnie | Kanał Haversa | ✗ Kanał Volkmanna; Jamka kostna; Jama szpikowa
-Blaszki kostne ułożone wokół kanału Haversa to | Blaszki systemowe | ✗ Blaszki międzysystemowe; Blaszki okalające; Beleczki kostne
-Blaszki leżące między osteonami to | Blaszki międzysystemowe | ✗ Blaszki systemowe; Kanały Haversa; Pęczki kolagenowe
-Kość gąbczasta zbudowana jest z | Beleczek kostnych | ✗ Osteonów; Blaszek systemowych; Grup izogenicznych
-Kość zbita a gąbczasta | Zbita ma osteony, gąbczasta beleczki | ✗ Zbita ma beleczki, gąbczasta osteony; Obie mają tylko beleczki; Obie mają tylko osteony
-Jaki procent wapnia organizmu jest w kościach? | Ok. 99% | ✗ Ok. 90%; Ok. 50%; Ok. 9%
+Co sprawia, że kość jest twarda i trwała? | Sole mineralne w substancji międzykomórkowej | ✗ Włókna sprężyste; Duża ilość wody; Szpik kostny
+Złamana kość goi się dobrze, a chrząstka słabo. Dlaczego? | Kość jest obficie unaczyniona, chrząstka wcale | ✗ Kość nie ma komórek; Chrząstka ma za dużo naczyń; Kość nie jest unerwiona
+Błona pokrywająca kość z zewnątrz, z dużą liczbą osteoblastów | Okostna | ✗ Ochrzęstna; Błona podstawna; Śródbłonek
+Dzięki czemu złamanie kości może się zrosnąć? | Dzięki okostnej i osteoblastom budującym nową kość | ✗ Dzięki chondroklastom; Dzięki erytrocytom; Dzięki nabłonkowi przejściowemu
+Komórki, które budują kość | Osteoblasty | ✗ Osteoklasty; Osteocyty; Chondroblasty
+Komórki, które rozkładają kość (mogą mieć kilka jąder) | Osteoklasty | ✗ Osteoblasty; Osteocyty; Chondroklasty
+Dojrzała komórka kostna zamknięta w jamce | Osteocyt | ✗ Osteoblast; Chondrocyt; Osteoklast
+Jak osteocyty kontaktują się ze sobą, skoro są zamknięte w jamkach? | Wypustkami w kanalikach kostnych | ✗ Przez kanał Volkmanna; Przez krew w jamkach; Wcale się nie kontaktują
+Co biegnie w kanale Haversa? | Naczynia krwionośne i nerwy | ✗ Osteocyty; Szpik żółty; Chondrocyty
+Na szlifie kości widzisz koncentryczne kręgi wokół kanału. To | Osteon | ✗ Grupa izogeniczna; Beleczka kostna; Chrząstka włóknista
+Blaszki między osteonami (resztki starych osteonów) | Międzysystemowe | ✗ Systemowe; Okalające; Gąbczaste
+Kość zbudowana z beleczek, ze szpikiem między nimi | Gąbczasta | ✗ Zbita; Chrzęstna; Splotowata zbita
+W trzonie kości długiej przeważa kość | Zbita | ✗ Gąbczasta; Chrzęstna; Siateczkowa
+We krwi jest za mało wapnia. Skąd organizm go weźmie? | Z kości – osteoklasty je rozkładają | ✗ Z chrząstki – chondroblasty ją budują; Z erytrocytów; Z nabłonka jelita
+Ile wapnia organizmu jest zmagazynowane w kościach? | Ok. 99% | ✗ Ok. 10%; Ok. 50%; Ok. 75%
