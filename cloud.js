@@ -302,21 +302,25 @@ function takeNick() {
   if (v && v !== S.profile.nick) { S.profile.nick = v; S.profile.mod = Date.now(); save(); }
   return !!S.profile.nick;
 }
+// ekran konta: rejestracja domyślnie (nowa osoba), logowanie gdy na tym urządzeniu ktoś już się logował
+let AUTH_MODE = '';
+const authMode = () => { if (AUTH_MODE) return AUTH_MODE; try { return localStorage.getItem('hadAcc') ? 'login' : 'reg'; } catch { return 'reg'; } };
 function accountCardHTML() {
   if (!SB) return `<div class="card row nowrap"><span style="font-size:30px">☁️</span><div class="grow"><b>Konto w chmurze</b>
       <div class="small muted">${SB_CFG === null ? 'Jeszcze nie podłączone – host musi dodać Supabase (instrukcja).' : 'Łączę…'}</div></div>
       <button class="sm" data-go="#/cloud-help">Instrukcja</button></div>`;
-  if (!SB_USER) return `<div class="card"><h2 style="margin-top:0">☁️ Konto</h2>
-      <p class="small muted">Zaloguj się, żeby mieć fiszki na każdym urządzeniu i widzieć ranking znajomych.</p>
-      <input id="acc-nick" placeholder="Nick (widzą go znajomi)" maxlength="24" value="${esc(S.profile.nick || '')}">
-      <div class="spacer"></div>
+  if (!SB_USER) {
+    const reg = authMode() === 'reg';
+    return `<div class="card auth-card"><h2 style="margin-top:0">${reg ? 'Załóż konto' : 'Zaloguj się'}</h2>
+      ${reg ? `<input id="acc-nick" placeholder="Nick (widzą go znajomi)" maxlength="24" value="${esc(S.profile.nick || '')}"><div class="spacer"></div>` : ''}
       <input id="acc-email" type="email" placeholder="E-mail" autocomplete="email" autocapitalize="off">
       <div class="spacer"></div>
-      <input id="acc-pass" type="password" placeholder="Hasło (min. 10 znaków, litery i cyfry)" autocomplete="current-password">
+      <input id="acc-pass" type="password" placeholder="${reg ? 'Hasło (min. 10 znaków, litery i cyfry)' : 'Hasło'}" autocomplete="${reg ? 'new-password' : 'current-password'}">
       <div class="spacer"></div>
-      <div class="row"><button class="primary grow" data-act="acc-login">Zaloguj</button><button class="grow" data-act="acc-signup">Załóż konto</button></div>
-      <p class="small muted">Twoje obecne fiszki zostaną dołączone do konta przy pierwszym logowaniu.</p>
+      <button class="primary block" data-act="${reg ? 'acc-signup' : 'acc-login'}" style="min-height:50px">${reg ? 'Załóż konto' : 'Zaloguj się'}</button>
+      <p class="center small" style="margin:12px 0 4px">${reg ? 'Masz już konto?' : 'Nie masz konta?'} <button class="ghost sm" data-act="acc-mode">${reg ? 'Zaloguj się' : 'Zarejestruj się'}</button></p>
       <button class="ghost sm" data-act="cloud-check">🩺 Sprawdź połączenie z bazą</button>${cloudCheckHTML()}</div>`;
+  }
   return `<div class="card"><h2 style="margin-top:0">☁️ Konto</h2>
     <label class="small muted">Twój nick – tak widzą Cię znajomi w rankingu i bitwach</label>
     <div class="row nowrap"><input id="acc-nick" class="grow" maxlength="24" placeholder="Wpisz nick" value="${esc(S.profile.nick || '')}"><button class="${S.profile.nick ? '' : 'primary pulse'}" data-act="acc-nick">Zapisz</button></div>
@@ -368,12 +372,14 @@ async function cloudCheck() {
 
 Object.assign(ACTIONS, {
   'cloud-check': () => cloudCheck(),
+  'acc-mode': () => { AUTH_MODE = authMode() === 'reg' ? 'login' : 'reg'; const g = document.getElementById('auth-gate'); if (g) { g.remove(); authGate(); } else render(); },
   'acc-login': async () => {
     takeNick();
     const email = $('#acc-email').value.trim(), password = $('#acc-pass').value;
     if (!email || !password) return toast('Wpisz e-mail i hasło');
     const { error } = await SB.auth.signInWithPassword({ email, password });
     if (error) return toast(authErr(error.message), 5000);
+    try { localStorage.setItem('hadAcc', '1'); } catch { /* */ }
     toast('Zalogowano ✓ Synchronizuję fiszki…');
   },
   'acc-nick': async () => {
@@ -386,7 +392,9 @@ Object.assign(ACTIONS, {
     if (!takeNick()) return toast('Wpisz nick – zobaczą go znajomi');
     if (!/^\S+@\S+\.\S+$/.test(email)) return toast('Wpisz poprawny e-mail');
     if (password.length < 6) return toast('Hasło musi mieć min. 6 znaków');
-    const { data, error } = await SB.auth.signUp({ email, password, options: { emailRedirectTo: APP_URL() } });
+    const pend = typeof pendGet === 'function' ? pendGet() : null, pd = pend && (pend.t || pend.f) ? { t: pend.t, f: pend.f, name: pend.name } : null;
+    const { data, error } = await SB.auth.signUp({ email, password, options: { emailRedirectTo: APP_URL(), data: pd ? { pending_deck: pd } : {} } });
+    if (!error) try { localStorage.setItem('hadAcc', '1'); } catch { /* */ }
     if (error) return toast(authErr(error.message), 5000);
     if (!data.session) { AUTH_SENT = email; authGate(); toast('Konto utworzone ✓ Kliknij link w mailu (sprawdź też spam)', 7000); }
     else toast('Konto utworzone i zalogowano ✓');
@@ -420,7 +428,10 @@ function authGate() {
   const need = !!SB && !SB_USER && !SESS_NET_FAIL, ov = document.getElementById('auth-gate');   // bez internetu (a z zapisaną sesją) nie zasłaniamy aplikacji
   document.body.classList.toggle('auth-locked', need);
   if (!need) { ov?.remove(); return; }
-  const html = `<div class="auth-box"><div class="auth-logo">🧠</div><h1>Fiszki</h1><p class="muted">Załóż konto albo zaloguj się, żeby zacząć. Fiszki, postęp i kryształy będą na każdym Twoim urządzeniu.</p>
+  const pend = typeof pendGet === 'function' ? pendGet() : null;
+  const html = `<div class="auth-box"><div class="auth-logo">🧠</div><h1>Fiszki</h1>
+    ${pend ? `<div class="card auth-pend"><b>📚 Ktoś udostępnił Ci talię${pend.name ? ` „${esc(pend.name)}”` : ''}${pend.n ? ` (${pend.n} ${plural(pend.n, 'fiszka', 'fiszki', 'fiszek')})` : ''}</b><p class="small" style="margin:6px 0 0">${authMode() === 'reg' ? 'Załóż konto' : 'Zaloguj się'} – talia od razu doda się do Twoich zestawów.</p></div>`
+      : `<p class="muted">Załóż konto albo zaloguj się, żeby zacząć. Fiszki, postęp i kryształy będą na każdym Twoim urządzeniu.</p>`}
     ${AUTH_SENT ? `<div class="card auth-sent"><b>📧 Sprawdź skrzynkę</b><p class="small" style="margin:6px 0">Wysłaliśmy link na <b>${esc(AUTH_SENT)}</b>. Kliknij go na tym urządzeniu, a zalogujesz się automatycznie. Nie ma maila? Zajrzyj do spamu.</p><button class="sm" data-act="acc-resend">Wyślij ponownie</button></div>` : ''}
     ${accountCardHTML()}</div>`;
   if (ov) { if (!ov.contains(document.activeElement)) ov.innerHTML = html; return; }

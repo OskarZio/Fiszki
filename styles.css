@@ -3860,3 +3860,5 @@ img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline
 .imgzoom.big img { max-width: none; max-height: none; width: 220%; cursor: zoom-out; }
 @media (min-width: 900px) { .imgzoom.big img { width: 160%; } }
 .imgzoom-x { position: fixed; top: calc(10px + var(--sat, 0px)); right: 10px; z-index: 1; background: #fff !important; color: #1d2433 !important; }
+.auth-pend { border-left: 4px solid var(--accent); }
+.auth-card button.ghost.sm[data-act="acc-mode"] { font-weight: 700; color: var(--accent-text, var(--accent)); padding: 4px 6px !important; min-height: 0; }
