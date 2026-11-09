@@ -58,10 +58,12 @@ function unofficialBanner() {
 async function initCloud() {
   try {
     if (!isOfficial()) { SB_CFG = null; unofficialBanner(); return; }
+    // ⚡ biblioteka bazy pobiera się równolegle z konfiguracją (wcześniej po kolei – dłuższe „ładowanie” konta)
+    const libP = typeof supabase === 'undefined' ? loadScript('vendor/supabase.js').catch(() => null) : null;
     const cfg = await loadCloudConfig(); if (!cfg) { SB_CFG = null; return; }
     if (SB && SB_CFG && SB_CFG.url === cfg.url && SB_CFG.key === cfg.key) return;   // już połączone
     SB_CFG = cfg;
-    await loadScript('vendor/supabase.js');
+    if (libP) await libP; if (typeof supabase === 'undefined') await loadScript('vendor/supabase.js');
     stayInCheck();
     SB = supabase.createClient(SB_CFG.url, SB_CFG.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
     let { data } = await SB.auth.getSession();

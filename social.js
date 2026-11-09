@@ -208,7 +208,7 @@ ROUTES.chat = parts => {
   ${CHAT.pick === 'gift' && false ? `<div class="card tight"><p class="small muted" style="margin-top:0">Wybierz naklejkę – zniknie z Twojego albumu i trafi do ${esc(f.nick || 'znajomego')}.</p>
     ${gifts.length ? `<div class="gift-pick">${gifts.map(s => `<button data-act="chat-gift" data-id="${s.id}" style="--rc:${RARITY[s.r].color}"><span>${stE(s)}</span><small>${esc(s.name)}</small><em>×${itemCount('sticker', s.id)}</em></button>`).join('')}</div>`
       : '<p class="small">Nie masz jeszcze naklejek do podarowania – zdobądź je w <a href="#/shop">skrzynkach</a>. (Startowe 👋👍😅 nie są do oddania.)</p>'}</div>` : ''}
-  <div class="chat-list" id="chat-list">${list.length ? list.map(m => { const mine = m.from_id === me; return `<div class="msg ${mine ? 'me' : 'them'} k-${msgKind(m)}">${msgBodyHTML(m, mine)}<small>${hhmm(m.created_at)}${mine && m.read_at ? ' · ✓✓' : ''}${mine ? ` <button class="msg-del" data-act="msg-del" data-id="${m.id}" title="${m.body?.fun ? 'Cofnij zaczepkę' : 'Usuń u obu osób'}" aria-label="Usuń">${m.body?.fun && !m.read_at ? '↩️ cofnij' : '🗑️'}</button>` : ''}</small></div>`; }).join('')
+  <div class="chat-list" id="chat-list">${list.length ? list.map(m => { const mine = m.from_id === me; return `<div class="msg ${mine ? 'me' : 'them'} k-${msgKind(m)}"${mine ? ` data-mid="${m.id}" title="Przytrzymaj, żeby usunąć"` : ''}>${msgBodyHTML(m, mine)}<small>${hhmm(m.created_at)}${mine && m.read_at ? ' · ✓✓' : ''}</small></div>`; }).join('')
     : `<p class="muted small center">Napisz pierwszą wiadomość, wyślij naklejkę albo wyzwij ${esc(f.nick || 'znajomego')} na bitwę 👋</p>`}</div>
   <div class="chat-input row nowrap"><input id="chat-in" class="grow" maxlength="${MSG_TEXT_MAX}" placeholder="Wiadomość…" autocomplete="off" enterkeyhint="send"><button class="primary" data-act="chat-send">➤</button></div>
   ${notifBtnHTML()}` };
@@ -369,3 +369,17 @@ ACTIONS['msg-del'] = async el => {
   if (refund && !S.wallet.some(w => w.id === 'funref-' + id)) { S.wallet.push({ id: 'funref-' + id, n: fun.price, why: 'fun-refund', t: Date.now() }); save(); }
   MSGS = MSGS.filter(x => x.id !== id); toast(fun ? (refund ? `↩️ Cofnięto · +${fun.price} 💎` : '↩️ Cofnięto') : '🗑️ Usunięto u obu osób', 2500); render();
 };
+
+// 🗑️ usuwanie własnej wiadomości: przytrzymaj ją (telefon) albo kliknij prawym przyciskiem (komputer) – bez widocznego kosza
+(function msgHold() {
+  let t = 0, el = null, x0 = 0, y0 = 0;
+  const stop = () => { clearTimeout(t); el?.classList.remove('holding'); el = null; };
+  const fire = m => { stop(); try { navigator.vibrate?.(15); } catch { /* */ } ACTIONS['msg-del']({ dataset: { id: m.dataset.mid } }); };
+  document.addEventListener('pointerdown', e => {
+    const m = e.target.closest?.('.msg[data-mid]'); if (!m || e.button > 0) return;
+    stop(); el = m; x0 = e.clientX; y0 = e.clientY; m.classList.add('holding'); t = setTimeout(() => fire(m), 550);
+  }, { passive: true });
+  document.addEventListener('pointermove', e => { if (el && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) stop(); }, { passive: true });
+  ['pointerup', 'pointercancel', 'scroll'].forEach(ev => document.addEventListener(ev, stop, { passive: true, capture: ev === 'scroll' }));
+  document.addEventListener('contextmenu', e => { const m = e.target.closest?.('.msg[data-mid]'); if (m) { e.preventDefault(); fire(m); } });
+})();

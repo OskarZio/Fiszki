@@ -3771,8 +3771,8 @@ button.primary .emo8, .btn.primary .emo8 { filter: none; }
 .small, small { line-height: 1.45; }
 .card p { line-height: 1.5; }
 /* kolory rzadkości w tekście (skiny, szanse, poziomy postaci) – ciemniejsze na jasnym tle, jaśniejsze na ciemnym */
-html[data-ui="light"] :is(.skin-t b, .odds span, .char-tier, .char-pts, small span[style*="color"], .gemw) { filter: brightness(.68) saturate(1.15); }
-html[data-ui="dark"] :is(.skin-t b, .odds span, .char-tier, .char-pts, small span[style*="color"]) { filter: brightness(1.35); }
+
+
 .mode-pick small, .tower-weapon small { font-size: 12px !important; }
 html[data-ui="dark"] button.danger, html[data-ui="dark"] .btn.danger { color: #fca5a5; }
 html[data-ui="light"] .hubnav a:not(.on) { color: color-mix(in srgb, var(--muted) 82%, var(--text)); }
@@ -3864,3 +3864,13 @@ img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline
 .auth-card button.ghost.sm[data-act="acc-mode"] { font-weight: 700; color: var(--accent-text, var(--accent)); padding: 4px 6px !important; min-height: 0; }
 .open-app summary { cursor: pointer; list-style: none; } .open-app summary::-webkit-details-marker { display: none; }
 .stay-in { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px; }
+/* wiadomości: przytrzymaj własną, żeby usunąć */
+.msg[data-mid] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; transition: transform .25s ease, filter .25s ease; }
+.msg[data-mid].holding { transform: scale(.96); filter: brightness(.92); }
+
+/* ⚡ v355 wydajność na iPhonie: rozmycie (backdrop-filter) na przyklejonych paskach Safari przelicza przy każdej klatce
+   przewijania – zamiast tego pełne tło. Rozmycie zostaje tylko na chwilowych okienkach. */
+#tabs, #sbar, .hubnav, .hubnav::before, #toast { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+#tabs { background: var(--card) !important; }
+#sbar, .hubnav::before { background: var(--bg) !important; }
+#toast { background: #1d2030 !important; }
