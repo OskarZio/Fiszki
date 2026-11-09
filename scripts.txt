@@ -64,3 +64,4 @@ safety.js
 ads.js
 premium.js
 kumul.js
+skoj.js

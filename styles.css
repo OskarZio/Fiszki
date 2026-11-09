@@ -3908,3 +3908,7 @@ img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline
 .kum-owned { display: flex; flex-wrap: wrap; gap: 6px; }
 .kum-cta-ic { font-size: 30px; } .kum-end h2 { margin: 6px 0; }
 @media (prefers-reduced-motion: reduce) { .kum-card { transition: none; } }
+/* 💡 Powtórka skojarzeń (admin) */
+.skoj-hint { margin: 0 auto; } .skoj-hint .hb-t { font-size: 19px; line-height: 1.45; }
+.skoj-rev { margin-top: 12px; } .skoj-rev .card.flash { min-height: 0; }
+.skoj-no { color: #b91c1c !important; }
