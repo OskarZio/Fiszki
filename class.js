@@ -131,7 +131,7 @@ function clsView(id) {
     const mine = S.decks.filter(d => S.notes.some(n => n.deckId === d.id && (n.type === 'basic' || n.type === 'cloze')) && !d.clsSrc);
     body = `${CLS.prev ? `<div class="card cls-prev"><div class="row nowrap"><b class="grow">👀 ${esc(CLS.prev.name)}</b><button class="sm ghost" data-act="cls-prev-close">✕</button></div><div class="pack-list">${CLS.prev.notes.slice(0, 60).map(n => n.type === 'cloze' ? `<div class="pack-it"><span class="tag">luka</span>${fmt(String(n.text).replace(/\{\{c\d+::(.*?)(::.*?)?\}\}/g, '[$1]'))}</div>` : `<div class="pack-it"><b>${fmt(n.front || '')}</b><span>${fmt(n.back || '')}</span></div>`).join('')}${CLS.prev.notes.length > 60 ? `<p class="small muted center">…i ${CLS.prev.notes.length - 60} więcej</p>` : ''}</div><button class="primary block" data-act="cls-add" data-id="${esc(CLS.prev.id)}">📥 Dodaj do moich talii</button></div>` : ''}
       ${CLS.decks.length ? CLS.decks.map(x => `<div class="card cls-deck"><div class="grow"><b>${esc(x.name)}</b><div class="small muted">${x.n} ${plural(x.n, 'fiszka', 'fiszki', 'fiszek')} · ${x.owner === myId() ? 'Ty' : esc(x.nick)} · ${new Date(x.t).toLocaleDateString('pl-PL')}</div></div>
-        <div class="row nowrap"><button class="sm" data-act="cls-prev" data-id="${esc(x.id)}">👀</button><button class="sm primary" data-act="cls-add" data-id="${esc(x.id)}">📥 Do moich</button>${x.owner === myId() || owner ? `<button class="sm ghost" data-act="cls-unshare" data-id="${esc(x.id)}" aria-label="Usuń z klasy">🗑️</button>` : ''}</div></div>`).join('')
+        <div class="row nowrap"><button class="sm" data-act="cls-prev" data-id="${esc(x.id)}">👀</button>${x.owner === myId() ? `<button class="sm primary" data-act="cls-push" data-id="${esc(x.id)}" title="Wyślij zmiany wszystkim w klasie">🔄 Aktualizuj u wszystkich</button>` : `<button class="sm primary" data-act="cls-add" data-id="${esc(x.id)}">📥 Do moich</button>`}${x.owner === myId() || owner ? `<button class="sm ghost" data-act="cls-unshare" data-id="${esc(x.id)}" aria-label="Usuń z klasy">🗑️</button>` : ''}</div></div>`).join('')
         : '<div class="card center"><p class="muted" style="margin:6px 0">Nikt jeszcze nie udostępnił zestawu. Bądź pierwszy!</p></div>'}
       <div class="card"><h3 style="margin-top:0">📤 Udostępnij swój zestaw</h3>${mine.length ? `<div class="row nowrap"><select id="cls-deck" class="grow">${mine.map(d => `<option value="${d.id}">${esc(d.name)} (${S.notes.filter(n => n.deckId === d.id).length})</option>`).join('')}</select><button class="primary" data-act="cls-share">Udostępnij</button></div><p class="small muted" style="margin:6px 0 0">Klasa widzi pytania i odpowiedzi (bez zdjęć). Udostępnij jeszcze raz, żeby zaktualizować.</p>` : '<p class="small muted" style="margin:0">Nie masz talii z fiszkami tekstowymi.</p>'}</div>`;
   } else if (t === 'chat') {
@@ -200,27 +200,50 @@ async function clsAutoSync() {
         await SB.from('class_decks').update({ notes, n: notes.length, name: d.name.replace(/^(👥|🏫)\s*/, '').slice(0, 80), updated_at: new Date().toISOString() }).eq('id', row.id);
       }
     }
-    // członek: moje kopie zestawów z klasy
+    // członek: moje kopie zestawów z klasy – nowe fiszki, poprawione odpowiedzi, usunięte przez autora
     const ds = S.decks.filter(d => d.clsSrc && !String(d.clsSrc).endsWith(':' + d.id)); if (!ds.length) return;
     const r = await SB.from('class_decks').select('id,notes,updated_at').in('id', ds.map(d => d.clsSrc)); if (r.error) return;
-    let added = 0;
+    let added = 0, fixed = 0, gone = 0;
+    const key = n => (n.type === 'cloze' ? n.text : n.front || '').trim().toLowerCase();
     for (const row of r.data || []) {
       const d = ds.find(x => x.clsSrc === row.id), t = Date.parse(row.updated_at) || 0; if (!d || t <= (d.clsAt || 0)) continue;
-      const since = d.clsAt || d.created || 0, key = n => (n.type === 'cloze' ? n.text : n.front || '').trim().toLowerCase();
-      const have = new Set(S.notes.filter(n => n.deckId === d.id).map(key));
-      for (const s of (Array.isArray(row.notes) ? row.notes : []).slice(0, 3000).map(sNote).filter(Boolean)) {
-        if (!(s.created > since) || !key(s) || have.has(key(s))) continue; have.add(key(s));
+      const since = d.clsAt || d.created || 0, src = (Array.isArray(row.notes) ? row.notes : []).slice(0, 3000).map(sNote).filter(Boolean);
+      const rowKeys = new Set(src.map(key).filter(Boolean)), mineNotes = S.notes.filter(n => n.deckId === d.id), byKey = new Map(mineNotes.map(n => [key(n), n]));
+      for (const s of src) {
+        const k = key(s); if (!k) continue; const n = byKey.get(k);
+        if (n) {   // poprawiona przez autora → nowa odpowiedź, postęp nauki zostaje
+          if (s.mod > since && s.type === 'basic' && (n.back !== (s.back || '') || (n.wrong || '') !== (s.wrong || '') || (n.hint || '') !== (s.hint || ''))) {
+            n.back = s.back || ''; n.wrong = s.wrong || ''; n.hint = s.hint || ''; if (s.extra !== undefined) n.extra = s.extra; touch(n); fixed++; }
+          continue;
+        }
+        if (!(s.created > since)) continue;   // stara fiszka, której u siebie nie masz = sam ją usunąłeś – nie wraca
         if (s.type === 'cloze') addNote({ deckId: d.id, type: 'cloze', text: s.text, extra: s.extra || '', hint: s.hint || '' });
         else addNote({ deckId: d.id, type: 'basic', front: s.front || '', back: s.back || '', hint: s.hint || '', extra: s.extra || '', ...(s.wrong ? { wrong: s.wrong } : {}), reverse: !!s.reverse });
-        added++;
+        byKey.set(k, true); added++;
       }
-      d.clsAt = t; touch(d);
+      // usunięte przez autora: tylko fiszki, które wcześniej przyszły z tego zestawu (Twoich własnych nie ruszamy)
+      if (Array.isArray(d.clsKeys)) for (const k of d.clsKeys) if (!rowKeys.has(k)) { const n = mineNotes.find(x => key(x) === k); if (n) { deleteNote(n, true); gone++; } }
+      d.clsKeys = [...rowKeys]; d.clsAt = t; touch(d);
     }
-    save(); if (added) { toast(`🏫 Klasa: +${added} ${plural(added, 'nowa fiszka', 'nowe fiszki', 'nowych fiszek')} w zestawach od klasy`, 4500); render(); }
+    save();
+    if (added || fixed || gone) { toast(`🏫 Zestaw z klasy zaktualizowany: ${[added && `+${added} nowe`, fixed && `${fixed} poprawione`, gone && `${gone} usunięte`].filter(Boolean).join(', ')}`, 5000); render(); }
   } catch { /* stara baza / brak sieci – spróbujemy przy następnej synchronizacji */ }
 }
 // przy dodaniu zestawu do siebie zapamiętujemy moment – później dochodzą tylko fiszki nowsze niż ten moment
 const clsAdd0 = clsAddDeck;
-clsAddDeck = async function (rowId) { const r = await clsAdd0(rowId); const d = S.decks.find(y => y.clsSrc === rowId); if (d && !d.clsAt) { d.clsAt = Date.now(); touch(d); save(); } return r; };
+clsAddDeck = async function (rowId) {
+  const r = await clsAdd0(rowId); const d = S.decks.find(y => y.clsSrc === rowId);
+  if (d) { if (!d.clsAt) d.clsAt = Date.now(); const x = await clsDeckNotes(rowId); if (x) d.clsKeys = x.notes.map(n => (n.type === 'cloze' ? n.text : n.front || '').trim().toLowerCase()).filter(Boolean); touch(d); save(); }
+  return r;
+};
+// 🔄 autor: „Aktualizuj u wszystkich” – wysyła aktualną wersję talii do klasy od razu
+ACTIONS['cls-push'] = async el => {
+  const rowId = el.dataset.id, deckId = String(rowId).split(':').slice(1).join(':'), d = deckById(deckId);
+  if (!d) return toast('Nie masz już tej talii na tym urządzeniu');
+  const notes = S.notes.filter(n => n.deckId === d.id && (n.type === 'basic' || n.type === 'cloze')).slice(0, 3000).map(shareNote);
+  const r = await SB.from('class_decks').update({ notes, n: notes.length, name: d.name.replace(/^(👥|🏫)\s*/, '').slice(0, 80), updated_at: new Date().toISOString() }).eq('id', rowId);
+  if (r.error) return toast(clsErr(r.error), 5000);
+  toast(`🔄 Wysłano „${d.name}” (${notes.length} ${plural(notes.length, "fiszka", "fiszki", "fiszek")}) – u wszystkich zaktualizuje się przy najbliższym otwarciu aplikacji`, 5000); clsOpen(CLS.cur);
+};
 const clsSync0 = cloudSync;
 cloudSync = async function (...a) { const r = await clsSync0.apply(this, a); setTimeout(clsAutoSync, 1500); return r; };
