@@ -156,3 +156,28 @@ viewAdd = function (editId, ...a) {
 // jednorazowo: stare dopiski „literówka” z pakietu Angielski kolokwium → wyjaśnienia, na czym polegał błąd
 const QL_HINT_FIX = {"w Quizlecie: „Adjust a footstraps” (literówka)": "Błąd w Quizlecie: „Adjust a footstraps”. Rodzajnik „a” (= jeden) nie stoi przed liczbą mnogą – footstraps to wiele pasków, więc „the footstraps”.", "w Quizlecie: „Grap the handle” (literówka)": "Błąd w Quizlecie: „Grap”. Takiego słowa nie ma – chwytać = grab. Skojarzenie: grab ≈ grabie, którymi chwytasz liście.", "w Quizlecie: „Joins” (literówka)": "Błąd w Quizlecie: „Joins”. Join = łączyć, dołączać. Staw to joint – z „t” na końcu (stawy = joints).", "w Quizlecie: „Chichen pox” (literówka)": "Błąd w Quizlecie: „Chichen pox”. Kurczak = chicken, ospa wietrzna = chickenpox (pisane razem).", "w Quizlecie było „Menrally handicapped” – to znaczy co innego (niepełnosprawny umysłowo); ruchowa = physically disabled": "W Quizlecie było „Mentally handicapped” – to znaczy niepełnosprawny umysłowo. Niepełnosprawność ruchowa = physically disabled.", "w Quizlecie: „rouing” (literówka)": "Błąd w Quizlecie: „rouing” – to zapis wymowy. Wiosłować = row [czyt. rou], wioślarstwo = rowing.", "w Quizlecie było „Recoverment” – takiego słowa nie ma": "Błąd w Quizlecie: „Recoverment” – takiego słowa nie ma. Recover = wyzdrowieć, recovery = wyzdrowienie.", "w Quizlecie było „Cycle” (= jeździć na rowerze); kolarstwo jako sport = cycling": "W Quizlecie było „Cycle” – to czasownik (jeździć na rowerze). Kolarstwo jako sport = cycling.", "w Quizlecie: „Achivemnet” (literówka)": "Błąd w Quizlecie: „Achivemnet” – przestawione litery. Achieve (osiągnąć) + -ment = achievement.", "w Quizlecie: „lin on your back” (literówka)": "Błąd w Quizlecie: „lin”. Lie = leżeć / połóż się. Nie myl z lay (= kłaść coś).", "w Quizlecie: „bent your knees” (literówka)": "Błąd w Quizlecie: „bent”. Polecenie to bend (zegnij); bent to forma przeszła – „knees bent” = ze zgiętymi kolanami."};
 on('start', () => { let n = 0; for (const x of S.notes) if (x.hint && QL_HINT_FIX[x.hint]) { x.hint = QL_HINT_FIX[x.hint]; touch(x); n++; } if (n) save(); });
+// 🔄 ponowny import talii, którą już masz (np. poprawiona wersja z linku): zamiast dokładać stare + nowe fiszki,
+// pytamy „Zastąpić nową wersją?” – takie same pytania zachowują postęp nauki (dostają nową odpowiedź),
+// fiszki, których nie ma w nowej wersji, są usuwane.
+const packKey = (front, img) => (String(front || '').trim() + (img ? ' ' + img : '')).toLowerCase();
+const importPack0 = importPack;
+importPack = function (P) {
+  if (!P || !P.items?.length || P.__upd) return importPack0(P);
+  const name = P.deck || 'Nowa talia', d = S.decks.find(x => x.name.trim().toLowerCase() === name.toLowerCase());
+  const ns = d ? S.notes.filter(n => n.deckId === d.id) : [];
+  if (!ns.length) return importPack0(P);
+  const byKey = new Map(P.items.map(x => [packKey(x.cloze || x.front, x.img), x]));
+  const stale = ns.filter(n => !byKey.has(packKey(n.type === 'cloze' ? n.text : n.front, n.imgSrc)));
+  const changed = ns.filter(n => { const x = byKey.get(packKey(n.type === 'cloze' ? n.text : n.front, n.imgSrc)); return x && !x.cloze && (x.back !== n.back || (x.wrong || '') !== (n.wrong || '')); });
+  const add = P.items.length - (ns.length - stale.length);
+  if (!stale.length && !changed.length) { P.__upd = 1; return importPack0(P); }
+  askBox({ icon: '🔄', title: `Masz już talię „${d.name}”`, intro: `W aplikacji: ${ns.length} fiszek, w nowej wersji: ${P.items.length}.`,
+    steps: [['🗑️', `${stale.length} starych fiszek nie ma w nowej wersji – zostaną usunięte`], ['✏️', `${changed.length} fiszek dostanie poprawioną odpowiedź (postęp nauki zostaje)`], ['➕', `${Math.max(0, add)} nowych fiszek`]],
+    ok: 'Zastąp nową wersją', cancel: 'Dodaj tylko nowe' }).then(yes => {
+    if (yes) {
+      stale.forEach(n => deleteNote(n, true));
+      for (const n of changed) { const x = byKey.get(packKey(n.front, n.imgSrc)); n.back = x.back; n.wrong = x.wrong || ''; if (x.hint) n.hint = x.hint; touch(n); }
+    }
+    P.__upd = 1; importPack0(P); render();
+  });
+};
