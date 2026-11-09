@@ -33,10 +33,12 @@ Funkcje krwi – regulacyjne | Utrzymuje stałe pH\nreguluje ilość wody i ciś
 Funkcje krwi – immunologiczne (obronne) | Leukocyty niszczą drobnoustroje (fagocytoza)\nwytwarzanie przeciwciał (limfocyty B)\nniszczenie zmienionych komórek, np. nowotworowych (limfocyty T, NK)
 Erytrocyt – budowa | Dwuwklęsła soczewka (krążek)\nok. 7 µm\nbez jądra i organelli – ma je na początku, ale się ich pozbywa\nna powierzchni antygeny (grupa krwi)\nwypełniony hemoglobiną
 Erytrocyt – czas życia, gdzie powstaje, rola | Żyje ok. 120 dni\npowstaje w czerwonym szpiku kostnym (jak każdy element krwi)\nrola transportera – przenosi tlen
+Erytrocyty – ilość | U mężczyzn ok. 4,5–5,5 mln w 1 µl krwi, u kobiet ok. 4–5 mln w 1 µl – to najliczniejsze komórki krwi.
 Erytrocyty żaby a ssaka | [obraz: assets/imports/tkanki-rys/erytrocyty-zaby.webp] Erytrocyty żaby są owalne i MAJĄ jądro; erytrocyty ssaka są okrągłe (dwuwklęsłe) i NIE mają jądra.
 Hemoglobina – co to? | Białko oddechowe i barwnik krwi – ok. 90% masy erytrocytu.
 Budowa hemoglobiny | Część białkowa – globina\nczęść niebiałkowa – hem, zawierający żelazo (Fe²⁺)
 Połączenia hemoglobiny z gazami | Nietrwale – z tlenem i z CO₂ (dlatego może je oddawać)\ntrwale – z tlenkiem węgla (czad) → karboksyhemoglobina (zatrucie)
+Rodzaje hemoglobiny i jej znaczenie | HbA – u dorosłych (2α + 2β)\nHbF – płodowa, mocniej wiąże tlen (pobiera go od matki)\nHbA₂ – mała ilość u dorosłych\nformy: oksyhemoglobina (z O₂), karbaminohemoglobina (z CO₂), karboksyhemoglobina (z czadem – trwała), methemoglobina (Fe³⁺ – nie przenosi O₂)\nznaczenie: transport tlenu z płuc do tkanek\ntransport CO₂ z tkanek do płuc\nbufor – utrzymuje stałe pH krwi
 Leukocyty – cechy ogólne | [obraz: assets/imports/tkanki-rys/krew-ssaka.webp] Heterogenna (zróżnicowana) grupa kulistych komórek z jądrem; dzielimy je na granulocyty i agranulocyty.
 Granulocyty – cechy | Ziarnistości w cytoplazmie\nnietypowe, segmentowane jądro\nkrótko żyją (dni)\nneutrofile, eozynofile, bazofile
 Agranulocyty – cechy | Jądro w całości (niepodzielone), bardzo duże\nmogą się dzielić\nżyją długo\nlimfocyty i monocyty

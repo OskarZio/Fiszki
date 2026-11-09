@@ -180,3 +180,47 @@ Object.assign(ACTIONS, {
     if (r.error) return toast(clsErr(r.error)); clearInterval(CLS.poll); CLS.cur = null; await clsLoad(); go('#/class');
   },
 });
+
+// 🔄 Zestawy klasy aktualizują się same:
+// • właściciel: gdy w talii udostępnionej klasie przybędzie / zmieni się fiszek, zestaw w klasie odświeża się po synchronizacji;
+// • członkowie: w ich kopii „🏫 …” dochodzą TYLKO nowe fiszki (dodane przez autora po tym, jak zestaw do siebie dodali) –
+//   nic nie jest usuwane ani nadpisywane, a fiszki, które ktoś u siebie usunął, nie wracają.
+let CLS_AUTO_T = 0;
+async function clsAutoSync() {
+  if (!cloudOn() || Date.now() - CLS_AUTO_T < 60000) return; CLS_AUTO_T = Date.now();
+  try {
+    // właściciel: moje zestawy w klasach
+    const mine = await SB.from('class_decks').select('id,class_id,n,updated_at').eq('owner', myId());
+    for (const row of mine.data || []) {
+      const deckId = String(row.id).split(':').slice(1).join(':'), d = deckById(deckId); if (!d) continue;
+      const ns = S.notes.filter(n => n.deckId === d.id && (n.type === 'basic' || n.type === 'cloze'));
+      const last = Math.max(0, ...ns.map(n => n.mod || n.created || 0));
+      if (ns.length !== row.n || last > (Date.parse(row.updated_at) || 0)) {
+        const notes = ns.slice(0, 3000).map(shareNote);
+        await SB.from('class_decks').update({ notes, n: notes.length, name: d.name.replace(/^(👥|🏫)\s*/, '').slice(0, 80), updated_at: new Date().toISOString() }).eq('id', row.id);
+      }
+    }
+    // członek: moje kopie zestawów z klasy
+    const ds = S.decks.filter(d => d.clsSrc && !String(d.clsSrc).endsWith(':' + d.id)); if (!ds.length) return;
+    const r = await SB.from('class_decks').select('id,notes,updated_at').in('id', ds.map(d => d.clsSrc)); if (r.error) return;
+    let added = 0;
+    for (const row of r.data || []) {
+      const d = ds.find(x => x.clsSrc === row.id), t = Date.parse(row.updated_at) || 0; if (!d || t <= (d.clsAt || 0)) continue;
+      const since = d.clsAt || d.created || 0, key = n => (n.type === 'cloze' ? n.text : n.front || '').trim().toLowerCase();
+      const have = new Set(S.notes.filter(n => n.deckId === d.id).map(key));
+      for (const s of (Array.isArray(row.notes) ? row.notes : []).slice(0, 3000).map(sNote).filter(Boolean)) {
+        if (!(s.created > since) || !key(s) || have.has(key(s))) continue; have.add(key(s));
+        if (s.type === 'cloze') addNote({ deckId: d.id, type: 'cloze', text: s.text, extra: s.extra || '', hint: s.hint || '' });
+        else addNote({ deckId: d.id, type: 'basic', front: s.front || '', back: s.back || '', hint: s.hint || '', extra: s.extra || '', ...(s.wrong ? { wrong: s.wrong } : {}), reverse: !!s.reverse });
+        added++;
+      }
+      d.clsAt = t; touch(d);
+    }
+    save(); if (added) { toast(`🏫 Klasa: +${added} ${plural(added, 'nowa fiszka', 'nowe fiszki', 'nowych fiszek')} w zestawach od klasy`, 4500); render(); }
+  } catch { /* stara baza / brak sieci – spróbujemy przy następnej synchronizacji */ }
+}
+// przy dodaniu zestawu do siebie zapamiętujemy moment – później dochodzą tylko fiszki nowsze niż ten moment
+const clsAdd0 = clsAddDeck;
+clsAddDeck = async function (rowId) { const r = await clsAdd0(rowId); const d = S.decks.find(y => y.clsSrc === rowId); if (d && !d.clsAt) { d.clsAt = Date.now(); touch(d); save(); } return r; };
+const clsSync0 = cloudSync;
+cloudSync = async function (...a) { const r = await clsSync0.apply(this, a); setTimeout(clsAutoSync, 1500); return r; };
