@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '357';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '358';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -717,6 +717,10 @@ function viewHome() {
   const dayFrac = today / Math.max(1, today + all.total);
   const deckRow = d => {
     const k = deckCounts(d.id);
+    if (d.paused) return `<div class="deck deck-done">
+      <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div><span class="small done-tag">⏸ wstrzymana</span>
+      <button class="sm" data-act="deck-pause" data-id="${d.id}" data-v="0" title="Wznów naukę">▶</button>
+      <button class="sm" data-act="deck-menu" data-id="${d.id}" title="Opcje talii">⋯</button></div>`;
     if (d.done) return `<div class="deck deck-done">
       <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div><span class="small done-tag">🎓 zdane</span>
       <button class="sm" data-act="deck-menu" data-id="${d.id}" title="Opcje talii">⋯</button></div>`;
@@ -731,14 +735,17 @@ function viewHome() {
   const byName = (a, b) => a.name.localeCompare(b.name, 'pl');
   const cats = typeof topicDecks === 'function' && appMode() === 'full' ? S.topics.filter(t => !t.parentId).sort(byName) : [];
   const inCat = new Set();
-  const catHTML = cats.map(t => { const ds = topicDecks(t, true).filter(d => !d.done).sort(byName); ds.forEach(d => inCat.add(d.id)); if (!ds.length) return ''; const k = ds.reduce((a, d) => a + deckCounts(d.id).total, 0);
+  const catHTML = cats.map(t => { const ds = topicDecks(t, true).filter(d => !d.done && !d.paused).sort(byName); ds.forEach(d => inCat.add(d.id)); if (!ds.length) return ''; const k = ds.reduce((a, d) => a + deckCounts(d.id).total, 0);
     return `<div class="deck-cat" data-go="#/topic/${t.id}"><span class="dc-ic">${esc(t.emoji || '📁')}</span><b class="grow">${esc(t.name)}</b><small class="muted">${ds.length} ${plural(ds.length, 'talia', 'talie', 'talii')}${(t.items || []).length ? ` · ${(t.items || []).length} ${plural((t.items || []).length, 'materiał', 'materiały', 'materiałów')}` : ''}${k ? ` · <b class="c-new">${k}</b> na dziś` : ''}</small><span>›</span></div>
       ${ds.map(d => `<div class="deck-in">${deckRow(d)}</div>`).join('')}`; }).join('');
-  const rest = S.decks.filter(d => !inCat.has(d.id) && !d.done).sort(byName).map(deckRow).join('');
+  const rest = S.decks.filter(d => !inCat.has(d.id) && !d.done && !d.paused).sort(byName).map(deckRow).join('');
+  // ⏸ wstrzymane talie: osobna grupa (zwinięta), nic z nich nie przychodzi na naukę
+  const pausedDs = S.decks.filter(d => d.paused && !d.done).sort(byName);
+  const pausedHTML = pausedDs.length ? `<details class="deck-done-grp"><summary class="deck-cat plain"><span class="dc-ic">⏸</span><b class="grow">Wstrzymane</b><small class="muted">${pausedDs.length} ${plural(pausedDs.length, 'talia', 'talie', 'talii')}</small></summary>${pausedDs.map(d => `<div class="deck-in">${deckRow(d)}</div>`).join('')}</details>` : '';
   // 🎓 opanowane / zdane talie: własna kategoria na dole (zwinięta), nie mieszają się z taliami do nauki
   const doneDs = S.decks.filter(d => d.done).sort(byName);
   const doneHTML = doneDs.length ? `<details class="deck-done-grp"><summary class="deck-cat plain"><span class="dc-ic">🎓</span><b class="grow">Opanowane / zdane</b><small class="muted">${doneDs.length} ${plural(doneDs.length, 'talia', 'talie', 'talii')}</small></summary>${doneDs.map(d => `<div class="deck-in">${deckRow(d)}</div>`).join('')}</details>` : '';
-  const decks = catHTML + (catHTML && rest ? '<div class="deck-cat plain"><span class="dc-ic">🗂️</span><b class="grow">Bez kategorii</b></div>' : '') + rest + doneHTML;
+  const decks = catHTML + (catHTML && rest ? '<div class="deck-cat plain"><span class="dc-ic">🗂️</span><b class="grow">Bez kategorii</b></div>' : '') + rest + pausedHTML + doneHTML;
   const sync = S.settings.sync.token ? `<button class="iconbtn" data-act="sync" title="Synchronizuj">🔄</button>` : '';
   return `
   <div class="row nowrap home-head"><div class="grow"><div class="greet">${greeting()}</div><h1>Fiszki</h1></div>${sync}${typeof homeChipHTML === 'function' ? homeChipHTML() : ''}</div>
@@ -846,6 +853,8 @@ function viewDeck(id, q) {
     ${NOTE_SEL ? `<div class="selbar row nowrap"><span class="grow small"><b>${NOTE_SEL.size}</b> zaznaczonych</span>
       <button class="sm" data-act="note-selall" data-id="${id}">${NOTE_SEL.size === notes.length ? 'Odznacz' : 'Wszystkie'}</button>
       <button class="sm" data-act="note-selsus" ${NOTE_SEL.size ? '' : 'disabled'} title="Zaznaczone fiszki znikną z powtórek, ale liczą się jako nauczone">✓ Opanowane</button>
+      <button class="sm" data-act="note-selpause" ${NOTE_SEL.size ? '' : 'disabled'} title="Zaznaczone fiszki nie będą przychodzić na naukę">⏸ Wyłącz z nauki</button>
+      <button class="sm" data-act="note-selresume" ${NOTE_SEL.size ? '' : 'disabled'} title="Przywróć zaznaczone do nauki">▶ Przywróć</button>
       <button class="sm danger-fill" data-act="note-seldel" ${NOTE_SEL.size ? '' : 'disabled'}>🗑 Usuń</button></div>` : ''}
     <div class="spacer"></div>
     <input id="note-search" type="search" placeholder="Szukaj…">
@@ -887,6 +896,7 @@ function notesList(notes, query) {
     if (n.type === 'cloze') { a = clozePlain(n.text); b = ''; tag = 'luki'; }
     else if (n.type === 'occl') { a = n.title || 'Obraz z lukami'; b = n.boxes.map(x => x.label).join(', '); tag = n.style === 'pin' ? 'pałac' : 'obraz'; img = IMG[n.imageId]; }
     else { a = n.front || '(obraz)'; b = n.back; tag = n.reverse ? '⇄' : ''; img = n.imageId && IMG[n.imageId]; }
+    const cs = S.cards.filter(c => c.noteId === n.id); if (cs.length && cs.every(c => c.sus)) tag = cs[0].sus === 'known' ? '✓ opanowana' : cs[0].sus === 'pause' ? '⏸ talia wstrzymana' : '⏸ wyłączona';
     return { n, a, b, tag, img };
   }).filter(r => !qn || norm(r.a + ' ' + r.b + ' ' + (r.n.hint || '')).includes(qn)).slice(0, 300);
   if (!rows.length) return '<p class="muted">Brak fiszek.</p>';
@@ -1056,7 +1066,7 @@ function viewStudy(deckId, mode, q) {
 // ✓ nauczone / 🚫 niepotrzebne: karta wypada z powtórek (przywrócisz ją w widoku talii)
 // przywrócenie z „opanowanych”: nowe karty wracają jako nowe, reszta – na powtórkę, jeśli była odłożona na rok
 function unSus(c) { if (c.preSrs) { c.srs = c.preSrs; delete c.preSrs; } else if (c.srs.due > Date.now() + 300 * DAY) c.srs = { ...c.srs, due: Date.now(), ivl: Math.min(c.srs.ivl, 30) }; }
-const SUS_NAME = { known: 'nauczona – bez powtórek', skip: 'niepotrzebna' };
+const SUS_NAME = { known: 'nauczona – bez powtórek', skip: 'wyłączona z nauki', pause: 'talia wstrzymana' };
 function suspendCard(k) {
   const s = SESSION, c = s?.card; if (!c) return;
   s.undo = { cardId: c.id, sus: true, srs: c.srs }; c.sus = k; if (k === 'known' && c.srs.state === 'new') c.srs = { ...c.srs, state: 'review', due: Date.now() + 365 * DAY, ivl: 365, reps: 1 }; touch(c); save();
@@ -1979,7 +1989,7 @@ const ACTIONS = {
     el.classList.add('flip-out'); setTimeout(turn, 160);
   },
   'card-sus': el => suspendCard(el.dataset.k),
-  'sus-restore': el => { let n = 0; S.cards.forEach(c => { if (c.deckId === el.dataset.id && c.sus) { delete c.sus; delete c.doneDeck; unSus(c); touch(c); n++; } }); const d = deckById(el.dataset.id); if (d?.done) { delete d.done; touch(d); } save(); toast(`↩️ Przywrócono ${n} ${plural(n, 'kartę', 'karty', 'kart')}`); render(); },
+  'sus-restore': el => { let n = 0; S.cards.forEach(c => { if (c.deckId === el.dataset.id && c.sus) { delete c.sus; delete c.doneDeck; unSus(c); touch(c); n++; } }); const d = deckById(el.dataset.id); if (d?.done) { delete d.done; touch(d); } if (d?.paused) { delete d.paused; touch(d); } save(); toast(`↩️ Przywrócono ${n} ${plural(n, 'kartę', 'karty', 'kart')}`); render(); },
   star: () => {
     const n = SESSION?.card && noteById(SESSION.card.noteId); if (!n) return;
     n.star = !n.star; touch(n); save(); toast(n.star ? '⭐ Oznaczono – znajdziesz ją w „Oznaczone”' : 'Usunięto gwiazdkę', 1600); render();
@@ -2041,12 +2051,28 @@ const ACTIONS = {
       ${d.done ? `<button class="primary" data-act="deck-done" data-id="${d.id}" data-v="0">↩️ Przywróć do nauki</button>`
         : `<button class="primary" data-act="deck-done" data-id="${d.id}" data-v="1">🎓 Opanowane – zdałem, bez powtórek</button>`}
       <small class="muted">${d.done ? 'Talia wróci do powtórek (zaległe karty od razu).' : 'Wszystkie fiszki znikną z powtórek, a talia przestanie się liczyć do nauki na dziś. W każdej chwili przywrócisz.'}</small>
+      ${d.done ? '' : d.paused ? `<button data-act="deck-pause" data-id="${d.id}" data-v="0">▶ Wznów naukę</button>` : `<button data-act="deck-pause" data-id="${d.id}" data-v="1">⏸ Wstrzymaj naukę</button>`}
       <button class="danger" data-act="delete-deck" data-id="${d.id}">🗑 Usuń talię</button>
       <button class="ghost" data-act="dmenu-close">Anuluj</button></div>`;
     ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-go],[data-act]')) setTimeout(() => ov.remove()); });
     document.body.append(ov);
   },
   'dmenu-close': () => document.querySelector('.dmenu-ov')?.remove(),
+  // ⏸ wstrzymanie talii: karty znikają z nauki (sus 'pause'); po wznowieniu terminy przesuwamy o czas pauzy – bez zaległości
+  'deck-pause': el => {
+    const d = deckById(el.dataset.id); if (!d) return; const on = el.dataset.v === '1';
+    const go = () => {
+      let n = 0; const shift = on ? 0 : Math.max(0, Date.now() - (d.paused || Date.now()));
+      for (const c of S.cards) if (c.deckId === d.id) {
+        if (on && !c.sus) { c.sus = 'pause'; touch(c); n++; }
+        if (!on && c.sus === 'pause') { delete c.sus; if (c.srs.state !== 'new' && shift) c.srs = { ...c.srs, due: c.srs.due + shift }; touch(c); n++; }
+      }
+      if (on) d.paused = Date.now(); else delete d.paused; touch(d); save();
+      toast(on ? `⏸ „${d.name}” wstrzymana – nie pojawi się na nauce, dopóki jej nie wznowisz` : `▶ „${d.name}” znowu w nauce – terminy przesunięte o czas pauzy`, 4000); render();
+    };
+    if (!on) return go();
+    askBox({ icon: '⏸', title: 'Wstrzymać naukę tej talii?', intro: `„${d.name}”`, steps: [['📭', 'Fiszki nie będą przychodzić na powtórki ani do walk'], ['⏳', 'Postęp zostaje – po wznowieniu nic nie zaległo'], ['▶', 'Wznowisz w menu ⋯ albo przyciskiem ▶ przy talii']], ok: 'Wstrzymaj', cancel: 'Anuluj' }).then(ok => ok && go());
+  },
   'deck-done': el => {
     const d = deckById(el.dataset.id); if (!d) return; const on = el.dataset.v === '1';
     if (on && !confirm(`Oznaczyć „${d.name}” jako zdaną? Wszystkie fiszki znikną z powtórek.`)) return;
@@ -2282,6 +2308,16 @@ Object.assign(ACTIONS, {
   'note-selmode': () => { NOTE_SEL = NOTE_SEL ? null : new Set(); render(); },
   'note-sel': el => { const id = el.dataset.id; NOTE_SEL.has(id) ? NOTE_SEL.delete(id) : NOTE_SEL.add(id); render(); },
   'note-selall': el => { const ids = S.notes.filter(n => n.deckId === el.dataset.id).map(n => n.id); NOTE_SEL = NOTE_SEL.size === ids.length ? new Set() : new Set(ids); render(); },
+  'note-selpause': () => {
+    const ids = NOTE_SEL; let n = 0;
+    S.cards.forEach(c => { if (ids.has(c.noteId) && !c.sus) { c.sus = 'skip'; touch(c); n++; } });
+    NOTE_SEL = null; save(); toast(`⏸ ${n} ${plural(n, 'karta wyłączona', 'karty wyłączone', 'kart wyłączonych')} z nauki – przywrócisz je tutaj („☑️ Zaznacz” → „▶ Przywróć”)`, 4000); render();
+  },
+  'note-selresume': () => {
+    const ids = NOTE_SEL; let n = 0;
+    S.cards.forEach(c => { if (ids.has(c.noteId) && c.sus && c.sus !== 'pause') { delete c.sus; delete c.doneDeck; unSus(c); touch(c); n++; } });
+    NOTE_SEL = null; save(); toast(n ? `▶ Przywrócono ${n} ${plural(n, 'kartę', 'karty', 'kart')} do nauki` : 'Zaznaczone fiszki już są w nauce', 3000); render();
+  },
   'note-selsus': () => {
     const ids = NOTE_SEL; let n = 0;
     S.cards.forEach(c => { if (ids.has(c.noteId) && !c.sus) { c.sus = 'known'; if (c.srs.state === 'new') c.preSrs = c.srs, c.srs = { ...c.srs, state: 'review', due: Date.now() + 365 * DAY, ivl: 365, reps: 1 }; touch(c); n++; } });
