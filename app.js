@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '348';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '349';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -2189,6 +2189,15 @@ document.addEventListener('keydown', e => {
 });
 
 // ============================================================ Start aplikacji
+// 🧹 talia przykładowa „Przykład – anatomia” już nie powstaje; nietknięte kopie (tylko 3 przykładowe fiszki, bez nauki) usuwamy
+function dropSampleDecks() {
+  const SAMPLE = ['Najdłuższa kość w ciele człowieka', 'Ile kości ma dorosły człowiek?'];
+  for (const d of S.decks.filter(x => x.name === 'Przykład – anatomia')) {
+    const ns = S.notes.filter(n => n.deckId === d.id), cs = S.cards.filter(c => c.deckId === d.id);
+    const untouched = ns.length <= 3 && ns.every(n => n.type === 'cloze' ? /dwugłowy ramienia/.test(n.text || '') : SAMPLE.includes(n.front)) && cs.every(c => !(c.srs?.reps > 0));
+    if (untouched) deleteDeck(d);
+  }
+}
 function seed() {
   const d = newDeck('Przykład – anatomia');
   const t = Date.now();
@@ -2206,7 +2215,7 @@ async function init() {
   } catch (e) {
     console.error(e); $('#view').innerHTML = '<div class="card">Nie udało się otworzyć bazy danych. Wyłącz tryb prywatny w Safari.</div>'; return;
   }
-  if (!S) { S = blankState(); seed(); await DB.set('state', S); }
+  if (!S) { S = blankState(); await DB.set('state', S); }   // bez talii przykładowej
   S.games = S.games || [];
   for (const [k, v] of Object.entries(extraState())) if (S[k] == null) S[k] = v;
   S.settings = { ...structuredClone(DEFAULT_SETTINGS), ...S.settings, sync: { ...DEFAULT_SETTINGS.sync, ...(S.settings?.sync || {}) } };
@@ -2296,3 +2305,4 @@ document.addEventListener('click', e => {
   ov.addEventListener('click', () => ov.remove());
   document.body.append(ov);
 }, true);
+on('start', () => { try { dropSampleDecks(); } catch { /* */ } });

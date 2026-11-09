@@ -50,12 +50,12 @@ Płytki krwi (trombocyty) | 2–4 µm\nfragmenty cytoplazmy (nie komórki), bez 
 Hemopoeza | Powstawanie składników krwi (w czerwonym szpiku kostnym); wszystkie powstają z hemocytoblastu – komórki macierzystej.
 
 // ================= TKANKA ŁĄCZNA =================
-Tkanka łączna – cechy | Pochodzi z mezodermy\nma obfitą substancję międzykomórkową\nkomórek jest stosunkowo mało
+Tkanka łączna – cechy | [obraz: assets/imports/histologia/tl-luzna-opis.webp] Pochodzi z mezodermy\nma obfitą substancję międzykomórkową\nkomórek jest stosunkowo mało
 Substancja międzykomórkowa tkanki łącznej | Istota podstawowa – bezpostaciowy żel\nwłókna: kolagenowe, sprężyste, srebrochłonne
 Włókna kolagenowe | [obraz: assets/imports/histologia/wlokna-opis.webp] Są we wszystkich tkankach łącznych; nadają wytrzymałość.
 Włókna sprężyste | Zbudowane z elastyny (białko)\nbiegną w różnych kierunkach, są obok kolagenowych\nodporne na gotowanie\nw strunach głosowych, skórze, małżowinie usznej
 Włókna srebrochłonne | Też zbudowane z kolagenu\npodpora dla komórek – tworzą zrąb (rusztowanie) narządów
-Rodzaje tkanki łącznej | Właściwa: luźna, zbita (np. ścięgna), tłuszczowa, siateczkowa\nszkieletowa: chrzęstna i kostna\npłynna: krew i chłonka
+Rodzaje tkanki łącznej | [obraz: assets/imports/histologia/tl-luzna-opis.webp] Właściwa: luźna, zbita (np. ścięgna), tłuszczowa, siateczkowa\nszkieletowa: chrzęstna i kostna\npłynna: krew i chłonka
 
 // ================= CHRZĄSTKA =================
 Tkanka chrzęstna – cechy | Sztywna i sprężysta\nbierze udział w kostnieniu\nnie jest unaczyniona
@@ -71,12 +71,12 @@ Co rysujemy w chrząstce? | Chondrocyt (z jądrem) w jamce chrzęstnej\ngrupa iz
 // ================= KOŚĆ =================
 Tkanka kostna – cechy | Sole mineralne w substancji międzykomórkowej dają trwałość (twardość)\nobficie unaczyniona i unerwiona\ntworzy szkielet, w kościach jest szpik kostny
 Substancja międzykomórkowa kości | Część organiczna – głównie włókna kolagenowe (elastyczność)\nczęść nieorganiczna – sole mineralne, głównie fosforany wapnia (twardość)
-Okostna | Błona pokrywająca kość z zewnątrz; ma dużo komórek kościotwórczych (osteoblastów), naczynia i nerwy\nodżywia kość, odpowiada za wzrost na grubość i gojenie złamań
+Okostna | [obraz: assets/imports/histologia/kosc-trzon-opis.webp] Błona pokrywająca kość z zewnątrz; ma dużo komórek kościotwórczych (osteoblastów), naczynia i nerwy\nodżywia kość, odpowiada za wzrost na grubość i gojenie złamań
 Komórki tkanki kostnej | [obraz: assets/imports/histologia/kom-kosci-opis.webp] Osteoblasty – kościotwórcze (budują kość)\nosteocyty – dojrzałe, zawsze tylko 1 w jamce kostnej, łączą się kanalikami kostnymi wypustkami cytoplazmatycznymi\nosteoklasty – rozkładają kość (jak makrofagi), mogą mieć kilka jąder
 Kość zbita – budowa | [obraz: assets/imports/histologia/osteon-opis.webp] Zbudowana z osteonów\nosteon: kanał Haversa w środku + blaszki kostne systemowe ułożone wokół niego\nmiędzy blaszkami osteocyty w jamkach kostnych\nmiędzy osteonami blaszki międzysystemowe
 Kanał Haversa | Kanał w środku osteonu – biegną w nim naczynia krwionośne i nerwy.
 Kość gąbczasta | Zbudowana z beleczek kostnych, między nimi szpik; jest w nasadach kości długich i wnętrzu kości płaskich.
 Kość zbita a gąbczasta | Zbita – lita, z osteonami, w trzonach i na powierzchni kości; gąbczasta – beleczki, lżejsza, ze szpikiem w środku.
 Regeneracja kości | Dobra – kość ciągle się przebudowuje (osteoklasty rozkładają, osteoblasty budują); złamanie goi się dzięki okostnej: krwiak → kostnina → przebudowa w kość.
-Kość a gospodarka wapniem | Kość to magazyn wapnia (ok. 99% wapnia w organizmie)\ngdy wapnia we krwi jest mało – osteoklasty uwalniają go z kości (parathormon)\ngdy dużo – wapń jest odkładany w kości (kalcytonina)
+Kość a gospodarka wapniem | [obraz: assets/imports/histologia/wapn-opis.webp] Kość to magazyn wapnia (ok. 99% wapnia w organizmie)\ngdy wapnia we krwi jest mało – osteoklasty uwalniają go z kości (parathormon)\ngdy dużo – wapń jest odkładany w kości (kalcytonina)
 Co rysujemy w kości zbitej? | Osteon\nkanał Haversa\nblaszki kostne systemowe\nosteocyty w jamkach kostnych\nblaszki kostne międzysystemowe

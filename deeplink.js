@@ -60,7 +60,7 @@ ROUTES.import = (parts, q) => {
 };
 // gdy ktoś zaloguje się później: dodaj czekającą talię po synchronizacji
 const shareSync0 = cloudSync;
-cloudSync = async function (...a) { const r = await shareSync0.apply(this, a); if (cloudOn() && (pendGet() || SB_USER?.user_metadata?.pending_deck)) setTimeout(pendProcess, 300); return r; };
+cloudSync = async function (...a) { const r = await shareSync0.apply(this, a); try { if (S.decks.some(d => d.name === 'Przykład – anatomia')) { dropSampleDecks(); render(); } } catch { /* */ } if (cloudOn() && (pendGet() || SB_USER?.user_metadata?.pending_deck)) setTimeout(pendProcess, 300); return r; };
 
 // 📱 iPhone: link otwiera się w Safari, a aplikacja z ekranu głównego ma osobne logowanie i dane.
 // W Safari: „Kopiuj link” + jak otworzyć w aplikacji / dodać skrót. W aplikacji: „Wklej link do talii”.
