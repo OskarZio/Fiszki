@@ -1,0 +1,151 @@
+#fiszki
+#talia: Tkanki – quiz
+#przedmiot: medycyna
+// Tkanki bez mikroskopu i barwień. Wersja do grania (boss, wieża, hydra, test ABCD): krótka odpowiedź + 3 podobne błędne.
+
+
+// ---------- ĆW2 nabłonki
+Nabłonek wyściełający naczynia krwionośne | Śródbłonek (jednowarstwowy płaski) | ✗ Mezotelium (wielowarstwowy płaski); Jednowarstwowy sześcienny; Przejściowy
+Nabłonek pokrywający opłucną i otrzewną | Mezotelium (jednowarstwowy płaski) | ✗ Śródbłonek (wielorzędowy); Jednowarstwowy walcowaty; Wielowarstwowy płaski
+Nabłonek pęcherzyków tarczycy | Jednowarstwowy sześcienny | ✗ Jednowarstwowy walcowaty; Wielorzędowy; Jednowarstwowy płaski
+Nabłonek kanalików nerkowych | Jednowarstwowy sześcienny | ✗ Przejściowy; Wielowarstwowy płaski; Wielorzędowy migawkowy
+Nabłonek jelita cienkiego | Jednowarstwowy walcowaty z rąbkiem szczoteczkowym | ✗ Jednowarstwowy walcowaty migawkowy; Wielorzędowy migawkowy; Wielowarstwowy walcowaty
+Nabłonek żołądka | Jednowarstwowy walcowaty (bez komórek kubkowych) | ✗ Jednowarstwowy walcowaty z komórkami kubkowymi; Wielowarstwowy płaski; Jednowarstwowy sześcienny
+Nabłonek jajowodu | Jednowarstwowy walcowaty migawkowy | ✗ Wielorzędowy migawkowy; Jednowarstwowy sześcienny; Przejściowy
+Nabłonek tchawicy | Wielorzędowy walcowaty migawkowy z komórkami kubkowymi | ✗ Jednowarstwowy walcowaty migawkowy; Wielowarstwowy płaski; Wielorzędowy ze stereociliami
+Nabłonek najądrza | Wielorzędowy walcowaty ze stereociliami | ✗ Wielorzędowy migawkowy; Jednowarstwowy sześcienny; Przejściowy
+Nabłonek przełyku | Wielowarstwowy płaski nierogowaciejący | ✗ Wielowarstwowy płaski rogowaciejący; Jednowarstwowy walcowaty; Przejściowy
+Nabłonek skóry (naskórek) | Wielowarstwowy płaski rogowaciejący | ✗ Wielowarstwowy płaski nierogowaciejący; Wielorzędowy; Przejściowy
+Nabłonek pęcherza moczowego | Przejściowy (urotelium) | ✗ Wielowarstwowy płaski; Wielorzędowy; Jednowarstwowy sześcienny
+Nabłonek rogówki | Wielowarstwowy płaski nierogowaciejący | ✗ Wielowarstwowy płaski rogowaciejący; Jednowarstwowy płaski; Przejściowy
+Nabłonek, w którym wszystkie komórki dotykają błony podstawnej, a jądra leżą na różnych wysokościach | Wielorzędowy | ✗ Wielowarstwowy; Przejściowy; Jednowarstwowy walcowaty
+Komórki parasolowate są typowe dla nabłonka | Przejściowego | ✗ Płaskiego rogowaciejącego; Wielorzędowego; Walcowatego
+Warstwa naskórka bez jąder | Rogowa | ✗ Kolczysta; Ziarnista; Podstawna
+Najgłębsza warstwa naskórka (rozrodcza) | Podstawna | ✗ Kolczysta; Ziarnista; Jasna
+Warstwa naskórka obecna tylko w skórze grubej | Jasna | ✗ Ziarnista; Kolczysta; Rogowa
+Główny kolagen blaszki podstawnej | Typu IV | ✗ Typu I; Typu II; Typu III
+Jak odżywiany jest nabłonek? | Przez dyfuzję z naczyń tkanki łącznej | ✗ Przez własne naczynia włosowate; Przez naczynia chłonne nabłonka; Przez kanały Volkmanna
+Czy nabłonek jest unaczyniony? | Nie | ✗ Tak, bogato; Tylko wielowarstwowy; Tylko gruczołowy
+Czy nabłonek jest unerwiony? | Tak – wolne zakończenia nerwowe | ✗ Nie; Tylko nabłonek jelita; Tylko przez błonę podstawną bez wnikania
+Połączenie uszczelniające przestrzeń międzykomórkową | Obwódka zamykająca (tight junction) | ✗ Desmosom; Neksus; Hemidesmosom
+Połączenie mocujące komórkę do błony podstawnej | Hemidesmosom | ✗ Desmosom; Obwódka zamykająca; Neksus
+Połączenie umożliwiające przepływ jonów między komórkami | Neksus (gap junction) | ✗ Desmosom; Obwódka zwierająca; Hemidesmosom
+Struktura zwiększająca powierzchnię wchłaniania | Mikrokosmki | ✗ Rzęski; Stereocilia ruchome; Desmosomy
+Gruczoł jednokomórkowy | Komórka kubkowa | ✗ Komórka parasolowata; Komórka podstawna; Mastocyt
+Wydzielanie, w którym rozpada się cała komórka | Holokrynowe (gruczoły łojowe) | ✗ Merokrynowe (ślinianki); Apokrynowe (gruczoł mlekowy); Endokrynowe (tarczyca)
+Wydzielanie przez egzocytozę bez utraty części komórki | Merokrynowe | ✗ Holokrynowe; Apokrynowe; Parakrynowe
+Wydzielanie z oderwaniem szczytu komórki | Apokrynowe (gruczoł mlekowy) | ✗ Merokrynowe (trzustka); Holokrynowe (łojowe); Autokrynowe
+Gruczoły bez przewodu wyprowadzającego | Dokrewne (wewnątrzwydzielnicze) | ✗ Zewnątrzwydzielnicze; Złożone cewkowe; Jednokomórkowe
+
+// ---------- ĆW3 krew
+Udział osocza w objętości krwi | ok. 55% | ✗ ok. 45%; ok. 90%; ok. 30%
+Objętość krwi dorosłego | 5–6 litrów | ✗ 2–3 litry; 8–10 litrów; 3–4 litry
+Osocze bez fibrynogenu to | Surowica | ✗ Chłonka; Hematokryt; Płyn tkankowy
+Białko osocza utrzymujące ciśnienie onkotyczne | Albumina | ✗ Fibrynogen; Gamma-globulina; Hemoglobina
+Kształt erytrocytu | Dwuwklęsły krążek | ✗ Dwuwypukła soczewka; Kula; Wrzeciono
+Średnica erytrocytu | 7–8 µm | ✗ 12–14 µm; 2–4 µm; 15–20 µm
+Czas życia erytrocytu | ok. 120 dni | ✗ ok. 10 dni; ok. 30 dni; ok. 1 rok
+Gdzie niszczone są stare erytrocyty? | Głównie w śledzionie | ✗ Głównie w nerkach; W grasicy; W węzłach chłonnych
+Liczba erytrocytów u mężczyzny | 4,5–5,5 mln/µl | ✗ 4–10 tys./µl; 150–400 tys./µl; 1–2 mln/µl
+Hormon pobudzający erytropoezę | Erytropoetyna (nerki) | ✗ Trombopoetyna (wątroba); Kalcytonina; Parathormon
+Budowa HbA | 2α + 2β | ✗ 2α + 2γ; 2α + 2δ; 4β
+Hemoglobina płodowa | HbF (2α2γ) | ✗ HbA₂ (2α2δ); HbA (2α2β); HbS
+Ile O₂ wiąże jedna cząsteczka hemoglobiny? | 4 | ✗ 1; 2; 8
+Stopień utlenienia żelaza w hemie przenoszącym O₂ | Fe²⁺ | ✗ Fe³⁺; Fe⁰; Fe⁴⁺
+Połączenie hemoglobiny z tlenkiem węgla | Karboksyhemoglobina | ✗ Karbaminohemoglobina; Methemoglobina; Oksyhemoglobina
+Połączenie hemoglobiny z CO₂ | Karbaminohemoglobina | ✗ Karboksyhemoglobina; Oksyhemoglobina; Methemoglobina
+Hemoglobina z Fe³⁺, nieprzenosząca O₂ | Methemoglobina | ✗ Karboksyhemoglobina; Oksyhemoglobina; Deoksyhemoglobina
+Liczba leukocytów | 4–10 tys./µl | ✗ 150–400 tys./µl; 4–5 mln/µl; 1–2 tys./µl
+Najliczniejsze leukocyty | Neutrofile (50–70%) | ✗ Limfocyty (50–70%); Monocyty (20–40%); Eozynofile (10–20%)
+Odsetek limfocytów we krwi | 20–40% | ✗ 50–70%; 2–8%; 0–1%
+Najrzadszy leukocyt | Bazofil | ✗ Eozynofil; Monocyt; Limfocyt
+Największy leukocyt | Monocyt | ✗ Limfocyt; Neutrofil; Bazofil
+Jądro 3–5-płatowe ma | Neutrofil | ✗ Eozynofil; Monocyt; Limfocyt
+Jądro dwupłatowe i pomarańczowe ziarnistości ma | Eozynofil | ✗ Neutrofil; Bazofil; Monocyt
+Ciemne ziarnistości zasłaniające jądro ma | Bazofil | ✗ Eozynofil; Neutrofil; Limfocyt
+Jądro nerkowate ma | Monocyt | ✗ Limfocyt; Neutrofil; Eozynofil
+Duże okrągłe jądro i wąski rąbek cytoplazmy ma | Limfocyt | ✗ Monocyt; Bazofil; Neutrofil pałeczkowaty
+Leukocyt pierwszej linii w ostrym zapaleniu bakteryjnym | Neutrofil | ✗ Eozynofil; Bazofil; Limfocyt T
+Bazofil zawiera | Heparynę i histaminę | ✗ Hemoglobinę i mioglobinę; Lizozym i laktoferynę; Perforynę i granzymy
+Monocyt w tkankach staje się | Makrofagiem | ✗ Komórką plazmatyczną; Mastocytem; Fibroblastem
+Limfocyt B po aktywacji staje się | Komórką plazmatyczną | ✗ Makrofagiem; Limfocytem T cytotoksycznym; Komórką NK
+Limfocyty odpowiedzialne za odporność komórkową | Limfocyty T | ✗ Limfocyty B; Komórki plazmatyczne; Eozynofile
+Płytki krwi powstają z | Megakariocytów | ✗ Monocytów; Erytroblastów; Mastocytów
+Liczba płytek krwi | 150–400 tys./µl | ✗ 4–10 tys./µl; 4–5 mln/µl; 20–40 tys./µl
+Czas życia płytek krwi | 8–10 dni | ✗ 120 dni; 1–2 dni; 30–40 dni
+Gdzie zachodzi hemopoeza u dorosłego? | W szpiku czerwonym | ✗ W wątrobie; W szpiku żółtym; W śledzionie
+Odporność od urodzenia, nieswoista, bez pamięci | Wrodzona | ✗ Nabyta czynna; Nabyta bierna; Humoralna swoista
+Cecha odporności nabytej | Pamięć immunologiczna | ✗ Działanie natychmiastowe; Nieswoistość; Brak udziału limfocytów
+Odporność po szczepieniu | Nabyta czynna sztuczna | ✗ Nabyta bierna sztuczna; Nabyta czynna naturalna; Wrodzona
+Przeciwciała matki u noworodka | Nabyta bierna naturalna | ✗ Nabyta czynna naturalna; Nabyta bierna sztuczna; Wrodzona
+Przeciwciała przechodzące przez łożysko | IgG | ✗ IgM; IgA; IgE
+Przeciwciała pierwszej odpowiedzi | IgM | ✗ IgG; IgA; IgD
+Przeciwciała błon śluzowych i mleka | IgA | ✗ IgE; IgG; IgM
+Przeciwciała związane z alergią | IgE | ✗ IgA; IgD; IgM
+
+// ---------- ĆW4 tkanka łączna i chrząstka
+Z czego pochodzi tkanka łączna? | Z mezenchymy | ✗ Z ektodermy; Z endodermy; Z grzebienia nerwowego wyłącznie
+Komórka wytwarzająca włókna tkanki łącznej | Fibroblast | ✗ Makrofag; Mastocyt; Plazmocyt
+Komórka z heparyną i histaminą w tkance łącznej | Komórka tuczna (mastocyt) | ✗ Komórka plazmatyczna; Fibroblast; Makrofag
+Jądro w układzie „szprych koła” ma | Komórka plazmatyczna | ✗ Mastocyt; Fibroblast; Adipocyt
+Komórka sygnetowata to | Adipocyt tkanki tłuszczowej żółtej | ✗ Adipocyt tkanki brunatnej; Komórka kubkowa; Plazmocyt
+Najliczniejsze włókna tkanki łącznej | Kolagenowe | ✗ Sprężyste; Siateczkowe; Mięśniowe
+Typ kolagenu w ścięgnach, skórze i kości | Typu I | ✗ Typu II; Typu III; Typu IV
+Typ kolagenu w chrząstce szklistej | Typu II | ✗ Typu I; Typu III; Typu IV
+Typ kolagenu we włóknach siateczkowych | Typu III | ✗ Typu I; Typu II; Typu IV
+Włókna srebrochłonne (argyrofilne) to | Siateczkowe | ✗ Sprężyste; Kolagenowe typu I; Mięśniowe
+Witamina potrzebna do syntezy kolagenu | Witamina C | ✗ Witamina D; Witamina K; Witamina A
+Tkanka łączna ścięgna | Zbita regularna | ✗ Zbita nieregularna; Luźna; Siateczkowa
+Tkanka łączna skóry właściwej (warstwa siateczkowata) | Zbita nieregularna | ✗ Zbita regularna; Luźna; Tłuszczowa
+Tkanka łączna węzłów chłonnych i szpiku | Siateczkowa | ✗ Luźna; Zbita regularna; Galaretowata
+Tkanka tłuszczowa z wieloma kropelkami i centralnym jądrem | Brunatna | ✗ Żółta (biała); Siateczkowa; Galaretowata
+Komórki dojrzałej chrząstki | Chondrocyty | ✗ Osteocyty; Fibrocyty; Chondroklasty
+Jamka z chondrocytem to | Chondroplast | ✗ Lakuna Howshipa; Kanał Haversa; Grupa izogeniczna
+Grupa chondrocytów z jednej komórki macierzystej | Grupa izogeniczna | ✗ Osteon; Chondroplast; Macierz terytorialna
+Czy chrząstka ma naczynia krwionośne? | Nie | ✗ Tak, bogato; Tylko włóknista; Tylko sprężysta
+Jak odżywiana jest chrząstka? | Dyfuzją z ochrzęstnej lub mazi stawowej | ✗ Przez kanały Haversa; Przez własne naczynia; Przez kanały Volkmanna
+Chrząstka tchawicy i żeber | Szklista | ✗ Sprężysta; Włóknista; Kostniejąca
+Chrząstka małżowiny usznej i nagłośni | Sprężysta | ✗ Szklista; Włóknista; Stawowa
+Chrząstka krążka międzykręgowego i spojenia łonowego | Włóknista | ✗ Szklista; Sprężysta; Galaretowata
+Chrząstka bez ochrzęstnej | Włóknista (i stawowa) | ✗ Sprężysta; Szklista żebrowa; Każda
+Chondrocyty ułożone w szeregach między pęczkami kolagenu | Chrząstka włóknista | ✗ Chrząstka szklista; Chrząstka sprężysta; Kość splotowata
+Wzrost chrząstki przez podziały chondrocytów w jej wnętrzu | Śródmiąższowy (interstycjalny) | ✗ Aplozycyjny; Okostnowy; Przez nawarstwianie
+Wzrost chrząstki od ochrzęstnej | Aplozycyjny (przez nawarstwianie) | ✗ Śródmiąższowy; Interstycjalny; Śródkostny
+Regeneracja chrząstki | Słaba | ✗ Bardzo dobra; Pełna w 5 dni; Taka jak nabłonka
+
+// ---------- ĆW5 kość
+Mineralny składnik kości | Hydroksyapatyt | ✗ Węglan magnezu; Fluoroapatyt wyłącznie; Szczawian wapnia
+Główny kolagen kości | Typu I | ✗ Typu II; Typu III; Typu IV
+Udział składników mineralnych w kości | ok. 65% | ✗ ok. 30%; ok. 90%; ok. 10%
+Ile wapnia ustroju jest w kościach? | ok. 99% | ✗ ok. 50%; ok. 75%; ok. 10%
+Komórka tworząca osteoid | Osteoblast | ✗ Osteoklast; Osteocyt; Chondrocyt
+Komórka zamknięta w jamce z wypustkami w kanalikach | Osteocyt | ✗ Osteoblast; Osteoklast; Komórka okrywająca
+Duża wielojądrowa komórka resorbująca kość | Osteoklast | ✗ Osteoblast; Osteocyt; Megakariocyt
+Zatoka, w której leży osteoklast | Zatoka Howshipa | ✗ Kanał Haversa; Kanał Volkmanna; Jamka kostna
+Podstawowa jednostka kości zbitej | Osteon (system Haversa) | ✗ Beleczka kostna; Grupa izogeniczna; Kanał Volkmanna
+Co biegnie w kanale Haversa? | Naczynia i nerwy | ✗ Osteocyty; Szpik czerwony; Chondrocyty
+Kanały łączące kanały Haversa (poprzeczne) | Kanały Volkmanna | ✗ Kanaliki kostne; Kanały Sharpeya; Zatoki Howshipa
+Granica osteonu | Linia cementowa | ✗ Blaszka okalająca; Okostna; Śródkostna
+Resztki starych osteonów | Blaszki międzysystemowe | ✗ Blaszki okalające zewnętrzne; Blaszki koncentryczne; Beleczki
+Kość z beleczkami bez osteonów | Gąbczasta | ✗ Zbita; Splotowata korowa; Chrzęstna
+Gdzie przeważa kość gąbczasta? | W nasadach kości długich | ✗ W trzonach kości długich; W okostnej; W kościach płaskich tylko zewnątrz
+Kość młoda, gojąca się, o nieuporządkowanych włóknach | Grubowłóknista (splotowata) | ✗ Blaszkowata zbita; Blaszkowata gąbczasta; Chrzęstna
+Warstwa okostnej z osteoblastami | Wewnętrzna rozrodcza (osteogenna) | ✗ Zewnętrzna włóknista; Śródkostna; Blaszki okalające
+Włókna mocujące okostną do kości | Włókna Sharpeya | ✗ Włókna siateczkowe; Włókna sprężyste; Linie cementowe
+Błona wyściełająca jamę szpikową | Śródkostna | ✗ Okostna; Ochrzęstna; Błona maziowa
+Kostnienie kości płaskich czaszki | Na podłożu łącznotkankowym | ✗ Na podłożu chrzęstnym; Przez chrząstkę włóknistą; Ze śródkostnej
+Kostnienie kości długich | Na podłożu chrzęstnym | ✗ Na podłożu łącznotkankowym; Tylko z okostnej; Bez modelu chrzęstnego
+Wzrost kości na długość odbywa się dzięki | Chrząstce nasadowej | ✗ Okostnej; Śródkostnej; Kanałom Haversa
+Wzrost kości na grubość odbywa się dzięki | Okostnej | ✗ Chrząstce nasadowej; Szpikowi; Chrząstce stawowej
+Prawidłowe stężenie wapnia we krwi | 2,25–2,6 mmol/l | ✗ 0,5–1 mmol/l; 4,5–5,5 mmol/l; 135–145 mmol/l
+Hormon podnoszący poziom wapnia | Parathormon | ✗ Kalcytonina; Insulina; Glukagon
+Skąd pochodzi parathormon? | Z przytarczyc | ✗ Z komórek C tarczycy; Z nerek; Z przysadki
+Hormon obniżający poziom wapnia | Kalcytonina | ✗ Parathormon; Kalcytriol; Kortyzol
+Skąd pochodzi kalcytonina? | Z komórek C tarczycy | ✗ Z przytarczyc; Z kory nadnerczy; Z wątroby
+Gdzie powstaje aktywna witamina D (kalcytriol)? | W nerce | ✗ W wątrobie; W skórze; W jelicie
+Działanie kalcytriolu | ↑ wchłanianie wapnia w jelicie | ✗ ↓ wchłanianie wapnia w jelicie; Hamowanie mineralizacji; ↑ wydalanie wapnia z moczem
+Niedobór witaminy D u dzieci | Krzywica | ✗ Osteoporoza; Szkorbut; Osteomalacja
+Niedobór witaminy D u dorosłych | Osteomalacja | ✗ Krzywica; Szkorbut; Osteopetroza
+Przewaga resorpcji nad tworzeniem, krucha kość | Osteoporoza | ✗ Osteomalacja; Krzywica; Osteopetroza
+Pierwszy etap gojenia złamania | Krwiak | ✗ Kostnina twarda; Kostnina miękka; Przebudowa
+
