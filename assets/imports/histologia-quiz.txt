@@ -1,0 +1,283 @@
+#fiszki
+#talia: Histologia ĆW1–ĆW5 (quiz)
+#przedmiot: medycyna
+// Wersja do grania (boss, wieża, hydra, test ABCD): krótka odpowiedź + 3 podobne błędne.
+
+// ---------- ĆW1 mikroskop i preparatyka
+Powiększenie mikroskopu: okular 10×, obiektyw 40× | 400× | ✗ 50×; 4000×; 40×
+Zdolność rozdzielcza mikroskopu świetlnego | ok. 0,2 µm | ✗ ok. 2 µm; ok. 0,2 nm; ok. 20 µm
+Która część skupia światło na preparacie? | Kondensor | ✗ Przysłona; Okular; Obiektyw
+Która część reguluje ilość światła i kontrast? | Przysłona (diafragma) | ✗ Kondensor; Śruba mikrometryczna; Rewolwer
+Którą śrubą ustawia się ostrość przy dużym powiększeniu? | Mikrometryczną | ✗ Makrometryczną; Śrubą kondensora; Śrubą stolika
+Na czym osadzone są obiektywy? | Na rewolwerze | ✗ Na tubusie; Na kondensorze; Na stoliku
+Czego używa się z obiektywem 100×? | Olejku immersyjnego | ✗ Wody destylowanej; Ksylenu; Balsamu kanadyjskiego
+Od jakiego obiektywu zaczyna się oglądanie preparatu? | Od najmniejszego | ✗ Od największego; Od immersyjnego; Od dowolnego
+Najczęstszy utrwalacz w histologii | Formalina | ✗ Ksylen; Parafina; Eozyna
+W czym zatapia się materiał przed krojeniem? | W parafinie | ✗ W formalinie; W ksylenie; W alkoholu
+Czym odwadnia się materiał? | Alkoholami o rosnącym stężeniu | ✗ Alkoholami o malejącym stężeniu; Formaliną; Wodą destylowaną
+Na czym kroi się skrawki? | Na mikrotomie | ✗ Na wirówce; Na kriostacie zawsze; Na szkiełku podstawowym
+Typowa grubość skrawka parafinowego | 5–10 µm | ✗ 50–100 µm; 0,5–1 µm; 1 mm
+Najczęstsze barwienie przeglądowe | Hematoksylina i eozyna | ✗ Metoda PAS; Impregnacja srebrem; Sudan III
+Hematoksylina barwi jądra na kolor | Fioletowo-niebieski | ✗ Różowy; Pomarańczowy; Czarny
+Eozyna barwi cytoplazmę na kolor | Różowy | ✗ Fioletowy; Niebieski; Zielony
+Struktura zasadochłonna (bazofilna) | Jądro komórkowe | ✗ Erytrocyt; Włókna kolagenowe; Ziarnistości eozynofila
+Struktura kwasochłonna (eozynofilna) | Erytrocyt | ✗ Jądro komórkowe; Rybosomy; Ziarnistości bazofila
+Reakcja wykrywająca glikogen i śluz | PAS | ✗ Sudan III; Orceina; Impregnacja srebrem
+Czym barwi się włókna sprężyste? | Orceiną / rezorcyną-fuksyną | ✗ Eozyną; Sudanem III; Błękitem toluidyny
+Czym uwidacznia się włókna siateczkowe? | Solami srebra | ✗ Orceiną; Sudanem czarnym; Eozyną
+Czym barwi się tłuszcze? | Sudanem III | ✗ Hematoksyliną; Orceiną; Odczynnikiem Schiffa
+Barwienie zmieniające kolor barwnika (np. mastocyty w błękicie toluidyny) | Metachromazja | ✗ Ortochromazja; Argyrofilia; Bazofilia
+Zmiana w preparacie powstała przy jego przygotowaniu | Artefakt | ✗ Metaplazja; Metachromazja; Autoliza
+
+// ---------- ĆW2 nabłonki
+Nabłonek wyściełający naczynia krwionośne | Śródbłonek (jednowarstwowy płaski) | ✗ Mezotelium (wielowarstwowy płaski); Jednowarstwowy sześcienny; Przejściowy
+Nabłonek pokrywający opłucną i otrzewną | Mezotelium (jednowarstwowy płaski) | ✗ Śródbłonek (wielorzędowy); Jednowarstwowy walcowaty; Wielowarstwowy płaski
+Nabłonek pęcherzyków tarczycy | Jednowarstwowy sześcienny | ✗ Jednowarstwowy walcowaty; Wielorzędowy; Jednowarstwowy płaski
+Nabłonek kanalików nerkowych | Jednowarstwowy sześcienny | ✗ Przejściowy; Wielowarstwowy płaski; Wielorzędowy migawkowy
+Nabłonek jelita cienkiego | Jednowarstwowy walcowaty z rąbkiem szczoteczkowym | ✗ Jednowarstwowy walcowaty migawkowy; Wielorzędowy migawkowy; Wielowarstwowy walcowaty
+Nabłonek żołądka | Jednowarstwowy walcowaty (bez komórek kubkowych) | ✗ Jednowarstwowy walcowaty z komórkami kubkowymi; Wielowarstwowy płaski; Jednowarstwowy sześcienny
+Nabłonek jajowodu | Jednowarstwowy walcowaty migawkowy | ✗ Wielorzędowy migawkowy; Jednowarstwowy sześcienny; Przejściowy
+Nabłonek tchawicy | Wielorzędowy walcowaty migawkowy z komórkami kubkowymi | ✗ Jednowarstwowy walcowaty migawkowy; Wielowarstwowy płaski; Wielorzędowy ze stereociliami
+Nabłonek najądrza | Wielorzędowy walcowaty ze stereociliami | ✗ Wielorzędowy migawkowy; Jednowarstwowy sześcienny; Przejściowy
+Nabłonek przełyku | Wielowarstwowy płaski nierogowaciejący | ✗ Wielowarstwowy płaski rogowaciejący; Jednowarstwowy walcowaty; Przejściowy
+Nabłonek skóry (naskórek) | Wielowarstwowy płaski rogowaciejący | ✗ Wielowarstwowy płaski nierogowaciejący; Wielorzędowy; Przejściowy
+Nabłonek pęcherza moczowego | Przejściowy (urotelium) | ✗ Wielowarstwowy płaski; Wielorzędowy; Jednowarstwowy sześcienny
+Nabłonek rogówki | Wielowarstwowy płaski nierogowaciejący | ✗ Wielowarstwowy płaski rogowaciejący; Jednowarstwowy płaski; Przejściowy
+Nabłonek, w którym wszystkie komórki dotykają błony podstawnej, a jądra leżą na różnych wysokościach | Wielorzędowy | ✗ Wielowarstwowy; Przejściowy; Jednowarstwowy walcowaty
+Komórki parasolowate są typowe dla nabłonka | Przejściowego | ✗ Płaskiego rogowaciejącego; Wielorzędowego; Walcowatego
+Warstwa naskórka bez jąder | Rogowa | ✗ Kolczysta; Ziarnista; Podstawna
+Najgłębsza warstwa naskórka (rozrodcza) | Podstawna | ✗ Kolczysta; Ziarnista; Jasna
+Warstwa naskórka obecna tylko w skórze grubej | Jasna | ✗ Ziarnista; Kolczysta; Rogowa
+Główny kolagen blaszki podstawnej | Typu IV | ✗ Typu I; Typu II; Typu III
+Glikoproteina blaszki podstawnej | Laminina | ✗ Fibrylina; Elastyna; Osteokalcyna
+Jak odżywiany jest nabłonek? | Przez dyfuzję z naczyń tkanki łącznej | ✗ Przez własne naczynia włosowate; Przez naczynia chłonne nabłonka; Przez kanały Volkmanna
+Czy nabłonek jest unaczyniony? | Nie | ✗ Tak, bogato; Tylko wielowarstwowy; Tylko gruczołowy
+Czy nabłonek jest unerwiony? | Tak – wolne zakończenia nerwowe | ✗ Nie; Tylko nabłonek jelita; Tylko przez błonę podstawną bez wnikania
+Połączenie uszczelniające przestrzeń międzykomórkową | Obwódka zamykająca (tight junction) | ✗ Desmosom; Neksus; Hemidesmosom
+Połączenie mocujące komórkę do błony podstawnej | Hemidesmosom | ✗ Desmosom; Obwódka zamykająca; Neksus
+Połączenie umożliwiające przepływ jonów między komórkami | Neksus (gap junction) | ✗ Desmosom; Obwódka zwierająca; Hemidesmosom
+Budowa aksonemy rzęski | 9×2 + 2 mikrotubule | ✗ 9×3 + 0; 9×2 + 0; 9×3 + 2
+Co jest w środku mikrokosmka? | Filamenty aktynowe | ✗ Mikrotubule 9×2+2; Filamenty keratynowe; Ciałko podstawne
+Struktura zwiększająca powierzchnię wchłaniania | Mikrokosmki | ✗ Rzęski; Stereocilia ruchome; Desmosomy
+Gruczoł jednokomórkowy | Komórka kubkowa | ✗ Komórka parasolowata; Komórka podstawna; Mastocyt
+Wydzielanie, w którym rozpada się cała komórka | Holokrynowe (gruczoły łojowe) | ✗ Merokrynowe (ślinianki); Apokrynowe (gruczoł mlekowy); Endokrynowe (tarczyca)
+Wydzielanie przez egzocytozę bez utraty części komórki | Merokrynowe | ✗ Holokrynowe; Apokrynowe; Parakrynowe
+Wydzielanie z oderwaniem szczytu komórki | Apokrynowe (gruczoł mlekowy) | ✗ Merokrynowe (trzustka); Holokrynowe (łojowe); Autokrynowe
+Gruczoły bez przewodu wyprowadzającego | Dokrewne (wewnątrzwydzielnicze) | ✗ Zewnątrzwydzielnicze; Złożone cewkowe; Jednokomórkowe
+Przemiana jednego dojrzałego nabłonka w inny | Metaplazja | ✗ Dysplazja; Hiperplazja; Atrofia
+Nabłonek oddechowy u palaczy może przejść w | Wielowarstwowy płaski | ✗ Przejściowy; Jednowarstwowy sześcienny; Wielorzędowy ze stereociliami
+
+// ---------- ĆW3 krew
+Udział osocza w objętości krwi | ok. 55% | ✗ ok. 45%; ok. 90%; ok. 30%
+Objętość krwi dorosłego | 5–6 litrów | ✗ 2–3 litry; 8–10 litrów; 3–4 litry
+Osocze bez fibrynogenu to | Surowica | ✗ Chłonka; Hematokryt; Płyn tkankowy
+Białko osocza utrzymujące ciśnienie onkotyczne | Albumina | ✗ Fibrynogen; Gamma-globulina; Hemoglobina
+Kształt erytrocytu | Dwuwklęsły krążek | ✗ Dwuwypukła soczewka; Kula; Wrzeciono
+Średnica erytrocytu | 7–8 µm | ✗ 12–14 µm; 2–4 µm; 15–20 µm
+Czas życia erytrocytu | ok. 120 dni | ✗ ok. 10 dni; ok. 30 dni; ok. 1 rok
+Gdzie niszczone są stare erytrocyty? | Głównie w śledzionie | ✗ Głównie w nerkach; W grasicy; W węzłach chłonnych
+Liczba erytrocytów u mężczyzny | 4,5–5,5 mln/µl | ✗ 4–10 tys./µl; 150–400 tys./µl; 1–2 mln/µl
+Źródło energii erytrocytu | Glikoliza beztlenowa | ✗ Fosforylacja oksydacyjna; Beta-oksydacja; Cykl Krebsa
+Młody erytrocyt z resztkami rybosomów | Retikulocyt | ✗ Normoblast; Megakariocyt; Proerytroblast
+Hormon pobudzający erytropoezę | Erytropoetyna (nerki) | ✗ Trombopoetyna (wątroba); Kalcytonina; Parathormon
+Budowa HbA | 2α + 2β | ✗ 2α + 2γ; 2α + 2δ; 4β
+Hemoglobina płodowa | HbF (2α2γ) | ✗ HbA₂ (2α2δ); HbA (2α2β); HbS
+Ile O₂ wiąże jedna cząsteczka hemoglobiny? | 4 | ✗ 1; 2; 8
+Stopień utlenienia żelaza w hemie przenoszącym O₂ | Fe²⁺ | ✗ Fe³⁺; Fe⁰; Fe⁴⁺
+Połączenie hemoglobiny z tlenkiem węgla | Karboksyhemoglobina | ✗ Karbaminohemoglobina; Methemoglobina; Oksyhemoglobina
+Połączenie hemoglobiny z CO₂ | Karbaminohemoglobina | ✗ Karboksyhemoglobina; Oksyhemoglobina; Methemoglobina
+Hemoglobina z Fe³⁺, nieprzenosząca O₂ | Methemoglobina | ✗ Karboksyhemoglobina; Oksyhemoglobina; Deoksyhemoglobina
+Efekt Bohra: spadek pH powoduje | Łatwiejsze oddawanie O₂ | ✗ Silniejsze wiązanie O₂; Brak zmian; Wiązanie CO zamiast O₂
+Kształt krzywej dysocjacji hemoglobiny | Litera S (sigmoidalna) | ✗ Prosta; Hiperbola; Litera U
+Liczba leukocytów | 4–10 tys./µl | ✗ 150–400 tys./µl; 4–5 mln/µl; 1–2 tys./µl
+Najliczniejsze leukocyty | Neutrofile (50–70%) | ✗ Limfocyty (50–70%); Monocyty (20–40%); Eozynofile (10–20%)
+Odsetek limfocytów we krwi | 20–40% | ✗ 50–70%; 2–8%; 0–1%
+Najrzadszy leukocyt | Bazofil | ✗ Eozynofil; Monocyt; Limfocyt
+Największy leukocyt | Monocyt | ✗ Limfocyt; Neutrofil; Bazofil
+Jądro 3–5-płatowe ma | Neutrofil | ✗ Eozynofil; Monocyt; Limfocyt
+Jądro dwupłatowe i pomarańczowe ziarnistości ma | Eozynofil | ✗ Neutrofil; Bazofil; Monocyt
+Ciemne ziarnistości zasłaniające jądro ma | Bazofil | ✗ Eozynofil; Neutrofil; Limfocyt
+Jądro nerkowate ma | Monocyt | ✗ Limfocyt; Neutrofil; Eozynofil
+Duże okrągłe jądro i wąski rąbek cytoplazmy ma | Limfocyt | ✗ Monocyt; Bazofil; Neutrofil pałeczkowaty
+Leukocyt walczący z pasożytami | Eozynofil | ✗ Neutrofil; Monocyt; Limfocyt B
+Leukocyt pierwszej linii w ostrym zapaleniu bakteryjnym | Neutrofil | ✗ Eozynofil; Bazofil; Limfocyt T
+Bazofil zawiera | Heparynę i histaminę | ✗ Hemoglobinę i mioglobinę; Lizozym i laktoferynę; Perforynę i granzymy
+Monocyt w tkankach staje się | Makrofagiem | ✗ Komórką plazmatyczną; Mastocytem; Fibroblastem
+Limfocyt B po aktywacji staje się | Komórką plazmatyczną | ✗ Makrofagiem; Limfocytem T cytotoksycznym; Komórką NK
+Limfocyty odpowiedzialne za odporność komórkową | Limfocyty T | ✗ Limfocyty B; Komórki plazmatyczne; Eozynofile
+Płytki krwi powstają z | Megakariocytów | ✗ Monocytów; Erytroblastów; Mastocytów
+Liczba płytek krwi | 150–400 tys./µl | ✗ 4–10 tys./µl; 4–5 mln/µl; 20–40 tys./µl
+Czas życia płytek krwi | 8–10 dni | ✗ 120 dni; 1–2 dni; 30–40 dni
+Barwienie rozmazu krwi | May-Grünwald-Giemsa (Pappenheim) | ✗ Hematoksylina-eozyna; Van Gieson; PAS
+Gdzie zachodzi hemopoeza u dorosłego? | W szpiku czerwonym | ✗ W wątrobie; W szpiku żółtym; W śledzionie
+Odporność od urodzenia, nieswoista, bez pamięci | Wrodzona | ✗ Nabyta czynna; Nabyta bierna; Humoralna swoista
+Cecha odporności nabytej | Pamięć immunologiczna | ✗ Działanie natychmiastowe; Nieswoistość; Brak udziału limfocytów
+Odporność po szczepieniu | Nabyta czynna sztuczna | ✗ Nabyta bierna sztuczna; Nabyta czynna naturalna; Wrodzona
+Przeciwciała matki u noworodka | Nabyta bierna naturalna | ✗ Nabyta czynna naturalna; Nabyta bierna sztuczna; Wrodzona
+Przeciwciała przechodzące przez łożysko | IgG | ✗ IgM; IgA; IgE
+Przeciwciała pierwszej odpowiedzi | IgM | ✗ IgG; IgA; IgD
+Przeciwciała błon śluzowych i mleka | IgA | ✗ IgE; IgG; IgM
+Przeciwciała związane z alergią | IgE | ✗ IgA; IgD; IgM
+Komórki NK należą do odporności | Wrodzonej | ✗ Nabytej humoralnej; Nabytej biernej; Swoistej komórkowej
+
+// ---------- ĆW4 tkanka łączna i chrząstka
+Z czego pochodzi tkanka łączna? | Z mezenchymy | ✗ Z ektodermy; Z endodermy; Z grzebienia nerwowego wyłącznie
+Komórka wytwarzająca włókna tkanki łącznej | Fibroblast | ✗ Makrofag; Mastocyt; Plazmocyt
+Komórka z heparyną i histaminą w tkance łącznej | Komórka tuczna (mastocyt) | ✗ Komórka plazmatyczna; Fibroblast; Makrofag
+Jądro w układzie „szprych koła” ma | Komórka plazmatyczna | ✗ Mastocyt; Fibroblast; Adipocyt
+Komórka sygnetowata to | Adipocyt tkanki tłuszczowej żółtej | ✗ Adipocyt tkanki brunatnej; Komórka kubkowa; Plazmocyt
+Najliczniejsze włókna tkanki łącznej | Kolagenowe | ✗ Sprężyste; Siateczkowe; Mięśniowe
+Typ kolagenu w ścięgnach, skórze i kości | Typu I | ✗ Typu II; Typu III; Typu IV
+Typ kolagenu w chrząstce szklistej | Typu II | ✗ Typu I; Typu III; Typu IV
+Typ kolagenu we włóknach siateczkowych | Typu III | ✗ Typu I; Typu II; Typu IV
+Białko budujące rdzeń włókien sprężystych | Elastyna | ✗ Fibrylina; Kolagen typu I; Laminina
+Białko mikrofibryli włókien sprężystych | Fibrylina | ✗ Elastyna; Fibronektyna; Kolagen typu III
+Włókna srebrochłonne (argyrofilne) to | Siateczkowe | ✗ Sprężyste; Kolagenowe typu I; Mięśniowe
+Witamina potrzebna do syntezy kolagenu | Witamina C | ✗ Witamina D; Witamina K; Witamina A
+Okres prążkowania włókienek kolagenowych | 67 nm | ✗ 6,7 nm; 670 nm; 6,7 µm
+Tkanka łączna ścięgna | Zbita regularna | ✗ Zbita nieregularna; Luźna; Siateczkowa
+Tkanka łączna skóry właściwej (warstwa siateczkowata) | Zbita nieregularna | ✗ Zbita regularna; Luźna; Tłuszczowa
+Tkanka łączna węzłów chłonnych i szpiku | Siateczkowa | ✗ Luźna; Zbita regularna; Galaretowata
+Tkanka łączna sznura pępowinowego | Galaretowata (galareta Whartona) | ✗ Siateczkowa; Zbita regularna; Mezenchyma
+Tkanka tłuszczowa z wieloma kropelkami i centralnym jądrem | Brunatna | ✗ Żółta (biała); Siateczkowa; Galaretowata
+Białko termogeniny tkanki brunatnej | UCP-1 | ✗ Leptyna; Adiponektyna; Elastyna
+Hormon wydzielany przez tkankę tłuszczową | Leptyna | ✗ Kalcytonina; Erytropoetyna; Parathormon
+Komórki dojrzałej chrząstki | Chondrocyty | ✗ Osteocyty; Fibrocyty; Chondroklasty
+Jamka z chondrocytem to | Chondroplast | ✗ Lakuna Howshipa; Kanał Haversa; Grupa izogeniczna
+Grupa chondrocytów z jednej komórki macierzystej | Grupa izogeniczna | ✗ Osteon; Chondroplast; Macierz terytorialna
+Czy chrząstka ma naczynia krwionośne? | Nie | ✗ Tak, bogato; Tylko włóknista; Tylko sprężysta
+Jak odżywiana jest chrząstka? | Dyfuzją z ochrzęstnej lub mazi stawowej | ✗ Przez kanały Haversa; Przez własne naczynia; Przez kanały Volkmanna
+Chrząstka tchawicy i żeber | Szklista | ✗ Sprężysta; Włóknista; Kostniejąca
+Chrząstka małżowiny usznej i nagłośni | Sprężysta | ✗ Szklista; Włóknista; Stawowa
+Chrząstka krążka międzykręgowego i spojenia łonowego | Włóknista | ✗ Szklista; Sprężysta; Galaretowata
+Chrząstka bez ochrzęstnej | Włóknista (i stawowa) | ✗ Sprężysta; Szklista żebrowa; Każda
+Chondrocyty ułożone w szeregach między pęczkami kolagenu | Chrząstka włóknista | ✗ Chrząstka szklista; Chrząstka sprężysta; Kość splotowata
+Wzrost chrząstki przez podziały chondrocytów w jej wnętrzu | Śródmiąższowy (interstycjalny) | ✗ Aplozycyjny; Okostnowy; Przez nawarstwianie
+Wzrost chrząstki od ochrzęstnej | Aplozycyjny (przez nawarstwianie) | ✗ Śródmiąższowy; Interstycjalny; Śródkostny
+Regeneracja chrząstki | Słaba | ✗ Bardzo dobra; Pełna w 5 dni; Taka jak nabłonka
+
+// ---------- ĆW5 kość
+Mineralny składnik kości | Hydroksyapatyt | ✗ Węglan magnezu; Fluoroapatyt wyłącznie; Szczawian wapnia
+Główny kolagen kości | Typu I | ✗ Typu II; Typu III; Typu IV
+Udział składników mineralnych w kości | ok. 65% | ✗ ok. 30%; ok. 90%; ok. 10%
+Ile wapnia ustroju jest w kościach? | ok. 99% | ✗ ok. 50%; ok. 75%; ok. 10%
+Komórka tworząca osteoid | Osteoblast | ✗ Osteoklast; Osteocyt; Chondrocyt
+Komórka zamknięta w jamce z wypustkami w kanalikach | Osteocyt | ✗ Osteoblast; Osteoklast; Komórka okrywająca
+Duża wielojądrowa komórka resorbująca kość | Osteoklast | ✗ Osteoblast; Osteocyt; Megakariocyt
+Pochodzenie osteoklastów | Z linii monocytów-makrofagów | ✗ Z komórek mezenchymalnych; Z chondrocytów; Z fibroblastów
+Zatoka, w której leży osteoklast | Zatoka Howshipa | ✗ Kanał Haversa; Kanał Volkmanna; Jamka kostna
+Pofałdowana błona osteoklastu | Rąbek szczoteczkowy | ✗ Strefa uszczelniająca; Mikrokosmki jelitowe; Linia cementowa
+Enzym osteoklastu trawiący kolagen | Katepsyna K | ✗ Fosfataza zasadowa; Lizozym; Amylaza
+Enzym markerowy osteoblastów | Fosfataza zasadowa | ✗ Kwaśna fosfataza; Katepsyna K; Kolagenaza
+Czynnik osteoblastów pobudzający osteoklasty | RANKL | ✗ Osteoprotegeryna (OPG); Kalcytonina; Osteokalcyna
+Czynnik hamujący RANKL | Osteoprotegeryna (OPG) | ✗ Parathormon; RANK; Katepsyna K
+Podstawowa jednostka kości zbitej | Osteon (system Haversa) | ✗ Beleczka kostna; Grupa izogeniczna; Kanał Volkmanna
+Co biegnie w kanale Haversa? | Naczynia i nerwy | ✗ Osteocyty; Szpik czerwony; Chondrocyty
+Kanały łączące kanały Haversa (poprzeczne) | Kanały Volkmanna | ✗ Kanaliki kostne; Kanały Sharpeya; Zatoki Howshipa
+Granica osteonu | Linia cementowa | ✗ Blaszka okalająca; Okostna; Śródkostna
+Resztki starych osteonów | Blaszki międzysystemowe | ✗ Blaszki okalające zewnętrzne; Blaszki koncentryczne; Beleczki
+Kość z beleczkami bez osteonów | Gąbczasta | ✗ Zbita; Splotowata korowa; Chrzęstna
+Gdzie przeważa kość gąbczasta? | W nasadach kości długich | ✗ W trzonach kości długich; W okostnej; W kościach płaskich tylko zewnątrz
+Kość młoda, gojąca się, o nieuporządkowanych włóknach | Grubowłóknista (splotowata) | ✗ Blaszkowata zbita; Blaszkowata gąbczasta; Chrzęstna
+Warstwa okostnej z osteoblastami | Wewnętrzna rozrodcza (osteogenna) | ✗ Zewnętrzna włóknista; Śródkostna; Blaszki okalające
+Włókna mocujące okostną do kości | Włókna Sharpeya | ✗ Włókna siateczkowe; Włókna sprężyste; Linie cementowe
+Błona wyściełająca jamę szpikową | Śródkostna | ✗ Okostna; Ochrzęstna; Błona maziowa
+Kostnienie kości płaskich czaszki | Na podłożu łącznotkankowym | ✗ Na podłożu chrzęstnym; Przez chrząstkę włóknistą; Ze śródkostnej
+Kostnienie kości długich | Na podłożu chrzęstnym | ✗ Na podłożu łącznotkankowym; Tylko z okostnej; Bez modelu chrzęstnego
+Wzrost kości na długość odbywa się dzięki | Chrząstce nasadowej | ✗ Okostnej; Śródkostnej; Kanałom Haversa
+Wzrost kości na grubość odbywa się dzięki | Okostnej | ✗ Chrząstce nasadowej; Szpikowi; Chrząstce stawowej
+Prawidłowe stężenie wapnia we krwi | 2,25–2,6 mmol/l | ✗ 0,5–1 mmol/l; 4,5–5,5 mmol/l; 135–145 mmol/l
+Hormon podnoszący poziom wapnia | Parathormon | ✗ Kalcytonina; Insulina; Glukagon
+Skąd pochodzi parathormon? | Z przytarczyc | ✗ Z komórek C tarczycy; Z nerek; Z przysadki
+Hormon obniżający poziom wapnia | Kalcytonina | ✗ Parathormon; Kalcytriol; Kortyzol
+Skąd pochodzi kalcytonina? | Z komórek C tarczycy | ✗ Z przytarczyc; Z kory nadnerczy; Z wątroby
+Gdzie powstaje aktywna witamina D (kalcytriol)? | W nerce | ✗ W wątrobie; W skórze; W jelicie
+Działanie kalcytriolu | ↑ wchłanianie wapnia w jelicie | ✗ ↓ wchłanianie wapnia w jelicie; Hamowanie mineralizacji; ↑ wydalanie wapnia z moczem
+Niedobór witaminy D u dzieci | Krzywica | ✗ Osteoporoza; Szkorbut; Osteomalacja
+Niedobór witaminy D u dorosłych | Osteomalacja | ✗ Krzywica; Szkorbut; Osteopetroza
+Przewaga resorpcji nad tworzeniem, krucha kość | Osteoporoza | ✗ Osteomalacja; Krzywica; Osteopetroza
+Pierwszy etap gojenia złamania | Krwiak | ✗ Kostnina twarda; Kostnina miękka; Przebudowa
+Preparat kości bez barwienia, z osteonami i ciemnymi jamkami | Szlif kości | ✗ Kość odwapniona H+E; Rozmaz; Preparat mrożony
+
+// ---------- rozpoznawanie na schematach (nr)
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 1? | Okular | ✗ Podstawa; Tubus; Kondensor
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 2? | Tubus | ✗ Stolik przedmiotowy; Okular; Podstawa
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 3? | Rewolwer | ✗ Kondensor; Śruba makrometryczna; Stolik przedmiotowy
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 4? | Obiektywy | ✗ Rewolwer; Śruba makrometryczna; Tubus
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 5? | Stolik przedmiotowy | ✗ Śruba makrometryczna; Kondensor; Obiektywy
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 6? | Kondensor | ✗ Ramię (statyw); Śruba mikrometryczna; Rewolwer
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 7? | Przysłona (diafragma) | ✗ Tubus; Źródło światła; Ramię (statyw)
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 8? | Źródło światła | ✗ Przysłona (diafragma); Stolik przedmiotowy; Tubus
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 9? | Ramię (statyw) | ✗ Preparat; Źródło światła; Rewolwer
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 10? | Śruba makrometryczna | ✗ Ramię (statyw); Kondensor; Okular
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 11? | Śruba mikrometryczna | ✗ Preparat; Przysłona (diafragma); Tubus
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 12? | Podstawa | ✗ Ramię (statyw); Tubus; Śruba makrometryczna
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 13? | Preparat | ✗ Obiektywy; Śruba mikrometryczna; Podstawa
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 1? | Jądro spłaszczone | ✗ Tkanka łączna; Jądro okrągłe, centralne; Mikrokosmki (rąbek szczoteczkowy)
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 2? | Błona podstawna | ✗ Mikrokosmki (rąbek szczoteczkowy); Tkanka łączna; Jądro owalne, w podstawie
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 3? | Jądro okrągłe, centralne | ✗ Mikrokosmki (rąbek szczoteczkowy); Tkanka łączna; Błona podstawna
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 4? | Mikrokosmki (rąbek szczoteczkowy) | ✗ Jądro okrągłe, centralne; Tkanka łączna; Komórka kubkowa
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 5? | Komórka kubkowa | ✗ Tkanka łączna; Jądro owalne, w podstawie; Jądro okrągłe, centralne
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 6? | Jądro owalne, w podstawie | ✗ Tkanka łączna; Jądro spłaszczone; Błona podstawna
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 7? | Rzęski (migawki) | ✗ Mikrokosmki (rąbek szczoteczkowy); Jądro okrągłe, centralne; Komórka podstawna
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 8? | Komórka podstawna | ✗ Komórka kubkowa; Tkanka łączna; Błona podstawna
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 9? | Tkanka łączna | ✗ Jądro spłaszczone; Jądro owalne, w podstawie; Mikrokosmki (rąbek szczoteczkowy)
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 1? | Warstwa podstawna | ✗ Tkanka łączna; Spłaszczone komórki z jądrami; Warstwa rogowa (bez jąder)
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 2? | Warstwa kolczysta (pośrednia) | ✗ Tkanka łączna; Komórki parasolowate (często 2 jądra); Błona podstawna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 3? | Spłaszczone komórki z jądrami | ✗ Warstwa podstawna; Warstwa rogowa (bez jąder); Błona podstawna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 4? | Warstwa rogowa (bez jąder) | ✗ Spłaszczone komórki z jądrami; Tkanka łączna; Błona podstawna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 5? | Błona podstawna | ✗ Tkanka łączna; Warstwa rogowa (bez jąder); Warstwa podstawna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 6? | Komórki parasolowate (często 2 jądra) | ✗ Warstwa kolczysta (pośrednia); Warstwa rogowa (bez jąder); Tkanka łączna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 7? | Tkanka łączna | ✗ Warstwa kolczysta (pośrednia); Warstwa podstawna; Spłaszczone komórki z jądrami
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 1? | Przejaśnienie centralne | ✗ Zasadochłonne ziarnistości (zasłaniają jądro); Ziarnistości (granulomer); Jądro 3–5 płatów
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 2? | Jądro 3–5 płatów | ✗ Przejaśnienie centralne; Jądro nerkowate; Kwasochłonne ziarnistości
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 3? | Kwasochłonne ziarnistości | ✗ Jądro 2-płatowe; Przejaśnienie centralne; Ziarnistości (granulomer)
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 4? | Jądro 2-płatowe | ✗ Jądro 3–5 płatów; Kwasochłonne ziarnistości; Jądro nerkowate
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 5? | Zasadochłonne ziarnistości (zasłaniają jądro) | ✗ Przejaśnienie centralne; Kwasochłonne ziarnistości; Jądro 2-płatowe
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 6? | Wąski rąbek cytoplazmy | ✗ Jądro 3–5 płatów; Jądro 2-płatowe; Przejaśnienie centralne
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 7? | Jądro nerkowate | ✗ Wąski rąbek cytoplazmy; Zasadochłonne ziarnistości (zasłaniają jądro); Ziarnistości (granulomer)
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 8? | Ziarnistości (granulomer) | ✗ Zasadochłonne ziarnistości (zasłaniają jądro); Jądro 2-płatowe; Przejaśnienie centralne
+[obraz: assets/imports/histologia/hemoglobina-nr.webp] Hemoglobina A (HbA) – budowa: co oznacza nr 1? | Łańcuch α (141 aminokwasów) | ✗ Globina = 4 łańcuchy (2α + 2β); Łańcuch β (146 aminokwasów); Grupa hemowa z Fe²⁺ (wiąże 1 O₂)
+[obraz: assets/imports/histologia/hemoglobina-nr.webp] Hemoglobina A (HbA) – budowa: co oznacza nr 2? | Łańcuch β (146 aminokwasów) | ✗ Łańcuch α (141 aminokwasów); Globina = 4 łańcuchy (2α + 2β); Grupa hemowa z Fe²⁺ (wiąże 1 O₂)
+[obraz: assets/imports/histologia/hemoglobina-nr.webp] Hemoglobina A (HbA) – budowa: co oznacza nr 3? | Grupa hemowa z Fe²⁺ (wiąże 1 O₂) | ✗ Globina = 4 łańcuchy (2α + 2β); Łańcuch β (146 aminokwasów); Łańcuch α (141 aminokwasów)
+[obraz: assets/imports/histologia/hemoglobina-nr.webp] Hemoglobina A (HbA) – budowa: co oznacza nr 4? | Globina = 4 łańcuchy (2α + 2β) | ✗ Łańcuch β (146 aminokwasów); Grupa hemowa z Fe²⁺ (wiąże 1 O₂); Łańcuch α (141 aminokwasów)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 1? | Fibroblast | ✗ Makrofag (fagosomy); Adipocyt; Włókna kolagenowe
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 2? | Włókna kolagenowe | ✗ Istota podstawowa; Fibroblast; Komórka tuczna (mastocyt)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 3? | Włókna sprężyste | ✗ Komórka tuczna (mastocyt); Adipocyt; Komórka plazmatyczna („szprychy koła”)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 4? | Komórka tuczna (mastocyt) | ✗ Istota podstawowa; Włókna sprężyste; Komórka plazmatyczna („szprychy koła”)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 5? | Makrofag (fagosomy) | ✗ Komórka plazmatyczna („szprychy koła”); Włókna kolagenowe; Naczynie krwionośne
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 6? | Komórka plazmatyczna („szprychy koła”) | ✗ Makrofag (fagosomy); Istota podstawowa; Włókna sprężyste
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 7? | Adipocyt | ✗ Naczynie krwionośne; Makrofag (fagosomy); Komórka tuczna (mastocyt)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 8? | Naczynie krwionośne | ✗ Włókna kolagenowe; Komórka plazmatyczna („szprychy koła”); Adipocyt
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 9? | Istota podstawowa | ✗ Fibroblast; Komórka tuczna (mastocyt); Makrofag (fagosomy)
+[obraz: assets/imports/histologia/tluszcz-nr.webp] Tkanka tłuszczowa: co oznacza nr 1? | Jedna duża kropla tłuszczu | ✗ Wiele małych kropli; Jądro spłaszczone na obwodzie („sygnet”); Jądro centralne, okrągłe
+[obraz: assets/imports/histologia/tluszcz-nr.webp] Tkanka tłuszczowa: co oznacza nr 2? | Jądro spłaszczone na obwodzie („sygnet”) | ✗ Jądro centralne, okrągłe; Jedna duża kropla tłuszczu; Wiele małych kropli
+[obraz: assets/imports/histologia/tluszcz-nr.webp] Tkanka tłuszczowa: co oznacza nr 3? | Wiele małych kropli | ✗ Jądro spłaszczone na obwodzie („sygnet”); Jedna duża kropla tłuszczu; Jądro centralne, okrągłe
+[obraz: assets/imports/histologia/tluszcz-nr.webp] Tkanka tłuszczowa: co oznacza nr 4? | Jądro centralne, okrągłe | ✗ Jedna duża kropla tłuszczu; Wiele małych kropli; Jądro spłaszczone na obwodzie („sygnet”)
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 1? | Ochrzęstna | ✗ Chondrocyt w jamce (chondroplaście); Pęczki włókien kolagenowych; Chondrocyty w szeregach
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 2? | Macierz terytorialna (torebka) | ✗ Ochrzęstna; Chondrocyt w jamce (chondroplaście); Pęczki włókien kolagenowych
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 3? | Chondrocyt w jamce (chondroplaście) | ✗ Włókna sprężyste; Chondrocyty w szeregach; Pęczki włókien kolagenowych
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 4? | Grupa izogeniczna (2–4 chondrocyty) | ✗ Włókna sprężyste; Chondrocyt w jamce (chondroplaście); Chondrocyty w szeregach
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 5? | Włókna sprężyste | ✗ Ochrzęstna; Chondrocyt w jamce (chondroplaście); Chondrocyty w szeregach
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 6? | Pęczki włókien kolagenowych | ✗ Chondrocyt w jamce (chondroplaście); Grupa izogeniczna (2–4 chondrocyty); Chondrocyty w szeregach
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 7? | Chondrocyty w szeregach | ✗ Chondrocyt w jamce (chondroplaście); Grupa izogeniczna (2–4 chondrocyty); Ochrzęstna
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 1? | Kanał osteonu (Haversa) – naczynia, nerwy | ✗ Blaszki międzysystemowe; Blaszki osteonu (koncentryczne); Linia cementowa
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 2? | Blaszki osteonu (koncentryczne) | ✗ Blaszki międzysystemowe; Kanał Volkmanna (przeszywający); Osteocyt w jamce
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 3? | Osteocyt w jamce | ✗ Blaszki międzysystemowe; Kanał osteonu (Haversa) – naczynia, nerwy; Blaszki osteonu (koncentryczne)
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 4? | Kanaliki kostne | ✗ Blaszki międzysystemowe; Osteocyt w jamce; Kanał osteonu (Haversa) – naczynia, nerwy
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 5? | Linia cementowa | ✗ Osteocyt w jamce; Blaszki osteonu (koncentryczne); Kanaliki kostne
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 6? | Blaszki międzysystemowe | ✗ Kanał osteonu (Haversa) – naczynia, nerwy; Kanał Volkmanna (przeszywający); Osteocyt w jamce
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 7? | Kanał Volkmanna (przeszywający) | ✗ Kanał osteonu (Haversa) – naczynia, nerwy; Kanaliki kostne; Osteocyt w jamce
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 1? | Okostna – warstwa włóknista (zewnętrzna) | ✗ Śródkostna; Okostna – warstwa rozrodcza (osteogenna); Blaszki okalające wewnętrzne
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 2? | Okostna – warstwa rozrodcza (osteogenna) | ✗ Jama szpikowa (szpik żółty); Blaszki okalające wewnętrzne; Okostna – warstwa włóknista (zewnętrzna)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 3? | Blaszki okalające zewnętrzne | ✗ Blaszki okalające wewnętrzne; Okostna – warstwa rozrodcza (osteogenna); Okostna – warstwa włóknista (zewnętrzna)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 4? | Osteony | ✗ Blaszki okalające zewnętrzne; Okostna – warstwa rozrodcza (osteogenna); Jama szpikowa (szpik żółty)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 5? | Blaszki okalające wewnętrzne | ✗ Blaszki okalające zewnętrzne; Jama szpikowa (szpik żółty); Okostna – warstwa włóknista (zewnętrzna)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 6? | Śródkostna | ✗ Okostna – warstwa włóknista (zewnętrzna); Okostna – warstwa rozrodcza (osteogenna); Jama szpikowa (szpik żółty)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 7? | Jama szpikowa (szpik żółty) | ✗ Osteony; Okostna – warstwa włóknista (zewnętrzna); Blaszki okalające wewnętrzne
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 1? | Osteoblast (sześcienny, zasadochłonny) | ✗ Zatoka resorpcyjna (Howshipa); Rąbek szczoteczkowy (pofałdowana błona); Osteoklast – wielojądrowy
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 2? | Osteoid (niezmineralizowana macierz) | ✗ Zatoka resorpcyjna (Howshipa); Rąbek szczoteczkowy (pofałdowana błona); Osteoblast (sześcienny, zasadochłonny)
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 3? | Osteocyt w jamce z wypustkami w kanalikach | ✗ Osteoblast (sześcienny, zasadochłonny); Zatoka resorpcyjna (Howshipa); Rąbek szczoteczkowy (pofałdowana błona)
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 4? | Osteoklast – wielojądrowy | ✗ Osteoblast (sześcienny, zasadochłonny); Osteocyt w jamce z wypustkami w kanalikach; Osteoid (niezmineralizowana macierz)
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 5? | Rąbek szczoteczkowy (pofałdowana błona) | ✗ Osteoklast – wielojądrowy; Osteoblast (sześcienny, zasadochłonny); Osteoid (niezmineralizowana macierz)
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 6? | Zatoka resorpcyjna (Howshipa) | ✗ Osteoid (niezmineralizowana macierz); Osteocyt w jamce z wypustkami w kanalikach; Osteoblast (sześcienny, zasadochłonny)
