@@ -3851,3 +3851,12 @@ html[data-ui="dark"]:not([style*="--bg-image"]) body:not(.px-theme) #view h1 { t
 /* pływające przyciski (czas jajka, czat) nie zasłaniają końca strony */
 body:has(#egg-chip.floating, #gc-fab) main { padding-bottom: 88px !important; }
 img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline-block !important; vertical-align: -6px; }
+/* 🔍 podgląd obrazka z fiszki */
+.flash img.cimg, .flash .ctext img { cursor: zoom-in; }
+.imgzoom { position: fixed; inset: 0; z-index: 200; background: rgba(10,14,20,.88); display: flex; align-items: center; justify-content: center; }
+.imgzoom-sc { width: 100%; height: 100%; overflow: auto; display: flex; align-items: center; justify-content: center; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y pinch-zoom; }
+.imgzoom img { max-width: 100%; max-height: 100%; background: #fff; border-radius: 6px; cursor: zoom-in; }
+.imgzoom.big .imgzoom-sc { display: block; }
+.imgzoom.big img { max-width: none; max-height: none; width: 220%; cursor: zoom-out; }
+@media (min-width: 900px) { .imgzoom.big img { width: 160%; } }
+.imgzoom-x { position: fixed; top: calc(10px + var(--sat, 0px)); right: 10px; z-index: 1; background: #fff !important; color: #1d2433 !important; }

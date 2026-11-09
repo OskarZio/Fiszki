@@ -1,0 +1,310 @@
+#fiszki
+#talia: Histologia ĆW1–ĆW5
+#przedmiot: medycyna
+// Histologia: mikroskopowanie, nabłonek, krew, tkanka łączna i chrzęstna, tkanka kostna.
+// Fiszki pod pytania otwarte + „narysuj” ze wzorcowym schematem + schematy z numerami do rozpoznawania.
+
+// ================= ĆW1 – MIKROSKOPOWANIE I INTERPRETACJA OBRAZU =================
+Czym zajmuje się histologia? | Nauką o budowie mikroskopowej tkanek – ich komórkach, istocie międzykomórkowej i powiązaniu budowy z funkcją.
+Czym jest tkanka? | Zespołem komórek o podobnej budowie, pochodzeniu i funkcji wraz z wytwarzaną przez nie istotą międzykomórkową.
+Cztery podstawowe tkanki organizmu człowieka | Nabłonkowa\nłączna (w tym krew, chrząstka, kość)\nmięśniowa\nnerwowa
+Części optyczne mikroskopu świetlnego | Okular\nobiektywy\nkondensor\nprzysłona (diafragma)\nźródło światła (lub lusterko)
+Części mechaniczne mikroskopu świetlnego | Podstawa\nramię (statyw)\ntubus\nrewolwer\nstolik przedmiotowy z łapkami / prowadnicą\nśruba makrometryczna\nśruba mikrometryczna
+Jak obliczyć powiększenie całkowite mikroskopu? | Powiększenie okularu × powiększenie obiektywu (np. 10× · 40× = 400×).
+Czym jest zdolność rozdzielcza mikroskopu? | Najmniejsza odległość między dwoma punktami, które widać jeszcze jako osobne; dla mikroskopu świetlnego ok. 0,2 µm.
+Od czego zależy zdolność rozdzielcza? | Od długości fali światła i apertury numerycznej obiektywu (krótsza fala i większa apertura = lepsza rozdzielczość).
+Do czego służy kondensor? | Skupia światło na preparacie i równomiernie go oświetla.
+Do czego służy przysłona (diafragma)? | Reguluje ilość światła i kontrast obrazu.
+Do czego służy śruba makrometryczna, a do czego mikrometryczna? | Makro – zgrubne ustawienie ostrości (małe powiększenia); mikro – precyzyjna ostrość (zwłaszcza przy dużych powiększeniach).
+Kolejność pracy z mikroskopem | Włączyć światło i ustawić najmniejszy obiektyw\npołożyć preparat szkiełkiem nakrywkowym do góry\nustawić ostrość śrubą makro\nwyregulować kondensor i przysłonę\nznaleźć obszar i zmienić obiektyw na większy\npoprawić ostrość tylko śrubą mikro\npo pracy – najmniejszy obiektyw, zdjąć preparat
+Kiedy stosuje się obiektyw immersyjny (100×)? | Przy największych powiększeniach (np. rozmaz krwi) – między szkiełkiem a obiektywem daje się olejek immersyjny o współczynniku załamania jak szkło.
+Etapy przygotowania preparatu histologicznego | Pobranie materiału\nutrwalenie (np. formalina)\nodwodnienie (alkohole o rosnącym stężeniu)\nprześwietlenie (ksylen)\nzatopienie w parafinie\nkrojenie na mikrotomie (5–10 µm)\nodparafinowanie i barwienie\nzamknięcie pod szkiełkiem nakrywkowym
+Po co utrwala się materiał? | Aby zatrzymać rozkład (autolizę) i zachować budowę komórek jak za życia.
+Najczęstsze barwienie w histologii | Hematoksylina i eozyna (H+E).
+Co barwi hematoksylina, a co eozyna? | Hematoksylina (barwnik zasadowy) barwi struktury zasadochłonne – jądra, RNA, rybosomy – na fioletowo-niebiesko; eozyna (barwnik kwaśny) barwi struktury kwasochłonne – cytoplazmę, kolagen, erytrocyty – na różowo.
+Struktury zasadochłonne (bazofilne) – przykłady | Jądro komórkowe (chromatyna, DNA)\nrybosomy, szorstka siateczka (RNA)\nziarnistości bazofilów\nmacierz chrząstki szklistej
+Struktury kwasochłonne (eozynofilne) – przykłady | Cytoplazma większości komórek\nwłókna kolagenowe\nerytrocyty\nziarnistości eozynofilów
+Czym jest metachromazja? | Barwienie się struktury na inny kolor niż kolor barwnika (np. ziarnistości mastocytów barwione błękitem toluidyny na fioletowo-czerwono) – wynika z obecności siarczanowanych glikozaminoglikanów (heparyna).
+Jakim barwieniem wykrywa się glikogen i śluz obojętny? | Reakcją PAS (kwas nadjodowy + odczynnik Schiffa) – na kolor purpurowy (magenta).
+Jak barwi się włókna sprężyste? | Orceiną lub rezorcyną-fuksyną (np. metoda Weigerta) – na ciemnobrązowo lub fioletowo-czarno.
+Jak uwidocznić włókna siateczkowe? | Impregnacją solami srebra – barwią się na czarno (są srebrochłonne, argyrofilne).
+Jak barwi się tłuszcze? | Na skrawkach mrożonych barwnikami Sudan (Sudan III / IV – na czerwono-pomarańczowo, Sudan czarny – na czarno); w preparatach parafinowych tłuszcz się wypłukuje.
+Jak opisywać obraz mikroskopowy (schemat odpowiedzi)? | Nazwa preparatu i barwienie\nprzy jakim powiększeniu\nkształt i układ komórek (ile warstw)\nkształt i położenie jąder\nbarwliwość cytoplazmy\nstruktury szczególne (rzęski, mikrokosmki, włókna)\npodłoże / otoczenie (błona podstawna, tkanka łączna)
+Zasady rysowania preparatu na ćwiczeniach | Rysować to, co widać, a nie z podręcznika\nołówkiem, wyraźne kontury\nzachować proporcje\npodpisać elementy liniami odnośnymi\npodpisać nazwę preparatu, barwienie i powiększenie
+Czym jest artefakt w preparacie? | Zmiana w obrazie powstała w trakcie przygotowania preparatu (np. pęknięcia, fałdy, pęcherzyki powietrza, osad barwnika, obkurczenie komórek).
+
+// ================= ĆW2 – TKANKA NABŁONKOWA =================
+Cechy tkanki nabłonkowej | Komórki leżą ściśle obok siebie\nmało istoty międzykomórkowej\nspoczywa na błonie podstawnej\njest beznaczyniowa\nwyraźna biegunowość komórek (szczyt i podstawa)\nduża zdolność regeneracji
+Funkcje nabłonków | Ochronna (osłaniająca)\nwchłaniająca (resorpcyjna)\nwydzielnicza (gruczołowa)\nzmysłowa (receptorowa)\ntransportowa (np. ruch rzęsek)\nwymiana gazowa
+Podział nabłonków ze względu na funkcję | Pokrywające (wyściełające)\ngruczołowe\nzmysłowe\nresorpcyjne (wchłaniające)\noddechowy
+Podział morfologiczny nabłonków – podstawa | Liczba warstw komórek (jednowarstwowy, wielowarstwowy, wielorzędowy) i kształt komórek warstwy powierzchownej (płaski, sześcienny, walcowaty).
+Nabłonek jednowarstwowy płaski – budowa i występowanie | Jedna warstwa płaskich komórek ze spłaszczonym jądrem\nśródbłonek naczyń (endothelium)\nmezotelium (opłucna, otrzewna, osierdzie)\npęcherzyki płucne (pneumocyty I)\nblaszka ciemieniowa torebki Bowmana
+Nabłonek jednowarstwowy sześcienny – budowa i występowanie | Komórki o zbliżonej wysokości i szerokości, jądro okrągłe, centralne\nkanaliki nerkowe\npęcherzyki tarczycy\nprzewody wyprowadzające gruczołów\npowierzchnia jajnika
+Nabłonek jednowarstwowy walcowaty – budowa i występowanie | Komórki wyższe niż szersze, jądro owalne w części podstawnej\nżołądek (bez komórek kubkowych)\njelito cienkie i grube (z mikrokosmkami i komórkami kubkowymi)\npęcherzyk żółciowy
+Nabłonek jednowarstwowy walcowaty migawkowy – gdzie? | Jajowód\nmacica\nmniejsze oskrzeliki
+Nabłonek wielorzędowy – budowa | Wszystkie komórki leżą na błonie podstawnej, ale nie wszystkie sięgają powierzchni; jądra leżą na różnych wysokościach, więc wydaje się wielowarstwowy.
+Nabłonek wielorzędowy walcowaty migawkowy z komórkami kubkowymi – gdzie? | Drogi oddechowe: jama nosowa, tchawica, oskrzela (tzw. nabłonek oddechowy).
+Nabłonek wielorzędowy walcowaty ze stereociliami – gdzie? | Najądrze i nasieniowód.
+Nabłonek wielowarstwowy płaski nierogowaciejący – gdzie? | Jama ustna\ngardło\nprzełyk\npochwa\nrogówka
+Nabłonek wielowarstwowy płaski rogowaciejący – gdzie? | Naskórek skóry.
+Warstwy naskórka (od podstawy) | Podstawna (rozrodcza)\nkolczysta\nziarnista\njasna (tylko w skórze grubej)\nrogowa
+Nabłonek wielowarstwowy sześcienny i walcowaty – gdzie? | Sześcienny – przewody gruczołów potowych; walcowaty – duże przewody wyprowadzające gruczołów, część cewki moczowej męskiej, spojówka (fragmenty).
+Nabłonek przejściowy (moczowy, urotelium) – cechy | Liczba warstw i kształt komórek zmienia się przy rozciąganiu\nkomórki powierzchowne duże, parasolowate, często dwujądrowe\nmiędzy nimi płytki błony (uroplakiny) – bariera dla moczu
+Gdzie występuje nabłonek przejściowy? | Drogi moczowe: kielichy i miedniczka nerkowa, moczowód, pęcherz moczowy, początkowa część cewki moczowej.
+Czym jest błona podstawna? | Cienka warstwa macierzy między nabłonkiem a tkanką łączną (w PAS i srebrze widoczna); łączy, podtrzymuje, filtruje i kieruje regeneracją.
+Składniki blaszki podstawnej | Kolagen typu IV\nlaminina\nentaktyna (nidogen)\nproteoglikany (perlekan)
+Warstwy błony podstawnej (mikroskop elektronowy) | Blaszka jasna (lamina lucida)\nblaszka gęsta (lamina densa)\nblaszka siateczkowa (z włókien siateczkowych, od tkanki łącznej)
+Jak odżywiany jest nabłonek? | Przez dyfuzję z naczyń włosowatych tkanki łącznej leżącej pod błoną podstawną – nabłonek nie ma własnych naczyń.
+Unerwienie nabłonków | Nabłonek ma liczne wolne zakończenia nerwowe (czucie bólu, temperatury, dotyku) – włókna nerwowe przechodzą przez błonę podstawną między komórki; naczyń brak.
+Regeneracja nabłonków | Bardzo duża – komórki macierzyste w warstwie podstawnej (lub kryptach jelita) stale się dzielą i zastępują złuszczane komórki (np. jelito ok. 3–5 dni, naskórek ok. 4 tygodnie).
+Połączenia międzykomórkowe w nabłonku | Zamykające (obwódka zamykająca, tight junction)\nprzylegające (obwódka zwierająca, desmosomy, hemidesmosomy)\nkomunikacyjne (neksus, gap junction)
+Funkcja obwódki zamykającej (tight junction) | Uszczelnia przestrzeń między komórkami i oddziela szczyt od podstawy (bariera dla przenikania substancji).
+Funkcja desmosomów i hemidesmosomów | Desmosom – mocne łączenie komórek ze sobą (filamenty pośrednie, keratyna); hemidesmosom – mocowanie komórki do błony podstawnej.
+Funkcja neksusu (gap junction) | Kanały (koneksony) łączące cytoplazmy sąsiednich komórek – przepływ jonów i małych cząsteczek.
+Wyspecjalizowane struktury powierzchni szczytowej | Mikrokosmki – zwiększają powierzchnię wchłaniania\nrzęski (migawki) – ruch śluzu i cząstek (9×2+2 mikrotubul)\nstereocilia – długie, nieruchome mikrokosmki (najądrze, ucho wewnętrzne)
+Czym różni się rzęska od mikrokosmka? | Rzęska – ruchoma, wewnątrz aksonema z mikrotubul (9×2+2), wyrasta z ciałka podstawnego; mikrokosmek – krótki, nieruchomy, wewnątrz filamenty aktynowe.
+Struktury biegunu podstawnego komórek nabłonka | Hemidesmosomy\nprążkowanie podstawne (wpuklenia błony + mitochondria – np. kanaliki nerkowe, transport jonów)
+Czym jest nabłonek gruczołowy? | Nabłonek, którego komórki wytwarzają i wydzielają substancje (wydzielinę) – tworzy gruczoły.
+Gruczoły zewnątrz- i wewnątrzwydzielnicze – różnica | Zewnątrzwydzielnicze mają przewód wyprowadzający i wydzielają na powierzchnię lub do światła narządu; dokrewne nie mają przewodu – hormony trafiają do krwi.
+Gruczoł jednokomórkowy – przykład | Komórka kubkowa (wydziela śluz) – nabłonek jelita i dróg oddechowych.
+Podział gruczołów wg kształtu części wydzielniczej | Cewkowe (proste, rozgałęzione)\npęcherzykowe\ncewkowo-pęcherzykowe
+Podział gruczołów wg przewodu wyprowadzającego | Proste (przewód nierozgałęziony)\nzłożone (przewód rozgałęziony)
+Mechanizmy wydzielania gruczołów | Merokrynowe (egzocytoza, komórka bez strat – np. ślinianki, trzustka)\napokrynowe (oddziela się szczyt komórki – gruczoł mlekowy, gruczoły potowe wonne)\nholokrynowe (cała komórka rozpada się w wydzielinę – gruczoły łojowe)
+Wydzielina surowicza a śluzowa | Surowicza – płynna, bogata w białka (enzymy), komórki z zasadochłonną podstawą i okrągłym jądrem; śluzowa – gęsta, glikoproteiny (mucyny), jasna cytoplazma, jądro spłaszczone przy podstawie.
+Preparaty nabłonków na ćwiczeniach – przykłady | Jednowarstwowy płaski – mezotelium / śródbłonek\nsześcienny – nerka, tarczyca\nwalcowaty – jelito cienkie, żołądek\nwielorzędowy migawkowy – tchawica\nwielowarstwowy płaski nierogowaciejący – przełyk\nrogowaciejący – skóra\nprzejściowy – pęcherz moczowy
+Jak odróżnić nabłonek wielorzędowy od wielowarstwowego? | W wielorzędowym każda komórka dotyka błony podstawnej (jądra na różnych wysokościach); w wielowarstwowym tylko warstwa podstawna leży na błonie, a kształt nazywa się wg warstwy powierzchownej.
+Jak odróżnić nabłonek przejściowy od płaskiego wielowarstwowego? | Przejściowy ma na powierzchni duże, kopulaste (parasolowate) komórki, często dwujądrowe; płaski wielowarstwowy ma na powierzchni komórki spłaszczone.
+Pochodzenie zarodkowe nabłonków | Ze wszystkich trzech listków: ektodermy (naskórek), endodermy (nabłonek przewodu pokarmowego, dróg oddechowych) i mezodermy (śródbłonek, mezotelium, nabłonek nerek).
+Czym jest metaplazja nabłonka? | Przemiana jednego typu dojrzałego nabłonka w inny pod wpływem bodźca (np. u palaczy wielorzędowy migawkowy w oskrzelach → wielowarstwowy płaski).
+
+// ================= ĆW3 – TKANKA KRĄŻĄCA (KREW) =================
+Z czego składa się krew? | Z osocza (ok. 55%) i elementów morfotycznych (ok. 45%): erytrocytów, leukocytów i płytek krwi.
+Ile krwi ma dorosły człowiek? | Ok. 5–6 litrów (ok. 7–8% masy ciała).
+Funkcje krwi | Transport (O₂, CO₂, składniki odżywcze, hormony, produkty przemiany materii)\nobronna (odporność)\nutrzymanie homeostazy (pH, ciśnienie osmotyczne)\ntermoregulacja\nkrzepnięcie (hemostaza)
+Skład osocza | Woda (ok. 90%)\nbiałka (albuminy, globuliny, fibrynogen) ok. 7%\nelektrolity\nglukoza, lipidy, aminokwasy\nhormony, produkty przemiany materii
+Rola albumin | Utrzymanie ciśnienia onkotycznego osocza i transport (kwasy tłuszczowe, bilirubina, leki).
+Czym różni się surowica od osocza? | Surowica to osocze pozbawione fibrynogenu i czynników krzepnięcia (powstaje po wykrzepieniu krwi).
+Hematokryt | Odsetek objętości krwi zajmowany przez elementy morfotyczne (głównie erytrocyty); norma ok. 40–50% u mężczyzn i 36–46% u kobiet.
+Erytrocyt – budowa | Komórka dwuwklęsła (krążek), średnica 7–8 µm\nbez jądra i organelli\nwypełniona hemoglobiną\nelastyczna (cytoszkielet ze spektryną)
+Ile erytrocytów jest we krwi? | Ok. 4,5–5,5 mln/µl u mężczyzn i 4–5 mln/µl u kobiet.
+Jak długo żyje erytrocyt i gdzie jest niszczony? | Ok. 120 dni; niszczony głównie w śledzionie (makrofagi), także w wątrobie i szpiku.
+Dlaczego erytrocyt jest dwuwklęsły? | Duża powierzchnia w stosunku do objętości – szybka wymiana gazowa i łatwe odkształcanie w naczyniach włosowatych.
+Jak erytrocyt uzyskuje energię? | Z glikolizy beztlenowej (nie ma mitochondriów, nie zużywa przenoszonego tlenu).
+Czym jest retikulocyt? | Młody erytrocyt z resztkami rybosomów (sieć widoczna w barwieniu przyżyciowym); ok. 1% erytrocytów krwi – wskaźnik pracy szpiku.
+Budowa hemoglobiny | Białko o budowie czwartorzędowej: 4 łańcuchy globiny (u dorosłych 2α + 2β), każdy z grupą hemową zawierającą Fe²⁺.
+Ile cząsteczek O₂ wiąże jedna hemoglobina? | 4 (po jednej na każdą grupę hemową).
+Rodzaje hemoglobiny | HbA (2α2β) – ok. 97% u dorosłych\nHbA₂ (2α2δ) – ok. 2–3%\nHbF płodowa (2α2γ) – większe powinowactwo do O₂
+Połączenia hemoglobiny z gazami | Oksyhemoglobina – z O₂\nkarbaminohemoglobina – z CO₂\nkarboksyhemoglobina – z CO (bardzo trwała, zatrucie czadem)\nmethemoglobina – Fe³⁺, nie przenosi O₂
+Rola hemoglobiny | Transport O₂ z płuc do tkanek, część CO₂ z tkanek do płuc oraz bufor krwi (utrzymanie pH).
+Na czym polega kooperatywność hemoglobiny? | Przyłączenie jednej cząsteczki O₂ ułatwia przyłączenie kolejnych – krzywa dysocjacji ma kształt litery S.
+Co przesuwa krzywą dysocjacji hemoglobiny w prawo (łatwiejsze oddawanie O₂)? | ↑ CO₂\n↓ pH (efekt Bohra)\n↑ temperatura\n↑ 2,3-BPG
+Ile jest leukocytów i jak je dzielimy? | 4–10 tys./µl; granulocyty (neutrofile, eozynofile, bazofile) i agranulocyty (limfocyty, monocyty).
+Wzór odsetkowy leukocytów (rozmaz) | Neutrofile 50–70%\nlimfocyty 20–40%\nmonocyty 2–8%\neozynofile 1–4%\nbazofile 0–1%
+Neutrofil – budowa i funkcja | 10–12 µm, jądro segmentowane (3–5 płatów), drobne obojętnochłonne ziarnistości\nfagocytoza bakterii, pierwsza linia obrony w ostrym zapaleniu (tworzą ropę)
+Jak nazywa się młody neutrofil z niepodzielonym jądrem? | Pałeczkowaty (forma z jądrem w kształcie pałeczki/podkowy).
+Eozynofil – budowa i funkcja | 12–14 µm, jądro dwupłatowe („okulary”), duże pomarańczowo-czerwone ziarnistości kwasochłonne\nobrona przeciw pasożytom, udział w alergii (białko zasadowe główne, unieszkodliwianie histaminy)
+Bazofil – budowa i funkcja | 10–12 µm, jądro nieregularne zasłonięte dużymi ciemnofioletowymi ziarnistościami\nzawierają heparynę i histaminę – reakcje alergiczne i nadwrażliwość
+Limfocyt – budowa | 6–15 µm (małe i duże), duże okrągłe ciemne jądro, wąski rąbek błękitnej cytoplazmy.
+Rodzaje limfocytów i ich rola | Limfocyty B – odporność humoralna (przekształcają się w plazmocyty produkujące przeciwciała)\nlimfocyty T – odporność komórkowa (pomocnicze CD4, cytotoksyczne CD8, regulatorowe)\nkomórki NK – niszczą komórki zakażone i nowotworowe (odporność wrodzona)
+Monocyt – budowa i funkcja | Największy leukocyt (15–20 µm), jądro nerkowate lub podkowiaste, szaroniebieska cytoplazma\npo przejściu do tkanek staje się makrofagiem – fagocytoza, prezentacja antygenu
+Płytki krwi – budowa | Bezjądrowe fragmenty cytoplazmy megakariocytów, 2–4 µm\nczęść jasna (hialomer) i ziarnista (granulomer)\n150–400 tys./µl, żyją 8–10 dni
+Funkcja płytek krwi | Hemostaza: przylegają do uszkodzonego naczynia, agregują (czop płytkowy) i uwalniają czynniki krzepnięcia oraz czynniki wzrostu.
+Czym jest hemopoeza i gdzie zachodzi u dorosłego? | Wytwarzanie komórek krwi; u dorosłego w czerwonym szpiku kostnym (kości płaskie, trzony kręgów, nasady kości długich), limfocyty dojrzewają też w grasicy i narządach limfatycznych.
+Z jakiej komórki pochodzą wszystkie komórki krwi? | Z pluripotencjalnej komórki macierzystej szpiku (hemocytoblast) – daje linię mieloidalną i limfoidalną.
+Hormon pobudzający wytwarzanie erytrocytów | Erytropoetyna (EPO) – wytwarzana głównie w nerkach przy niedotlenieniu.
+Jak przygotować i zabarwić rozmaz krwi? | Kroplę krwi rozprowadza się cienko szkiełkiem na szkiełku podstawowym, suszy i barwi metodą panoptyczną (May-Grünwald-Giemsa = Pappenheim).
+Odporność wrodzona – cechy | Nieswoista, obecna od urodzenia\ndziała natychmiast\nbez pamięci immunologicznej\nrozpoznaje ogólne wzorce drobnoustrojów (PAMP)
+Składniki odporności wrodzonej | Bariery: skóra, błony śluzowe, lizozym, kwaśne pH\nkomórki: neutrofile, makrofagi, komórki NK, eozynofile, bazofile, mastocyty, komórki dendrytyczne\nczynniki humoralne: dopełniacz, interferony, białka ostrej fazy\nreakcja zapalna i gorączka
+Odporność nabyta (swoista) – cechy | Swoista wobec konkretnego antygenu\nrozwija się po kontakcie (kilka dni)\nma pamięć immunologiczną – szybsza i silniejsza odpowiedź przy ponownym kontakcie\nopiera się na limfocytach T i B
+Odporność humoralna a komórkowa | Humoralna – limfocyty B i przeciwciała (immunoglobuliny) w płynach ustrojowych; komórkowa – limfocyty T niszczą zakażone komórki i aktywują inne komórki.
+Odporność nabyta czynna i bierna – przykłady | Czynna naturalna – przechorowanie; czynna sztuczna – szczepienie; bierna naturalna – przeciwciała matki (łożysko, mleko); bierna sztuczna – surowica odpornościowa.
+Klasy przeciwciał (immunoglobulin) | IgG – najliczniejsze, przechodzą przez łożysko\nIgM – pierwsze w odpowiedzi pierwotnej\nIgA – na błonach śluzowych, w mleku\nIgE – alergia, pasożyty\nIgD – receptor na limfocytach B
+Komórki prezentujące antygen (APC) | Komórki dendrytyczne\nmakrofagi\nlimfocyty B
+
+// ================= ĆW4 – TKANKA ŁĄCZNA I CHRZĘSTNA =================
+Cechy tkanki łącznej | Mało komórek, dużo istoty międzykomórkowej\nistota międzykomórkowa = włókna + istota podstawowa\nzwykle unaczyniona (poza chrząstką)\npochodzi z mezenchymy
+Funkcje tkanki łącznej | Podporowa i mechaniczna\nłącząca narządy i tkanki\nodżywcza (transport przez istotę podstawową)\nobronna (makrofagi, plazmocyty)\nmagazynująca (tłuszcz, woda, jony)\nregeneracyjna (blizna)
+Z czego powstaje tkanka łączna? | Z mezenchymy – zarodkowej tkanki łącznej pochodzenia mezodermalnego.
+Podział tkanki łącznej | Zarodkowa: mezenchyma, galaretowata (sznur pępowinowy – galareta Whartona)\nwłaściwa: luźna (wiotka), zbita (regularna i nieregularna), siateczkowa, tłuszczowa, sprężysta\nszkieletowa: chrzęstna i kostna\npłynna: krew i chłonka
+Komórki osiadłe tkanki łącznej | Fibroblasty i fibrocyty\nadipocyty\nkomórki mezenchymatyczne (macierzyste)\nmakrofagi osiadłe (histiocyty)\nkomórki siateczki
+Komórki wędrujące tkanki łącznej | Makrofagi wędrujące\nkomórki tuczne (mastocyty)\nkomórki plazmatyczne\nleukocyty (neutrofile, eozynofile, limfocyty)
+Fibroblast – budowa i funkcja | Wrzecionowata komórka z wypustkami, owalne jasne jądro, zasadochłonna cytoplazma (dużo szorstkiej siateczki)\nwytwarza włókna i istotę podstawową, kluczowy w gojeniu ran
+Czym różni się fibroblast od fibrocytu? | Fibrocyt to mniej aktywna, mniejsza forma fibroblastu – wrzecionowata, z ciemnym wydłużonym jądrem i skąpą cytoplazmą.
+Makrofag – budowa i funkcja | Nieregularny kształt, jądro nerkowate, liczne lizosomy i fagosomy\nfagocytoza, prezentacja antygenu, wydzielanie cytokin
+Komórka tuczna (mastocyt) – budowa i funkcja | Owalna komórka wypełniona zasadochłonnymi, metachromatycznymi ziarnistościami\nheparyna (przeciwkrzepliwie) i histamina (rozszerza naczynia, zwiększa przepuszczalność)\nreakcje alergiczne (receptor dla IgE), zapalenie
+Komórka plazmatyczna – budowa i funkcja | Owalna, jądro ekscentryczne z chromatyną w układzie „szprych koła”, jasne pole przy jądrze (aparat Golgiego), zasadochłonna cytoplazma\nwytwarza przeciwciała – powstaje z limfocyta B
+Adipocyt – budowa | Duża kulista komórka z jedną kroplą tłuszczu; jądro i cytoplazma zepchnięte na obwód („komórka sygnetowata”).
+Składniki istoty międzykomórkowej tkanki łącznej | Włókna: kolagenowe, sprężyste, siateczkowe\nistota podstawowa: glikozaminoglikany, proteoglikany, glikoproteiny adhezyjne (fibronektyna, laminina), woda
+Glikozaminoglikany – przykłady i rola | Kwas hialuronowy, siarczan chondroityny, keratanu, dermatanu, heparanu\nwiążą wodę – tworzą żel, nadają sprężystość i odporność na ucisk
+Włókna kolagenowe – budowa | Najliczniejsze, grube (1–20 µm), faliste, nierozgałęzione pęczki\nzbudowane z kolagenu (tropokolagen = 3 łańcuchy α w potrójnej helisie)\npoprzeczne prążkowanie co 67 nm (mikroskop elektronowy)
+Włókna kolagenowe – właściwości i barwienie | Bardzo wytrzymałe na rozciąganie, mało rozciągliwe\nkwasochłonne – w H+E różowe\nw metodzie van Giesona czerwone, w Mallorym niebieskie
+Główne typy kolagenu i występowanie | I – skóra, ścięgna, kość, więzadła (najczęstszy)\nII – chrząstka szklista i sprężysta\nIII – włókna siateczkowe (narządy limfatyczne, wątroba)\nIV – błony podstawne
+Do czego potrzebna jest witamina C przy syntezie kolagenu? | Do hydroksylacji proliny i lizyny – bez niej kolagen jest słaby (szkorbut: krwawienia dziąseł, słabe gojenie ran).
+Włókna sprężyste – budowa | Cienkie, rozgałęzione, tworzą sieci lub błony okienkowe\nzbudowane z elastyny (rdzeń) i mikrofibryli z fibryliny (osłonka)
+Włókna sprężyste – właściwości, barwienie, występowanie | Rozciągają się nawet o 150% i wracają do kształtu\nbarwią się orceiną / rezorcyną-fuksyną (w H+E słabo)\nściany tętnic (aorta), płuca, skóra, więzadła żółte, chrząstka sprężysta
+Włókna siateczkowe (srebrochłonne) – budowa | Bardzo cienkie, rozgałęzione włókna z kolagenu typu III, tworzą delikatną sieć\npokryte glikoproteinami – stąd argyrofilia (czernieją po impregnacji srebrem) i barwienie PAS
+Gdzie występują włókna siateczkowe? | Zrąb narządów limfatycznych (węzły chłonne, śledziona) i szpiku\nwątroba\nwokół komórek mięśniowych, tłuszczowych, nerwów\nblaszka siateczkowa błony podstawnej
+Porównanie włókien tkanki łącznej | Kolagenowe – grube, faliste, nierozgałęzione, wytrzymałe; sprężyste – cienkie, rozgałęzione, rozciągliwe; siateczkowe – najcieńsze, sieć, srebrochłonne, rusztowanie narządów.
+Tkanka łączna luźna (wiotka) – budowa i występowanie | Dużo istoty podstawowej, luźno ułożone włókna, liczne różne komórki\npodśluzówka, tkanka podskórna, wokół naczyń i nerwów, zrąb narządów
+Tkanka łączna zbita regularna (o układzie regularnym) | Równoległe pęczki włókien kolagenowych, między nimi rzędy fibrocytów\nścięgna, więzadła, rozcięgna
+Tkanka łączna zbita nieregularna | Grube pęczki kolagenu biegnące w różnych kierunkach\nskóra właściwa (warstwa siateczkowata), torebki narządów, okostna, twardówka
+Tkanka łączna siateczkowa – budowa i występowanie | Komórki siateczki z wypustkami + sieć włókien siateczkowych\nszpik kostny, węzły chłonne, śledziona
+Tkanka tłuszczowa żółta (biała) – cechy | Komórki jednopęcherzykowe (jedna duża kropla), jądro spłaszczone na obwodzie\nmagazyn energii, izolacja cieplna, ochrona mechaniczna, funkcja hormonalna (leptyna, adiponektyna)
+Tkanka tłuszczowa brunatna – cechy | Komórki wielopęcherzykowe, jądro centralne, dużo mitochondriów (cytochromy – brunatny kolor)\ntermogeneza bez drżenia (termogenina UCP-1)\ngłównie u noworodków (okolica międzyłopatkowa, wokół nerek)
+Jak goi się rana tkanki łącznej? | Krwawienie i skrzep → zapalenie (neutrofile, makrofagi) → ziarnina (fibroblasty, nowe naczynia) → produkcja kolagenu → przebudowa w bliznę.
+Cechy tkanki chrzęstnej | Komórki (chondrocyty) w jamkach w macierzy\nmacierz sztywna, ale sprężysta, dużo wody i proteoglikanów\nbrak naczyń krwionośnych i nerwów\nodżywianie przez dyfuzję z ochrzęstnej lub mazi stawowej
+Komórki tkanki chrzęstnej | Chondroblasty – młode, wytwarzają macierz (w ochrzęstnej)\nchondrocyty – dojrzałe, leżą w jamkach (chondroplastach), często w grupach izogenicznych
+Czym jest grupa izogeniczna? | Grupa 2–8 chondrocytów leżących razem, powstałych z podziałów jednej komórki – typowa dla chrząstki szklistej.
+Czym jest ochrzęstna (perichondrium) i jaka ma budowę? | Błona z tkanki łącznej zbitej otaczająca chrząstkę\nwarstwa zewnętrzna włóknista (naczynia, fibroblasty)\nwarstwa wewnętrzna chondrogenna (komórki macierzyste → chondroblasty)
+Gdzie nie ma ochrzęstnej? | Na chrząstce stawowej i w chrząstce włóknistej.
+Macierz terytorialna i międzyterytorialna | Terytorialna (torebka) – wokół grupy izogenicznej, bogata w proteoglikany, silnie zasadochłonna; międzyterytorialna – między grupami, jaśniejsza, więcej kolagenu.
+Chrząstka szklista – budowa | Jednorodna, szklista, niebieskawa macierz (kolagen typu II, agrekan)\nchondrocyty w grupach izogenicznych\nzwykle z ochrzęstną (oprócz stawowej)
+Gdzie występuje chrząstka szklista? | Chrząstki stawowe\nżebra (chrząstki żebrowe)\ntchawica i oskrzela\nkrtań (częściowo), nos\nchrząstki nasadowe (wzrostowe) i szkielet zarodka
+Chrząstka sprężysta – budowa i występowanie | Macierz z gęstą siecią włókien sprężystych (+ kolagen II), chondrocyty pojedyncze lub po 2, ochrzęstna obecna\nmałżowina uszna, przewód słuchowy zewnętrzny, trąbka słuchowa, nagłośnia
+Chrząstka włóknista – budowa i występowanie | Grube pęczki kolagenu typu I, między nimi chondrocyty w szeregach, mało macierzy, brak ochrzęstnej\nkrążki międzykręgowe (pierścień włóknisty), spojenie łonowe, łąkotki, przyczepy ścięgien
+Wzrost chrząstki – dwa mechanizmy | Śródmiąższowy (interstycjalny) – podziały chondrocytów wewnątrz chrząstki (grupy izogeniczne)\naplozycyjny (przez nawarstwianie) – chondroblasty ochrzęstnej odkładają nową macierz na powierzchni
+Regeneracja chrząstki | Słaba – brak naczyń i niska aktywność chondrocytów; ubytki goją się głównie z ochrzęstnej, często bliznowato (chrząstką włóknistą lub tkanką łączną); chrząstka stawowa praktycznie się nie odnawia.
+Zmiany chrząstki z wiekiem | Utrata wody i proteoglikanów, zwapnienie macierzy (np. chrząstki żebrowe), obumieranie chondrocytów.
+Preparaty tkanki łącznej i chrzęstnej na ćwiczeniach – przykłady | Luźna – błona podskórna / krezka\nzbita regularna – ścięgno\nzbita nieregularna – skóra właściwa\nsiateczkowa – węzeł chłonny (srebro)\ntłuszczowa – tkanka podskórna\nchrząstka szklista – tchawica, żebro\nsprężysta – małżowina uszna, nagłośnia\nwłóknista – krążek międzykręgowy
+
+// ================= ĆW5 – TKANKA KOSTNA =================
+Cechy tkanki kostnej | Zmineralizowana (twarda) istota międzykomórkowa\nbogato unaczyniona i unerwiona\nstale przebudowywana\nmagazyn wapnia i fosforanów
+Funkcje tkanki kostnej | Podporowa (szkielet)\nochronna (czaszka, klatka piersiowa)\nruch (dźwignie dla mięśni)\nmagazyn Ca²⁺ i fosforanów\nmiejsce hemopoezy (szpik czerwony)
+Skład istoty międzykomórkowej kości | Część organiczna (ok. 30–35%) – osseina: głównie kolagen typu I + białka niekolagenowe (osteokalcyna, osteonektyna, osteopontyna)\nczęść nieorganiczna (ok. 65%) – kryształy hydroksyapatytu Ca₁₀(PO₄)₆(OH)₂\nwoda
+Za co odpowiada część organiczna, a za co mineralna kości? | Organiczna (kolagen) – elastyczność i odporność na zginanie; mineralna (hydroksyapatyt) – twardość i odporność na ściskanie.
+Komórki tkanki kostnej | Komórki osteogenne (macierzyste)\nosteoblasty\nosteocyty\nkomórki okrywające (lining cells)\nosteoklasty
+Osteoblast – budowa i funkcja | Sześcienna/walcowata komórka na powierzchni kości, zasadochłonna cytoplazma (dużo szorstkiej siateczki), aktywna fosfataza zasadowa\nwytwarza osteoid i inicjuje mineralizację; zamurowany staje się osteocytem
+Czym jest osteoid? | Świeżo odłożona, jeszcze niezmineralizowana macierz kostna (głównie kolagen I) – wytwarzana przez osteoblasty.
+Osteocyt – budowa i funkcja | Dojrzała komórka zamknięta w jamce kostnej, z licznymi wypustkami w kanalikach kostnych (połączenia neksus)\nutrzymuje macierz, odbiera bodźce mechaniczne (mechanoreceptor), reguluje przebudowę i wymianę Ca
+Osteoklast – budowa i funkcja | Bardzo duża, wielojądrowa (do kilkudziesięciu jąder), kwasochłonna komórka w zatoce resorpcyjnej (Howshipa)\nrąbek szczoteczkowy (pofałdowana błona) i strefa uszczelniająca\nresorbuje kość: H⁺ rozpuszcza minerał, enzymy (katepsyna K, kwaśna fosfataza) trawią kolagen
+Skąd pochodzą osteoklasty, a skąd osteoblasty? | Osteoklasty – z linii monocytarno-makrofagowej szpiku (fuzja komórek); osteoblasty – z mezenchymalnych komórek macierzystych (komórek osteogennych).
+Jak osteoblasty kontrolują osteoklasty? | Wydzielają RANKL (pobudza tworzenie i aktywność osteoklastów) oraz osteoprotegerynę OPG (blokuje RANKL, hamuje resorpcję).
+Rodzaje tkanki kostnej wg budowy | Grubowłóknista (splotowata) – nieuporządkowane włókna, kość młoda / gojąca się\nblaszkowata – włókna ułożone w blaszkach: zbita i gąbczasta
+Kość zbita – budowa | Zbudowana z osteonów (systemów Haversa) i blaszek okalających oraz międzysystemowych; brak jam szpikowych w jej obrębie\ntrzony kości długich, warstwa zewnętrzna wszystkich kości
+Kość gąbczasta – budowa | Sieć beleczek kostnych (blaszki ułożone równolegle do powierzchni beleczki, bez osteonów), przestrzenie wypełnia szpik\nnasady kości długich, wnętrze kości płaskich i krótkich, trzony kręgów
+Jak beleczki kości gąbczastej są odżywiane? | Przez dyfuzję z naczyń szpiku – beleczki są cienkie, więc nie potrzebują kanałów Haversa.
+Czym jest osteon (system Haversa)? | Podstawowa jednostka kości zbitej: walec z 4–20 koncentrycznych blaszek kostnych wokół kanału Haversa z naczyniami i nerwem; między blaszkami osteocyty w jamkach połączone kanalikami.
+Jak przebiegają włókna kolagenowe w blaszkach osteonu? | Spiralnie, a w sąsiednich blaszkach pod innym kątem (naprzemiennie) – zwiększa to wytrzymałość.
+Czym są kanały Volkmanna? | Kanały przeszywające, biegnące poprzecznie/skośnie – łączą kanały Haversa ze sobą, z okostną i jamą szpikową; nie mają blaszek koncentrycznych.
+Rodzaje blaszek kostnych w kości zbitej | Blaszki osteonów (koncentryczne)\nblaszki międzysystemowe (resztki starych osteonów)\nblaszki okalające zewnętrzne (pod okostną)\nblaszki okalające wewnętrzne (od strony jamy szpikowej)
+Czym jest linia cementowa? | Cienka warstwa macierzy bogata w minerał, a uboga w kolagen – wyraźna granica oddzielająca osteon od otaczających blaszek międzysystemowych.
+Kość zbita a gąbczasta – porównanie | Zbita: lita, osteony, kanały Haversa i Volkmanna, na obwodzie i w trzonach; gąbczasta: beleczki bez osteonów, przestrzenie ze szpikiem, w nasadach i wnętrzu kości – lżejsza, ułożona wzdłuż linii sił.
+Okostna (periosteum) – budowa | Warstwa zewnętrzna włóknista – tkanka łączna zbita, naczynia i nerwy\nwarstwa wewnętrzna rozrodcza (osteogenna) – komórki osteogenne i osteoblasty\nprzyczepiona do kości włóknami Sharpeya
+Funkcje okostnej | Odżywianie kości (naczynia przez kanały Volkmanna)\nwzrost kości na grubość (aplozycyjny)\nregeneracja – gojenie złamań\nprzyczep ścięgien i więzadeł\nczucie (bogato unerwiona, ból)
+Czym są włókna Sharpeya? | Pęczki kolagenu z warstwy włóknistej okostnej wnikające do blaszek okalających zewnętrznych – mocują okostną (i ścięgna) do kości.
+Śródkostna (endosteum) | Cienka warstwa komórek osteogennych i tkanki łącznej wyściełająca jamę szpikową, beleczki i kanały – udział we wzroście i przebudowie kości od wewnątrz.
+Kostnienie na podłożu łącznotkankowym (bezpośrednie) | Mezenchyma → komórki osteogenne → osteoblasty tworzą ogniska kostnienia i beleczki kości splotowatej; kości płaskie czaszki, część obojczyka, żuchwa.
+Kostnienie na podłożu chrzęstnym (pośrednie) | Najpierw model z chrząstki szklistej, który jest stopniowo zastępowany kością (pierwotny punkt kostnienia w trzonie, wtórne w nasadach); większość kości (np. kości długie).
+Strefy chrząstki nasadowej (płytki wzrostowej) | Chrząstka spoczynkowa\nproliferacji (chondrocyty w słupkach)\nhipertrofii (dojrzewania)\nzwapnienia\nkostnienia (osteoblasty na resztkach zwapniałej chrząstki)
+Jak kość rośnie na długość, a jak na grubość? | Na długość – dzięki chrząstce nasadowej (do zakończenia wzrostu, zrost ok. 18–25 r.ż.); na grubość – przez odkładanie kości przez okostną (aplozycyjnie) i resorpcję od strony jamy szpikowej.
+Przebudowa (remodeling) kości | Stały cykl: osteoklasty resorbują stary fragment (stożek tnący), osteoblasty odkładają nową kość – tak powstają nowe osteony; dorosły wymienia ok. 10% szkieletu rocznie; kość dostosowuje się do obciążeń (prawo Wolffa).
+Etapy gojenia złamania kości | Krwiak w szczelinie\nziarnina (zapalenie, naczynia, fibroblasty)\nkostnina miękka (chrząstka i tkanka łączna)\nkostnina twarda (kość splotowata)\nprzebudowa w kość blaszkowatą
+Rola tkanki kostnej w gospodarce wapniem | Kość magazynuje ok. 99% wapnia ustroju\nwymiana szybka – z płynu wokół osteocytów\nwymiana wolna – przez resorpcję (osteoklasty) i odkładanie (osteoblasty)\npozwala utrzymać stałe stężenie Ca²⁺ we krwi
+Prawidłowe stężenie wapnia we krwi i do czego jest potrzebny | Ok. 2,25–2,6 mmol/l; skurcz mięśni, przewodnictwo nerwowe, krzepnięcie krwi, wydzielanie hormonów, mineralizacja kości.
+Parathormon (PTH) – źródło i działanie | Przytarczyce, wydzielany przy spadku Ca²⁺\n↑ resorpcja kości (pośrednio przez osteoblasty → RANKL → osteoklasty)\n↑ wchłanianie zwrotne Ca w nerkach, ↓ fosforanów\n↑ synteza kalcytriolu w nerce
+Kalcytonina – źródło i działanie | Komórki C (okołopęcherzykowe) tarczycy, przy wzroście Ca²⁺\nhamuje osteoklasty → ↓ resorpcja kości\n↓ Ca²⁺ we krwi
+Witamina D (kalcytriol) – działanie | Aktywna forma 1,25(OH)₂D₃ powstaje w nerce\n↑ wchłanianie Ca i fosforanów w jelicie\numożliwia prawidłową mineralizację kości
+Skutki niedoboru witaminy D | U dzieci krzywica, u dorosłych osteomalacja – kość słabo zmineralizowana (dużo osteoidu), miękka, odkształca się.
+Czym jest osteoporoza? | Zmniejszenie masy kostnej i zaburzenie mikroarchitektury (przewaga resorpcji nad tworzeniem) – kość krucha, częste złamania; zwłaszcza po menopauzie (spadek estrogenów).
+Inne hormony wpływające na kość | Estrogeny i testosteron – hamują resorpcję, zamykanie chrząstek nasadowych\nhormon wzrostu (przez IGF-1) – wzrost na długość\nglikokortykosteroidy – ↓ tworzenie kości (osteoporoza)\nhormony tarczycy – dojrzewanie szkieletu
+Preparaty tkanki kostnej na ćwiczeniach | Szlif kości zbitej (bez barwienia) – osteony, jamki i kanaliki widoczne jako ciemne (powietrze)\nkość odwapniona barwiona H+E – komórki, okostna, szpik\nkostnienie na podłożu chrzęstnym – płytka wzrostowa
+Czym różni się szlif kości od preparatu kości odwapnionej? | Szlif – cienko zeszlifowana kość z minerałem, bez komórek (widać architekturę osteonów, jamki i kanaliki); odwapniona – usunięty minerał (kwasy, EDTA), można kroić i barwić – widać komórki i tkanki miękkie.
+
+
+// ================= RYSOWANIE – wzorcowe schematy =================
+Narysuj i podpisz mikroskop świetlny | [obraz: assets/imports/histologia/mikroskop-opis.webp] Część optyczna: okular, obiektywy w rewolwerze, kondensor, przysłona, źródło światła\nczęść mechaniczna: podstawa, ramię, tubus, stolik, śruba makro- i mikrometryczna
+Narysuj nabłonki jednowarstwowe (płaski, sześcienny, walcowaty, wielorzędowy) – co musi być na rysunku? | [obraz: assets/imports/histologia/nab-jedno-opis.webp] Jedna warstwa komórek na błonie podstawnej, pod nią tkanka łączna\nkształt jąder: płaskie / okrągłe centralne / owalne w podstawie\nwalcowaty: mikrokosmki, komórki kubkowe\nwielorzędowy: jądra na różnych wysokościach, rzęski, komórki podstawne
+Narysuj nabłonki wielowarstwowe (płaski nierogowaciejący, rogowaciejący, przejściowy) – co musi być na rysunku? | [obraz: assets/imports/histologia/nab-wielo-opis.webp] Warstwa podstawna walcowata na błonie podstawnej\nwarstwa kolczysta z komórek wielobocznych\npłaski: spłaszczone komórki na powierzchni (z jądrami lub warstwa rogowa bez jąder)\nprzejściowy: komórki parasolowate, często dwujądrowe
+Narysuj rozmaz krwi – jakie komórki i cechy zaznaczyć? | [obraz: assets/imports/histologia/krew-opis.webp] Erytrocyt bez jądra z przejaśnieniem\nneutrofil – jądro 3–5 płatów\neozynofil – jądro 2-płatowe, czerwone ziarnistości\nbazofil – ciemne ziarnistości zasłaniające jądro\nlimfocyt – duże okrągłe jądro, wąski rąbek cytoplazmy\nmonocyt – największy, jądro nerkowate\npłytki – drobne fragmenty z ziarnistościami
+Narysuj schemat budowy hemoglobiny | [obraz: assets/imports/histologia/hemoglobina-opis.webp] 4 podjednostki globiny: 2α i 2β\nw każdej grupa hemowa z Fe²⁺\njeden hem wiąże 1 cząsteczkę O₂ (razem 4 O₂)
+Narysuj tkankę łączną luźną – co musi być na rysunku? | [obraz: assets/imports/histologia/tl-luzna-opis.webp] Włókna kolagenowe (grube, faliste) i sprężyste (cienkie, rozgałęzione)\nfibroblasty\nkomórki wędrujące: makrofag, mastocyt, plazmocyt\nadipocyt\nnaczynie krwionośne\nistota podstawowa
+Narysuj trzy rodzaje włókien tkanki łącznej i podaj ich cechy | [obraz: assets/imports/histologia/wlokna-opis.webp] Kolagenowe – grube faliste pęczki, nie rozgałęziają się\nsprężyste – cienkie, rozgałęzione, sieci\nsiateczkowe – delikatna sieć, czarne po impregnacji srebrem
+Narysuj tkankę tłuszczową żółtą i brunatną – czym się różnią na rysunku? | [obraz: assets/imports/histologia/tluszcz-opis.webp] Żółta: duże komórki z jedną kroplą tłuszczu, jądro spłaszczone na obwodzie (sygnet)\nbrunatna: mniejsze komórki z wieloma kropelkami, jądro centralne, okrągłe
+Narysuj trzy rodzaje chrząstki – co musi być na rysunku? | [obraz: assets/imports/histologia/chrzastki-opis.webp] Szklista: ochrzęstna, jednorodna macierz, chondrocyty w jamkach w grupach izogenicznych, torebki\nsprężysta: sieć włókien sprężystych, pojedyncze chondrocyty\nwłóknista: grube pęczki kolagenu, chondrocyty w szeregach, brak ochrzęstnej
+Narysuj osteon (system Haversa) – co musi być na rysunku? | [obraz: assets/imports/histologia/osteon-opis.webp] Kanał Haversa z naczyniami w środku\nkoncentryczne blaszki kostne\nosteocyty w jamkach między blaszkami\nkanaliki kostne łączące jamki\nlinia cementowa na obwodzie\nblaszki międzysystemowe i kanał Volkmanna
+Narysuj przekrój ściany trzonu kości długiej – co musi być na rysunku? | [obraz: assets/imports/histologia/kosc-trzon-opis.webp] Okostna: warstwa włóknista i rozrodcza\nblaszki okalające zewnętrzne\nosteony z blaszkami międzysystemowymi\nblaszki okalające wewnętrzne\nśródkostna\njama szpikowa
+Narysuj komórki tkanki kostnej w ich położeniu | [obraz: assets/imports/histologia/kom-kosci-opis.webp] Osteoblasty – rząd sześciennych komórek na powierzchni kości, pod nimi osteoid\nosteocyty – w jamkach z wypustkami w kanalikach\nosteoklast – duży, wielojądrowy, w zatoce Howshipa, z rąbkiem szczoteczkowym
+Narysuj schemat regulacji wapnia (PTH, kalcytonina, witamina D) | [obraz: assets/imports/histologia/wapn-opis.webp] PTH (przytarczyce) – podnosi Ca²⁺: resorpcja kości, wchłanianie zwrotne w nerce, synteza kalcytriolu\nkalcytonina (komórki C tarczycy) – obniża Ca²⁺, hamuje osteoklasty\nkalcytriol – wchłanianie Ca w jelicie\nkość – rezerwuar 99% wapnia
+
+// ================= ROZPOZNAWANIE NA SCHEMATACH (nr) =================
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 1? | Okular | ✗ Podstawa; Tubus; Kondensor
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 2? | Tubus | ✗ Stolik przedmiotowy; Okular; Podstawa
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 3? | Rewolwer | ✗ Kondensor; Śruba makrometryczna; Stolik przedmiotowy
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 4? | Obiektywy | ✗ Rewolwer; Śruba makrometryczna; Tubus
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 5? | Stolik przedmiotowy | ✗ Śruba makrometryczna; Kondensor; Obiektywy
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 6? | Kondensor | ✗ Ramię (statyw); Śruba mikrometryczna; Rewolwer
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 7? | Przysłona (diafragma) | ✗ Tubus; Źródło światła; Ramię (statyw)
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 8? | Źródło światła | ✗ Przysłona (diafragma); Stolik przedmiotowy; Tubus
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 9? | Ramię (statyw) | ✗ Preparat; Źródło światła; Rewolwer
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 10? | Śruba makrometryczna | ✗ Ramię (statyw); Kondensor; Okular
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 11? | Śruba mikrometryczna | ✗ Preparat; Przysłona (diafragma); Tubus
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 12? | Podstawa | ✗ Ramię (statyw); Tubus; Śruba makrometryczna
+[obraz: assets/imports/histologia/mikroskop-nr.webp] Mikroskop świetlny – budowa: co oznacza nr 13? | Preparat | ✗ Obiektywy; Śruba mikrometryczna; Podstawa
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 1? | Jądro spłaszczone | ✗ Tkanka łączna; Jądro okrągłe, centralne; Mikrokosmki (rąbek szczoteczkowy)
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 2? | Błona podstawna | ✗ Mikrokosmki (rąbek szczoteczkowy); Tkanka łączna; Jądro owalne, w podstawie
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 3? | Jądro okrągłe, centralne | ✗ Mikrokosmki (rąbek szczoteczkowy); Tkanka łączna; Błona podstawna
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 4? | Mikrokosmki (rąbek szczoteczkowy) | ✗ Jądro okrągłe, centralne; Tkanka łączna; Komórka kubkowa
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 5? | Komórka kubkowa | ✗ Tkanka łączna; Jądro owalne, w podstawie; Jądro okrągłe, centralne
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 6? | Jądro owalne, w podstawie | ✗ Tkanka łączna; Jądro spłaszczone; Błona podstawna
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 7? | Rzęski (migawki) | ✗ Mikrokosmki (rąbek szczoteczkowy); Jądro okrągłe, centralne; Komórka podstawna
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 8? | Komórka podstawna | ✗ Komórka kubkowa; Tkanka łączna; Błona podstawna
+[obraz: assets/imports/histologia/nab-jedno-nr.webp] Nabłonki jednowarstwowe: co oznacza nr 9? | Tkanka łączna | ✗ Jądro spłaszczone; Jądro owalne, w podstawie; Mikrokosmki (rąbek szczoteczkowy)
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 1? | Warstwa podstawna | ✗ Tkanka łączna; Spłaszczone komórki z jądrami; Warstwa rogowa (bez jąder)
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 2? | Warstwa kolczysta (pośrednia) | ✗ Tkanka łączna; Komórki parasolowate (często 2 jądra); Błona podstawna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 3? | Spłaszczone komórki z jądrami | ✗ Warstwa podstawna; Warstwa rogowa (bez jąder); Błona podstawna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 4? | Warstwa rogowa (bez jąder) | ✗ Spłaszczone komórki z jądrami; Tkanka łączna; Błona podstawna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 5? | Błona podstawna | ✗ Tkanka łączna; Warstwa rogowa (bez jąder); Warstwa podstawna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 6? | Komórki parasolowate (często 2 jądra) | ✗ Warstwa kolczysta (pośrednia); Warstwa rogowa (bez jąder); Tkanka łączna
+[obraz: assets/imports/histologia/nab-wielo-nr.webp] Nabłonki wielowarstwowe: co oznacza nr 7? | Tkanka łączna | ✗ Warstwa kolczysta (pośrednia); Warstwa podstawna; Spłaszczone komórki z jądrami
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 1? | Przejaśnienie centralne | ✗ Zasadochłonne ziarnistości (zasłaniają jądro); Ziarnistości (granulomer); Jądro 3–5 płatów
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 2? | Jądro 3–5 płatów | ✗ Przejaśnienie centralne; Jądro nerkowate; Kwasochłonne ziarnistości
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 3? | Kwasochłonne ziarnistości | ✗ Jądro 2-płatowe; Przejaśnienie centralne; Ziarnistości (granulomer)
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 4? | Jądro 2-płatowe | ✗ Jądro 3–5 płatów; Kwasochłonne ziarnistości; Jądro nerkowate
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 5? | Zasadochłonne ziarnistości (zasłaniają jądro) | ✗ Przejaśnienie centralne; Kwasochłonne ziarnistości; Jądro 2-płatowe
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 6? | Wąski rąbek cytoplazmy | ✗ Jądro 3–5 płatów; Jądro 2-płatowe; Przejaśnienie centralne
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 7? | Jądro nerkowate | ✗ Wąski rąbek cytoplazmy; Zasadochłonne ziarnistości (zasłaniają jądro); Ziarnistości (granulomer)
+[obraz: assets/imports/histologia/krew-nr.webp] Elementy morfotyczne krwi (rozmaz, barwienie panoptyczne): co oznacza nr 8? | Ziarnistości (granulomer) | ✗ Zasadochłonne ziarnistości (zasłaniają jądro); Jądro 2-płatowe; Przejaśnienie centralne
+[obraz: assets/imports/histologia/hemoglobina-nr.webp] Hemoglobina A (HbA) – budowa: co oznacza nr 1? | Łańcuch α (141 aminokwasów) | ✗ Globina = 4 łańcuchy (2α + 2β); Łańcuch β (146 aminokwasów); Grupa hemowa z Fe²⁺ (wiąże 1 O₂)
+[obraz: assets/imports/histologia/hemoglobina-nr.webp] Hemoglobina A (HbA) – budowa: co oznacza nr 2? | Łańcuch β (146 aminokwasów) | ✗ Łańcuch α (141 aminokwasów); Globina = 4 łańcuchy (2α + 2β); Grupa hemowa z Fe²⁺ (wiąże 1 O₂)
+[obraz: assets/imports/histologia/hemoglobina-nr.webp] Hemoglobina A (HbA) – budowa: co oznacza nr 3? | Grupa hemowa z Fe²⁺ (wiąże 1 O₂) | ✗ Globina = 4 łańcuchy (2α + 2β); Łańcuch β (146 aminokwasów); Łańcuch α (141 aminokwasów)
+[obraz: assets/imports/histologia/hemoglobina-nr.webp] Hemoglobina A (HbA) – budowa: co oznacza nr 4? | Globina = 4 łańcuchy (2α + 2β) | ✗ Łańcuch β (146 aminokwasów); Grupa hemowa z Fe²⁺ (wiąże 1 O₂); Łańcuch α (141 aminokwasów)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 1? | Fibroblast | ✗ Makrofag (fagosomy); Adipocyt; Włókna kolagenowe
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 2? | Włókna kolagenowe | ✗ Istota podstawowa; Fibroblast; Komórka tuczna (mastocyt)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 3? | Włókna sprężyste | ✗ Komórka tuczna (mastocyt); Adipocyt; Komórka plazmatyczna („szprychy koła”)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 4? | Komórka tuczna (mastocyt) | ✗ Istota podstawowa; Włókna sprężyste; Komórka plazmatyczna („szprychy koła”)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 5? | Makrofag (fagosomy) | ✗ Komórka plazmatyczna („szprychy koła”); Włókna kolagenowe; Naczynie krwionośne
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 6? | Komórka plazmatyczna („szprychy koła”) | ✗ Makrofag (fagosomy); Istota podstawowa; Włókna sprężyste
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 7? | Adipocyt | ✗ Naczynie krwionośne; Makrofag (fagosomy); Komórka tuczna (mastocyt)
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 8? | Naczynie krwionośne | ✗ Włókna kolagenowe; Komórka plazmatyczna („szprychy koła”); Adipocyt
+[obraz: assets/imports/histologia/tl-luzna-nr.webp] Tkanka łączna właściwa luźna (wiotka): co oznacza nr 9? | Istota podstawowa | ✗ Fibroblast; Komórka tuczna (mastocyt); Makrofag (fagosomy)
+[obraz: assets/imports/histologia/tluszcz-nr.webp] Tkanka tłuszczowa: co oznacza nr 1? | Jedna duża kropla tłuszczu | ✗ Wiele małych kropli; Jądro spłaszczone na obwodzie („sygnet”); Jądro centralne, okrągłe
+[obraz: assets/imports/histologia/tluszcz-nr.webp] Tkanka tłuszczowa: co oznacza nr 2? | Jądro spłaszczone na obwodzie („sygnet”) | ✗ Jądro centralne, okrągłe; Jedna duża kropla tłuszczu; Wiele małych kropli
+[obraz: assets/imports/histologia/tluszcz-nr.webp] Tkanka tłuszczowa: co oznacza nr 3? | Wiele małych kropli | ✗ Jądro spłaszczone na obwodzie („sygnet”); Jedna duża kropla tłuszczu; Jądro centralne, okrągłe
+[obraz: assets/imports/histologia/tluszcz-nr.webp] Tkanka tłuszczowa: co oznacza nr 4? | Jądro centralne, okrągłe | ✗ Jedna duża kropla tłuszczu; Wiele małych kropli; Jądro spłaszczone na obwodzie („sygnet”)
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 1? | Ochrzęstna | ✗ Chondrocyt w jamce (chondroplaście); Pęczki włókien kolagenowych; Chondrocyty w szeregach
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 2? | Macierz terytorialna (torebka) | ✗ Ochrzęstna; Chondrocyt w jamce (chondroplaście); Pęczki włókien kolagenowych
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 3? | Chondrocyt w jamce (chondroplaście) | ✗ Włókna sprężyste; Chondrocyty w szeregach; Pęczki włókien kolagenowych
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 4? | Grupa izogeniczna (2–4 chondrocyty) | ✗ Włókna sprężyste; Chondrocyt w jamce (chondroplaście); Chondrocyty w szeregach
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 5? | Włókna sprężyste | ✗ Ochrzęstna; Chondrocyt w jamce (chondroplaście); Chondrocyty w szeregach
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 6? | Pęczki włókien kolagenowych | ✗ Chondrocyt w jamce (chondroplaście); Grupa izogeniczna (2–4 chondrocyty); Chondrocyty w szeregach
+[obraz: assets/imports/histologia/chrzastki-nr.webp] Tkanka chrzęstna – rodzaje: co oznacza nr 7? | Chondrocyty w szeregach | ✗ Chondrocyt w jamce (chondroplaście); Grupa izogeniczna (2–4 chondrocyty); Ochrzęstna
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 1? | Kanał osteonu (Haversa) – naczynia, nerwy | ✗ Blaszki międzysystemowe; Blaszki osteonu (koncentryczne); Linia cementowa
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 2? | Blaszki osteonu (koncentryczne) | ✗ Blaszki międzysystemowe; Kanał Volkmanna (przeszywający); Osteocyt w jamce
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 3? | Osteocyt w jamce | ✗ Blaszki międzysystemowe; Kanał osteonu (Haversa) – naczynia, nerwy; Blaszki osteonu (koncentryczne)
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 4? | Kanaliki kostne | ✗ Blaszki międzysystemowe; Osteocyt w jamce; Kanał osteonu (Haversa) – naczynia, nerwy
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 5? | Linia cementowa | ✗ Osteocyt w jamce; Blaszki osteonu (koncentryczne); Kanaliki kostne
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 6? | Blaszki międzysystemowe | ✗ Kanał osteonu (Haversa) – naczynia, nerwy; Kanał Volkmanna (przeszywający); Osteocyt w jamce
+[obraz: assets/imports/histologia/osteon-nr.webp] Osteon (system Haversa) – przekrój poprzeczny: co oznacza nr 7? | Kanał Volkmanna (przeszywający) | ✗ Kanał osteonu (Haversa) – naczynia, nerwy; Kanaliki kostne; Osteocyt w jamce
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 1? | Okostna – warstwa włóknista (zewnętrzna) | ✗ Śródkostna; Okostna – warstwa rozrodcza (osteogenna); Blaszki okalające wewnętrzne
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 2? | Okostna – warstwa rozrodcza (osteogenna) | ✗ Jama szpikowa (szpik żółty); Blaszki okalające wewnętrzne; Okostna – warstwa włóknista (zewnętrzna)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 3? | Blaszki okalające zewnętrzne | ✗ Blaszki okalające wewnętrzne; Okostna – warstwa rozrodcza (osteogenna); Okostna – warstwa włóknista (zewnętrzna)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 4? | Osteony | ✗ Blaszki okalające zewnętrzne; Okostna – warstwa rozrodcza (osteogenna); Jama szpikowa (szpik żółty)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 5? | Blaszki okalające wewnętrzne | ✗ Blaszki okalające zewnętrzne; Jama szpikowa (szpik żółty); Okostna – warstwa włóknista (zewnętrzna)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 6? | Śródkostna | ✗ Okostna – warstwa włóknista (zewnętrzna); Okostna – warstwa rozrodcza (osteogenna); Jama szpikowa (szpik żółty)
+[obraz: assets/imports/histologia/kosc-trzon-nr.webp] Kość zbita trzonu – przekrój (fragment ściany): co oznacza nr 7? | Jama szpikowa (szpik żółty) | ✗ Osteony; Okostna – warstwa włóknista (zewnętrzna); Blaszki okalające wewnętrzne
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 1? | Osteoblast (sześcienny, zasadochłonny) | ✗ Zatoka resorpcyjna (Howshipa); Rąbek szczoteczkowy (pofałdowana błona); Osteoklast – wielojądrowy
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 2? | Osteoid (niezmineralizowana macierz) | ✗ Zatoka resorpcyjna (Howshipa); Rąbek szczoteczkowy (pofałdowana błona); Osteoblast (sześcienny, zasadochłonny)
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 3? | Osteocyt w jamce z wypustkami w kanalikach | ✗ Osteoblast (sześcienny, zasadochłonny); Zatoka resorpcyjna (Howshipa); Rąbek szczoteczkowy (pofałdowana błona)
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 4? | Osteoklast – wielojądrowy | ✗ Osteoblast (sześcienny, zasadochłonny); Osteocyt w jamce z wypustkami w kanalikach; Osteoid (niezmineralizowana macierz)
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 5? | Rąbek szczoteczkowy (pofałdowana błona) | ✗ Osteoklast – wielojądrowy; Osteoblast (sześcienny, zasadochłonny); Osteoid (niezmineralizowana macierz)
+[obraz: assets/imports/histologia/kom-kosci-nr.webp] Komórki tkanki kostnej: co oznacza nr 6? | Zatoka resorpcyjna (Howshipa) | ✗ Osteoid (niezmineralizowana macierz); Osteocyt w jamce z wypustkami w kanalikach; Osteoblast (sześcienny, zasadochłonny)

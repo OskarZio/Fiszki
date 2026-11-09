@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '345';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '346';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -2284,3 +2284,15 @@ function askBox({ icon = '', title = '', intro = '', steps = [], warn = '', ok =
     ov.querySelector('[data-a="1"]')?.focus({ preventScroll: true });
   });
 }
+// 🔍 powiększanie obrazka z fiszki: dotknięcie otwiera pełny ekran, drugie dotknięcie przybliża 2×, ✕ / tło zamyka
+document.addEventListener('click', e => {
+  const im = e.target.closest?.('.flash img.cimg, .flash .ctext img');
+  if (!im) return;
+  e.stopPropagation(); e.preventDefault();
+  const ov = document.createElement('div'); ov.className = 'imgzoom';
+  ov.innerHTML = `<button class="iconbtn imgzoom-x" aria-label="Zamknij">✕</button><div class="imgzoom-sc"><img src="${im.src}" alt=""></div>`;
+  const img = ov.querySelector('img');
+  img.addEventListener('click', ev => { ev.stopPropagation(); ov.classList.toggle('big'); });
+  ov.addEventListener('click', () => ov.remove());
+  document.body.append(ov);
+}, true);
