@@ -3912,3 +3912,25 @@ img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline
 .skoj-hint { margin: 0 auto; } .skoj-hint .hb-t { font-size: 19px; line-height: 1.45; }
 .skoj-rev { margin-top: 12px; } .skoj-rev .card.flash { min-height: 0; }
 .skoj-no { color: #b91c1c !important; }
+/* 🃏 Kumulacja 2: egzaminator, plecaki, typy zagrań, pieczątki, rzadkość, animacja liczenia */
+.kum-boss { display: flex; gap: 10px; align-items: center; padding: 8px 12px; margin-bottom: 8px; border-radius: 12px; background: #fef3c7; border: 2px solid #f59e0b; color: #78350f; }
+.kum-boss small { display: block; font-size: 12px; }
+.kum-kits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.kum-kit { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 10px; border-radius: 12px; }
+.kum-kit small { font-size: 11px; color: var(--muted); line-height: 1.3; }
+.kum-kit.on { border-color: #2f5bd3 !important; box-shadow: 0 0 0 3px #2f5bd355; }
+.kum-preview { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; margin: 10px 0 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+.kum-chips.sm, .kum-mult.sm { font: 800 14px/1.2 Rubik, system-ui, sans-serif; padding: 2px 8px; border-radius: 8px; }
+.kum-levels { margin-top: 10px; } .kum-levels summary { cursor: pointer; font-weight: 700; } .kum-levels .row { padding: 3px 0; }
+.kum-stamp { position: absolute; top: 8px; right: 44px; font-size: 14px; line-height: 1; }
+.kum-card.st-gold { box-shadow: inset 0 0 0 2px #eab308; } .kum-card.st-glass { box-shadow: inset 0 0 0 2px #38bdf8; } .kum-card.st-stone { box-shadow: inset 0 0 0 2px #78716c; }
+.kum-steps { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.kum-steps li { display: flex; gap: 8px; align-items: center; padding: 4px 8px; border-radius: 8px; background: var(--card2); font-size: 13px; opacity: 0; animation: kumStep .25s ease-out forwards; }
+.kum-steps li.bad { color: #b91c1c; } .kum-steps li b { font-variant-numeric: tabular-nums; font-family: Rubik, system-ui, sans-serif; }
+@keyframes kumStep { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.kum-won { text-align: center; }
+.kum-j.r-r, .kum-own.r-r, .kum-off.r-r { border-color: #60a5fa !important; } .kum-j.r-l, .kum-own.r-l, .kum-off.r-l { border-color: #f59e0b !important; box-shadow: 0 0 0 2px #f59e0b44; }
+.kum-j.muted { opacity: .35; filter: grayscale(1); }
+.kum-own { display: flex; gap: 8px; align-items: center; width: 100%; padding: 8px; border-radius: 10px; border: 2px solid var(--line); }
+.kum-own small { display: block; font-size: 11px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .kum-steps li { animation: none; opacity: 1; } }
