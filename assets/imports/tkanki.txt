@@ -1,123 +1,82 @@
 #fiszki
 #talia: Tkanki – na kolokwium
 #przedmiot: medycyna
-// Uproszczona wersja: tylko tkanki (wygląd, występowanie, budowa, funkcje). Bez mikroskopu i barwień.
+// Według notatek z zajęć: nabłonek, krew, tkanka łączna, chrząstka, kość.
+
+// ================= OGÓLNE =================
+Ważne cechy, po których rozpoznajemy tkankę | Czy komórki mają jądro\nile jest jąder\nczy jest substancja międzykomórkowa (i ile)
 
 // ================= NABŁONEK =================
-Cechy tkanki nabłonkowej | Komórki ciasno przylegają do siebie\nbardzo mało istoty międzykomórkowej\nleży na błonie podstawnej\nnie ma naczyń krwionośnych\nma biegun szczytowy i podstawny\nszybko się odnawia
-Funkcje nabłonków | Ochrona (osłanianie powierzchni)\nwchłanianie\nwydzielanie (gruczoły)\nodbieranie bodźców (nabłonek zmysłowy)\ntransport (rzęski przesuwają śluz)\nwymiana gazowa
-Podział nabłonków ze względu na funkcję | Pokrywający (wyściełający)\ngruczołowy\nzmysłowy\nwchłaniający (resorpcyjny)
-Jak nazywamy nabłonki ze względu na budowę? | Według liczby warstw (jednowarstwowy, wielowarstwowy, wielorzędowy) i kształtu komórek (płaski, sześcienny, walcowaty); w wielowarstwowym liczy się kształt komórek na powierzchni.
-Nabłonek jednowarstwowy płaski – wygląd i gdzie? | [obraz: assets/imports/histologia/nab-jedno-opis.webp] Jedna warstwa cienkich, płaskich komórek ze spłaszczonym jądrem\nśródbłonek naczyń krwionośnych\nmezotelium (opłucna, otrzewna, osierdzie)\npęcherzyki płucne
-Nabłonek jednowarstwowy sześcienny – wygląd i gdzie? | Komórki jak kostki, okrągłe jądro w środku\nkanaliki nerkowe\npęcherzyki tarczycy\nprzewody gruczołów
-Nabłonek jednowarstwowy walcowaty – wygląd i gdzie? | Komórki wysokie, owalne jądro przy podstawie\nżołądek\njelito cienkie i grube (mikrokosmki + komórki kubkowe)\npęcherzyk żółciowy
-Nabłonek jednowarstwowy walcowaty z rzęskami – gdzie? | Jajowód i macica, małe oskrzeliki.
-Nabłonek wielorzędowy – na czym polega? | Wszystkie komórki leżą na błonie podstawnej, ale nie wszystkie sięgają powierzchni – jądra są na różnych wysokościach, więc wygląda na wielowarstwowy.
-Nabłonek wielorzędowy migawkowy – gdzie i co ma? | Drogi oddechowe (jama nosowa, tchawica, oskrzela)\nma rzęski i komórki kubkowe (śluz) – oczyszcza powietrze
-Nabłonek wielorzędowy ze stereociliami – gdzie? | Najądrze i nasieniowód.
-Nabłonek wielowarstwowy płaski nierogowaciejący – gdzie? | [obraz: assets/imports/histologia/nab-wielo-opis.webp] Jama ustna\ngardło\nprzełyk\npochwa\nrogówka
-Nabłonek wielowarstwowy płaski rogowaciejący – gdzie i co ma? | Naskórek; na powierzchni warstwa rogowa z martwych komórek bez jąder (keratyna) – chroni przed wysychaniem i urazami.
-Warstwy naskórka (od dołu) | Podstawna (komórki się dzielą)\nkolczysta\nziarnista\njasna (tylko skóra gruba – dłonie, stopy)\nrogowa
-Nabłonek przejściowy (moczowy) – cechy i gdzie? | Zmienia wygląd przy rozciąganiu; na powierzchni duże komórki parasolowate (często 2 jądra)\nmiedniczka nerkowa, moczowody, pęcherz moczowy – chroni przed moczem
-Nabłonek wielowarstwowy sześcienny i walcowaty – gdzie? | Rzadkie: sześcienny – przewody gruczołów potowych; walcowaty – duże przewody gruczołów, fragment cewki moczowej męskiej.
-Czym jest błona podstawna i do czego służy? | Cienka warstwa pod nabłonkiem, oddziela go od tkanki łącznej\nprzytwierdza nabłonek\nfiltruje substancje\nkieruje odnową nabłonka
-Jak odżywiany jest nabłonek? | Przez dyfuzję z naczyń krwionośnych tkanki łącznej leżącej pod błoną podstawną (sam nabłonek nie ma naczyń).
-Unerwienie nabłonka | Ma wolne zakończenia nerwowe między komórkami (czucie bólu, dotyku, temperatury), ale nie ma naczyń krwionośnych.
-Regeneracja nabłonka | Bardzo dobra – komórki warstwy podstawnej (macierzyste) ciągle się dzielą i zastępują złuszczone; np. nabłonek jelita odnawia się w kilka dni, naskórek w ok. 4 tygodnie.
-Połączenia między komórkami nabłonka | Zamykające (tight junction) – uszczelniają\ndesmosomy – mocno łączą komórki\nhemidesmosomy – przyczepiają do błony podstawnej\nneksus (gap junction) – kanały między komórkami
-Struktury na powierzchni komórek nabłonka | Mikrokosmki – zwiększają powierzchnię wchłaniania (jelito)\nrzęski – ruchome, przesuwają śluz (tchawica, jajowód)\nstereocilia – długie, nieruchome (najądrze)
-Rzęska a mikrokosmek – różnica | Rzęska jest ruchoma i dłuższa (w środku mikrotubule); mikrokosmek jest krótki i nieruchomy (w środku aktyna) – służy do wchłaniania.
-Komórka kubkowa | Jednokomórkowy gruczoł w nabłonku jelita i dróg oddechowych – wydziela śluz.
-Gruczoły zewnątrzwydzielnicze a dokrewne | Zewnątrzwydzielnicze mają przewód i wydzielają na powierzchnię lub do światła narządu (ślinianki, potowe); dokrewne nie mają przewodu – hormony idą do krwi (tarczyca).
-Podział gruczołów wg kształtu | Cewkowe\npęcherzykowe\ncewkowo-pęcherzykowe\n(proste – przewód nierozgałęziony, złożone – rozgałęziony)
-Sposoby wydzielania gruczołów | Merokrynowe – wydzielina wychodzi, komórka cała (ślinianki, trzustka)\napokrynowe – odrywa się szczyt komórki (gruczoł mlekowy)\nholokrynowe – rozpada się cała komórka (gruczoły łojowe)
-Wydzielina surowicza a śluzowa | Surowicza – rzadka, wodnista, z enzymami (ślinianka przyuszna); śluzowa – gęsta, ze śluzem (mucyny), chroni i nawilża.
+Z czego pochodzi tkanka nabłonkowa? | Ze wszystkich trzech listków zarodkowych – żadna inna tkanka tak nie ma.
+Cechy tkanki nabłonkowej | Komórki ściśle ułożone, wielościenne\nbrak lub bardzo mało substancji międzykomórkowej\nleży na błonie podstawnej\nbiegunowość komórek (część szczytowa, np. z rzęskami, i podstawna)\nnieunaczyniona – naczynia dochodzą tylko do błony podstawnej
+Funkcje nabłonków | Ochrona przed różnymi czynnikami\nizolowanie środowisk (np. bariera krew–mózg)\nwchłanianie (układ pokarmowy) i wymiana gazowa (pęcherzyki płucne)\nwydzielanie – robią to tylko komórki nabłonkowe\nodbieranie bodźców – narządy zmysłów, np. kubki smakowe
+Twory dodatkowe nabłonka | Mikrokosmki – zwiększają powierzchnię wchłaniania (np. kosmki jelita)\nrzęski (witki) – zbudowane z mikrotubul, przesuwają np. śluz w układzie oddechowym
+Klasyfikacja nabłonków | Według liczby warstw (jednowarstwowy, wielowarstwowy)\nwedług kształtu komórek (płaski, sześcienny, walcowaty)\nwedług funkcji (np. ochronny, wchłaniający, wydzielniczy, zmysłowy)\ndo każdego umieć podać przykład
+Nabłonek jednowarstwowy płaski – przykład | [obraz: assets/imports/histologia/nab-jedno-opis.webp] Śródbłonek naczyń, pęcherzyki płucne, opłucna i otrzewna (mezotelium).
+Nabłonek jednowarstwowy sześcienny – przykład | Kanaliki nerkowe, pęcherzyki tarczycy.
+Nabłonek jednowarstwowy walcowaty – przykład | Jelito (z mikrokosmkami), żołądek.
+Nabłonek wielowarstwowy płaski – przykład | [obraz: assets/imports/histologia/nab-wielo-opis.webp] Nierogowaciejący – jama ustna, przełyk; rogowaciejący – naskórek (skóra).
+Śródbłonek – co to i gdzie? | Nietypowy nabłonek jednowarstwowy płaski wyściełający układ krążenia – od serca aż do naczyń włosowatych.
+Śródbłonek – wygląd | Płaskie komórki o pofałdowanej błonie komórkowej – komórki się zazębiają, żeby połączenie było mocniejsze.
+Nabłonek wielorzędowy | Wygląda jak wielowarstwowy, ale jest jednowarstwowy – wszystkie komórki dotykają błony podstawnej, a jądra leżą na różnych wysokościach\nnp. układ oddechowy (z rzęskami)
+Nabłonek przejściowy | W pęcherzu moczowym\nzmienna (przejściowa) liczba warstw – zależy od rozciągnięcia\nw warstwie szczytowej mogą być komórki dwujądrowe\nbłona komórkowa w części szczytowej jest nieprzepuszczalna („pancerz” przed moczem)
+Regeneracja nabłonka | Bardzo dobra – nabłonek ciągle się odnawia: w ok. 30 dni organizm wymienia wszystkie komórki nabłonka, a nabłonek jelita co ok. 3 dni.
+Tkanka nabłonkowa żaby – wygląd (rysunek) | Wielokątne komórki ściśle przylegające do siebie, każda z jednym okrągłym jądrem w środku, wyraźna błona komórkowa.
 
 // ================= KREW =================
-Z czego składa się krew? | Osocze (ok. 55%) + elementy morfotyczne (ok. 45%): erytrocyty, leukocyty, płytki krwi.
-Rola krwi | Transport (tlen, CO₂, składniki odżywcze, hormony, zbędne produkty)\nobrona organizmu\nutrzymanie stałego pH i ilości wody\nregulacja temperatury\nkrzepnięcie
-Skład osocza | Woda (ok. 90%)\nbiałka: albuminy, globuliny, fibrynogen\nsole mineralne\nglukoza, tłuszcze, aminokwasy\nhormony
-Osocze a surowica | Surowica to osocze bez fibrynogenu (i czynników krzepnięcia) – zostaje po wykrzepieniu krwi.
-Erytrocyt – wygląd i budowa | Krążek dwuwklęsły, ok. 7–8 µm\nbez jądra i organelli\nwypełniony hemoglobiną\nelastyczny – przeciska się przez naczynia włosowate
-Erytrocyty – ilość, czas życia, gdzie giną | 4,5–5 mln w 1 µl\nżyją ok. 120 dni\nniszczone głównie w śledzionie (też wątroba)
-Funkcja erytrocytów | Transport tlenu (i części CO₂) dzięki hemoglobinie.
-Dlaczego erytrocyt jest dwuwklęsły i bez jądra? | Ma większą powierzchnię do wymiany gazów i więcej miejsca na hemoglobinę; łatwo się odkształca.
-Budowa hemoglobiny | [obraz: assets/imports/histologia/hemoglobina-opis.webp] Białko z 4 łańcuchów globiny (u dorosłego 2α + 2β)\nkażdy łańcuch ma hem z żelazem Fe²⁺\njedna hemoglobina wiąże 4 cząsteczki O₂
-Rola hemoglobiny | Przenosi tlen z płuc do tkanek, część CO₂ z tkanek do płuc i pomaga utrzymać pH krwi.
-Rodzaje hemoglobiny | HbA (2α2β) – u dorosłych\nHbF płodowa (2α2γ) – mocniej wiąże tlen\nHbA₂ – niewielka ilość
-Połączenia hemoglobiny | Oksyhemoglobina – z tlenem\nkarbaminohemoglobina – z CO₂\nkarboksyhemoglobina – z tlenkiem węgla (czad, bardzo trwała – zatrucie)\nmethemoglobina – Fe³⁺, nie przenosi tlenu
-Leukocyty – ilość i podział | [obraz: assets/imports/histologia/krew-opis.webp] 4–10 tys. w 1 µl\ngranulocyty: neutrofile, eozynofile, bazofile\nagranulocyty: limfocyty, monocyty
-Ile jest poszczególnych leukocytów? | Neutrofile 50–70%\nlimfocyty 20–40%\nmonocyty 2–8%\neozynofile 1–4%\nbazofile 0–1%
-Neutrofil – wygląd i funkcja | Jądro podzielone na 3–5 płatów, drobne ziarnistości\nfagocytuje bakterie – pierwszy w ostrym zapaleniu (tworzy ropę)
-Eozynofil – wygląd i funkcja | Jądro dwupłatowe („okulary”), duże pomarańczowe ziarnistości\nzwalcza pasożyty, bierze udział w alergii
-Bazofil – wygląd i funkcja | Duże ciemne ziarnistości zasłaniają jądro\nzawiera histaminę i heparynę – reakcje alergiczne
-Limfocyt – wygląd i funkcja | Duże okrągłe jądro, wąski rąbek cytoplazmy\nodporność swoista: limfocyty B (przeciwciała), T (niszczą zakażone komórki), NK (odporność wrodzona)
-Monocyt – wygląd i funkcja | Największy leukocyt, jądro nerkowate\nw tkankach zmienia się w makrofaga – fagocytoza, prezentacja antygenów
-Płytki krwi – budowa i funkcja | Małe bezjądrowe fragmenty megakariocytów (2–4 µm), 150–400 tys. w 1 µl, żyją 8–10 dni\nkrzepnięcie krwi – tworzą czop i uwalniają czynniki krzepnięcia
-Gdzie powstają komórki krwi? | W czerwonym szpiku kostnym (kości płaskie, kręgi, nasady kości długich); limfocyty dojrzewają też w grasicy i narządach limfatycznych.
-Odporność wrodzona – cechy i elementy | Nieswoista, od urodzenia, działa od razu, bez pamięci\nbariery: skóra, błony śluzowe, lizozym, kwas żołądkowy\nkomórki: neutrofile, makrofagi, komórki NK\nstan zapalny, gorączka, dopełniacz
-Odporność nabyta – cechy | Swoista (na konkretny antygen)\nrozwija się po kontakcie z antygenem\nma pamięć – drugi kontakt = szybsza reakcja\nopiera się na limfocytach T i B
-Odporność humoralna a komórkowa | Humoralna – limfocyty B wytwarzają przeciwciała; komórkowa – limfocyty T niszczą zakażone komórki.
-Rodzaje odporności nabytej | Czynna naturalna – po chorobie\nczynna sztuczna – szczepionka\nbierna naturalna – przeciwciała od matki (łożysko, mleko)\nbierna sztuczna – surowica z przeciwciałami
-Klasy przeciwciał | IgG – najwięcej, przechodzą przez łożysko\nIgM – pierwsze przy zakażeniu\nIgA – błony śluzowe, mleko\nIgE – alergie, pasożyty\nIgD – na limfocytach B
+Czym jest krew? | Tkanką łączną płynną – płynna dzięki osoczu, które jest jej substancją międzykomórkową.
+Skład krwi | Osocze – ok. 55%\nelementy morfotyczne – ok. 45% (erytrocyty, leukocyty, trombocyty)
+Czy wszystkie elementy morfotyczne to komórki? | Nie – trombocyty (płytki krwi) to nie komórki, tylko fragmenty cytoplazmy.
+Skład osocza | Woda – 91–92%\nbiałka – 7–8%: albuminy, globuliny, fibrynogen (krzepnięcie krwi)\ninne składniki 1–2%: gazy, jony, produkty przemiany materii, substancje regulacyjne i odżywcze
+Funkcje krwi – transportowe | Przenosi tlen i CO₂\nsubstancje odżywcze (glukoza, aminokwasy, tłuszcze)\nprodukty przemiany materii do wydalenia (np. mocznik)\nhormony\nciepło
+Funkcje krwi – regulacyjne | Utrzymuje stałe pH\nreguluje ilość wody i ciśnienie osmotyczne\nreguluje temperaturę ciała (rozprowadza ciepło)\nkrzepnięcie – zapobiega utracie krwi
+Funkcje krwi – immunologiczne (obronne) | Leukocyty niszczą drobnoustroje (fagocytoza)\nwytwarzanie przeciwciał (limfocyty B)\nniszczenie zmienionych komórek, np. nowotworowych (limfocyty T, NK)
+Erytrocyt – budowa | [obraz: assets/imports/histologia/krew-opis.webp] Dwuwklęsła soczewka (krążek)\nok. 7 µm\nbez jądra i organelli – ma je na początku, ale się ich pozbywa\nna powierzchni antygeny (grupa krwi)\nwypełniony hemoglobiną
+Erytrocyt – czas życia, gdzie powstaje, rola | Żyje ok. 120 dni\npowstaje w czerwonym szpiku kostnym (jak każdy element krwi)\nrola transportera – przenosi tlen
+Erytrocyty żaby a ssaka | Erytrocyty żaby są owalne i MAJĄ jądro; erytrocyty ssaka są okrągłe (dwuwklęsłe) i NIE mają jądra.
+Hemoglobina – co to? | Białko oddechowe i barwnik krwi – ok. 90% masy erytrocytu.
+Budowa hemoglobiny | [obraz: assets/imports/histologia/hemoglobina-opis.webp] Część białkowa – globina\nczęść niebiałkowa – hem, zawierający żelazo (Fe²⁺)
+Połączenia hemoglobiny z gazami | Nietrwale – z tlenem i z CO₂ (dlatego może je oddawać)\ntrwale – z tlenkiem węgla (czad) → karboksyhemoglobina (zatrucie)
+Leukocyty – cechy ogólne | Heterogenna (zróżnicowana) grupa kulistych komórek z jądrem; dzielimy je na granulocyty i agranulocyty.
+Granulocyty – cechy | Ziarnistości w cytoplazmie\nnietypowe, segmentowane jądro\nkrótko żyją (dni)\nneutrofile, eozynofile, bazofile
+Agranulocyty – cechy | Jądro w całości (niepodzielone), bardzo duże\nmogą się dzielić\nżyją długo\nlimfocyty i monocyty
+Neutrofil | 50–75% wszystkich białych krwinek\nśrednica ok. 12 µm\njądro segmentowane (kilka płatów)\nfunkcja: fagocytoza bakterii
+Eozynofil | Kwasochłonny, max. 5% białych krwinek\nok. 14 µm\njądro dwupłatowe\nfunkcja: fagocytoza i niszczenie larw pasożytów
+Bazofil | Zasadochłonny, do 1% białych krwinek\nok. 12 µm\njądro segmentowane, zasłonięte ziarnistościami\nfunkcja: wydziela heparynę (przeciwzakrzepowo) i histaminę
+Limfocyty – wygląd | 25–30% leukocytów\nmałe ok. 8 µm albo duże ok. 15 µm\nduże okrągłe jądro, cytoplazma zepchnięta na brzeg (wąski rąbek)\npołowa krąży we krwi, połowa osiada w narządach
+Rodzaje limfocytów i ich rola | Limfocyty T – odpowiedź typu komórkowego (np. niszczą komórki nowotworowe)\nlimfocyty B (szpikozależne) – odpowiedź swoista humoralna, na konkretny antygen (przeciwciała)\nlimfocyty NK (natural killers) – niszczą zmienione komórki
+Monocyty | 4–8% leukocytów\nnajwiększe komórki krwi (ok. 20 µm i więcej)\nduże jądro (nerkowate)\nsą prekursorami makrofagów
+Płytki krwi (trombocyty) | 2–4 µm\nfragmenty cytoplazmy (nie komórki), bez jądra, bezkształtne\nbiorą udział w krzepnięciu krwi
+Hemopoeza | Powstawanie składników krwi (w czerwonym szpiku kostnym); wszystkie powstają z hemocytoblastu – komórki macierzystej.
 
 // ================= TKANKA ŁĄCZNA =================
-Cechy tkanki łącznej | Mało komórek, dużo istoty międzykomórkowej (włókna + istota podstawowa)\nzwykle ma naczynia (oprócz chrząstki)\npowstaje z mezenchymy
-Funkcje tkanki łącznej | Łączy i podpiera narządy\nodżywia (transport przez istotę podstawową)\nbroni (makrofagi, plazmocyty)\nmagazynuje (tłuszcz, wodę)\ngoi rany (blizna)
-Rodzaje tkanki łącznej | Właściwa: luźna, zbita (regularna i nieregularna), siateczkowa, tłuszczowa\nszkieletowa: chrzęstna, kostna\npłynna: krew, chłonka\nzarodkowa: mezenchyma, galaretowata (pępowina)
-Komórki tkanki łącznej | [obraz: assets/imports/histologia/tl-luzna-opis.webp] Stałe: fibroblasty/fibrocyty, adipocyty, komórki macierzyste\nwędrujące: makrofagi, mastocyty (komórki tuczne), komórki plazmatyczne, leukocyty
-Fibroblast – wygląd i funkcja | Wydłużona (wrzecionowata) komórka z wypustkami i owalnym jądrem\nwytwarza włókna i istotę podstawową, goi rany; mniej aktywna forma to fibrocyt
-Makrofag – funkcja | Pochłania (fagocytuje) bakterie i resztki komórek, prezentuje antygeny limfocytom.
-Komórka tuczna (mastocyt) – co zawiera i co robi? | Pełna ziarnistości z histaminą i heparyną\nwywołuje reakcje alergiczne i stan zapalny (rozszerza naczynia)
-Komórka plazmatyczna – wygląd i funkcja | Owalna, jądro z boku z chromatyną jak „szprychy koła”\npowstaje z limfocyta B i wytwarza przeciwciała
-Z czego składa się istota międzykomórkowa tkanki łącznej? | Włókna: kolagenowe, sprężyste, siateczkowe\nistota podstawowa: woda, glikozaminoglikany (np. kwas hialuronowy), proteoglikany, białka klejące
-Włókna kolagenowe – budowa i właściwości | [obraz: assets/imports/histologia/wlokna-opis.webp] Grube, faliste pęczki, nie rozgałęziają się\nzbudowane z kolagenu\nbardzo wytrzymałe na rozciąganie, mało rozciągliwe\nnajliczniejsze (ścięgna, skóra, kość)
-Najważniejsze typy kolagenu | Typ I – skóra, ścięgna, kość\ntyp II – chrząstka\ntyp III – włókna siateczkowe\ntyp IV – błona podstawna
-Włókna sprężyste – budowa, właściwości, gdzie? | Cienkie, rozgałęzione, tworzą sieci; z elastyny\nrozciągają się i wracają do kształtu\nściany tętnic (aorta), płuca, skóra, chrząstka sprężysta
-Włókna siateczkowe (srebrochłonne) – budowa i gdzie? | Bardzo cienkie, tworzą delikatną sieć; z kolagenu typu III (czernieją od soli srebra)\nrusztowanie: węzły chłonne, śledziona, szpik, wątroba
-Tkanka łączna luźna – wygląd i gdzie? | Luźno ułożone włókna, dużo istoty podstawowej i różnych komórek\npod skórą, pod nabłonkami (błony śluzowe), wokół naczyń i nerwów
-Tkanka łączna zbita regularna – wygląd i gdzie? | Równoległe pęczki kolagenu, między nimi rzędy fibrocytów\nścięgna, więzadła
-Tkanka łączna zbita nieregularna – wygląd i gdzie? | Grube pęczki kolagenu biegną w różnych kierunkach\nskóra właściwa, torebki narządów, okostna
-Tkanka łączna siateczkowa – gdzie? | Szpik kostny, węzły chłonne, śledziona – tworzy ich rusztowanie.
-Tkanka tłuszczowa żółta – wygląd i funkcja | [obraz: assets/imports/histologia/tluszcz-opis.webp] Duże komórki z jedną kroplą tłuszczu, jądro zepchnięte na brzeg („sygnet”)\nmagazyn energii, izolacja cieplna, ochrona narządów, wydziela hormony (leptyna)
-Tkanka tłuszczowa brunatna – wygląd i funkcja | Komórki z wieloma małymi kroplami tłuszczu, jądro w środku, dużo mitochondriów\nwytwarza ciepło – głównie u noworodków
-Jak goi się rana? | Skrzep → stan zapalny (sprzątanie) → ziarnina (fibroblasty, nowe naczynia) → odkładanie kolagenu → blizna.
+Tkanka łączna – cechy | Pochodzi z mezodermy\nma obfitą substancję międzykomórkową\nkomórek jest stosunkowo mało
+Substancja międzykomórkowa tkanki łącznej | Istota podstawowa – bezpostaciowy żel\nwłókna: kolagenowe, sprężyste, srebrochłonne
+Włókna kolagenowe | [obraz: assets/imports/histologia/wlokna-opis.webp] Są we wszystkich tkankach łącznych; nadają wytrzymałość.
+Włókna sprężyste | Zbudowane z elastyny (białko)\nbiegną w różnych kierunkach, są obok kolagenowych\nodporne na gotowanie\nw strunach głosowych, skórze, małżowinie usznej
+Włókna srebrochłonne | Też zbudowane z kolagenu\npodpora dla komórek – tworzą zrąb (rusztowanie) narządów
+Rodzaje tkanki łącznej | Właściwa: luźna, zbita (np. ścięgna), tłuszczowa, siateczkowa\nszkieletowa: chrzęstna i kostna\npłynna: krew i chłonka
 
 // ================= CHRZĄSTKA =================
-Cechy tkanki chrzęstnej | Komórki (chondrocyty) leżą w jamkach w macierzy\nmacierz twarda, ale sprężysta, dużo wody\nbrak naczyń i nerwów – odżywia się przez dyfuzję
-Komórki chrząstki | Chondroblasty – młode, wytwarzają macierz\nchondrocyty – dojrzałe, leżą w jamkach, często w grupach izogenicznych
-Grupa izogeniczna | 2–8 chondrocytów leżących razem, powstałych z podziałów jednej komórki (typowe dla chrząstki szklistej).
-Ochrzęstna – budowa i funkcja | Błona z tkanki łącznej zbitej wokół chrząstki\nwarstwa włóknista (zewnętrzna, naczynia)\nwarstwa chondrogenna (wewnętrzna) – daje nowe komórki\nodżywia chrząstkę i pozwala jej rosnąć
-Gdzie nie ma ochrzęstnej? | Na chrząstce stawowej i w chrząstce włóknistej.
-Chrząstka szklista – wygląd i gdzie? | [obraz: assets/imports/histologia/chrzastki-opis.webp] Jednolita, gładka macierz (kolagen typu II), chondrocyty w grupach izogenicznych\npowierzchnie stawowe, chrząstki żebrowe, tchawica i oskrzela, nos, krtań, chrząstki wzrostowe
-Chrząstka sprężysta – wygląd i gdzie? | Dużo włókien sprężystych w macierzy, ma ochrzęstną – jest giętka\nmałżowina uszna, nagłośnia, przewód słuchowy, trąbka słuchowa
-Chrząstka włóknista – wygląd i gdzie? | Grube pęczki kolagenu, chondrocyty ułożone w szeregach, brak ochrzęstnej – najbardziej wytrzymała\nkrążki międzykręgowe, spojenie łonowe, łąkotki
-Jak rośnie chrząstka? | Od środka (śródmiąższowo) – dzielą się chondrocyty\nod powierzchni (przez nawarstwianie) – nowe komórki z ochrzęstnej
-Regeneracja chrząstki | Słaba – nie ma naczyń, a chondrocyty mało się dzielą; ubytki zarastają głównie blizną, chrząstka stawowa prawie się nie odnawia.
+Tkanka chrzęstna – cechy | Sztywna i sprężysta\nbierze udział w kostnieniu\nnie jest unaczyniona
+Komórki tkanki chrzęstnej | Chondroblasty – chrząstkotwórcze (budują chrząstkę)\nchondrocyty – dojrzałe komórki, zawsze w jamce chrzęstnej\nchondroklasty – chrząstkogubne (rozkładają chrząstkę)
+Grupa izogeniczna | Kilka chondrocytów powstałych z jednego chondroblastu, leżących razem.
+Substancja międzykomórkowa chrząstki | Włókna kolagenowe (i sprężyste w chrząstce sprężystej) + istota podstawowa.
+Chrząstka szklista | [obraz: assets/imports/histologia/chrzastki-opis.webp] W okresie embrionalnym (szkielet zarodka), potem na powierzchni stawów\nwidać głównie grupy izogeniczne chondrocytów w jamkach
+Chrząstka sprężysta | Elastyczna\nucho zewnętrzne (małżowina), krtań\nmałe grupy izogeniczne (najczęściej 2 chondrocyty) albo 1 chondrocyt\ngęsta sieć włókien sprężystych
+Chrząstka włóknista | Najbardziej wytrzymała\nwięzadła, krążki międzykręgowe (dyski), spojenie łonowe, staw skroniowo-żuchwowy\nwłókna kolagenowe w pęczkach, biegną równolegle, chondrocyty między nimi
+Regeneracja chrząstki | Słaba – chrząstka raczej się degeneruje (nie ma naczyń).
+Co rysujemy w chrząstce? | Chondrocyt (z jądrem) w jamce chrzęstnej\ngrupa izogeniczna\nw sprężystej – sieć włókien sprężystych\nw włóknistej – równoległe pęczki włókien kolagenowych
 
 // ================= KOŚĆ =================
-Cechy i funkcje tkanki kostnej | Twarda, zmineralizowana macierz, ma naczynia i nerwy, stale się przebudowuje\npodpora i ochrona narządów\nruch (przyczep mięśni)\nmagazyn wapnia i fosforu\nszpik czerwony – tworzenie krwi
-Z czego składa się macierz kostna? | Część organiczna (ok. 1/3) – głównie kolagen typu I → elastyczność\nczęść mineralna (ok. 2/3) – hydroksyapatyt (fosforan wapnia) → twardość
-Komórki tkanki kostnej | [obraz: assets/imports/histologia/kom-kosci-opis.webp] Komórki macierzyste (osteogenne)\nosteoblasty\nosteocyty\nosteoklasty
-Osteoblast – wygląd i funkcja | Sześcienne komórki w rzędzie na powierzchni kości\nbudują kość: wytwarzają osteoid (macierz) i ją mineralizują\nzamurowany w kości staje się osteocytem
-Osteocyt – wygląd i funkcja | Dojrzała komórka zamknięta w jamce, z wypustkami w kanalikach kostnych\nutrzymuje kość w dobrym stanie, wyczuwa obciążenia, pomaga w wymianie wapnia
-Osteoklast – wygląd i funkcja | Bardzo duża komórka z wieloma jądrami, leży w zagłębieniu (zatoce Howshipa), ma rąbek szczoteczkowy\nrozkłada (resorbuje) kość – powstaje z monocytów
-Rodzaje tkanki kostnej | Grubowłóknista (splotowata) – młoda, nieuporządkowana (u płodu, po złamaniu)\nblaszkowata – dojrzała: zbita i gąbczasta
-Kość zbita – budowa i gdzie? | [obraz: assets/imports/histologia/kosc-trzon-opis.webp] Lita, zbudowana z osteonów\ntrzony kości długich i zewnętrzna warstwa wszystkich kości
-Kość gąbczasta – budowa i gdzie? | Sieć beleczek kostnych (bez osteonów), między nimi szpik\nnasady kości długich, wnętrze kości płaskich i krótkich, trzony kręgów
-Kość zbita a gąbczasta | Zbita – lita, z osteonami, twarda i ciężka; gąbczasta – beleczki ułożone wzdłuż obciążeń, lekka, ze szpikiem.
-Osteon (system Haversa) – budowa | [obraz: assets/imports/histologia/osteon-opis.webp] Kanał Haversa w środku (naczynia i nerwy)\nwokół koncentryczne blaszki kostne\nmiędzy blaszkami osteocyty w jamkach\nkanaliki kostne łączące jamki\nna zewnątrz linia cementowa
-Kanały Volkmanna | Kanały biegnące w poprzek – łączą kanały Haversa ze sobą, z okostną i jamą szpikową (doprowadzają naczynia).
-Rodzaje blaszek w kości zbitej | Blaszki osteonów (wokół kanału)\nblaszki międzysystemowe (resztki starych osteonów)\nblaszki okalające zewnętrzne (pod okostną)\nblaszki okalające wewnętrzne (od strony szpiku)
-Okostna – budowa | Warstwa zewnętrzna włóknista – tkanka łączna zbita, naczynia, nerwy\nwarstwa wewnętrzna rozrodcza – komórki tworzące kość (osteoblasty)\nprzyczepiona do kości włóknami Sharpeya
-Funkcje okostnej | Odżywia kość\nodpowiada za wzrost kości na grubość\nodbudowuje kość po złamaniu\nprzyczep mięśni i więzadeł\nczucie bólu (dużo nerwów)
-Śródkostna | Cienka warstwa wyściełająca jamę szpikową i beleczki od środka – udział we wzroście i odbudowie kości.
-Dwa sposoby kostnienia | Na podłożu łącznotkankowym (bezpośrednie) – kości płaskie czaszki, obojczyk\nna podłożu chrzęstnym (pośrednie) – najpierw model z chrząstki, potem zastępowany kością: kości długie i większość szkieletu
-Jak kość rośnie na długość i na grubość? | Na długość – dzięki chrząstce nasadowej (do ok. 18–25 lat); na grubość – okostna dokłada kość na zewnątrz, a od środka kość jest rozkładana (jama szpikowa).
-Przebudowa kości | Przez całe życie osteoklasty rozkładają starą kość, a osteoblasty budują nową – kość dopasowuje się do obciążeń.
-Regeneracja kości – etapy gojenia złamania | Krwiak\nziarnina (zapalenie, naczynia)\nkostnina miękka (chrząstka, tkanka łączna)\nkostnina twarda (kość splotowata)\nprzebudowa w kość blaszkowatą
-Rola kości w gospodarce wapniem | [obraz: assets/imports/histologia/wapn-opis.webp] Kość magazynuje ok. 99% wapnia w organizmie\ngdy wapnia we krwi brakuje – osteoklasty uwalniają go z kości\ngdy jest go dużo – osteoblasty odkładają go w kości
-Parathormon (PTH) | Z przytarczyc; podnosi wapń we krwi: pobudza rozkład kości (osteoklasty), zatrzymuje wapń w nerkach, zwiększa produkcję witaminy D.
-Kalcytonina | Z komórek C tarczycy; obniża wapń we krwi – hamuje osteoklasty.
-Witamina D | Zwiększa wchłanianie wapnia z jelita; jej brak powoduje krzywicę u dzieci i osteomalację (miękkie kości) u dorosłych.
-Osteoporoza | Ubytek masy kostnej (rozkład przeważa nad budową) – kości kruche, łatwo się łamią; częsta u kobiet po menopauzie.
+Tkanka kostna – cechy | Sole mineralne w substancji międzykomórkowej dają trwałość (twardość)\nobficie unaczyniona i unerwiona\ntworzy szkielet, w kościach jest szpik kostny
+Substancja międzykomórkowa kości | Część organiczna – głównie włókna kolagenowe (elastyczność)\nczęść nieorganiczna – sole mineralne, głównie fosforany wapnia (twardość)
+Okostna | Błona pokrywająca kość z zewnątrz; ma dużo komórek kościotwórczych (osteoblastów), naczynia i nerwy\nodżywia kość, odpowiada za wzrost na grubość i gojenie złamań
+Komórki tkanki kostnej | [obraz: assets/imports/histologia/kom-kosci-opis.webp] Osteoblasty – kościotwórcze (budują kość)\nosteocyty – dojrzałe, zawsze tylko 1 w jamce kostnej, łączą się kanalikami kostnymi wypustkami cytoplazmatycznymi\nosteoklasty – rozkładają kość (jak makrofagi), mogą mieć kilka jąder
+Kość zbita – budowa | [obraz: assets/imports/histologia/osteon-opis.webp] Zbudowana z osteonów\nosteon: kanał Haversa w środku + blaszki kostne systemowe ułożone wokół niego\nmiędzy blaszkami osteocyty w jamkach kostnych\nmiędzy osteonami blaszki międzysystemowe
+Kanał Haversa | Kanał w środku osteonu – biegną w nim naczynia krwionośne i nerwy.
+Kość gąbczasta | Zbudowana z beleczek kostnych, między nimi szpik; jest w nasadach kości długich i wnętrzu kości płaskich.
+Kość zbita a gąbczasta | Zbita – lita, z osteonami, w trzonach i na powierzchni kości; gąbczasta – beleczki, lżejsza, ze szpikiem w środku.
+Regeneracja kości | Dobra – kość ciągle się przebudowuje (osteoklasty rozkładają, osteoblasty budują); złamanie goi się dzięki okostnej: krwiak → kostnina → przebudowa w kość.
+Kość a gospodarka wapniem | Kość to magazyn wapnia (ok. 99% wapnia w organizmie)\ngdy wapnia we krwi jest mało – osteoklasty uwalniają go z kości (parathormon)\ngdy dużo – wapń jest odkładany w kości (kalcytonina)
+Co rysujemy w kości zbitej? | Osteon\nkanał Haversa\nblaszki kostne systemowe\nosteocyty w jamkach kostnych\nblaszki kostne międzysystemowe
