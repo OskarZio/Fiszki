@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '351';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '352';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -867,6 +867,12 @@ function undoBar(text, entries) {
   };
   document.body.append(el); clearTimeout(undoBar.t); undoBar.t = setTimeout(() => el.remove(), 7000);
 }
+// potwierdzenie usunięcia jednej fiszki (pokazujemy, co usuwamy)
+function askDelNote(id) {
+  const n = noteById(id); if (!n) return Promise.resolve(false);
+  const t = stripHtml(n.type === 'cloze' ? clozePlain(n.text) : n.type === 'occl' ? (n.title || 'Obraz z lukami') : (n.front || '(obraz)')).slice(0, 140);
+  return askBox({ icon: '🗑️', title: 'Usunąć tę fiszkę?', intro: `„${t}”`, warn: 'Zniknie z talii, nauki i walk. Zaraz po usunięciu możesz stuknąć „Cofnij”.', ok: 'Usuń', cancel: 'Anuluj', danger: true });
+}
 function deleteNotes(ids) {
   const before = typeof TRASH !== 'undefined' ? TRASH.length : 0;
   ids.forEach(id => { const n = noteById(id); if (n) deleteNote(n); });
@@ -1044,7 +1050,7 @@ function viewStudy(deckId, mode, q) {
       return `<button class="g${g}${suggest === g ? ' suggest' : ''}" data-act="grade" data-g="${g}">${labels[g - 1]}${S.settings.showIvl !== false ? `<small>${t}</small>` : ''}</button>`;
     }).join('')}</div>`;
   }
-  const susBar = s.shown && !s.cram ? `<div class="sus-bar"><button class="ghost sm" data-act="card-sus" data-k="known" title="Karta znika z powtórek, ale liczy się jako nauczona">✓ Umiem – bez powtórek</button><button class="ghost sm" data-act="card-sus" data-k="skip" title="Karta znika z nauki i walk z bossami">🚫 Niepotrzebna</button></div>` : '';
+  const susBar = s.shown && !s.cram ? `<div class="sus-bar"><button class="ghost sm" data-act="card-sus" data-k="known" title="Karta znika z powtórek, ale liczy się jako nauczona">✓ Umiem – bez powtórek</button><button class="ghost sm" data-act="card-sus" data-k="skip" title="Karta znika z nauki i walk z bossami">🚫 Niepotrzebna</button><button class="ghost sm card-del" data-act="card-del" title="Usuń fiszkę na zawsze">🗑 Usuń</button></div>` : '';
   return head + body + susBar + `<div class="answerbar">${bar}</div>`;
 }
 // ✓ nauczone / 🚫 niepotrzebne: karta wypada z powtórek (przywrócisz ją w widoku talii)
@@ -2061,7 +2067,7 @@ const ACTIONS = {
   'hintimg-del': el => { keepHintText(el.dataset.scope); setHintImg(el.dataset.scope, null); },
   'cancel-edit': () => { DRAFT = null; history.back(); },
   'save-draft': () => saveDraft(),
-  'delete-note': () => { const n = noteById(DRAFT.editId); if (n && confirm('Usunąć tę fiszkę?')) { const d = n.deckId; deleteNote(n); save(); gcImages(); DRAFT = null; go(`#/deck/${d}`); } },
+  'delete-note': () => { const n = noteById(DRAFT.editId); if (n) askDelNote(n.id).then(ok => { if (!ok) return; const d = n.deckId; DRAFT = null; deleteNotes([n.id]); go(`#/deck/${d}`); }); },
   cloze: el => {
     const ta = $('#cloze-ta'), v = ta.value, s = ta.selectionStart, e = ta.selectionEnd;
     const nums = [...v.matchAll(CLOZE_RE)].map(m => +m[1]), max = nums.length ? Math.max(...nums) : 0;
@@ -2257,7 +2263,17 @@ function deckDir(d) {
 }
 Object.assign(ACTIONS, {
   'deck-dir': el => { const d = deckById(el.dataset.id); if (d) deckDir(d); },
-  'note-del': el => { deleteNotes([el.dataset.id]); render(); },
+  'note-del': el => askDelNote(el.dataset.id).then(ok => { if (ok) { deleteNotes([el.dataset.id]); render(); } }),
+  // 🗑 usuwanie w trakcie nauki – z potwierdzeniem, usunięta fiszka znika z sesji
+  'card-del': () => {
+    const s = SESSION, c = s?.card; if (!c) return;
+    askDelNote(c.noteId).then(ok => {
+      if (!ok || SESSION !== s) return;
+      const ids = new Set(S.cards.filter(x => x.noteId === c.noteId).map(x => x.id));
+      if (s.cram) s.cram = s.cram.filter(id => !ids.has(id));
+      deleteNotes([c.noteId]); s.lastNote = null; nextCard(); render();
+    });
+  },
   'note-selmode': () => { NOTE_SEL = NOTE_SEL ? null : new Set(); render(); },
   'note-sel': el => { const id = el.dataset.id; NOTE_SEL.has(id) ? NOTE_SEL.delete(id) : NOTE_SEL.add(id); render(); },
   'note-selall': el => { const ids = S.notes.filter(n => n.deckId === el.dataset.id).map(n => n.id); NOTE_SEL = NOTE_SEL.size === ids.length ? new Set() : new Set(ids); render(); },
@@ -2268,8 +2284,8 @@ Object.assign(ACTIONS, {
   },
   'note-seldel': () => {
     const ids = [...NOTE_SEL]; if (!ids.length) return;
-    if (ids.length > 1 && !confirm(`Usunąć ${ids.length} ${plural(ids.length, 'fiszkę', 'fiszki', 'fiszek')}? (Możesz cofnąć albo przywrócić z kosza.)`)) return;
-    NOTE_SEL = null; deleteNotes(ids); render();
+    askBox({ icon: '🗑️', title: `Usunąć ${ids.length} ${plural(ids.length, 'fiszkę', 'fiszki', 'fiszek')}?`, intro: 'Znikną z talii, nauki i walk. Zaraz po usunięciu możesz stuknąć „Cofnij”.', ok: 'Usuń', cancel: 'Anuluj', danger: true })
+      .then(ok => { if (ok) { NOTE_SEL = null; deleteNotes(ids); render(); } });
   },
 });
 window.addEventListener('hashchange', () => { NOTE_SEL = null; });
