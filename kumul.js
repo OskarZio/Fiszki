@@ -479,22 +479,27 @@ function kumEndHTML() {
     <p class="small">Nagroda: <b>+${R.gold} 🪙 złota</b> · <b>+${R.xp} XP</b>${K.tier > 1 ? ` <span class="muted">(${KUM_CUPS[K.tier].n} +${(K.tier - 1) * 20}%)</span>` : ''}</p>
     <div class="kum-actions"><button class="primary grow" data-act="kum-again">▶ Jeszcze raz</button><button class="grow" data-act="kum-quit2">Wyjdź</button></div></div>`;
 }
+// 📱 tryb wymaga telefonu w poziomie: w pionie zasłania go plansza „Obróć telefon” (CSS: orientation: portrait)
+const KUM_ROTATE = `<div class="kum-rotate" role="dialog" aria-label="Obróć telefon"><div class="kum-rot-ph"><span>🃏</span></div><b>Obróć telefon poziomo</b><small>Kumulacja gra się na szerokim ekranie – karty, atuty i sklep mieszczą się wtedy w jednym rzędzie.</small><button class="ghost" data-act="kum-leave">‹ Wróć do Przygody</button></div>`;
+function kumLock() { try { screen.orientation?.lock?.('landscape').catch(() => {}); } catch { /* telefon nie pozwala – zostaje plansza */ } }
+function kumUnlock() { try { screen.orientation?.unlock?.(); } catch { /* */ } }
 ROUTES.kumul = () => {
   if (!kumAdmin()) return { tab: 'arena', html: '<p class="muted center" style="padding:40px 0">Ten tryb jest jeszcze w testach.</p>' };
-  if (!KUM) return { tab: 'arena', html: kumIntroHTML() };
+  if (!KUM) return { tab: 'arena', html: KUM_ROTATE + kumIntroHTML() };
   const K = KUM, html = { pre: kumPreHTML, pick: kumPickHTML, answer: kumAnswerHTML, scored: kumScoredHTML, shop: kumShopHTML, pack: kumPackHTML, victory: kumVictoryHTML, end: kumEndHTML }[K.phase]();
   if (K.phase === 'answer') onMount(() => { const i = $('#kum-in'); if (i) { i.focus(); i.onkeydown = e => { if (e.key === 'Enter') ACTIONS['kum-send'](); }; } });
-  return { tab: 'arena', focus: true, html: `<div class="kum">${html}</div>` };
+  return { tab: 'arena', focus: true, html: KUM_ROTATE + `<div class="kum">${html}</div>` };
 };
 // wejście w zakładce Przygoda – admin i testerzy
 const kumBoss0 = ROUTES.boss;
-ROUTES.boss = (...a) => { const v = kumBoss0(...a); if (!v?.html || !kumAdmin() || (a[0] && a[0][1])) return v; const st = S.stats.kum || {};
+ROUTES.boss = (...a) => { const v = kumBoss0(...a); if (typeof KUM_ROTATE !== 'undefined') kumUnlock(); if (!v?.html || !kumAdmin() || (a[0] && a[0][1])) return v; const st = S.stats.kum || {};
   return { ...v, html: v.html.replace('<div class="card row nowrap coop-cta"', `<div class="card row nowrap kum-cta" data-go="#/kumul"><span class="kum-cta-ic">🃏</span><div class="grow"><b>Kumulacja <span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></b><div class="small muted">8 rund · atuty, koperty, pieczątki · 7 pucharów${st.best ? ` · rekord: runda ${st.best}` : ''}</div></div>${st.cup ? kumCupImg(st.cup) : ''}<span>›</span></div><div class="card row nowrap coop-cta"`) }; };
 
 Object.assign(ACTIONS, {
   'kum-kit': el => { KUM_KIT_SEL = el.dataset.k; render(); },
   'kum-tier': el => { KUM_TIER_SEL = +el.dataset.t; render(); },
-  'kum-start': () => { const max = Math.min(KUM_TOP, kumCupMax() + 1); kumStart($('#kum-deck')?.value || 'all', KUM_KIT_SEL, Math.min(max, KUM_TIER_SEL || max)); },
+  'kum-leave': () => { kumUnlock(); go('#/boss'); },
+  'kum-start': () => { kumLock(); const max = Math.min(KUM_TOP, kumCupMax() + 1); kumStart($('#kum-deck')?.value || 'all', KUM_KIT_SEL, Math.min(max, KUM_TIER_SEL || max)); },
   'kum-go': () => { if (KUM?.phase === 'pre') { kumStartRound(); render(); } },
   'kum-skip': () => kumSkip(),
   'kum-sel': el => { const K = KUM, id = el.dataset.id; if (!K || K.phase !== 'pick') return;
@@ -540,5 +545,5 @@ Object.assign(ACTIONS, {
   'kum-info': el => { const j = KUM?.jokers[+el.dataset.i]; const J = j && KUM_J[j.id]; if (J) toast(`${J.ic} ${J.n} (${KUM_RAR[J.r].n}): ${J.d}${j.e ? ` · ${KUM_ED[j.e].ic} ${KUM_ED[j.e].n}: ${KUM_ED[j.e].d}` : ''}${j.sleepy ? ' · 💤 działa w co drugim zagraniu' : ''}`, 5000); },
   'kum-quit': () => { if (!KUM) return go('#/boss'); askBox({ icon: '🃏', title: 'Zakończyć bieg?', intro: 'Dostaniesz nagrodę za ukończone rundy.', ok: 'Zakończ', cancel: 'Graj dalej', danger: true }).then(ok => { if (ok && KUM && KUM.phase !== 'end') kumEnd(KUM.round > KUM_LAST); }); },
   'kum-again': () => { const d = KUM?.deckId || 'all', kit = KUM?.kit || 'classic', t = KUM?.tier || 1; KUM = null; kumStart(d, kit, t); },
-  'kum-quit2': () => { KUM = null; go('#/boss'); },
+  'kum-quit2': () => { KUM = null; kumUnlock(); go('#/boss'); },
 });
