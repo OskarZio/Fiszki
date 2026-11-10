@@ -106,7 +106,8 @@ async function admPlayerPopup(code) {
     <div class="adm-btns">${[['wallet', '💸 Zabierz kryształy'], ['items', '🎒 Zabierz przedmioty'], ['stickers', '🃏 Zabierz naklejki'], ['all', '🧹 Zabierz wszystko'],
       p.shadow ? ['unshadow', '👻 Zdejmij cień'] : ['shadow', '👻 Cień (myśli, że ma)'], p.clown ? ['unclown', '🙂 Zdejmij klauna'] : ['clown', '🤡 Zrób klauna'], ['flip', '🙃 Do góry nogami'], ['msg', '💬 Wiadomość'], ['restore', '♻️ Przywróć wszystko']].map(([k, l]) => `<button class="sm${['wallet', 'items', 'stickers', 'all'].includes(k) ? ' danger' : ''}" data-act="host-act" data-k="${k}" data-code="${esc(p.code)}">${l}</button>`).join('')}
       <button class="sm ${p.banned ? '' : 'danger'}" data-act="host-ban" data-code="${esc(p.code)}" data-on="${p.banned ? 0 : 1}">${p.banned ? '✅ Odblokuj' : '🚫 Zablokuj'}</button>
-      <button class="sm" data-act="prem-grant" data-code="${esc(p.code)}">💠 Dodaj premium</button></div>
+      <button class="sm" data-act="prem-grant" data-code="${esc(p.code)}">💠 Dodaj premium</button>
+      ${typeof TEST_FEATS !== 'undefined' ? Object.entries(TEST_FEATS).map(([k, n]) => `<button class="sm" data-act="tst-add" data-code="${esc(p.code)}" data-feat="${k}">🧪 ${n} – do testów</button>`).join('') : ''}</div>
     <button class="ghost" data-x="1">Zamknij</button>`;
 }
 

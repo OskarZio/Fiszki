@@ -3,7 +3,7 @@
    Kierunek „skojarzenie → fiszka”: widzisz tylko skojarzenie i przypominasz sobie pytanie i odpowiedź.
    Kierunek „fiszka → skojarzenie”: widzisz pytanie i przypominasz sobie swoje skojarzenie.
    To trening – nie zmienia terminów powtórek. Nietrafione wracają raz jeszcze na koniec. */
-const skojAdmin = () => typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
+const skojAdmin = () => typeof testOn === 'function' ? testOn('skoj') : typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
 let SKOJ = null;
 const skojHasHint = n => n && n.type !== 'occl' && (String(n.hint || '').trim() || (n.hintImg && IMG[n.hintImg]));
 const skojNotes = deckId => S.notes.filter(n => (deckId === 'all' || n.deckId === deckId) && skojHasHint(n) && S.cards.some(c => c.noteId === n.id && !c.sus));

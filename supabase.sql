@@ -1155,5 +1155,32 @@ drop policy if exists "push_own" on public.push_subs;
 create policy "push_own" on public.push_subs for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 create index if not exists push_subs_user on public.push_subs (user_id);
 
-create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-08a'::text $$;
+-- 🧪 testerzy: admin daje wybranym graczom dostęp do trybów w testach (np. Kumulacja); gracz widzi tylko swoje wpisy
+create table if not exists public.app_testers (user_id uuid not null references auth.users on delete cascade, feat text not null check (char_length(feat) <= 24), t timestamptz not null default now(), primary key (user_id, feat));
+alter table public.app_testers enable row level security;
+drop policy if exists "testers_own" on public.app_testers;
+create policy "testers_own" on public.app_testers for select to authenticated using (user_id = auth.uid());
+create or replace function public.my_tests() returns text[] language sql stable security definer set search_path = '' as $$
+  select coalesce(array_agg(feat), '{}') from public.app_testers where user_id = auth.uid();
+$$;
+revoke all on function public.my_tests() from public, anon; grant execute on function public.my_tests() to authenticated;
+create or replace function public.admin_set_tester(p_code text, p_feat text, p_on boolean) returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid; nk text;
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  if p_feat is null or p_feat !~ '^[a-z0-9_]{1,24}$' then raise exception 'bad feature'; end if;
+  select id, nick into uid, nk from public.profiles where code = upper(trim(p_code)); if uid is null then raise exception 'no such player'; end if;
+  if p_on then insert into public.app_testers (user_id, feat) values (uid, p_feat) on conflict do nothing;
+  else delete from public.app_testers where user_id = uid and feat = p_feat; end if;
+  return coalesce(nk, upper(trim(p_code)));
+end $$;
+revoke all on function public.admin_set_tester(text, text, boolean) from public, anon; grant execute on function public.admin_set_tester(text, text, boolean) to authenticated;
+create or replace function public.admin_testers() returns json language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.app_admins where user_id = auth.uid()) then raise exception 'not admin'; end if;
+  return (select coalesce(json_agg(x), '[]') from (select p.code, p.nick, t.feat, t.t from public.app_testers t left join public.profiles p on p.id = t.user_id order by t.t desc) x);
+end $$;
+revoke all on function public.admin_testers() from public, anon; grant execute on function public.admin_testers() to authenticated;
+
+create or replace function public.db_version() returns text language sql stable set search_path = '' as $$ select '2026-11-09a'::text $$;
 grant execute on function public.db_version() to anon, authenticated;

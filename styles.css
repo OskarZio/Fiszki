@@ -3934,3 +3934,55 @@ img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline
 .kum-own { display: flex; gap: 8px; align-items: center; width: 100%; padding: 8px; border-radius: 10px; border: 2px solid var(--line); }
 .kum-own small { display: block; font-size: 11px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .kum-steps li { animation: none; opacity: 1; } }
+/* 🃏 Kumulacja 3: puchary, ekran przed rundą, bilety, koperty, wykończenia atutów, album */
+.kcup { width: 34px; height: 34px; image-rendering: pixelated; vertical-align: middle; flex: none; }
+.kcup.sm { width: 26px; height: 26px; } .kcup.xs { width: 16px; height: 16px; } .kcup.big { width: 84px; height: 84px; }
+.kcup.gold { filter: sepia(1) saturate(4) hue-rotate(-12deg) brightness(1.1) drop-shadow(0 0 4px #facc15aa); }
+.kcup.t4 { filter: drop-shadow(0 0 4px #67e8f9aa); } .kcup.t5 { filter: drop-shadow(0 0 6px #22d3ee); }
+.kcup.ruby { filter: hue-rotate(150deg) saturate(2.2) drop-shadow(0 0 6px #f43f5e); }
+.kcup.master { animation: kumRainbow 3s linear infinite; }
+@keyframes kumRainbow { from { filter: hue-rotate(0deg) saturate(1.8) drop-shadow(0 0 6px #a855f7); } to { filter: hue-rotate(360deg) saturate(1.8) drop-shadow(0 0 6px #a855f7); } }
+.kcup0 { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px dashed var(--line); }
+.kum-top .kcup { margin-left: -4px; }
+.kum-cups { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.kum-cupb { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px !important; min-height: 0 !important; border-radius: 10px; }
+.kum-cupb small { font-size: 9.5px; line-height: 1.1; white-space: nowrap; }
+.kum-cupb.lock .kcup { filter: grayscale(1) brightness(.6); opacity: .45; animation: none; }
+.kum-cupb.won { background: color-mix(in srgb, #facc15 14%, transparent); }
+.kum-cupb.on { border-color: #2f5bd3 !important; box-shadow: 0 0 0 3px #2f5bd355; }
+.kum-cupinfo { margin: 8px 0 12px; padding: 8px 10px; border-radius: 10px; background: var(--card2); }
+.kum-cupinfo ul { margin: 4px 0; padding-left: 18px; }
+.kum-pre { display: flex; flex-direction: column; gap: 10px; } .kum-pre.boss { border: 2px solid #f59e0b; }
+.kum-pre-r { display: flex; gap: 10px; align-items: center; } .kum-pre-r .kum-ic { font-size: 34px; }
+.kum-pre-r small { display: block; font-size: 12px; color: var(--muted); } .kum-pre-r b { display: block; font-size: 17px; }
+.kum-pre-t { text-align: center; font-size: 15px; } .kum-pre-t b { font: 800 26px/1.1 Rubik, system-ui, sans-serif; color: #2f5bd3; }
+.kum-ticket { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 12px; border: 2px dashed #a78bfa; background: color-mix(in srgb, #a78bfa 10%, transparent); }
+.kum-ticket small { display: block; font-size: 12px; color: var(--muted); }
+.kum-j { position: relative; }
+.kum-zz { position: absolute; top: -6px; left: -4px; font-size: 11px; font-style: normal; }
+.kum-ed { position: absolute; bottom: -6px; right: -6px; font-size: 12px; font-style: normal; }
+.kum-jv { position: absolute; top: -7px; right: -7px; font: 800 10px/1 Rubik, system-ui, sans-serif; font-style: normal; background: #16a34a; color: #fff; border-radius: 8px; padding: 2px 4px; }
+.ed-shine { box-shadow: 0 0 0 2px #fde68a, 0 0 10px #fde68a !important; }
+.ed-neon { box-shadow: 0 0 0 2px #f0abfc, 0 0 12px #c084fc !important; }
+.ed-gilt { box-shadow: 0 0 0 2px #facc15, 0 0 12px #f59e0b !important; }
+.ed-ghost { opacity: .75; border-style: dashed !important; }
+.kum-edtag { font-size: 11px; font-weight: 700; color: #7c3aed; } .kum-edtag.zz { color: #64748b; }
+.kum-off.p { border-color: #a78bfa; background: color-mix(in srgb, #a78bfa 8%, var(--card)); }
+.kum-album { margin-top: 12px; } .kum-album summary { cursor: pointer; }
+.kum-albumg { display: grid; gap: 6px; margin-top: 8px; } .kum-own.unk { opacity: .55; }
+.kum-bigcup { margin: 4px 0; } .kum-bigcup .kcup { animation: kumPop .6s ease-out; }
+.kum-bigcup .kcup.master { animation: kumRainbow 3s linear infinite; }
+@keyframes kumPop { from { transform: scale(.3) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.kum-kits { grid-template-columns: repeat(2, 1fr); }
+/* 🧪 testerzy w panelu admina */
+.tst-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; } .tst-list .row { padding: 6px 0; border-bottom: 1px solid var(--line); }
+@media (prefers-reduced-motion: reduce) { .kcup.master, .kum-bigcup .kcup { animation: none; } }
+/* ✏️ Rysowanie fiszek */
+.rys-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.rys-cmp figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.rys-cmp img, .rys-empty { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #fff; border-radius: 12px; border: 2px solid var(--line); }
+.rys-empty { display: grid; place-items: center; font-size: 40px; }
+.rys-cmp figcaption { font-size: 12px; color: var(--muted); text-align: center; }
+.rys-score { text-align: center; margin-top: 8px; font-size: 14px; } .rys-score b { font: 800 22px/1 Rubik, system-ui, sans-serif; color: #2f5bd3; }
+.rys-back .row { gap: 6px; }
+.kum-top .grow > small { display: block; }

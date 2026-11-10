@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '361';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '362';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -1205,7 +1205,7 @@ let DRAFT = null;
 function freshDraft(type, deckId) {
   return {
     editId: null, type: type || 'basic', deckId: deckId || S.settings.lastDeck || S.decks[0]?.id,
-    front: '', back: '', hint: '', hintImg: null, extra: '', wrong: '', reverse: false, text: '', imageId: null, boxes: [], title: '',
+    front: '', back: '', hint: '', hintImg: null, extra: '', wrong: '', reverse: false, text: '', imageId: null, backImageId: null, boxes: [], title: '',
     hideAll: S.settings.hideAll, bulk: '', bulkSep: 'auto', bulkReverse: false, bulkSwap: false, sel: null, draw: true,
   };
 }
@@ -1269,6 +1269,7 @@ function formBasic(D) {
   <div class="row">${D.imageId && IMG[D.imageId] ? `<img src="${IMG[D.imageId]}" style="max-height:90px;border-radius:8px"> <button class="danger sm" data-act="basic-img-del">Usuń obraz</button>`
     : `<button class="sm" data-act="basic-img">🖼️ Dodaj obraz</button><button class="sm" data-act="basic-img-paste">📋 Wklej obraz</button>`}</div>
   ${field('Tył (odpowiedź)', 'back', D.back, { area: true, ph: 'np. Os femoris' })}
+  ${typeof rysBackImgHTML === 'function' ? rysBackImgHTML(D) : ''}
   ${field('💡 Skojarzenie / podpowiedź (opcjonalnie)', 'hint', D.hint, { ph: 'np. „FEMORIS – FEMme w RIS-ach” – pokazuje się na żądanie' })}
   ${hintImgToolsHTML(D.hintImg, 'draft')}
   ${field('Dodatkowe informacje (opcjonalnie)', 'extra', D.extra, { area: true, rows: 2 })}
@@ -1443,8 +1444,8 @@ async function saveDraft() {
   let fields;
   if (D.type === 'basic') {
     if (!D.front.trim() && !D.imageId) return toast('Uzupełnij przód fiszki');
-    if (!D.back.trim()) return toast('Uzupełnij tył fiszki');
-    fields = { type: 'basic', front: D.front.trim(), back: D.back.trim(), hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim(), wrong: String(D.wrong || '').trim().slice(0, 600), reverse: !!D.reverse, imageId: D.imageId };
+    if (!D.back.trim() && !D.backImageId) return toast('Uzupełnij tył fiszki');
+    fields = { type: 'basic', front: D.front.trim(), back: D.back.trim(), hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim(), wrong: String(D.wrong || '').trim().slice(0, 600), reverse: !!D.reverse, imageId: D.imageId, backImageId: D.backImageId || null };
   } else if (D.type === 'cloze') {
     if (!/\{\{c\d+::/.test(D.text)) return toast('Zrób przynajmniej jedną lukę');
     fields = { type: 'cloze', text: D.text.trim(), hint: D.hint.trim(), hintImg: D.hintImg || null, extra: D.extra.trim() };

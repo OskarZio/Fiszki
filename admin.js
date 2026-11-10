@@ -24,8 +24,39 @@ async function flagsLoad() {
   try { const r = await SB.from('app_flags').select('k,off'); if (!r.error && Array.isArray(r.data)) { FLAGS = Object.fromEntries(r.data.filter(x => x.off && FEATURES[x.k]).map(x => [x.k, 1])); try { localStorage.setItem('appFlags', JSON.stringify(FLAGS)); } catch { /* */ } updateTabBadges(); render(); } } catch { /* */ }
   try { if (typeof cloudOn === 'function' && cloudOn()) {
     let a = await SB.rpc('am_admin'); if (a.error) a = await SB.rpc('claim_admin');   // starsza baza bez am_admin
-    IS_ADMIN = a.data === true; ADMIN_ERR = a.error ? (a.error.message || 'błąd') : (IS_ADMIN ? '' : 'not-admin'); render(); }
-    else ADMIN_ERR = 'not-logged'; } catch (e) { ADMIN_ERR = e.message || 'błąd'; }
+    IS_ADMIN = a.data === true; ADMIN_ERR = a.error ? (a.error.message || 'błąd') : (IS_ADMIN ? '' : 'not-admin');
+    const t = await SB.rpc('my_tests'); if (!t.error) testsSet(Array.isArray(t.data) ? t.data : []); render(); }
+    else { ADMIN_ERR = 'not-logged'; testsSet([]); } } catch (e) { ADMIN_ERR = e.message || 'błąd'; }
+}
+// 🧪 tryby w testach: admin widzi wszystkie, a tester tylko te, które admin mu przydzielił (tabela app_testers)
+const TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek' };
+let MY_TESTS = (() => { try { return JSON.parse(localStorage.getItem('myTests') || '[]'); } catch { return []; } })();
+function testsSet(a) { MY_TESTS = a.filter(f => TEST_FEATS[f]); try { localStorage.setItem('myTests', JSON.stringify(MY_TESTS)); } catch { /* */ } }
+const testOn = f => IS_ADMIN === true || MY_TESTS.includes(f);
+let TESTERS = null;   // lista dla panelu admina: null = nie wczytano
+async function testersLoad() {
+  if (typeof SB === 'undefined' || !SB) { TESTERS = { err: 'Brak połączenia z bazą (zaloguj się).' }; return; }
+  TESTERS = { loading: true };
+  const r = await SB.rpc('admin_testers');
+  TESTERS = r.error ? { err: /function|schema cache|does not exist/i.test(r.error.message || '') ? 'Wgraj nowy supabase.sql (Panel hosta → Aktualizacja bazy).' : 'Błąd: ' + r.error.message } : { list: r.data || [] };
+  render();
+}
+async function testerSet(code, feat, on) {
+  code = (code || '').trim().toUpperCase(); if (!code) return toast('Wpisz kod gracza'); if (typeof SB === 'undefined' || !SB) return toast('Brak połączenia z bazą');
+  const r = await SB.rpc('admin_set_tester', { p_code: code, p_feat: feat, p_on: on });
+  if (r.error) return toast(/function|schema cache|does not exist/i.test(r.error.message || '') ? 'Wgraj nowy supabase.sql (Aktualizacja bazy)' : /no such/.test(r.error.message) ? 'Nie ma gracza o kodzie ' + code : 'Błąd: ' + r.error.message, 4000);
+  toast(on ? `🧪 ${r.data} może testować: ${TEST_FEATS[feat]}` : `🧪 ${r.data} – bez dostępu do: ${TEST_FEATS[feat]}`, 3500);
+  testersLoad();
+}
+function testersHTML() {
+  if (TESTERS === null) testersLoad();
+  const T = TESTERS || {};
+  return `<h3>🧪 Testerzy trybów</h3>
+    <p class="small muted" style="margin-top:0">Wybrane osoby zobaczą tryb w testach u siebie (po odświeżeniu aplikacji). Kod gracza jest w jego profilu i na liście w Panelu hosta.</p>
+    <div class="row nowrap tst-add"><input id="tst-code" class="grow" placeholder="Kod gracza" maxlength="12" autocapitalize="characters" style="text-transform:uppercase;margin:0">
+      <select id="tst-feat" style="margin:0;width:auto">${Object.entries(TEST_FEATS).map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select></div>
+    <button class="sm primary block" data-act="tst-add" style="margin-top:6px">➕ Dodaj testera</button>
+    <div class="small tst-list">${T.loading ? '<p class="muted">Ładuję…</p>' : T.err ? `<p class="muted">${esc(T.err)}</p>` : (T.list || []).length ? T.list.map(x => `<div class="row nowrap"><span class="grow"><b>${esc(x.nick || 'bez nicku')}</b> <span class="muted">${esc(x.code || '')}</span><br><small class="muted">${TEST_FEATS[x.feat] || esc(x.feat)}</small></span><button class="sm ghost" data-act="tst-del" data-code="${esc(x.code || '')}" data-feat="${esc(x.feat)}">Usuń</button></div>`).join('') : '<p class="muted">Na razie nikt nie testuje.</p>'}</div>`;
 }
 on('start', () => setTimeout(flagsLoad, 1500));
 setInterval(() => { if (document.visibilityState === 'visible') flagsLoad(); }, 10 * 60000);
@@ -97,6 +128,7 @@ function adminHTML() {
     <p class="small muted">Wyłączona funkcja znika <b>u wszystkich</b> (po odświeżeniu aplikacji, najpóźniej po 10 minutach). Dane użytkowników zostają.</p>
     <div class="feat-list">${Object.entries(FEATURES).map(([k, [name, , desc]]) => `<label class="feat"><input type="checkbox" data-feat="${k}" ${off[k] ? '' : 'checked'}><span><b>${name}</b><small>${desc}</small></span></label>`).join('')}</div>
     <div class="row" style="margin-top:8px"><button class="sm" data-act="feat-simple">✨ Tryb prosty: tylko nauka</button><button class="sm ghost" data-act="feat-all">Włącz wszystko</button></div>
+    ${testersHTML()}
     <h3>🎨 Podgląd motywów premium</h3>
     <p class="small muted" style="margin-top:0">Za darmo, bez kupowania – podgląd trwa do „Zakończ” albo do ponownego otwarcia aplikacji.</p>
     <div class="themes">${THEMES.filter(t => t.price).map(t => `<button class="theme${THEME_PREVIEW?.id === t.id ? ' on' : ''}${t.fx ? ' th-fx' : ''}" style="background:${t.bg};background-image:${t.image || 'none'}${themeFxVars(t)}" data-act="theme-preview" data-id="${t.id}"><span class="dot" style="background:${t.accent}"></span><b style="color:${lum(t.bg) < .18 ? '#fff' : '#1b1d29'}">${t.name}</b><small class="lock">${themeOwned(t) ? '✓ masz' : '👀 podgląd'}</small></button>`).join('')}</div>
@@ -132,6 +164,8 @@ Object.assign(ACTIONS, {
   'theme-preview-end': () => { THEME_PREVIEW = null; applyTheme(); themePreviewBar(); render(); },
   'theme-preview-buy': () => { THEME_PREVIEW = null; applyTheme(); themePreviewBar(); go('#/shop'); },
   'feat-on': el => setFlag(el.dataset.k, false),
+  'tst-add': el => testerSet(el.dataset.code || $('#tst-code')?.value, el.dataset.feat || $('#tst-feat')?.value || 'kumul', true),
+  'tst-del': el => { if (confirm(`Zabrać dostęp do: ${TEST_FEATS[el.dataset.feat] || el.dataset.feat}?`)) testerSet(el.dataset.code, el.dataset.feat, false); },
   'feat-all': async () => { if (!confirm('Włączyć wszystkie funkcje dla wszystkich?')) return; for (const k of Object.keys(FLAGS)) await setFlag(k, false); },
   'feat-simple': async () => { if (!confirm('Tryb prosty dla WSZYSTKICH użytkowników (tylko nauka, metody, terminarz, kategorie)?')) return; for (const k of Object.keys(FEATURES).filter(k => !['methods', 'calendar', 'topics'].includes(k))) await setFlag(k, true); },
   'adm-reset': el => {

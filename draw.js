@@ -5,19 +5,19 @@
 const PAD_COLORS = ['#111827', '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#ffffff'];
 const PAD_SIZES = [3, 6, 12, 22];
 
-function openDrawPad(start) {
+function openDrawPad(start, title, okLabel) {
   return new Promise(resolve => {
     document.querySelector('.draw-ov')?.remove();
     const ov = document.createElement('div'); ov.className = 'draw-ov';
     ov.innerHTML = `<div class="draw-box">
-      <div class="row nowrap draw-top"><b class="grow">✏️ Narysuj skojarzenie</b>
+      <div class="row nowrap draw-top"><b class="grow">${title || '✏️ Narysuj skojarzenie'}</b>
         <button class="sm" data-d="undo" title="Cofnij">↶</button><button class="sm" data-d="clear" title="Wyczyść">🗑️</button></div>
       <div class="draw-wrap"><canvas></canvas></div>
       <div class="draw-tools">
         <div class="draw-colors">${PAD_COLORS.map((c, i) => `<button data-c="${c}" class="${i ? '' : 'on'}" style="--c:${c}" title="${c === '#ffffff' ? 'gumka (biały)' : c}"></button>`).join('')}</div>
         <div class="draw-sizes">${PAD_SIZES.map((s, i) => `<button data-s="${s}" class="${i === 1 ? 'on' : ''}"><i style="width:${Math.min(22, s + 2)}px;height:${Math.min(22, s + 2)}px"></i></button>`).join('')}</div>
       </div>
-      <div class="row nowrap"><button class="grow" data-d="cancel">Anuluj</button><button class="primary grow" data-d="ok">✓ Zapisz rysunek</button></div></div>`;
+      <div class="row nowrap"><button class="grow" data-d="cancel">Anuluj</button><button class="primary grow" data-d="ok">${okLabel || '✓ Zapisz rysunek'}</button></div></div>`;
     document.body.append(ov);
     const cv = ov.querySelector('canvas'), ctx = cv.getContext('2d'), wrap = ov.querySelector('.draw-wrap');
     // płótno 4:3, w pikselach urządzenia (ostre linie na Retinie)
