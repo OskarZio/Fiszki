@@ -187,7 +187,7 @@ function mtStart(k) {
   MT = { k, deck: d, queue: pool.map(c => c.id), hits: {}, i: 0, done: 0, stats: { ok: 0, bad: 0 }, conf: [], phase: 'q', t0: Date.now() };
   go('#/mtrain/' + k);
 }
-const mtCard = () => MT && S.cards.find(c => c.id === MT.queue[0]);
+const mtCard = () => MT && cardById(MT.queue[0]);
 function mtNext(ok) {
   const c = mtCard(); if (!c) return;
   (S.tlog = S.tlog || []).push({ id: uid(), t: Date.now(), d: c.deckId, ms: Math.min(60000, Date.now() - (MT.shownAt || Date.now())) });

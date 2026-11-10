@@ -89,11 +89,14 @@ const MODE_HP = { abcd: .65, flip: 1, type: 1.1, mix: .95 }, MODE_REWARD = { abc
 const fightable = c => c.sus !== 'skip' && noteById(c.noteId);
 // bossowie z wielu talii (tygodnia, świata, kategorii, wieża, hydra „wszystkie”): bez talii oznaczonych jako zdane
 const mixFightable = c => fightable(c) && !deckById(c.deckId)?.done;
+// ⚡ wołane dla każdego rozdziału każdej talii – wynik pamiętamy do następnej zmiany danych (zwracamy kopie, żeby nikt nie zepsuł zapamiętanych list)
 function deckChapters(d) {
-  const cs = S.cards.filter(c => c.deckId === d.id && fightable(c)).sort((a, b) => a.pos - b.pos), out = [];
-  for (let i = 0; i < cs.length; i += CH_SIZE) out.push(cs.slice(i, i + CH_SIZE));
-  if (out.length > 1 && out[out.length - 1].length < CH_MIN_LAST) out[out.length - 2].push(...out.pop());
-  return out;
+  return dataMemo('chapters:' + d.id, () => {
+    const cs = S.cards.filter(c => c.deckId === d.id && fightable(c)).sort((a, b) => a.pos - b.pos), out = [];
+    for (let i = 0; i < cs.length; i += CH_SIZE) out.push(cs.slice(i, i + CH_SIZE));
+    if (out.length > 1 && out[out.length - 1].length < CH_MIN_LAST) out[out.length - 2].push(...out.pop());
+    return out;
+  }).map(ch => ch.slice());
 }
 const learnedN = cs => cs.filter(c => c.srs.state !== 'new').length;
 const deckLearned = d => learnedN(S.cards.filter(c => c.deckId === d.id && fightable(c)));
@@ -277,7 +280,7 @@ const pickMove = (b, B = BOSS) => { const ab = b.abil.filter(a => a !== 'rage'),
   } else if (ab.length) { const opts = ['hit', 'hit', ...ab]; k = opts[Math.random() * opts.length | 0]; }
   if (k === 'scramble' && b.gk) k = 'wind';   // 🧠 quiz: zamiast rozsypanki
   return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: 0 }; };
-const bossCardById = id => S.cards.find(c => c.id === id) || (typeof gkCard === 'function' ? gkCard(id) : null) || (typeof coopVCard === 'function' ? coopVCard(id) : null);
+const bossCardById = id => cardById(id) || (typeof gkCard === 'function' ? gkCard(id) : null) || (typeof coopVCard === 'function' ? coopVCard(id) : null);
 const bossCard = () => BOSS?.cur && bossCardById(BOSS.cur.id);
 const ABCD_MAX = 400;
 const textOk = v => v.ans && v.ans.trim() && v.ans.length <= 120;
@@ -454,12 +457,14 @@ function dealBoss(n, label) { const B = BOSS; n = Math.max(0, Math.round(n * (B.
   if (B.b.kind === 'weekly') { B.dmgTotal += n; B.hp = Math.max(0, B.hp - n); return n; }
   const r = Math.min(B.hp, n); B.hp -= r; B.dmgTotal += r; if (B.drain > 0 && B.hp > 0) B.hp = Math.min(B.max, B.hp + Math.round(r * .4)); return r; }
 const bossAlive = B => B.coop && typeof coopAlive === 'function' ? coopAlive() : B.hp > 0;
+// 💥 ile serc naprawdę zabierze cios o sile n (pancerz bohatera, furia bossa, bomba) – ta sama liczba w zapowiedzi ataku i przy trafieniu
+const hurtCalc = (B, n, bomb) => Math.round(n * (bomb ? 2 : 1) * (1 - B.hs.def) * (B.b.abil.includes('rage') && B.hp < B.max / 2 ? 1.4 : 1));
 function hurtMe(n, label) {
   const B = BOSS; if (B.down) return;
   if (B.guard > 0) { B.guard--; B.fxMe = { k: 'block', t: Date.now() }; B.log.unshift(`🛡️ Zablokowałeś: ${label}`); return; }
   if (Math.random() < B.hs.dodge) { B.fxMe = { k: 'dodge', t: Date.now() }; B.log.unshift(`💨 Unik! ${label} chybia`); return; }
-  if (B.bomb) { n *= 2; B.bomb = 0; label += ' 💣 ×2'; }
-  const dmg = Math.round(n * (1 - B.hs.def) * (B.b.abil.includes('rage') && B.hp < B.max / 2 ? 1.4 : 1));
+  const bomb = !!B.bomb; if (bomb) { B.bomb = 0; label += ' 💣 ×2'; }
+  const dmg = hurtCalc(B, n, bomb);
   B.me -= dmg; B.lostHp += dmg; B.fxMe = { k: 'hit', n: dmg, t: Date.now() }; B.log.unshift(`💥 ${label}: −${dmg} ❤️`);
   if (B.hs.thorns && bossAlive(B)) { const r = dealBoss(dmg * B.hs.thorns); if (r) B.log.unshift(`🌵 Odbicie: −${r} dla bossa`); }
   if (B.me <= 0 && B.second) { B.me = 1; B.second = false; B.log.unshift('✨ Drugie życie! Zostaje Ci 1 ❤️'); }
@@ -986,7 +991,7 @@ function fightView() {
     <div class="bf-top">
       ${B.say?.txt ? `<div class="boss-say" key="${B.say.t}">${esc(B.say.txt)}</div>` : ''}
       <div class="bf-boss">${B.coop && typeof coopHeadsHTML === 'function' ? coopHeadsHTML(fx, act) : `<div class="boss-stage${fx ? ' hit' : ''}${fx?.crit ? ' crit' : ''}${act ? ' attack' : ''}">${bossArt(b)}${B.shield ? '<span class="boss-shield">🛡️</span>' : ''}${fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}${fx.crit ? '!' : ''}</b><i class="slash"></i>` : ''}</div>`}
-        <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : '🎰'} <b>${mv.k === 'hit' ? esc(mv.name) : 'Losowanie przeszkadzajki'}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
+        <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : '🎰'} <b>${mv.k === 'hit' ? esc(mv.name) : 'Losowanie przeszkadzajki'}</b>${mv.dmg ? ` −${hurtCalc(B, mv.dmg, B.bomb)}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
       ${B.coop ? '' : HP_BAR(B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''))}${B.b.curses ? curseIconsHTML(B.b.abil, 'fight') : ''}
       ${B.phaseN ? `<div class="weak-tag">🔥 faza ${B.phaseN + 1}</div>` : ''}
       ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry && !cur?.qte ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
@@ -1002,7 +1007,7 @@ function fightView() {
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}
       ${cur?.dis && !B.shown ? `<div class="dis-tag">${BOSS_ABIL[cur.dis][0]} ${BOSS_ABIL[cur.dis][1]}</div>` : ''}
       ${cur?.ver ? (cur.ver.retry ? '<div class="ver-tag retry-tag">🔁 Rewanż: ta fiszka przed chwilą Cię pokonała. Teraz pamiętasz?</div>' : '<div class="ver-tag">🔍 Sprawdzian bossa – udowodnij, że to wiesz!</div>') : ''}
-      ${cur?.parry ? `<div class="ver-tag parry-tag">⚠️ ${esc(cur.parry.name)} (−${cur.parry.dmg} ❤️)! ${PARRY_TXT(cur)}${cur.weak && !cur.curse ? '<small class="weak-card">💔 boss bije fiszką, która Ci ostatnio nie szła</small>' : ''}${B.picked == null && cur.runes?.phase !== 'show' && !(cur.curse && B.shown) ? `<div class="parry-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / parryMs(B) * 100).toFixed(1)}%"></i></div>` : ''}</div>` : ''}
+      ${cur?.parry ? `<div class="ver-tag parry-tag">⚠️ ${esc(cur.parry.name)} (−${hurtCalc(B, cur.parry.dmg, B.bomb)} ❤️)! ${PARRY_TXT(cur)}${cur.weak && !cur.curse ? '<small class="weak-card">💔 boss bije fiszką, która Ci ostatnio nie szła</small>' : ''}${B.picked == null && cur.runes?.phase !== 'show' && !(cur.curse && B.shown) ? `<div class="parry-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / parryMs(B) * 100).toFixed(1)}%"></i></div>` : ''}</div>` : ''}
       ${B.triple && !cur?.parry && !cur?.ver ? '<div class="ver-tag ev-tag">💥 Pytanie za 3×!</div>' : ''}${B.gaunt && !cur?.parry ? `<div class="ver-tag ev-tag">🎯 Wyzwanie: ${B.gaunt.n}/3 dobrych z rzędu</div>` : ''}
       ${cur?.runes ? runesHTML(cur.runes) : ''}
       <div class="bq-in">${cur?.runes ? '' : q}${cur?.hint && !B.shown ? `<div class="hintbox">🔮 ${esc(cur.hint)}</div>` : ''}</div>

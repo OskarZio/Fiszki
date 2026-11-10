@@ -149,7 +149,7 @@ function kumPool(deckId) {
   const cs = S.cards.filter(ok), now = Date.now(), isDue = c => c.srs.state !== 'new' && c.srs.due <= now;
   return [...shuffle(cs.filter(isDue)), ...shuffle(cs.filter(c => !isDue(c)))].map(c => c.id);
 }
-const kumCard = id => S.cards.find(c => c.id === id);
+const kumCard = id => cardById(id);
 function kumKind(c) {
   if (!c) return { k: 'mid', base: 10, t: '' };
   if (c.srs.state === 'new') return { k: 'new', base: 20, t: 'nowa' };

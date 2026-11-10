@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '363';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '364';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -27,9 +27,26 @@ function dayStart(t = Date.now()) {
   return d.getTime();
 }
 function addDays(ts, n) { const d = new Date(ts); d.setDate(d.getDate() + n); return d.getTime(); }
+// ⚡ dayKey jest wołany dziesiątki tysięcy razy (cała historia powtórek) – wynik pamiętamy dla kwadransa
+// (granica dnia 4:00 i wszystkie strefy czasowe wypadają na pełnych kwadransach, więc w obrębie kwadransa dzień jest ten sam)
+var DAYKEY_CACHE = new Map();
 function dayKey(t) {
-  const d = new Date(dayStart(t));
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const q = Math.floor(t / 9e5); let k = DAYKEY_CACHE.get(q);
+  if (k === undefined) {
+    const d = new Date(dayStart(t));
+    k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (DAYKEY_CACHE.size > 60000) DAYKEY_CACHE.clear();
+    DAYKEY_CACHE.set(q, k);
+  }
+  return k;
+}
+// ⚡ wyniki liczone z całej historii powtórek (S.log) pamiętamy do następnej zmiany historii:
+// zależność = ta sama tablica, ta sama długość i ten sam ostatni wpis (dopisanie, cofnięcie, synchronizacja – wszystko to zmienia)
+var LOG_MEMO = new Map();
+function logMemo(name, fn) {
+  const L = S.log, n = L.length, last = n ? L[n - 1] : null, m = LOG_MEMO.get(name);
+  if (m && m.L === L && m.n === n && m.last === last && m.t === (last ? last.t : 0)) return m.v;
+  const v = fn(); LOG_MEMO.set(name, { L, n, last, t: last ? last.t : 0, v }); return v;
 }
 function human(ms) {
   if (ms < HOUR) return Math.max(1, Math.round(ms / MIN)) + ' min';
@@ -133,10 +150,21 @@ var emit = (name, ...a) => (HOOKS[name] || []).forEach(fn => { try { fn(...a); }
 // Dodatkowe ekrany rejestrowane przez moduły: ROUTES.nazwa = parts => ({ html, tab, focus })
 var ROUTES = {};
 function save() {
+  DATA_VER++;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { DB.set('state', S); updateBadge(); scheduleSync(); emit('save'); }, 200);
 }
-function touch(o) { o.mod = Date.now(); return o; }
+// ⚡ licznik zmian danych: rośnie przy każdym zapisie i każdej zmianie obiektu – po nim poznajemy, czy zapamiętany wynik jest aktualny
+var DATA_VER = 0;
+function touch(o) { o.mod = Date.now(); DATA_VER++; return o; }
+// wynik zapamiętany do następnej zmiany danych (albo podmiany tablic fiszek / notatek, np. po synchronizacji)
+var DATA_MEMO = new Map();
+function dataMemo(key, fn) {
+  const m = DATA_MEMO.get(key);
+  if (m && m.ver === DATA_VER && m.c === S.cards && m.cn === S.cards.length && m.n === S.notes && m.nn === S.notes.length) return m.v;
+  if (DATA_MEMO.size > 400) DATA_MEMO.clear();
+  const v = fn(); DATA_MEMO.set(key, { ver: DATA_VER, c: S.cards, cn: S.cards.length, n: S.notes, nn: S.notes.length, v }); return v;
+}
 async function putImage(dataUrl) {
   const id = 'i' + uid(); IMG[id] = dataUrl; await DB.set('img:' + id, dataUrl); return id;
 }
@@ -157,8 +185,26 @@ async function gcImages() {
 
 // ============================================================ Talie, notatki, karty
 var CLOZE_RE = /\{\{c(\d+)::([\s\S]*?)(?:::([\s\S]*?))?\}\}/g;
-var deckById = id => S.decks.find(d => d.id === id);
-var noteById = id => S.notes.find(n => n.id === id);
+// ⚡ wyszukiwanie po id z indeksem (Map) zamiast przeglądania całej listy przy każdym pytaniu.
+// Indeks sam się pilnuje: trafienie sprawdzamy z listą (arr[i] === wynik), a przy pudle szukamy po staremu i odbudowujemy indeks –
+// więc wynik jest zawsze taki sam jak z arr.find, także zaraz po dodaniu / usunięciu / wczytaniu danych.
+function idIndex() {
+  let arr = null, len = -1, map = null;
+  const build = a => { arr = a; len = a.length; map = new Map(); for (let i = 0; i < a.length; i++) if (!map.has(a[i].id)) map.set(a[i].id, i); };
+  return (a, id) => {
+    if (!a) return undefined;
+    if (a !== arr || a.length !== len) build(a);
+    const i = map.get(id);
+    if (i !== undefined) { const x = a[i]; if (x && x.id === id) return x; }
+    const x = a.find(o => o.id === id);   // indeks nieaktualny albo brak elementu
+    if (x || i !== undefined) build(a);
+    return x;
+  };
+}
+var _deckIdx = idIndex(), _noteIdx = idIndex(), _cardIdx = idIndex();
+var deckById = id => _deckIdx(S.decks, id);
+var noteById = id => _noteIdx(S.notes, id);
+var cardById = id => _cardIdx(S.cards, id);
 var palaceById = id => S.palaces.find(p => p.id === id);
 
 function newDeck(name) {
@@ -297,7 +343,7 @@ function deckCounts(deckId, noLimit) {
   return { nw, lrn, rev, total: nw + lrn + rev };
 }
 function streak() {
-  const days = new Set(S.log.map(l => dayKey(l.t)));
+  const days = logMemo('days', () => new Set(S.log.map(l => dayKey(l.t))));
   let t = dayStart(), n = 0;
   if (!days.has(dayKey(t))) t = addDays(t, -1);
   while (days.has(dayKey(t))) { n++; t = addDays(t, -1); }
@@ -483,7 +529,7 @@ function loadSess() { try { const j = JSON.parse(localStorage.getItem(SESS_KEY) 
 var dropSess = () => { try { localStorage.removeItem(SESS_KEY); } catch { /* */ } };
 function restoreSess(key) {
   const j = loadSess(); if (!j || j.key !== key) return false;
-  const card = S.cards.find(c => c.id === j.cardId);
+  const card = cardById(j.cardId);
   SESSION = { all: j.all, only: j.only ? new Set(j.only) : null, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
     done: j.done || 0, timeMs: j.timeMs || 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: Date.now() };
   if (card && (!SESSION.cram || SESSION.cram[0] === card.id)) { SESSION.card = card; SESSION.shown = !!j.shown && j.mode === 'flip'; }
@@ -507,7 +553,7 @@ function newOrderKey(cards) {
 }
 var LEARN_OPEN_MAX = 10;
 function pickNext(sess) {
-  if (sess.cram) return S.cards.find(c => c.id === sess.cram[0]) || null;
+  if (sess.cram) return cardById(sess.cram[0]) || null;
   const now = Date.now();
   const pool = S.cards.filter(c => !c.sus && (sess.deckId === 'all' || c.deckId === sess.deckId) && (!sess.only || sess.only.has(c.id)));
   const choose = arr => arr.find(c => c.noteId !== sess.lastNote) || arr[0];
@@ -606,7 +652,7 @@ var setRewardHTML = r => r ? `<div class="set-reward"><b>+${r.n} 💎</b> za uko
   : '';
 function undo() {
   const s = SESSION, u = s && s.undo; if (!u) return;
-  const c = S.cards.find(x => x.id === u.cardId); if (!c) return;
+  const c = cardById(u.cardId); if (!c) return;
   if (u.sus) { delete c.sus; c.srs = u.srs; touch(c); s.undo = null; s.card = c; s.shown = false; s.shownAt = Date.now(); save(); return render(); }
   c.srs = u.srs; touch(c); S.log = S.log.filter(l => l.id !== u.logId); s.done--; s.undo = null;
   s.card = c; s.shown = false; s.peek = false; s.editHint = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
@@ -643,6 +689,7 @@ function hcChrome() {
 }
 function render() {
   if (!S) return;
+  DATA_VER++;   // ⚡ zapamiętane wyniki żyją najwyżej jedno rysowanie ekranu – nigdy nie pokażemy starych danych
   hcChrome();
   const { parts, q } = parseRoute();
   MOUNT = [];
@@ -677,7 +724,7 @@ function render() {
   if (typeof applyPersonal === 'function') applyPersonal();
   document.body.classList.toggle('noanim', !S.settings.anim);
   $('#view').innerHTML = html;
-  if (typeof emo8Decorate === 'function') emo8Decorate($('#view'));   // ⚡ ikony 8-bit od razu, w tej samej klatce – bez mrugania emotek
+  if (typeof emo8Decorate === 'function') { emo8Decorate($('#view')); if (typeof emo8Flush === 'function') emo8Flush($('#view')); }   // ⚡ ikony 8-bit od razu, w tej samej klatce – bez mrugania emotek
   { const pth = parts.join('/'); $('#view').classList.toggle('enter', pth !== LAST_VIEW_PATH); LAST_VIEW_PATH = pth; }   // animacja wejścia tylko przy zmianie ekranu
   $$('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
   MOUNT.forEach(fn => fn());
@@ -1169,7 +1216,7 @@ function viewQuiz(deckId, q) {
     const wrong = Z.items.filter(x => !x.ok);
     if (!Z.reported) { Z.reported = true; Z.reward = typeof quizReward === 'function' ? quizReward(pct, total, type) : null; setTimeout(() => emit('quiz', pct, total)); }
     // pytanie nad odpowiedzią (długie odpowiedzi nie rozjeżdżają się w wąską kolumnę)
-    const list = wrong.map(x => { const c = S.cards.find(y => y.id === x.cardId); if (!c) return ''; const v = cardView(c);
+    const list = wrong.map(x => { const c = cardById(x.cardId); if (!c) return ''; const v = cardView(c);
       return `<div class="qwrong"><div class="small">${esc(v.label).slice(0, 160)}</div><b class="c-rev">${esc(v.ans)}</b></div>`; }).join('');
     const R = Z.reward;
     return head + `<div class="card center"><div class="score">${pct}%</div><p>${good} / ${total} poprawnych ${pct >= 90 ? '🏆' : pct >= 60 ? '👍' : '💪'}</p>
@@ -1180,7 +1227,7 @@ function viewQuiz(deckId, q) {
         <button class="grow" data-act="quiz-due">📅 Dodaj do dzisiejszych powtórek</button></div></div>` : ''}
       <div class="row"><button class="grow" data-act="quiz-again">Nowy test</button><button class="grow" data-act="quiz-end" data-href="${back}">Zakończ</button></div>`;
   }
-  const it = Z.items[Z.i], c = S.cards.find(x => x.id === it.cardId);
+  const it = Z.items[Z.i], c = cardById(it.cardId);
   if (!c) { Z.i++; return viewQuiz(deckId, q); }
   const v = cardView(c), answered = it.given !== null;
   let ui;
@@ -2024,8 +2071,8 @@ var ACTIONS = {
 
   'quiz-start-custom': el => { const v = Math.round(+$('#quiz-n').value); if (!(v >= 1)) return toast('Wpisz liczbę pytań'); el.dataset.n = v; ACTIONS['quiz-start'](el); },
   'quiz-start': el => { QUIZ = buildQuiz(el.dataset.deck, el.dataset.type, +el.dataset.n); if (!QUIZ.items.length) { QUIZ = null; toast('Brak kart z odpowiedziami'); } render(); },
-  'quiz-pick': el => { const it = QUIZ.items[QUIZ.i], v = cardView(S.cards.find(c => c.id === it.cardId)); it.given = +el.dataset.k; it.ok = it.options[it.given] === v.ans; render(); },
-  'quiz-check': () => { const it = QUIZ.items[QUIZ.i], v = cardView(S.cards.find(c => c.id === it.cardId)); it.given = $('#quizin').value; it.ok = checkAnswer(it.given, v.ans) !== 'wrong'; render(); },
+  'quiz-pick': el => { const it = QUIZ.items[QUIZ.i], v = cardView(cardById(it.cardId)); it.given = +el.dataset.k; it.ok = it.options[it.given] === v.ans; render(); },
+  'quiz-check': () => { const it = QUIZ.items[QUIZ.i], v = cardView(cardById(it.cardId)); it.given = $('#quizin').value; it.ok = checkAnswer(it.given, v.ans) !== 'wrong'; render(); },
   'quiz-override': () => { QUIZ.items[QUIZ.i].ok = true; render(); },
   'quiz-next': () => { QUIZ.i++; render(); window.scrollTo(0, 0); },
   'quiz-again': () => { QUIZ = null; render(); },
@@ -2033,7 +2080,7 @@ var ACTIONS = {
   'quiz-cram': () => { const ids = QUIZ.items.filter(x => !x.ok).map(x => x.cardId); const d = QUIZ.deckId; SESSION = null; QUIZ = null; go(`#/study/${d}/flip?cram=list&ids=${ids.join(',')}`); },
   'quiz-due': () => {
     const now = Date.now(); let n = 0;
-    QUIZ.items.filter(x => !x.ok).forEach(x => { const c = S.cards.find(y => y.id === x.cardId); if (c && c.srs.state !== 'new' && c.srs.due > now) { c.srs = { ...c.srs, due: dayStart(now) }; touch(c); n++; } });
+    QUIZ.items.filter(x => !x.ok).forEach(x => { const c = cardById(x.cardId); if (c && c.srs.state !== 'new' && c.srs.due > now) { c.srs = { ...c.srs, due: dayStart(now) }; touch(c); n++; } });
     save(); toast(n ? `Dodano ${n} do dzisiejszych powtórek` : 'Te karty są nowe lub już czekają na powtórkę');
   },
 
@@ -5236,8 +5283,9 @@ var studyGems = l => !l.m ? 0 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .05 : 0)
 var QUIZ_GEM_CAP = 150;   // max 💎 dziennie z testów ABCD / pisemnych
 function earnedCoins() {
   let c = Object.keys(S.ach).reduce((a, id) => a + (typeof achReward === 'function' ? achReward(id) : 30), 0);   // trudne osiągnięcia: 150
-  const perDay = {}; let study = 0;
-  for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); study += studyGems(l); }
+  const { perDay, study } = logMemo('coins', () => { const perDay = {}; let study = 0;
+    for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); study += studyGems(l); }
+    return { perDay, study }; });
   // dni z celem dziennym: liczone od wpisów 'goal-<dzień>' w portfelu (te same na każdym urządzeniu); stare – według celu z tego urządzenia, tylko jeśli wpisu brak
   const goalDone = new Set(S.wallet.filter(w => /^goal-/.test(w.id)).map(w => w.id.slice(5)));
   c += Object.entries(perDay).filter(([k, n]) => !goalDone.has(k) && n >= (S.settings.goal || 50)).length * 20 + Math.floor(study);
@@ -11173,11 +11221,14 @@ var MODE_HP = { abcd: .65, flip: 1, type: 1.1, mix: .95 }, MODE_REWARD = { abcd:
 var fightable = c => c.sus !== 'skip' && noteById(c.noteId);
 // bossowie z wielu talii (tygodnia, świata, kategorii, wieża, hydra „wszystkie”): bez talii oznaczonych jako zdane
 var mixFightable = c => fightable(c) && !deckById(c.deckId)?.done;
+// ⚡ wołane dla każdego rozdziału każdej talii – wynik pamiętamy do następnej zmiany danych (zwracamy kopie, żeby nikt nie zepsuł zapamiętanych list)
 function deckChapters(d) {
-  const cs = S.cards.filter(c => c.deckId === d.id && fightable(c)).sort((a, b) => a.pos - b.pos), out = [];
-  for (let i = 0; i < cs.length; i += CH_SIZE) out.push(cs.slice(i, i + CH_SIZE));
-  if (out.length > 1 && out[out.length - 1].length < CH_MIN_LAST) out[out.length - 2].push(...out.pop());
-  return out;
+  return dataMemo('chapters:' + d.id, () => {
+    const cs = S.cards.filter(c => c.deckId === d.id && fightable(c)).sort((a, b) => a.pos - b.pos), out = [];
+    for (let i = 0; i < cs.length; i += CH_SIZE) out.push(cs.slice(i, i + CH_SIZE));
+    if (out.length > 1 && out[out.length - 1].length < CH_MIN_LAST) out[out.length - 2].push(...out.pop());
+    return out;
+  }).map(ch => ch.slice());
 }
 var learnedN = cs => cs.filter(c => c.srs.state !== 'new').length;
 var deckLearned = d => learnedN(S.cards.filter(c => c.deckId === d.id && fightable(c)));
@@ -11361,7 +11412,7 @@ var pickMove = (b, B = BOSS) => { const ab = b.abil.filter(a => a !== 'rage'), a
   } else if (ab.length) { const opts = ['hit', 'hit', ...ab]; k = opts[Math.random() * opts.length | 0]; }
   if (k === 'scramble' && b.gk) k = 'wind';   // 🧠 quiz: zamiast rozsypanki
   return k === 'hit' ? { k, name: BOSS_MOVES[Math.random() * BOSS_MOVES.length | 0], dmg: atk + (Math.random() * 6 | 0) } : { k, name: BOSS_ABIL[k][1], dmg: 0 }; };
-var bossCardById = id => S.cards.find(c => c.id === id) || (typeof gkCard === 'function' ? gkCard(id) : null) || (typeof coopVCard === 'function' ? coopVCard(id) : null);
+var bossCardById = id => cardById(id) || (typeof gkCard === 'function' ? gkCard(id) : null) || (typeof coopVCard === 'function' ? coopVCard(id) : null);
 var bossCard = () => BOSS?.cur && bossCardById(BOSS.cur.id);
 var ABCD_MAX = 400;
 var textOk = v => v.ans && v.ans.trim() && v.ans.length <= 120;
@@ -11538,12 +11589,14 @@ function dealBoss(n, label) { const B = BOSS; n = Math.max(0, Math.round(n * (B.
   if (B.b.kind === 'weekly') { B.dmgTotal += n; B.hp = Math.max(0, B.hp - n); return n; }
   const r = Math.min(B.hp, n); B.hp -= r; B.dmgTotal += r; if (B.drain > 0 && B.hp > 0) B.hp = Math.min(B.max, B.hp + Math.round(r * .4)); return r; }
 var bossAlive = B => B.coop && typeof coopAlive === 'function' ? coopAlive() : B.hp > 0;
+// 💥 ile serc naprawdę zabierze cios o sile n (pancerz bohatera, furia bossa, bomba) – ta sama liczba w zapowiedzi ataku i przy trafieniu
+var hurtCalc = (B, n, bomb) => Math.round(n * (bomb ? 2 : 1) * (1 - B.hs.def) * (B.b.abil.includes('rage') && B.hp < B.max / 2 ? 1.4 : 1));
 function hurtMe(n, label) {
   const B = BOSS; if (B.down) return;
   if (B.guard > 0) { B.guard--; B.fxMe = { k: 'block', t: Date.now() }; B.log.unshift(`🛡️ Zablokowałeś: ${label}`); return; }
   if (Math.random() < B.hs.dodge) { B.fxMe = { k: 'dodge', t: Date.now() }; B.log.unshift(`💨 Unik! ${label} chybia`); return; }
-  if (B.bomb) { n *= 2; B.bomb = 0; label += ' 💣 ×2'; }
-  const dmg = Math.round(n * (1 - B.hs.def) * (B.b.abil.includes('rage') && B.hp < B.max / 2 ? 1.4 : 1));
+  const bomb = !!B.bomb; if (bomb) { B.bomb = 0; label += ' 💣 ×2'; }
+  const dmg = hurtCalc(B, n, bomb);
   B.me -= dmg; B.lostHp += dmg; B.fxMe = { k: 'hit', n: dmg, t: Date.now() }; B.log.unshift(`💥 ${label}: −${dmg} ❤️`);
   if (B.hs.thorns && bossAlive(B)) { const r = dealBoss(dmg * B.hs.thorns); if (r) B.log.unshift(`🌵 Odbicie: −${r} dla bossa`); }
   if (B.me <= 0 && B.second) { B.me = 1; B.second = false; B.log.unshift('✨ Drugie życie! Zostaje Ci 1 ❤️'); }
@@ -12070,7 +12123,7 @@ function fightView() {
     <div class="bf-top">
       ${B.say?.txt ? `<div class="boss-say" key="${B.say.t}">${esc(B.say.txt)}</div>` : ''}
       <div class="bf-boss">${B.coop && typeof coopHeadsHTML === 'function' ? coopHeadsHTML(fx, act) : `<div class="boss-stage${fx ? ' hit' : ''}${fx?.crit ? ' crit' : ''}${act ? ' attack' : ''}">${bossArt(b)}${B.shield ? '<span class="boss-shield">🛡️</span>' : ''}${fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}${fx.crit ? '!' : ''}</b><i class="slash"></i>` : ''}</div>`}
-        <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : '🎰'} <b>${mv.k === 'hit' ? esc(mv.name) : 'Losowanie przeszkadzajki'}</b>${mv.dmg ? ` −${mv.dmg}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
+        <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : '🎰'} <b>${mv.k === 'hit' ? esc(mv.name) : 'Losowanie przeszkadzajki'}</b>${mv.dmg ? ` −${hurtCalc(B, mv.dmg, B.bomb)}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
       ${B.coop ? '' : HP_BAR(B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''))}${B.b.curses ? curseIconsHTML(B.b.abil, 'fight') : ''}
       ${B.phaseN ? `<div class="weak-tag">🔥 faza ${B.phaseN + 1}</div>` : ''}
       ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry && !cur?.qte ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
@@ -12086,7 +12139,7 @@ function fightView() {
       ${cur?.qte ? `<div class="ver-tag qte-tag">⚡ QTE ${B.qte.i + 1}/${QTE_N} – szybko!${cur.cm === 'tf' ? ' Prawda czy fałsz?' : ''}${B.picked == null ? '<div class="qte-bar"><i></i></div>' : ''}</div>` : ''}
       ${cur?.dis && !B.shown ? `<div class="dis-tag">${BOSS_ABIL[cur.dis][0]} ${BOSS_ABIL[cur.dis][1]}</div>` : ''}
       ${cur?.ver ? (cur.ver.retry ? '<div class="ver-tag retry-tag">🔁 Rewanż: ta fiszka przed chwilą Cię pokonała. Teraz pamiętasz?</div>' : '<div class="ver-tag">🔍 Sprawdzian bossa – udowodnij, że to wiesz!</div>') : ''}
-      ${cur?.parry ? `<div class="ver-tag parry-tag">⚠️ ${esc(cur.parry.name)} (−${cur.parry.dmg} ❤️)! ${PARRY_TXT(cur)}${cur.weak && !cur.curse ? '<small class="weak-card">💔 boss bije fiszką, która Ci ostatnio nie szła</small>' : ''}${B.picked == null && cur.runes?.phase !== 'show' && !(cur.curse && B.shown) ? `<div class="parry-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / parryMs(B) * 100).toFixed(1)}%"></i></div>` : ''}</div>` : ''}
+      ${cur?.parry ? `<div class="ver-tag parry-tag">⚠️ ${esc(cur.parry.name)} (−${hurtCalc(B, cur.parry.dmg, B.bomb)} ❤️)! ${PARRY_TXT(cur)}${cur.weak && !cur.curse ? '<small class="weak-card">💔 boss bije fiszką, która Ci ostatnio nie szła</small>' : ''}${B.picked == null && cur.runes?.phase !== 'show' && !(cur.curse && B.shown) ? `<div class="parry-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / parryMs(B) * 100).toFixed(1)}%"></i></div>` : ''}</div>` : ''}
       ${B.triple && !cur?.parry && !cur?.ver ? '<div class="ver-tag ev-tag">💥 Pytanie za 3×!</div>' : ''}${B.gaunt && !cur?.parry ? `<div class="ver-tag ev-tag">🎯 Wyzwanie: ${B.gaunt.n}/3 dobrych z rzędu</div>` : ''}
       ${cur?.runes ? runesHTML(cur.runes) : ''}
       <div class="bq-in">${cur?.runes ? '' : q}${cur?.hint && !B.shown ? `<div class="hintbox">🔮 ${esc(cur.hint)}</div>` : ''}</div>
@@ -14003,7 +14056,7 @@ ROUTES.group = parts => {
 ROUTES.gjoin = parts => {
   const [, shid, code, name] = parts, J = S.stats.grpJoin;
   if (shid && deckByShare(shid)) { setTimeout(() => go('#/group/' + deckByShare(shid).id), 0); return { tab: 'learn', html: '' }; }
-  const nm = name ? decodeURIComponent(name) : J?.name || 'wspólna talia', waiting = J?.id === shid;
+  const nm = name ? decodeURIComponent(name) : J?.name || 'wspólna talia', waiting = !!J && !!shid && J.id === shid;
   return { tab: 'learn', html: `<div class="card center g-join"><div style="font-size:54px">👥</div><h2 style="margin:6px 0">Wspólna nauka: „${esc(nm)}”</h2>
     ${waiting ? `<p>⏳ Prośba wysłana${J.by ? ` do <b>${esc(J.by)}</b>` : ''}. Fiszki przyjdą automatycznie, gdy ta osoba otworzy aplikację – zostaw Fiszki otwarte albo zajrzyj później.</p>`
       : cloudOn() ? `<p>Dołącz, a dostaniesz te same fiszki i zobaczysz postęp całej grupy.</p><button class="primary block" data-act="g-join" data-s="${esc(shid || '')}" data-c="${esc(code || '')}" data-n="${esc(nm)}">👥 Dołącz do grupy</button>`
@@ -14657,7 +14710,7 @@ function mtStart(k) {
   MT = { k, deck: d, queue: pool.map(c => c.id), hits: {}, i: 0, done: 0, stats: { ok: 0, bad: 0 }, conf: [], phase: 'q', t0: Date.now() };
   go('#/mtrain/' + k);
 }
-var mtCard = () => MT && S.cards.find(c => c.id === MT.queue[0]);
+var mtCard = () => MT && cardById(MT.queue[0]);
 function mtNext(ok) {
   const c = mtCard(); if (!c) return;
   (S.tlog = S.tlog || []).push({ id: uid(), t: Date.now(), d: c.deckId, ms: Math.min(60000, Date.now() - (MT.shownAt || Date.now())) });
@@ -16458,13 +16511,18 @@ var emo8Run = () => { const set = emo8Q; emo8Q = null;
   for (const n of set) { if (!n.isConnected) continue;
     if (n.nodeType === 3) { if (n.parentElement && !set.has(n.parentElement)) emo8Decorate(n.parentElement); }
     else if (n.nodeType === 1) emo8Decorate(n); } };
-new MutationObserver(recs => {
+var emo8Take = recs => {
+  if (!recs.length) return;
   if (!emo8Q) { emo8Q = new Set(); requestAnimationFrame(emo8Run); }
   for (const r of recs) {
     if (r.type === 'characterData') { EMO8_RE.lastIndex = 0; if (EMO8_RE.test(r.target.nodeValue || '')) emo8Q.add(r.target); continue; }
     for (const n of r.addedNodes) { if (n.nodeType === 1 && n.classList?.contains('emo8')) continue; if (n.nodeType === 1 || n.nodeType === 3) emo8Q.add(n); }
   }
-}).observe(document.body, { childList: true, subtree: true, characterData: true });
+};
+var emo8Obs = new MutationObserver(emo8Take);
+emo8Obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+// ⚡ po narysowaniu ekranu ikony są już podmienione w tej samej klatce – zmiany wewnątrz niego nie muszą iść drugi raz przez obserwatora
+function emo8Flush(root) { emo8Take(emo8Obs.takeRecords().filter(r => !root.contains(r.target))); }
 emo8Decorate();
 // ikony mocy bohaterów: [bierna, supercios, gałąź 1, 2, 3] – numery obrazków z arkusza danej postaci
 var ABIL8 = { cat: [4, 6, 2, 3, 7], frog: [2, 5, 1, 8, 4], dog: [3, 5, 6, 1, 7], owl: [8, 6, 1, 4, 2], hamster: [6, 5, 3, 8, 4], fox: [1, 8, 2, 3, 5], beast: [1, 10, 9, 2, 4],
@@ -17197,7 +17255,7 @@ function kumPool(deckId) {
   const cs = S.cards.filter(ok), now = Date.now(), isDue = c => c.srs.state !== 'new' && c.srs.due <= now;
   return [...shuffle(cs.filter(isDue)), ...shuffle(cs.filter(c => !isDue(c)))].map(c => c.id);
 }
-var kumCard = id => S.cards.find(c => c.id === id);
+var kumCard = id => cardById(id);
 function kumKind(c) {
   if (!c) return { k: 'mid', base: 10, t: '' };
   if (c.srs.state === 'new') return { k: 'new', base: 20, t: 'nowa' };

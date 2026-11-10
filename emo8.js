@@ -56,13 +56,18 @@ const emo8Run = () => { const set = emo8Q; emo8Q = null;
   for (const n of set) { if (!n.isConnected) continue;
     if (n.nodeType === 3) { if (n.parentElement && !set.has(n.parentElement)) emo8Decorate(n.parentElement); }
     else if (n.nodeType === 1) emo8Decorate(n); } };
-new MutationObserver(recs => {
+const emo8Take = recs => {
+  if (!recs.length) return;
   if (!emo8Q) { emo8Q = new Set(); requestAnimationFrame(emo8Run); }
   for (const r of recs) {
     if (r.type === 'characterData') { EMO8_RE.lastIndex = 0; if (EMO8_RE.test(r.target.nodeValue || '')) emo8Q.add(r.target); continue; }
     for (const n of r.addedNodes) { if (n.nodeType === 1 && n.classList?.contains('emo8')) continue; if (n.nodeType === 1 || n.nodeType === 3) emo8Q.add(n); }
   }
-}).observe(document.body, { childList: true, subtree: true, characterData: true });
+};
+const emo8Obs = new MutationObserver(emo8Take);
+emo8Obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+// ⚡ po narysowaniu ekranu ikony są już podmienione w tej samej klatce – zmiany wewnątrz niego nie muszą iść drugi raz przez obserwatora
+function emo8Flush(root) { emo8Take(emo8Obs.takeRecords().filter(r => !root.contains(r.target))); }
 emo8Decorate();
 // ikony mocy bohaterów: [bierna, supercios, gałąź 1, 2, 3] – numery obrazków z arkusza danej postaci
 const ABIL8 = { cat: [4, 6, 2, 3, 7], frog: [2, 5, 1, 8, 4], dog: [3, 5, 6, 1, 7], owl: [8, 6, 1, 4, 2], hamster: [6, 5, 3, 8, 4], fox: [1, 8, 2, 3, 5], beast: [1, 10, 9, 2, 4],

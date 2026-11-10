@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '363';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '364';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -23,9 +23,26 @@ function dayStart(t = Date.now()) {
   return d.getTime();
 }
 function addDays(ts, n) { const d = new Date(ts); d.setDate(d.getDate() + n); return d.getTime(); }
+// ⚡ dayKey jest wołany dziesiątki tysięcy razy (cała historia powtórek) – wynik pamiętamy dla kwadransa
+// (granica dnia 4:00 i wszystkie strefy czasowe wypadają na pełnych kwadransach, więc w obrębie kwadransa dzień jest ten sam)
+const DAYKEY_CACHE = new Map();
 function dayKey(t) {
-  const d = new Date(dayStart(t));
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const q = Math.floor(t / 9e5); let k = DAYKEY_CACHE.get(q);
+  if (k === undefined) {
+    const d = new Date(dayStart(t));
+    k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (DAYKEY_CACHE.size > 60000) DAYKEY_CACHE.clear();
+    DAYKEY_CACHE.set(q, k);
+  }
+  return k;
+}
+// ⚡ wyniki liczone z całej historii powtórek (S.log) pamiętamy do następnej zmiany historii:
+// zależność = ta sama tablica, ta sama długość i ten sam ostatni wpis (dopisanie, cofnięcie, synchronizacja – wszystko to zmienia)
+const LOG_MEMO = new Map();
+function logMemo(name, fn) {
+  const L = S.log, n = L.length, last = n ? L[n - 1] : null, m = LOG_MEMO.get(name);
+  if (m && m.L === L && m.n === n && m.last === last && m.t === (last ? last.t : 0)) return m.v;
+  const v = fn(); LOG_MEMO.set(name, { L, n, last, t: last ? last.t : 0, v }); return v;
 }
 function human(ms) {
   if (ms < HOUR) return Math.max(1, Math.round(ms / MIN)) + ' min';
@@ -129,10 +146,21 @@ const emit = (name, ...a) => (HOOKS[name] || []).forEach(fn => { try { fn(...a);
 // Dodatkowe ekrany rejestrowane przez moduły: ROUTES.nazwa = parts => ({ html, tab, focus })
 const ROUTES = {};
 function save() {
+  DATA_VER++;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { DB.set('state', S); updateBadge(); scheduleSync(); emit('save'); }, 200);
 }
-function touch(o) { o.mod = Date.now(); return o; }
+// ⚡ licznik zmian danych: rośnie przy każdym zapisie i każdej zmianie obiektu – po nim poznajemy, czy zapamiętany wynik jest aktualny
+let DATA_VER = 0;
+function touch(o) { o.mod = Date.now(); DATA_VER++; return o; }
+// wynik zapamiętany do następnej zmiany danych (albo podmiany tablic fiszek / notatek, np. po synchronizacji)
+const DATA_MEMO = new Map();
+function dataMemo(key, fn) {
+  const m = DATA_MEMO.get(key);
+  if (m && m.ver === DATA_VER && m.c === S.cards && m.cn === S.cards.length && m.n === S.notes && m.nn === S.notes.length) return m.v;
+  if (DATA_MEMO.size > 400) DATA_MEMO.clear();
+  const v = fn(); DATA_MEMO.set(key, { ver: DATA_VER, c: S.cards, cn: S.cards.length, n: S.notes, nn: S.notes.length, v }); return v;
+}
 async function putImage(dataUrl) {
   const id = 'i' + uid(); IMG[id] = dataUrl; await DB.set('img:' + id, dataUrl); return id;
 }
@@ -153,8 +181,26 @@ async function gcImages() {
 
 // ============================================================ Talie, notatki, karty
 const CLOZE_RE = /\{\{c(\d+)::([\s\S]*?)(?:::([\s\S]*?))?\}\}/g;
-const deckById = id => S.decks.find(d => d.id === id);
-const noteById = id => S.notes.find(n => n.id === id);
+// ⚡ wyszukiwanie po id z indeksem (Map) zamiast przeglądania całej listy przy każdym pytaniu.
+// Indeks sam się pilnuje: trafienie sprawdzamy z listą (arr[i] === wynik), a przy pudle szukamy po staremu i odbudowujemy indeks –
+// więc wynik jest zawsze taki sam jak z arr.find, także zaraz po dodaniu / usunięciu / wczytaniu danych.
+function idIndex() {
+  let arr = null, len = -1, map = null;
+  const build = a => { arr = a; len = a.length; map = new Map(); for (let i = 0; i < a.length; i++) if (!map.has(a[i].id)) map.set(a[i].id, i); };
+  return (a, id) => {
+    if (!a) return undefined;
+    if (a !== arr || a.length !== len) build(a);
+    const i = map.get(id);
+    if (i !== undefined) { const x = a[i]; if (x && x.id === id) return x; }
+    const x = a.find(o => o.id === id);   // indeks nieaktualny albo brak elementu
+    if (x || i !== undefined) build(a);
+    return x;
+  };
+}
+const _deckIdx = idIndex(), _noteIdx = idIndex(), _cardIdx = idIndex();
+const deckById = id => _deckIdx(S.decks, id);
+const noteById = id => _noteIdx(S.notes, id);
+const cardById = id => _cardIdx(S.cards, id);
 const palaceById = id => S.palaces.find(p => p.id === id);
 
 function newDeck(name) {
@@ -293,7 +339,7 @@ function deckCounts(deckId, noLimit) {
   return { nw, lrn, rev, total: nw + lrn + rev };
 }
 function streak() {
-  const days = new Set(S.log.map(l => dayKey(l.t)));
+  const days = logMemo('days', () => new Set(S.log.map(l => dayKey(l.t))));
   let t = dayStart(), n = 0;
   if (!days.has(dayKey(t))) t = addDays(t, -1);
   while (days.has(dayKey(t))) { n++; t = addDays(t, -1); }
@@ -479,7 +525,7 @@ function loadSess() { try { const j = JSON.parse(localStorage.getItem(SESS_KEY) 
 const dropSess = () => { try { localStorage.removeItem(SESS_KEY); } catch { /* */ } };
 function restoreSess(key) {
   const j = loadSess(); if (!j || j.key !== key) return false;
-  const card = S.cards.find(c => c.id === j.cardId);
+  const card = cardById(j.cardId);
   SESSION = { all: j.all, only: j.only ? new Set(j.only) : null, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
     done: j.done || 0, timeMs: j.timeMs || 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: Date.now() };
   if (card && (!SESSION.cram || SESSION.cram[0] === card.id)) { SESSION.card = card; SESSION.shown = !!j.shown && j.mode === 'flip'; }
@@ -503,7 +549,7 @@ function newOrderKey(cards) {
 }
 const LEARN_OPEN_MAX = 10;
 function pickNext(sess) {
-  if (sess.cram) return S.cards.find(c => c.id === sess.cram[0]) || null;
+  if (sess.cram) return cardById(sess.cram[0]) || null;
   const now = Date.now();
   const pool = S.cards.filter(c => !c.sus && (sess.deckId === 'all' || c.deckId === sess.deckId) && (!sess.only || sess.only.has(c.id)));
   const choose = arr => arr.find(c => c.noteId !== sess.lastNote) || arr[0];
@@ -602,7 +648,7 @@ const setRewardHTML = r => r ? `<div class="set-reward"><b>+${r.n} 💎</b> za u
   : '';
 function undo() {
   const s = SESSION, u = s && s.undo; if (!u) return;
-  const c = S.cards.find(x => x.id === u.cardId); if (!c) return;
+  const c = cardById(u.cardId); if (!c) return;
   if (u.sus) { delete c.sus; c.srs = u.srs; touch(c); s.undo = null; s.card = c; s.shown = false; s.shownAt = Date.now(); save(); return render(); }
   c.srs = u.srs; touch(c); S.log = S.log.filter(l => l.id !== u.logId); s.done--; s.undo = null;
   s.card = c; s.shown = false; s.peek = false; s.editHint = false; s.hint = false; s.typed = null; s.verdict = null; s.shownAt = Date.now();
@@ -639,6 +685,7 @@ function hcChrome() {
 }
 function render() {
   if (!S) return;
+  DATA_VER++;   // ⚡ zapamiętane wyniki żyją najwyżej jedno rysowanie ekranu – nigdy nie pokażemy starych danych
   hcChrome();
   const { parts, q } = parseRoute();
   MOUNT = [];
@@ -673,7 +720,7 @@ function render() {
   if (typeof applyPersonal === 'function') applyPersonal();
   document.body.classList.toggle('noanim', !S.settings.anim);
   $('#view').innerHTML = html;
-  if (typeof emo8Decorate === 'function') emo8Decorate($('#view'));   // ⚡ ikony 8-bit od razu, w tej samej klatce – bez mrugania emotek
+  if (typeof emo8Decorate === 'function') { emo8Decorate($('#view')); if (typeof emo8Flush === 'function') emo8Flush($('#view')); }   // ⚡ ikony 8-bit od razu, w tej samej klatce – bez mrugania emotek
   { const pth = parts.join('/'); $('#view').classList.toggle('enter', pth !== LAST_VIEW_PATH); LAST_VIEW_PATH = pth; }   // animacja wejścia tylko przy zmianie ekranu
   $$('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
   MOUNT.forEach(fn => fn());
@@ -1165,7 +1212,7 @@ function viewQuiz(deckId, q) {
     const wrong = Z.items.filter(x => !x.ok);
     if (!Z.reported) { Z.reported = true; Z.reward = typeof quizReward === 'function' ? quizReward(pct, total, type) : null; setTimeout(() => emit('quiz', pct, total)); }
     // pytanie nad odpowiedzią (długie odpowiedzi nie rozjeżdżają się w wąską kolumnę)
-    const list = wrong.map(x => { const c = S.cards.find(y => y.id === x.cardId); if (!c) return ''; const v = cardView(c);
+    const list = wrong.map(x => { const c = cardById(x.cardId); if (!c) return ''; const v = cardView(c);
       return `<div class="qwrong"><div class="small">${esc(v.label).slice(0, 160)}</div><b class="c-rev">${esc(v.ans)}</b></div>`; }).join('');
     const R = Z.reward;
     return head + `<div class="card center"><div class="score">${pct}%</div><p>${good} / ${total} poprawnych ${pct >= 90 ? '🏆' : pct >= 60 ? '👍' : '💪'}</p>
@@ -1176,7 +1223,7 @@ function viewQuiz(deckId, q) {
         <button class="grow" data-act="quiz-due">📅 Dodaj do dzisiejszych powtórek</button></div></div>` : ''}
       <div class="row"><button class="grow" data-act="quiz-again">Nowy test</button><button class="grow" data-act="quiz-end" data-href="${back}">Zakończ</button></div>`;
   }
-  const it = Z.items[Z.i], c = S.cards.find(x => x.id === it.cardId);
+  const it = Z.items[Z.i], c = cardById(it.cardId);
   if (!c) { Z.i++; return viewQuiz(deckId, q); }
   const v = cardView(c), answered = it.given !== null;
   let ui;
@@ -2020,8 +2067,8 @@ const ACTIONS = {
 
   'quiz-start-custom': el => { const v = Math.round(+$('#quiz-n').value); if (!(v >= 1)) return toast('Wpisz liczbę pytań'); el.dataset.n = v; ACTIONS['quiz-start'](el); },
   'quiz-start': el => { QUIZ = buildQuiz(el.dataset.deck, el.dataset.type, +el.dataset.n); if (!QUIZ.items.length) { QUIZ = null; toast('Brak kart z odpowiedziami'); } render(); },
-  'quiz-pick': el => { const it = QUIZ.items[QUIZ.i], v = cardView(S.cards.find(c => c.id === it.cardId)); it.given = +el.dataset.k; it.ok = it.options[it.given] === v.ans; render(); },
-  'quiz-check': () => { const it = QUIZ.items[QUIZ.i], v = cardView(S.cards.find(c => c.id === it.cardId)); it.given = $('#quizin').value; it.ok = checkAnswer(it.given, v.ans) !== 'wrong'; render(); },
+  'quiz-pick': el => { const it = QUIZ.items[QUIZ.i], v = cardView(cardById(it.cardId)); it.given = +el.dataset.k; it.ok = it.options[it.given] === v.ans; render(); },
+  'quiz-check': () => { const it = QUIZ.items[QUIZ.i], v = cardView(cardById(it.cardId)); it.given = $('#quizin').value; it.ok = checkAnswer(it.given, v.ans) !== 'wrong'; render(); },
   'quiz-override': () => { QUIZ.items[QUIZ.i].ok = true; render(); },
   'quiz-next': () => { QUIZ.i++; render(); window.scrollTo(0, 0); },
   'quiz-again': () => { QUIZ = null; render(); },
@@ -2029,7 +2076,7 @@ const ACTIONS = {
   'quiz-cram': () => { const ids = QUIZ.items.filter(x => !x.ok).map(x => x.cardId); const d = QUIZ.deckId; SESSION = null; QUIZ = null; go(`#/study/${d}/flip?cram=list&ids=${ids.join(',')}`); },
   'quiz-due': () => {
     const now = Date.now(); let n = 0;
-    QUIZ.items.filter(x => !x.ok).forEach(x => { const c = S.cards.find(y => y.id === x.cardId); if (c && c.srs.state !== 'new' && c.srs.due > now) { c.srs = { ...c.srs, due: dayStart(now) }; touch(c); n++; } });
+    QUIZ.items.filter(x => !x.ok).forEach(x => { const c = cardById(x.cardId); if (c && c.srs.state !== 'new' && c.srs.due > now) { c.srs = { ...c.srs, due: dayStart(now) }; touch(c); n++; } });
     save(); toast(n ? `Dodano ${n} do dzisiejszych powtórek` : 'Te karty są nowe lub już czekają na powtórkę');
   },
 

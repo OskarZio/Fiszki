@@ -126,7 +126,7 @@ ROUTES.group = parts => {
 ROUTES.gjoin = parts => {
   const [, shid, code, name] = parts, J = S.stats.grpJoin;
   if (shid && deckByShare(shid)) { setTimeout(() => go('#/group/' + deckByShare(shid).id), 0); return { tab: 'learn', html: '' }; }
-  const nm = name ? decodeURIComponent(name) : J?.name || 'wspólna talia', waiting = J?.id === shid;
+  const nm = name ? decodeURIComponent(name) : J?.name || 'wspólna talia', waiting = !!J && !!shid && J.id === shid;
   return { tab: 'learn', html: `<div class="card center g-join"><div style="font-size:54px">👥</div><h2 style="margin:6px 0">Wspólna nauka: „${esc(nm)}”</h2>
     ${waiting ? `<p>⏳ Prośba wysłana${J.by ? ` do <b>${esc(J.by)}</b>` : ''}. Fiszki przyjdą automatycznie, gdy ta osoba otworzy aplikację – zostaw Fiszki otwarte albo zajrzyj później.</p>`
       : cloudOn() ? `<p>Dołącz, a dostaniesz te same fiszki i zobaczysz postęp całej grupy.</p><button class="primary block" data-act="g-join" data-s="${esc(shid || '')}" data-c="${esc(code || '')}" data-n="${esc(nm)}">👥 Dołącz do grupy</button>`

@@ -111,8 +111,9 @@ const studyGems = l => !l.m ? 0 : l.m === 'flip' ? (l.ms >= FLIP_MIN_MS ? .05 : 
 const QUIZ_GEM_CAP = 150;   // max 💎 dziennie z testów ABCD / pisemnych
 function earnedCoins() {
   let c = Object.keys(S.ach).reduce((a, id) => a + (typeof achReward === 'function' ? achReward(id) : 30), 0);   // trudne osiągnięcia: 150
-  const perDay = {}; let study = 0;
-  for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); study += studyGems(l); }
+  const { perDay, study } = logMemo('coins', () => { const perDay = {}; let study = 0;
+    for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); study += studyGems(l); }
+    return { perDay, study }; });
   // dni z celem dziennym: liczone od wpisów 'goal-<dzień>' w portfelu (te same na każdym urządzeniu); stare – według celu z tego urządzenia, tylko jeśli wpisu brak
   const goalDone = new Set(S.wallet.filter(w => /^goal-/.test(w.id)).map(w => w.id.slice(5)));
   c += Object.entries(perDay).filter(([k, n]) => !goalDone.has(k) && n >= (S.settings.goal || 50)).length * 20 + Math.floor(study);
