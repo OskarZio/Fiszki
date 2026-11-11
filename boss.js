@@ -978,10 +978,13 @@ function fightView() {
   const c = bossCard(), cur = B.cur, v = c ? cardView(c) : { q: '', a: '', ans: '' }, now = Date.now(), fresh = x => x && now - x.t < 900 ? x : null;
   const fx = fresh(B.fx), fm = fresh(B.fxMe), act = fresh(B.bossAct), ultFx = B.ultFx && now - B.ultFx.t < 1400 ? B.ultFx : null, mv = B.move, hs = B.hs;
   // ❤️ pasek życia z „śladem”: po ciosie żółty kawałek zostaje chwilę i dopiero opada (ekran rysuje się od nowa, więc ruch liczymy od zapamiętanej poprzedniej wartości)
-  const hpBar = (key, val, max, cls) => { const to = Math.max(0, Math.min(1, val / max)) * 100, A = (B.hpAnim = B.hpAnim || {}), st = A[key] || (A[key] = { from: to, to, t: 0 });
+  const hpBar = (key, val, max, cls, marks) => { const to = Math.max(0, Math.min(1, val / max)) * 100, A = (B.hpAnim = B.hpAnim || {}), st = A[key] || (A[key] = { from: to, to, t: 0 });
     if (Math.abs(st.to - to) > .05) { st.from = st.to; st.to = to; st.t = now; }
     const el = now - st.t, anim = el < 950;
-    return `<div class="hpbar ${cls}${anim ? ' anim' + (st.from > to ? ' loss' : ' gain') : ''}" style="--from:${st.from.toFixed(1)}%;--to:${to.toFixed(1)}%;--d:-${el}ms"><u></u><i style="width:${to.toFixed(1)}%"></i><span>${Math.max(0, Math.round(val))} / ${Math.round(max)}</span></div>`; };
+    return `<div class="hpbar ${cls}${anim ? ' anim' + (st.from > to ? ' loss' : ' gain') : ''}" style="--from:${st.from.toFixed(1)}%;--to:${to.toFixed(1)}%;--d:-${el}ms"><u></u><i style="width:${to.toFixed(1)}%"></i>${(marks || []).map(m => `<em class="hp-mark${to <= m ? ' past' : ''}" style="left:${m}%"></em>`).join('')}<span>${Math.max(0, Math.round(val))} / ${Math.round(max)}</span></div>`; };
+  // 🎬 wejście „VS” na początku walki (raz) – czas pytania rusza dopiero po nim
+  if (!B.introT) { B.introT = now; if (!B.i && B.qAt) { B.qAt += 1500; if (B.qShow) B.qShow += 1500; } }
+  const introEl = now - B.introT, lowHp = !B.down && B.me / B.meMax <= .25, acc = B.ok + B.bad ? Math.round(B.ok / (B.ok + B.bad) * 100) : null;
   const blocked = B.ice || B.bugs?.length, cm = cur?.cm, dis = blocked ? 'disabled' : '';
   let q = cur?.rev ? `<div class="ctext">${esc(v.ans)}</div><small class="muted">Do czego pasuje ta odpowiedź?</small>` : cm === 'pairs' ? '<div class="ctext">Połącz pytania z odpowiedziami</div><small class="muted">stuknij pytanie, potem odpowiedź · 2 pomyłki = cios</small>'
     : cm === 'tf' ? `${v.q}<div class="tf-claim">${esc(cur.claim)}</div>` : cm === 'flip' && B.shown ? v.a : v.q + (cur?.mask && !B.shown ? `<div class="mask">${esc(cur.mask)}</div>` : '');
@@ -1013,12 +1016,15 @@ function fightView() {
   return { tab: 'arena', focus: true, html: `
   <div class="studybar"><button class="iconbtn" data-act="boss-quit">✕</button><div class="title">${esc(b.name)} ${b.kind === 'world' ? `· etap ${b.stars + 1}` : starsHTML(b.diff + 1, b.kind === 'ch' ? STARS_MAX : 5)}</div><span class="small muted">${Math.min(B.i + 1, B.ids.length)}/${B.ids.length}</span></div>
   <div class="bf${(B.rolls || []).some(r => now - r.t < ROLL_MS + 800) || (B.learnFx && now - B.learnFx.t < 2600) ? ' rolling' : ''}${fm?.k === 'hit' ? ' shake-screen' : ''}${ultFx ? ' ult-on' : ''}" style="--el:${((now - (B.qShow || now)) / 1000).toFixed(2)}s">
-    <div class="bf-arena${fx ? ' atk' : ''}${fx?.crit ? ' atk-crit' : ''}${fm?.k ? ' got-' + fm.k : ''}${act ? ' boss-atk' : ''}">
+    ${introEl < 1700 ? `<div class="bf-intro" style="--d:-${introEl}ms" aria-hidden="true"><div class="bi-side bi-me"><span class="bf-hero bi-hero">${heroSVG('xs')}</span><b>Ty</b></div><strong class="bi-vs">VS</strong><div class="bi-side bi-boss"><div class="boss-stage">${bossArt(b)}</div><b>${esc(b.name)}</b></div><small class="bi-sub">${esc(b.title || '')}</small></div>` : ''}
+    <div class="bf-arena${fx ? ' atk' : ''}${fx?.crit ? ' atk-crit' : ''}${fm?.k ? ' got-' + fm.k : ''}${act ? ' boss-atk' : ''}${lowHp ? ' low' : ''}${B.phaseN ? ' rage rage' + B.phaseN : ''}">
+    ${fx && B.combo >= 3 ? `<b class="bf-combo${B.combo % 5 === 0 ? ' big' : ''}"><i>${B.combo}×</i> COMBO${B.combo >= 10 ? '!!' : B.combo >= 5 ? '!' : ''}</b>` : ''}
+    ${lowHp ? '<span class="bf-danger">⚠️ Mało życia – odpowiadaj ostrożnie</span>' : ''}
     <div class="bf-top">
       ${B.say?.txt ? `<div class="boss-say" key="${B.say.t}">${esc(B.say.txt)}</div>` : ''}
       <div class="bf-boss"><span class="bf-hero">${heroSVG('xs')}${fm?.k === 'hit' ? `<b class="dmg me">−${fm.n}</b><i class="claw"></i>` : fm?.k === 'dodge' ? '<b class="dmg me dodge">Unik!</b>' : fm?.k === 'block' ? '<b class="dmg me dodge">Blok!</b><i class="bf-guard"></i>' : ''}</span>${B.coop && typeof coopHeadsHTML === 'function' ? coopHeadsHTML(fx, act) : `<div class="boss-stage${fx ? ' hit' : ''}${fx?.crit ? ' crit' : ''}${act ? ' attack' : ''}">${bossArt(b)}${B.shield ? '<span class="boss-shield">🛡️</span>' : ''}${fx ? `<b class="dmg${fx.crit ? ' crit' : ''}">${fx.n !== '' ? '−' + fx.n : ''}${fx.crit ? '!' : ''}</b><i class="slash"></i><i class="bf-impact"></i>` : ''}</div>`}
         <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : '🎰'} <b>${mv.k === 'hit' ? esc(mv.name) : 'Losowanie przeszkadzajki'}</b>${mv.dmg ? ` −${hurtCalc(B, mv.dmg, B.bomb)}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
-      ${B.coop ? '' : hpBar('boss', B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''))}${B.b.curses ? curseIconsHTML(B.b.abil, 'fight') : ''}
+      ${B.coop ? '' : hpBar('boss', B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''), ['weekly', 'tower'].includes(b.kind) || B.coop ? [] : [50, 25])}${B.b.curses ? curseIconsHTML(B.b.abil, 'fight') : ''}
       ${B.phaseN ? `<div class="weak-tag">🔥 faza ${B.phaseN + 1}</div>` : ''}
       ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry && !cur?.qte ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
     </div>
@@ -1049,6 +1055,16 @@ function fightView() {
     </div>
   </div>` };
 }
+// 📖 podsumowanie nauki po walce: celność + fiszki, na których się pomyliłeś, od razu z poprawną odpowiedzią
+function fightRecapHTML(B) {
+  const total = B.ok + B.bad, acc = total ? Math.round(B.ok / total * 100) : null, ids = [...new Set(B.missed || [])];
+  const rows = ids.map(id => { const c = bossCardById(id); if (!c) return ''; const v = cardView(c), q = c.gk ? c.q : stripHtml(v.label || v.q || ''), a = stripHtml(v.ans || ''); if (!q && !a) return '';
+    const n = (B.missed || []).filter(x => x === id).length;
+    return `<li><span class="rq">${esc(q.slice(0, 110))}</span><span class="ra">${esc(a.slice(0, 140))}</span>${n > 1 ? `<i>${n}× źle</i>` : ''}</li>`; }).filter(Boolean);
+  return `<div class="fight-recap">${acc != null ? `<div class="fr-acc ${acc >= 85 ? 'good' : acc >= 60 ? 'mid' : 'bad'}"><b>${acc}%</b><small>celność · ${B.ok}/${total}</small></div>` : ''}
+    ${rows.length ? `<details class="fr-miss" open><summary>📖 Do zapamiętania: ${rows.length} ${plural(rows.length, 'fiszka', 'fiszki', 'fiszek')}, na ${rows.length === 1 ? 'której' : 'których'} się pomyliłeś</summary><ul>${rows.slice(0, 12).join('')}</ul>${rows.length > 12 ? `<small class="muted">…i ${rows.length - 12} więcej – wszystkie są w powtórce poniżej.</small>` : ''}</details>`
+      : total >= 3 ? '<div class="fr-clean">💯 Bez żadnej pomyłki – ten materiał masz opanowany.</div>' : ''}</div>`;
+}
 function endView() {
   const B = BOSS, b = B.b, won = B.phase === 'won';
   if (!won && B.why === 'dead' && B.deadT && !B.fled && !B.cutSkip && Date.now() - B.deadT < deathCutMs()) return { tab: 'arena', focus: true, html: deathCutHTML(B) };
@@ -1068,7 +1084,9 @@ function endView() {
     <div class="boss-stage ${won ? 'dead' : 'gloat'}">${bossArt(b)}${won ? '<div class="boss-boom"></div>' : ''}</div>
     ${!won && B.why === 'dead' && B.deadT && B.fled ? deathFxHTML(B) : ''}
     ${B.say?.txt ? `<div class="boss-say end">${esc(B.say.txt)}</div>` : ''}
+    ${won ? '<b class="bf-ko">K.O.!</b>' : ''}
     <h2 style="margin:6px 0">${won ? `🏆 ${esc(b.name)} pokonany!` : `💀 ${esc(b.name)} wygrywa…`}</h2>
+    ${fightRecapHTML(B)}
     <p class="small muted">${B.ok} dobrych · ${B.bad} błędów · seria ${B.best}${B.verOk ? ` · 🔍 ${B.verOk} sprawdzianów` : ''}${B.parryN ? ` · 🛡️ ${B.parryOk}/${B.parryN} sparowanych` : ''}${won && B.flawless ? ' · <b>bez straty ❤️</b>' : ''}</p>
     ${badgesHTML(B)}
     <p class="small">${msg}</p>

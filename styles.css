@@ -4442,3 +4442,49 @@ body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-i
 @keyframes dDashT { 0% { translate: 0 0; scale: 1; rotate: 0deg; } 12% { translate: -10px 5px; scale: .94; } 42% { translate: 26vw -64px; scale: 1.12; rotate: -10deg; } 58% { translate: 24vw -58px; scale: 1.08; rotate: -6deg; } 100% { translate: 0 0; scale: 1; rotate: 0deg; } }
 .darena.shake-me .duel-fig.op { animation: dLungeT .5s cubic-bezier(.3,1.5,.5,1) both; z-index: 3; }
 @keyframes dLungeT { 0% { translate: 0 0; scale: 1; rotate: 0deg; } 18% { translate: 8px -8px; scale: 1.04; } 48% { translate: -26vw 62px; scale: 1.16; rotate: -8deg; } 100% { translate: 0 0; scale: 1; rotate: 0deg; } }
+
+/* ============ ⚔️ Walka z bossem – emocje i nauka: wejście „VS”, zagrożenie, furia, combo, fazy na pasku, podsumowanie pomyłek ============ */
+/* 🎬 wejście: bohater z lewej, boss z prawej, „VS” wbija się na środek, potem scena znika */
+.bf-intro { position: fixed; inset: 0; z-index: 90; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; justify-items: center; gap: 6px; padding: 0 14px; pointer-events: none; overflow: hidden; color: #fff;
+  background: linear-gradient(115deg, #10214f 0 49.4%, #fff 49.4% 50.6%, #4a1030 50.6% 100%); animation: biOut 1.7s ease-in var(--d) both; }
+@keyframes biOut { 0% { opacity: 0; } 8%, 78% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+.bi-side { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; } .bi-side b { font: 800 17px/1.15 Rubik, system-ui, sans-serif; text-align: center; text-shadow: 0 2px 0 rgba(0,0,0,.45); max-width: 40vw; }
+.bi-me { animation: biInL .5s cubic-bezier(.2,1.2,.3,1) var(--d) both; } .bi-boss { animation: biInR .5s cubic-bezier(.2,1.2,.3,1) var(--d) both; }
+@keyframes biInL { from { transform: translateX(-70vw); } to { transform: none; } } @keyframes biInR { from { transform: translateX(70vw); } to { transform: none; } }
+.bf-intro .bi-hero { position: relative; display: block; } .bf-intro .bi-hero .hero-fig.xs.s8 { width: 116px; height: 116px; } .bf-intro .bi-hero .hero-fig.xs { width: 100px; height: 110px; }
+.bf-intro .boss-stage { position: relative; width: min(38vw, 170px); height: min(38vw, 170px); margin: 0; } .bf-intro .boss-stage::before { display: none; } .bf-intro .boss-art { animation: none; filter: drop-shadow(0 10px 6px rgba(0,0,0,.5)); }
+.bi-vs { font: 900 54px/1 Rubik, system-ui, sans-serif; color: #ffd43b; text-shadow: 3px 0 #14081a, -3px 0 #14081a, 0 3px #14081a, 0 -3px #14081a, 0 8px 0 rgba(0,0,0,.4); animation: biVs .5s cubic-bezier(.2,1.6,.4,1) calc(var(--d) + .35s) both; }
+@keyframes biVs { from { transform: scale(4) rotate(-14deg); opacity: 0; } to { transform: scale(1) rotate(-6deg); opacity: 1; } }
+.bi-sub { position: absolute; left: 0; right: 0; bottom: 20%; text-align: center; font-size: 13px; color: rgba(255,255,255,.85); padding: 0 16px; animation: biOut 1.7s ease-in var(--d) both; }
+/* ❤️ znaczniki faz na pasku bossa (50% i 25% – boss wpada w szał) */
+.bf .hpbar .hp-mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(255,255,255,.75); z-index: 1; box-shadow: 0 0 0 1px rgba(0,0,0,.35); } .bf .hpbar .hp-mark.past { opacity: .25; }
+/* ⚠️ mało życia: pulsująca czerwona rama i ostrzeżenie */
+.bf-arena.low { box-shadow: inset 0 0 0 2px #ff3b4e, 0 10px 24px rgba(20,16,60,.3); }
+.bf-arena.low::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 4; box-shadow: inset 0 0 46px rgba(255,40,60,.6); animation: bfLow 1.05s ease-in-out infinite; }
+@keyframes bfLow { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+.bf-arena.low .hpbar.me { animation: bfLowBar 1.05s ease-in-out infinite; } @keyframes bfLowBar { 50% { box-shadow: inset 0 0 0 1.5px #ff8a96, 0 0 12px #ff3b4e; } }
+.bf-danger { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); z-index: 4; white-space: nowrap; font-size: 11px; font-weight: 800; color: #fff; background: rgba(196,30,48,.9); border-radius: 99px; padding: 2px 10px; pointer-events: none; }
+/* 🔥 furia bossa: czerwona poświata, niebo czerwienieje z każdą fazą */
+.bf-arena.rage .boss-stage .boss-art { filter: drop-shadow(0 0 10px rgba(255,70,60,.95)) drop-shadow(0 8px 5px rgba(0,0,0,.45)); }
+.bf-arena.rage .bf-boss { background-blend-mode: normal; box-shadow: inset 0 0 60px rgba(220,40,40,.35); } .bf-arena.rage2 .bf-boss { box-shadow: inset 0 0 90px rgba(240,30,30,.55); }
+.bf-arena.rage2 .boss-stage .boss-art { animation-duration: 1.4s; }
+/* 💥 combo: napis wyskakuje na środku sceny przy serii dobrych odpowiedzi */
+.bf-combo { position: absolute; left: 50%; top: 40%; z-index: 6; pointer-events: none; white-space: nowrap; font: 900 22px/1 Rubik, system-ui, sans-serif; color: #ffd43b; letter-spacing: .02em;
+  text-shadow: 2px 0 #14081a, -2px 0 #14081a, 0 2px #14081a, 0 -2px #14081a, 0 5px 0 rgba(0,0,0,.45); animation: bfCombo .95s cubic-bezier(.2,1.3,.4,1) .3s both; }
+.bf-combo i { font-style: normal; font-size: 1.35em; color: #fff; } .bf-combo.big { font-size: 30px; color: #ff9f1c; }
+@keyframes bfCombo { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3) rotate(-10deg); } 22% { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(-4deg); } 40%, 78% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-4deg); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1) rotate(-4deg); } }
+/* 🏁 koniec walki: K.O. i podsumowanie nauki */
+.bf-ko { display: block; font: 900 46px/1 Rubik, system-ui, sans-serif; color: #ff5063; letter-spacing: .04em; margin: -6px 0 2px; text-shadow: 3px 0 #14081a, -3px 0 #14081a, 0 3px #14081a, 0 -3px #14081a, 0 7px 0 rgba(0,0,0,.25); animation: bfKo .6s cubic-bezier(.2,1.6,.4,1) .45s both; }
+@keyframes bfKo { from { opacity: 0; transform: scale(3.4) rotate(-12deg); } to { opacity: 1; transform: scale(1) rotate(-5deg); } }
+.fight-recap { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; text-align: left; }
+.fr-acc { align-self: center; display: flex; align-items: baseline; gap: 8px; padding: 6px 16px; border-radius: 99px; background: var(--card2); } .fr-acc b { font: 800 24px/1 Rubik, system-ui, sans-serif; } .fr-acc small { color: var(--muted); font-size: 12.5px; }
+.fr-acc.good b { color: #16a34a; } .fr-acc.mid b { color: #d97706; } .fr-acc.bad b { color: #dc2626; }
+.fr-miss { border-radius: 14px; background: var(--card2); padding: 10px 12px; } .fr-miss summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+.fr-miss ul { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 38dvh; overflow: auto; }
+.fr-miss li { display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px; background: var(--card); border-left: 4px solid #f59e0b; }
+.fr-miss .rq { font-size: 13px; color: var(--muted); } .fr-miss .ra { font-size: 14.5px; font-weight: 700; } .fr-miss li i { font-style: normal; font-size: 11px; font-weight: 700; color: #dc2626; }
+.fr-clean { text-align: center; font-weight: 700; color: #16a34a; padding: 8px; border-radius: 12px; background: color-mix(in srgb, #16a34a 12%, var(--card2)); }
+@media (orientation: landscape) and (max-height: 520px) { .bf-intro .boss-stage { width: 30dvh; height: 30dvh; } .bi-vs { font-size: 44px; } .bf-danger { bottom: 40px; } .bf-combo { top: 46%; } }
+@media (prefers-reduced-motion: reduce) { .bf-intro { display: none; } .bf-arena.low::before, .bf-arena.low .hpbar.me, .bf-combo, .bf-ko { animation: none; } .bf-combo { display: none; } }
+.bf > .ult-banner { top: 74px !important; font-size: 17px !important; padding: 7px 14px !important; }
+@media (orientation: landscape) and (max-height: 520px) { .bf > .ult-banner { left: 23% !important; top: 60px !important; font-size: 14px !important; } }
