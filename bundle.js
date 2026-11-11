@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '373';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '374';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -12069,13 +12069,25 @@ function nodeHTML(b, sel) {
     <span class="bn-art">${b.ok || b.stars ? bossArt(b) : '<span class="mq">🔒</span>'}</span><small>${b.kind === 'ch' ? (b.final ? '👑' : `Rozdz. ${b.i + 1}`) : b.final ? '👑 Finał' : ''}</small>
     ${b.ok ? (['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) : b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : starsHTML(b.stars)) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
 }
+// 🏆 postęp do następnego pucharu: puchar = najniższy medal z 4 metod, więc pokazujemy, w których metodach czego brakuje
+function cupProgHTML(b) {
+  const m = mastery(b) || {}, lv = MASTER_MODES.map(k => m[k] || 0), cup = Math.min(...lv);
+  if (cup >= 4) return `<div class="cup-prog done"><div class="cp-head"><img class="cup t4" src="assets/cups/diamond.webp" alt=""><b>Diamentowy puchar zdobyty</b></div><small>Masz diament we wszystkich 4 metodach. Możesz wejść na prestiż: medale od nowa, mocniejszy boss, większe nagrody.</small></div>`;
+  const next = cup + 1, have = lv.filter(x => x >= next).length;
+  const miss = MASTER_MODES.filter(k => (m[k] || 0) < next).map(k => { const w = next - (m[k] || 0); return `${MODES[k].icon} ${MODES[k].name} <i>${w} ${plural(w, 'wygrana', 'wygrane', 'wygranych')}</i>`; });
+  const top = Math.max(...lv);
+  return `<div class="cup-prog"><div class="cp-head"><img class="cup t${next}" src="assets/cups/${CUP[next]}.webp" alt=""><b>Do pucharu: ${CUP_N[next]}</b><span>${have}/4 metod</span></div>
+    <div class="cp-bar">${MASTER_MODES.map(k => `<i class="${(m[k] || 0) >= next ? 'on' : ''}"></i>`).join('')}</div>
+    <small>Puchar to <b>najniższy medal z 4 metod</b>. Brakuje: ${miss.join(' · ')}.</small>
+    <small>Z pucharem rośnie trudność bossa (teraz ${b.diff + 1}/5). Medal w wybranej metodzie dodatkowo wzmacnia bossa tylko w niej${top > cup + 1 ? ` – dlatego w metodzie z wyższym medalem boss jest dużo mocniejszy niż w pozostałych` : ''}.</small></div>`;
+}
 function setupSheetHTML() {
   const s = BOSS_SEL; if (!s) return ''; const b = bossFor(s.kind, s.id, s.i); if (!b) return '';
   const p = bossParams(b), d = s.kind === 'ch' || s.kind === 'fin' ? deckById(s.id) : null;
   const learnIds = b.kind === 'ch' ? b.cards.filter(c => c.srs.state === 'new').map(c => c.id) : [];
   return `<div class="bsheet-ov" data-act="boss-sel-close"></div><div class="bsheet">
     <div class="row nowrap" style="gap:12px">${bossArt(b, 'sheet')}<div class="grow"><b style="font-size:18px">${esc(b.name)}</b><div class="small muted">${esc(b.title)}</div><div class="small">${esc(b.desc)}</div>
-      <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : ['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) + (masterKey(b) ? medalsHTML(b) : '') : starsHTML(b.stars)}<span class="small muted">trudność ${b.diff + 1}${b.stars ? ` · ${CUP_N[Math.min(4, b.stars)]}: boss silniejszy` : ''}</span></div></div>
+      <div class="row nowrap" style="gap:6px;margin-top:4px">${b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : ['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) + (masterKey(b) ? medalsHTML(b) : '') : starsHTML(b.stars)}<span class="small muted">trudność ${b.diff + 1}/5${['ch', 'fin', 'cat'].includes(b.kind) ? ' · rośnie z pucharem' : ''}</span></div></div>
       <button class="iconbtn" data-act="boss-sel-close">✕</button></div>
     ${s.say ? `<div class="boss-say sel${S.settings.hardcore ? ' hc' : ''}">${esc(s.say)}</div>` : ''}
     ${['ch', 'fin', 'cat'].includes(b.kind) && b.stars >= 4 ? `<button class="block bprest" data-act="boss-prestige" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">⭐ Prestiż bossa → P${(b.bp || 0) + 1}: medale i puchary od nowa, boss +35% silniejszy i z turbo-przeszkadzajkami, nagrody +25%</button>` : ''}
@@ -12083,8 +12095,9 @@ function setupSheetHTML() {
     <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : '<span>⏱️ bez limitu</span>'}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
     ${b.ok && lessonFor(b) ? `<div class="lock-box"><b>📚 Lekcja z porażki</b><small>${esc(b.name)} pokonał Cię na tych fiszkach. Powtórz je (${lessonFor(b).ids.length}) – rewanż odblokuje się od razu.</small></div>
       <button class="primary block" data-act="boss-lesson">📚 Powtórz i wróć do walki</button>`
-    : b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => { const t = masterKey(b) ? mastery(b, k) : 0; return `<button class="${BOSS_PICK.mode === k ? 'on' : ''} mt${t}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>${masterKey(b) ? (MASTER_T[t] || 'brak medalu') : 'cios ' + m.mul}</small></button>`; }).join('')}</div>
+    : b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => { const t = masterKey(b) ? mastery(b, k) : 0; return `<button class="${BOSS_PICK.mode === k ? 'on' : ''} mt${t}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>${masterKey(b) ? (MASTER_T[t] || 'brak medalu') : 'cios ' + m.mul}</small>${masterKey(b) ? `<em>boss ×${String(MEDAL_POW[Math.min(4, t + 1)]).replace('.', ',')}</em>` : ''}</button>`; }).join('')}</div>
       <p class="small muted center" style="margin:4px 0 8px">${MODES[BOSS_PICK.mode].desc} · nagrody ×${String(MODE_REWARD[BOSS_PICK.mode]).replace('.', ',')}${masterKey(b) ? ` · ${mastery(b, BOSS_PICK.mode) >= 4 ? '💎 diament – mniejsza nagroda' : `wygraj, by zdobyć: <b>${MASTER_T[mastery(b, BOSS_PICK.mode) + 1]}</b>${MEDAL_POW[mastery(b, BOSS_PICK.mode) + 1] > 1 ? ` · boss ×${String(MEDAL_POW[mastery(b, BOSS_PICK.mode) + 1]).replace('.', ',')} silniejszy` : ''}`}` : ''}</p>
+      ${masterKey(b) ? cupProgHTML(b) : ''}
       <button class="primary block boss-go" data-act="boss-start" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}" ${lives().n || b.kind === 'weekly' ? '' : 'disabled'}>${lives().n || b.kind === 'weekly' ? '⚔️ Walcz sam' : '🖤 Brak serc'}</button>
       <button class="block" data-go="#/coop">👥 Walcz z kolegą (lobby – Hydra)</button>`
     : `<div class="lock-box"><b>🔒 ${b.lockMsg}</b><div class="pbar"><i style="width:${Math.min(100, b.learned / b.need * 100)}%"></i></div><small class="muted">${b.learned}/${b.need}</small></div>

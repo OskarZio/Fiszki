@@ -4376,3 +4376,12 @@ body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-i
 @media (orientation: landscape) and (max-height: 520px) { .bf-arena .boss-intent { max-width: 66%; padding: 3px 8px; } .bf-arena .boss-intent small { font-size: 10.5px; } }
 .bf-arena .boss-intent { display: grid; grid-template-columns: auto minmax(0, auto) auto; justify-content: start; align-items: center; }
 .bf-arena .boss-intent small { grid-column: 1 / -1; }
+
+/* 🏆 okienko bossa: postęp do następnego pucharu i siła bossa w każdej metodzie */
+.cup-prog { margin: 2px 0 10px; padding: 10px 12px; border-radius: 14px; background: var(--card2); display: flex; flex-direction: column; gap: 6px; }
+.cup-prog .cp-head { display: flex; align-items: center; gap: 8px; } .cup-prog .cp-head img { width: 26px; height: 26px; image-rendering: pixelated; } .cup-prog .cp-head b { flex: 1; font-size: 14px; }
+.cup-prog .cp-head span { font-size: 12px; font-weight: 800; color: var(--muted); }
+.cup-prog .cp-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; } .cup-prog .cp-bar i { height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--muted) 28%, transparent); } .cup-prog .cp-bar i.on { background: #f59e0b; }
+.cup-prog small { font-size: 12px; line-height: 1.4; color: var(--muted); } .cup-prog small b { color: var(--text); } .cup-prog small i { font-style: normal; font-weight: 700; color: var(--text); }
+.cup-prog.done { background: color-mix(in srgb, #22d3ee 14%, var(--card2)); }
+.mode-pick button em { font-style: normal; font-size: 9.5px; font-weight: 700; color: #b45309; margin-top: 1px; }
