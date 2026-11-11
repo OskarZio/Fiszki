@@ -871,8 +871,13 @@ const thinkMs = B => { const n = ansLen(B), cm = B.cur?.cm;
 let THINK_HIDDEN = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) THINK_HIDDEN = Date.now(); else if (BOSS && THINK_HIDDEN) { BOSS.qAt += Date.now() - THINK_HIDDEN; THINK_HIDDEN = 0; } });
 setInterval(() => { const B = BOSS; if (B?.phase === 'fight' && B.cur?.dis === 'whirl' && B.cur.cm === 'abcd' && B.picked == null && !B.ice && !B.bugs?.length && parseRoute().parts[1] === 'fight' && Date.now() - (B.whirlAt || 0) > 1600) { B.whirlAt = Date.now(); B.cur.opts.push(B.cur.opts.shift()); render(); } }, 400);
+// 🔍 oglądanie powiększonego obrazka nie zjada czasu: dopóki okno powiększenia jest otwarte, zegar pytania stoi
+let BOSS_ZOOM_T = 0;
+setInterval(() => { const B = BOSS, open = !!document.querySelector('.imgzoom'), now = Date.now();
+  if (open && B?.phase === 'fight' && BOSS_ZOOM_T) { const dt = now - BOSS_ZOOM_T; B.qAt += dt; if (B.qShow) B.qShow += dt; }
+  BOSS_ZOOM_T = open ? now : 0; }, 150);
 setInterval(() => {
-  const P = BOSS;
+  const P = BOSS; if (document.querySelector('.imgzoom')) return;
   if (P?.phase === 'fight' && P.cur?.qte && P.picked == null && !document.hidden && parseRoute().parts[1] === 'fight') {
     const f = (Date.now() - P.qAt) / qteMs(P), el = document.querySelector('.qte-bar i');
     if (el) el.style.width = Math.max(0, 100 - f * 100).toFixed(1) + '%';
