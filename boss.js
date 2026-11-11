@@ -376,7 +376,9 @@ function pairTap(side, i) {
   if (P.done.length === P.L.length) return parryResult(true);
   render();
 }
-const parryMs = B => PARRY_MS * B.hs.time * (B.cur?.curse ? 1.8 : B.cur?.runes ? .25 * B.cur.runes.seq.length + .2 : B.cur?.pairs ? 2 : B.cur?.mask ? 1.6 : B.cur?.cm === 'tf' ? .7 : 1);
+// 🖼️ pytanie z obrazkiem = więcej czasu na wszystko (obejrzenie rysunku, przewinięcie do odpowiedzi): ×1,7
+const imgTime = () => { const c = bossCard(), n = c && c.noteId && noteById(c.noteId); return n && noteHasImage(n) ? 1.7 : 1; };
+const parryMs = B => PARRY_MS * B.hs.time * imgTime() * (B.cur?.curse ? 1.8 : B.cur?.runes ? .25 * B.cur.runes.seq.length + .2 : B.cur?.pairs ? 2 : B.cur?.mask ? 1.6 : B.cur?.cm === 'tf' ? .7 : 1);
 function parryResult(ok, late, part = 0) {
   const B = BOSS, pr = B.cur.parry, now = Date.now();
   if (ok) B.parryOk++;
@@ -398,7 +400,7 @@ function runeTap(k) {
   render();
 }
 // ⚡ QTE: 3 błyskawiczne pytania (prawda/fałsz albo ABCD) z fiszek z tej walki, na czas; komplet = potężny cios
-const QTE_N = 3, qteMs = B => Math.max(2600, (4300 - 350 * B.b.diff) * B.hs.time);
+const QTE_N = 3, qteMs = B => Math.max(2600, (4300 - 350 * B.b.diff) * B.hs.time) * imgTime();
 function qteCard(B) {
   for (const x of parryPool(B).slice(0, 12)) { const v = cardView(x.c), r = Math.random();
     if (r < .5 && shortTxt(v.ans, 120)) { const truth = Math.random() < .4, wrong = !truth && (x.c.gk ? x.c.w[Math.random() * x.c.w.length | 0] : pickDistractors(distractorEntry(x.c), B.poolAll.filter(e => norm(e.a) !== norm(v.ans) && e.a.length <= 120), 1)[0]);
@@ -864,10 +866,10 @@ function bossSfx(k) {
 // ⏱️ czas na pytanie rośnie z długością odpowiedzi (wpisywanie: ~1 s na 4 znaki; ABCD i fiszki: na czytanie)
 const ansLen = B => { const c = bossCard(); if (!c) return 0; const v = cardView(c); return String(v.ans || '').length + (B.cur?.cm === 'abcd' ? (B.cur.opts || []).join('').length / 3 : 0); };
 // ⏱️ „szybka odpowiedź”: dłuższa odpowiedź / dłuższe opcje ABCD = więcej czasu na przeczytanie (do +8 s)
-const quickExtra = B => Math.min(8000, Math.max(0, ansLen(B) - 20) * (B.cur?.cm === 'abcd' ? 25 : 70));
+const quickExtra = B => Math.min(8000, Math.max(0, ansLen(B) - 20) * (B.cur?.cm === 'abcd' ? 25 : 70)) + (imgTime() > 1 ? 4000 : 0);
 const thinkMs = B => { const n = ansLen(B), cm = B.cur?.cm;
   const m = cm === 'type' ? 1.4 + Math.min(4, n / 22) : cm === 'abcd' ? .8 + Math.min(1.5, n / 120) : 1 + Math.min(2, n / 80);
-  return B.b.think * 1000 * B.hs.time * (B.haste > 0 ? .5 : 1) * m; };
+  return B.b.think * 1000 * B.hs.time * (B.haste > 0 ? .5 : 1) * m * imgTime(); };
 let THINK_HIDDEN = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) THINK_HIDDEN = Date.now(); else if (BOSS && THINK_HIDDEN) { BOSS.qAt += Date.now() - THINK_HIDDEN; THINK_HIDDEN = 0; } });
 setInterval(() => { const B = BOSS; if (B?.phase === 'fight' && B.cur?.dis === 'whirl' && B.cur.cm === 'abcd' && B.picked == null && !B.ice && !B.bugs?.length && parseRoute().parts[1] === 'fight' && Date.now() - (B.whirlAt || 0) > 1600) { B.whirlAt = Date.now(); B.cur.opts.push(B.cur.opts.shift()); render(); } }, 400);

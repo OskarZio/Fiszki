@@ -4326,7 +4326,7 @@ body.kb-open .bf-hero .hero-fig.xs.s8, body.kb-open .bf-hero .hero-fig.xs { widt
 /* karta pytania bierze resztę ekranu, a obrazek skaluje się do jej wysokości */
 .bf .boss-q { container-type: size; }
 .bf .boss-q img { max-height: min(30dvh, 64cqh) !important; width: auto; max-width: 100%; object-fit: contain; }
-.bf:has(.boss-q img) .bf-arena .bf-boss, .bf:has(.bf-ctrl .abcd-grid) .bf-arena .bf-boss, .bf:has(.bf-ctrl .pairs) .bf-arena .bf-boss { height: clamp(146px, 17.5dvh, 168px); }
+.bf:has(.boss-q .bq-in img:not(.emo8)) .bf-arena .bf-boss, .bf:has(.bf-ctrl .abcd-grid) .bf-arena .bf-boss, .bf:has(.bf-ctrl .pairs) .bf-arena .bf-boss { height: clamp(146px, 17.5dvh, 168px); }
 .bf .abcd-grid .abcd span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 @media (max-height: 700px) { .bf-arena { padding: 0; gap: 0; } .bf-arena .bf-boss { margin: 0; height: clamp(134px, 21dvh, 150px); } .bf-arena > .bf-top { gap: 0; }
   .bf-hero .hero-fig.xs.s8 { width: 62px; height: 62px; } .bf-arena .boss-stage { width: 88px; height: 88px; } }
@@ -4340,7 +4340,7 @@ body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-i
 }
 .bf-arena .boss-intent { max-width: 45%; } .bf-arena .boss-say { max-width: 50%; font-size: 12.5px; padding: 6px 10px; }
 /* niski ekran + obrazek w pytaniu: odpowiedzi w dwóch kolumnach, żeby obrazek został czytelny */
-@media (max-height: 720px) and (orientation: portrait) { .bf:has(.boss-q img) .abcd-grid { grid-template-columns: 1fr 1fr; } .bf:has(.boss-q img) .abcd-grid .abcd { font-size: 12.5px; padding: 6px 8px !important; align-items: flex-start; } }
+@media (max-height: 720px) and (orientation: portrait) { .bf:has(.boss-q .bq-in img:not(.emo8)) .abcd-grid { grid-template-columns: 1fr 1fr; } .bf:has(.boss-q .bq-in img:not(.emo8)) .abcd-grid .abcd { font-size: 12.5px; padding: 6px 8px !important; align-items: flex-start; } }
 
 /* 🔍 obrazek w pytaniu bossa da się powiększyć – mała lupka w rogu karty to podpowiada */
 .bf .boss-q:has(img.cimg)::after { content: '🔍'; position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 15px;
@@ -4359,3 +4359,10 @@ body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-i
 .imgzoom-pct { min-width: 54px; text-align: center; color: #fff; font: 700 14px/1 Rubik, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
 .imgzoom::after, .imgzoom.big::after { content: 'rozsuń palce, by przybliżyć · przeciągnij, by przesunąć · tło lub ✕ zamyka'; bottom: calc(12px + env(safe-area-inset-bottom)); font-size: 11.5px; padding: 0 10px; }
 .imgzoom::after, .imgzoom.big::after { content: 'rozsuń palce, by przybliżyć · tło lub ✕ zamyka'; white-space: nowrap; } .imgzoom.zoomed::after { display: none; }
+
+/* 🖼️ pytanie z obrazkiem: obrazek zostaje duży, a ekran po prostu przewija się w dół (bez ściskania karty do miniaturki) */
+.bf:has(.boss-q .bq-in img:not(.emo8)) { flex: 1 0 auto !important; }
+.bf:has(.boss-q .bq-in img:not(.emo8)) .boss-q { container-type: normal; flex: 0 0 auto !important; overflow: visible; max-height: none; }
+.bf:has(.boss-q .bq-in img:not(.emo8)) .boss-q img, .bf .boss-q img { max-height: 36dvh !important; }
+@media (max-height: 720px) and (orientation: portrait) { .bf:has(.boss-q .bq-in img:not(.emo8)) .abcd-grid { grid-template-columns: 1fr; } .bf:has(.boss-q .bq-in img:not(.emo8)) .abcd-grid .abcd { font-size: 13.5px; padding: 8px 10px !important; } }
+@media (orientation: landscape) and (max-height: 520px) { .bf:has(.boss-q .bq-in img:not(.emo8)) { flex: 1 1 0 !important; } .bf:has(.boss-q .bq-in img:not(.emo8)) .boss-q { container-type: size; overflow: auto; } .bf .boss-q img { max-height: 70cqh !important; } }
