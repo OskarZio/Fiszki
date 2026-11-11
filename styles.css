@@ -4137,48 +4137,116 @@ img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline
 /* wartość nowej fiszki według szacowanej trudności: łatwa → bardzo trudna */
 .k-new.t0 .kg-val { background: #dcfce7; color: #15803d; } .k-new.t1 .kg-val { background: #e0f2fe; color: #0369a1; } .k-new.t2 .kg-val { background: #ffedd5; color: #c2410c; } .k-new.t3 .kg-val { background: #fee2e2; color: #b91c1c; }
 
-/* ============ ⚔️ Walka z bossem: arena (pion) + układ poziomy po obróceniu telefonu ============ */
-/* scena: boss u góry na podeście, bohater pod nim – jedna ciemna arena zamiast kratki z zeszytu */
-.bf-top { position: relative; padding: 10px 12px 12px; border-radius: 18px 18px 0 0; color: #f4f2ff; overflow: hidden; isolation: isolate;
-  background: radial-gradient(120% 95% at 50% 105%, #4a3489 0%, #25204f 48%, #121229 100%); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08); }
-.bf-top::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(60% 34% at 32% 62%, rgba(255,255,255,.16), transparent 70%), repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 2px, transparent 2px 46px); }
-.bf .bf-boss { justify-content: space-between; gap: 12px; }
-.bf .boss-stage { width: clamp(104px, 23dvh, 190px); height: clamp(104px, 23dvh, 190px); filter: drop-shadow(0 10px 6px rgba(0,0,0,.45)); animation: bfIdle 3.2s ease-in-out infinite; }
-.bf .boss-stage.hit, .bf .boss-stage.attack { animation: none; }
-@keyframes bfIdle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-.bf .boss-intent { background: rgba(10,10,30,.55); color: #fff; border: 1.5px solid rgba(255,255,255,.2); backdrop-filter: blur(2px); flex: 1; max-width: none; padding: 8px 10px; text-align: center; }
-.bf .boss-intent small { color: #c9c4f0; }
-.bf .boss-intent.soon { background: rgba(190,30,45,.82); color: #fff; border-color: #ffb4b4; } .bf .boss-intent.soon small { color: #ffe1e1; }
-.bf .hpbar { height: 20px; background: rgba(0,0,0,.45); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.22); }
-.bf .hpbar span { line-height: 20px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.75), 0 0 4px rgba(0,0,0,.6); font-size: 12px; }
-.bf .boss-me { margin-top: -6px; padding: 8px 12px 10px; border-radius: 0 0 18px 18px; background: linear-gradient(#121229, #1b1a3a); color: #f4f2ff; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08); flex-wrap: wrap; }
-.bf .boss-me .hero-fig.xs { width: 48px; height: 48px; filter: drop-shadow(0 4px 3px rgba(0,0,0,.5)); }
-.bf .boss-me .me-col { flex: 1; min-width: 0; }
+/* ============ ⚔️ Walka z bossem: arena pojedynku, animacje ciosów, układ poziomy ============ */
+/* jedna przestronna scena: boss u góry po prawej, bohater na dole po lewej, każdy na własnym podeście ze światłem */
+.bf-arena { position: relative; isolation: isolate; overflow: hidden; border-radius: 22px; padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 14px; color: #f4f2ff;
+  background:
+    radial-gradient(1.6px 1.6px at 9% 14%, #fff 55%, transparent 60%), radial-gradient(1.2px 1.2px at 23% 34%, #cfd4ff 55%, transparent 60%), radial-gradient(1.6px 1.6px at 41% 9%, #fff 55%, transparent 60%),
+    radial-gradient(1.2px 1.2px at 58% 27%, #cfd4ff 55%, transparent 60%), radial-gradient(1.8px 1.8px at 77% 12%, #fff 55%, transparent 60%), radial-gradient(1.2px 1.2px at 91% 40%, #cfd4ff 55%, transparent 60%),
+    radial-gradient(1.2px 1.2px at 14% 62%, #b9bfff 55%, transparent 60%), radial-gradient(1.4px 1.4px at 66% 71%, #b9bfff 55%, transparent 60%),
+    radial-gradient(90% 70% at 78% 18%, rgba(132,94,247,.5), transparent 70%), radial-gradient(80% 60% at 16% 96%, rgba(56,189,248,.28), transparent 70%),
+    linear-gradient(180deg, #0c0d26 0%, #191a45 55%, #101028 100%);
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.1), 0 8px 22px rgba(20,16,60,.28); }
+.bf-arena > .bf-top, .bf-arena > .boss-me { background: none !important; box-shadow: none; border-radius: 0; padding: 0 !important; margin: 0 !important; color: inherit; overflow: visible; min-height: 0; }
+.bf-arena > .bf-top { display: flex; flex-direction: column; gap: 10px; }
+.bf-arena .bf-boss { flex-direction: row-reverse; justify-content: space-between; align-items: center; gap: 14px; }
+.bf-arena .boss-stage { width: clamp(108px, 22dvh, 180px); height: clamp(108px, 22dvh, 180px); flex: none; margin: 0 6px 6px 0; }
+/* podesty: plama światła pod bossem i pod bohaterem */
+.bf-arena .boss-stage::before, .bf-hero::before { content: ''; position: absolute; left: -8%; right: -8%; bottom: -9%; height: 30%; z-index: -1; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(190,170,255,.6), rgba(120,100,230,.28) 60%, transparent 100%); }
+.bf-hero::before { background: radial-gradient(closest-side, rgba(125,211,252,.6), rgba(56,150,220,.26) 60%, transparent 100%); bottom: -12%; }
+.bf-arena .boss-stage .boss-art { animation: bossIdle 2.8s ease-in-out infinite; filter: drop-shadow(0 8px 5px rgba(0,0,0,.45)); }
+.bf-arena .boss-intent { flex: 1; max-width: none; margin: 0; padding: 10px 12px; text-align: center; border-radius: 16px; background: rgba(8,8,28,.6); color: #fff; border: 1.5px solid rgba(255,255,255,.2); box-shadow: none; }
+.bf-arena .boss-intent small { color: #c9c4f0; }
+.bf-arena .boss-intent.soon { background: rgba(196,30,48,.85); color: #fff; border-color: #ffb4b4; } .bf-arena .boss-intent.soon small { color: #ffe1e1; }
+.bf-arena .boss-me { align-items: center; gap: 14px !important; flex-wrap: wrap; }
+.bf-hero { position: relative; display: block; flex: none; margin: 0 2px 4px 6px; }
+.bf-hero .hero-fig { filter: drop-shadow(0 6px 4px rgba(0,0,0,.5)); }
+.bf-arena .boss-me .me-col { flex: 1 1 0; min-width: 0; max-width: none; }
+/* paski życia: ramka, białe liczby i żółty „ślad” po ciosie */
+.bf .hpbar { height: 22px; background: rgba(0,0,0,.5); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.24); }
+.bf .hpbar u { position: absolute; inset: 0 auto 0 0; width: var(--to); border-radius: inherit; background: #ffe98a; text-decoration: none; }
+.bf .hpbar i { z-index: 1; transition: none; } .bf .hpbar span { z-index: 2; line-height: 22px; color: #fff; font-size: 12.5px; text-shadow: 0 1px 2px rgba(0,0,0,.8), 0 0 4px rgba(0,0,0,.6); }
+.bf .hpbar.anim i { animation: hpMain .28s ease-out var(--d) both; } .bf .hpbar.anim.loss u { animation: hpGhost .95s ease-in var(--d) both; }
+.bf .hpbar.anim.loss { animation: hpJolt .3s ease-out var(--d) both; }
+@keyframes hpMain { from { width: var(--from); } to { width: var(--to); } }
+@keyframes hpGhost { 0%, 48% { width: var(--from); } 100% { width: var(--to); } }
+@keyframes hpJolt { 0% { transform: translateX(-3px); } 35% { transform: translateX(3px); } 70% { transform: translateX(-1px); } 100% { transform: none; } }
+/* --- Twój cios: doskok, cięcie, błysk i drżenie bossa, podskakująca liczba --- */
+.bf-arena.atk .bf-hero { animation: bfDash .46s cubic-bezier(.3,.9,.3,1) both; z-index: 3; }
+@keyframes bfDash { 0% { transform: none; } 12% { transform: translate(-8px, 5px) scale(.94); } 42% { transform: translate(64px, -46px) scale(1.16) rotate(-10deg); } 58% { transform: translate(56px, -40px) scale(1.12) rotate(-6deg); } 100% { transform: none; } }
+.bf-arena .slash { position: absolute; inset: 0; background: none; animation: none; pointer-events: none; z-index: 2; }
+.bf-arena .slash::before, .bf-arena .slash::after { content: ''; position: absolute; left: -14%; right: -14%; top: 50%; height: 9px; margin-top: -4.5px; border-radius: 50%;
+  background: linear-gradient(90deg, transparent, #fff 18%, #fff 82%, transparent); box-shadow: 0 0 10px 3px #ff5a6e, 0 0 28px 9px rgba(255,90,110,.55);
+  transform: rotate(-38deg) scaleX(0); transform-origin: 0 50%; animation: bfSlash .34s cubic-bezier(.2,.8,.2,1) .16s both; }
+.bf-arena .slash::after { display: none; }
+.bf-arena .boss-stage.crit .slash::before { box-shadow: 0 0 10px 3px #ffd43b, 0 0 30px 10px rgba(255,212,59,.6); height: 11px; }
+.bf-arena .boss-stage.crit .slash::after { display: block; transform: rotate(38deg) scaleX(0); transform-origin: 100% 50%; box-shadow: 0 0 10px 3px #ffd43b, 0 0 30px 10px rgba(255,212,59,.6); animation: bfSlash2 .34s cubic-bezier(.2,.8,.2,1) .28s both; }
+@keyframes bfSlash { 0% { transform: rotate(-38deg) scaleX(0); opacity: 1; } 55% { transform: rotate(-38deg) scaleX(1); opacity: 1; } 100% { transform: rotate(-38deg) scaleX(1) scaleY(.08); opacity: 0; } }
+@keyframes bfSlash2 { 0% { transform: rotate(38deg) scaleX(0); opacity: 1; } 55% { transform: rotate(38deg) scaleX(1); opacity: 1; } 100% { transform: rotate(38deg) scaleX(1) scaleY(.08); opacity: 0; } }
+.bf-impact { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; border: 4px solid #fff; pointer-events: none; z-index: 2; opacity: 0; animation: bfImpact .42s ease-out .26s both; }
+@keyframes bfImpact { 0% { transform: scale(.2); opacity: 1; } 100% { transform: scale(5.2); opacity: 0; border-width: 1px; } }
+.bf-arena .boss-stage.hit .boss-art { animation: bfBossHit .56s linear .2s both; filter: none; }
+.bf-arena .boss-stage.crit .boss-art { animation: bfBossHit .62s linear .2s both; }
+@keyframes bfBossHit { 0% { transform: none; filter: brightness(4) saturate(0); } 10% { transform: translateX(-15px) rotate(-3deg); filter: brightness(4) saturate(0); } 22% { transform: translateX(13px) rotate(2deg); filter: brightness(1.7); }
+  34% { transform: translateX(-10px); } 46% { transform: translateX(8px); filter: none; } 58% { transform: translateX(-5px); } 70% { transform: translateX(4px); } 84% { transform: translateX(-2px); } 100% { transform: none; filter: none; } }
+.bf-arena .dmg { top: 4%; font: 900 36px/1 Rubik, system-ui, sans-serif; color: #ff5063; -webkit-text-stroke: 0; z-index: 4;
+  text-shadow: 2px 0 #14081a, -2px 0 #14081a, 0 2px #14081a, 0 -2px #14081a, 2px 2px #14081a, -2px 2px #14081a, 0 5px 0 rgba(0,0,0,.45); animation: bfDmg 1s linear .22s both; }
+.bf-arena .dmg.crit { font-size: 46px; color: #ffd43b; -webkit-text-stroke: 0; }
+@keyframes bfDmg { 0% { opacity: 0; transform: translate(-50%, 14px) scale(.4); } 10% { opacity: 1; transform: translate(-50%, -36px) scale(1.25); } 26% { transform: translate(-50%, 4px) scale(1, .86); } 38% { transform: translate(-50%, -16px) scale(1); }
+  50% { transform: translate(-50%, 2px) scale(1, .94); } 58% { transform: translate(-50%, -6px); } 66%, 84% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -6px); } }
+/* --- cios bossa: rzut w stronę bohatera, pazury, miganie postaci, czerwony błysk areny --- */
+.bf-arena .boss-stage.attack .boss-art { animation: bfLunge .5s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes bfLunge { 0% { transform: none; } 18% { transform: translate(10px, -8px) scale(1.04); } 48% { transform: translate(-58px, 44px) scale(1.2) rotate(-8deg); } 100% { transform: none; } }
+.bf-arena.got-hit .bf-hero { animation: bfHurt .6s linear .12s both; }
+@keyframes bfHurt { 0% { transform: none; filter: brightness(4) saturate(0); } 12% { transform: translate(-16px, 6px) rotate(-10deg); filter: brightness(4) saturate(0); } 26% { transform: translate(10px, 0) rotate(5deg); filter: none; }
+  40% { transform: translate(-8px, 2px) rotate(-4deg); } 54% { transform: translate(6px, 0); } 70% { transform: translate(-3px, 0); } 100% { transform: none; } }
+.bf-arena.got-hit .bf-hero .hero-fig { animation: bfBlink .9s steps(1) .25s both; }
+@keyframes bfBlink { 0%, 22%, 44%, 66% { opacity: .2; } 11%, 33%, 55%, 77%, 100% { opacity: 1; } }
+.bf-arena.got-hit::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 5; box-shadow: inset 0 0 0 3px #ff3b4e, inset 0 0 70px rgba(255,40,60,.7); animation: bfArenaHurt .6s ease-out .1s both; }
+@keyframes bfArenaHurt { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+.bf-hero .claw { position: absolute; inset: -18% -22%; border-radius: 0; z-index: 3; pointer-events: none; animation: bfClaw .42s ease-out .1s both;
+  background: linear-gradient(115deg, transparent 26%, #fff 27% 31%, #ff3b4e 31% 34%, transparent 35% 44%, #fff 45% 49%, #ff3b4e 49% 52%, transparent 53% 62%, #fff 63% 67%, #ff3b4e 67% 70%, transparent 71%); }
+@keyframes bfClaw { 0% { clip-path: inset(0 0 100% 0); opacity: 1; } 45% { clip-path: inset(0); opacity: 1; } 100% { clip-path: inset(0); opacity: 0; } }
+.bf-hero .dmg.me { left: 50%; top: -34%; bottom: auto; color: #ff8a96; font-size: 30px; white-space: nowrap; }
+.bf-hero .dmg.dodge { color: #bfe3ff; font-size: 22px; }
+.bf-arena.got-dodge .bf-hero { animation: bfDodge .5s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes bfDodge { 0% { transform: none; opacity: 1; } 30% { transform: translate(-34px, 4px) skewX(10deg); opacity: .55; } 60% { transform: translate(-34px, 4px) skewX(10deg); opacity: .55; } 100% { transform: none; opacity: 1; } }
+.bf-guard { position: absolute; inset: -16%; border-radius: 50%; border: 4px solid #8fd3ff; box-shadow: 0 0 16px #38bdf8, inset 0 0 16px rgba(56,189,248,.6); pointer-events: none; animation: bfGuard .55s ease-out both; }
+@keyframes bfGuard { 0% { transform: scale(.5); opacity: 0; } 30% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+.bf.shake-screen { animation: bfShake .34s linear .12s both; }
+@keyframes bfShake { 0%, 100% { transform: none; } 15% { transform: translate(-6px, 3px); } 30% { transform: translate(5px, -3px); } 45% { transform: translate(-4px, 2px); } 60% { transform: translate(3px, -1px); } 80% { transform: translate(-2px, 1px); } }
 .bf .boss-log { padding: 2px 0; }
-@media (prefers-reduced-motion: reduce) { .bf .boss-stage { animation: none; } }
+@media (max-height: 700px) { .bf-arena { padding: 12px 14px 10px; gap: 10px; } .bf-arena .boss-stage { width: clamp(88px, 19dvh, 150px); height: clamp(88px, 19dvh, 150px); } }
+@media (prefers-reduced-motion: reduce) { .bf-arena *, .bf-arena::after, .bf.shake-screen { animation: none !important; } .bf-arena .slash::before, .bf-impact, .bf-hero .claw { display: none; } }
 /* 📱 poziomo: arena po lewej, pytanie i odpowiedzi po prawej – wszystko na jednym ekranie */
 @media (orientation: landscape) and (max-height: 520px) {
   body.focus main:has(> .bf) { max-width: none; padding-top: calc(4px + var(--sat, 0px)); padding-bottom: 4px; padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
   main:has(> .bf) > .studybar { margin-bottom: 4px; min-height: 0; } main:has(> .bf) > .studybar .iconbtn { min-height: 30px; padding: 2px 8px; }
-  .bf { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); grid-template-rows: auto auto minmax(0, 1fr) auto; column-gap: 10px; row-gap: 5px;
+  .bf { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); grid-template-rows: auto minmax(0, 1fr) auto; column-gap: 10px; row-gap: 5px;
     min-height: 0; height: calc(100dvh - 46px - var(--sat, 0px) - env(safe-area-inset-bottom)); }
-  .bf > .bf-top { grid-column: 1; grid-row: 1; padding: 6px 10px 8px; } .bf > .boss-me { grid-column: 1; grid-row: 2; margin-top: -5px; padding: 6px 10px; }
-  .bf > .boss-log { grid-column: 1; grid-row: 3; align-self: start; font-size: 11.5px; overflow: hidden; max-height: 100%; }
-  .bf > .bf-bottom { grid-column: 1; grid-row: 4; margin: 0; padding-bottom: 0; }
-  .bf > .boss-q { grid-column: 2; grid-row: 1 / 3; max-height: none; min-height: 0; margin: 0; padding: 10px 12px; }
-  .bf > .bf-ctrl { grid-column: 2; grid-row: 3 / 5; align-self: end; max-height: 100%; overflow: auto; }
-  .bf > p { grid-column: 2; grid-row: 3; align-self: start; }
-  .bf .boss-stage { width: clamp(84px, 30dvh, 130px); height: clamp(84px, 30dvh, 130px); }
+  .bf > .bf-arena { grid-column: 1; grid-row: 1; padding: 10px 12px 8px; gap: 8px; border-radius: 18px; }
+  .bf > .boss-log { grid-column: 1; grid-row: 2; align-self: start; display: flex; align-items: flex-start; font-size: 11.5px; padding-left: 4px; min-height: 18px; }
+  .bf > .bf-bottom { grid-column: 1; grid-row: 3; margin: 0; padding-bottom: 0; }
+  .bf > .boss-q { grid-column: 2; grid-row: 1; max-height: none; min-height: 0; margin: 0; padding: 10px 12px; }
+  .bf > .bf-ctrl { grid-column: 2; grid-row: 2 / 4; align-self: end; max-height: 100%; overflow: auto; }
+  .bf > p { grid-column: 2; grid-row: 2; align-self: start; }
+  .bf-arena .boss-stage { width: clamp(80px, 27dvh, 118px); height: clamp(80px, 27dvh, 118px); margin: 0 4px 4px 0; }
+  .bf-arena > .bf-top { gap: 6px; } .bf .hpbar { height: 18px; } .bf .hpbar span { line-height: 18px; font-size: 11.5px; }
   .bf .boss-q .ctext { font-size: 17px; line-height: 1.3; } .bf .boss-q img { max-height: 34dvh; }
-  .bf .boss-say { font-size: 12px; padding: 4px 10px; } .bf .boss-intent { font-size: 12px; padding: 5px 8px; }
-  .bf .boss-me .hero-fig.xs { width: 38px; height: 38px; }
+  .bf .boss-say { font-size: 12px; padding: 4px 10px; } .bf-arena .boss-intent { font-size: 12px; padding: 6px 8px; }
+  .bf .boss-me .hero-fig.xs.s8, .bf .boss-me .hero-fig.xs { width: 50px; height: 50px; margin-top: 0; }
   .bf .abcd-grid { grid-template-columns: 1fr 1fr; gap: 6px; } .bf .abcd-grid .abcd { min-height: 44px; padding: 6px 10px; }
   .bf .boss-grades button { min-height: 50px; font-size: 22px; } .bf .boss-go { min-height: 48px; }
   .bf .pot-bar button { width: 40px; height: 40px; } .bf .ult-btn { min-height: 40px; }
+  @keyframes bfDash { 0% { transform: none; } 12% { transform: translate(-6px, 4px) scale(.94); } 42% { transform: translate(48px, -30px) scale(1.14) rotate(-10deg); } 58% { transform: translate(42px, -26px) scale(1.1); } 100% { transform: none; } }
 }
-.bf .boss-me { margin-top: -8px; padding-bottom: 12px; } .bf .boss-me .me-col { flex: 1 1 0; max-width: calc(100% - 62px); }
-@media (orientation: landscape) and (max-height: 520px) { .bf > .boss-me { margin-top: -7px; padding-bottom: 8px; } .bf .boss-me .me-col { max-width: calc(100% - 50px); } }
-.bf > .boss-me { margin-top: -8px !important; padding: 10px 12px 12px !important; }
-@media (orientation: landscape) and (max-height: 520px) { .bf > .boss-me { margin-top: -7px !important; padding: 6px 10px 8px !important; min-height: 0; } .bf .boss-me .hero-fig.xs.s8, .bf .boss-me .hero-fig.xs { width: 52px; height: 52px; margin-top: 0; } }
-@media (orientation: landscape) and (max-height: 520px) { .bf > .boss-log { display: flex; max-height: none; overflow: visible; min-height: 18px; align-items: flex-start; padding-left: 4px; } }
+/* dymek bossa: własny rząd nad sceną, przy bossie (nie nachodzi na zapowiedź ataku) */
+.bf-arena .boss-say { position: relative !important; inset: auto !important; align-self: flex-end; margin: 0 4px -2px 0 !important; max-width: 84%; width: auto; transform: none; background: #fff; color: #1b1d29; border-radius: 14px 14px 4px 14px; font-size: 13px; padding: 7px 12px; text-align: left; }
+.bf-arena .boss-say::after { left: auto; right: 34px; border-top-color: #fff; }
+@media (max-height: 700px) { .bf-arena .boss-say { display: block; } }
+/* liczby i napisy przy bohaterze zawsze na wierzchu */
+.bf .hpbar { isolation: isolate; } .bf-arena > .boss-me { position: relative; z-index: 3; } .bf-hero { z-index: 3; }
+.bf-hero .dmg.me { left: 96%; top: -46%; transform-origin: 0 50%; z-index: 6; } .bf-hero .dmg.dodge { color: #d6eeff; font-size: 24px; }
+@keyframes bfDodge { 0% { transform: none; opacity: 1; } 30%, 60% { transform: translate(-18px, 4px) skewX(10deg); opacity: .55; } 100% { transform: none; opacity: 1; } }
+@media (orientation: landscape) and (max-height: 520px) { .bf-arena .boss-say { display: none; } }
