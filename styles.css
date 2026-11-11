@@ -4301,3 +4301,43 @@ body.kb-open .bf-arena .bf-boss { height: 92px; } body.kb-open .bf-arena .boss-i
 body.kb-open .bf-hero .hero-fig.xs.s8, body.kb-open .bf-hero .hero-fig.xs { width: 46px; height: 46px; }
 @media (orientation: landscape) and (max-height: 520px) { .bf-hero .hero-fig.xs.s8, .bf-hero .hero-fig.xs { width: 58px; height: 58px; } }
 .bf-hero .dmg.dodge { color: #eaf6ff; text-shadow: 2px 0 #14081a, -2px 0 #14081a, 0 2px #14081a, 0 -2px #14081a; }
+
+/* ============ ⚔️ Arena v4: cała walka na jednym ekranie – paski życia w środku sceny, karta pytania dopasowuje się do reszty ============ */
+.bf { flex: 1 1 0 !important; min-height: 0 !important; }
+.bf-arena { padding: 0; gap: 0; flex: none; }
+.bf-arena > .bf-top { gap: 0 !important; position: relative; }
+.bf-arena .bf-boss { margin: 0; border-block: 0; border-bottom: 2px solid rgba(170,160,255,.22); height: clamp(150px, 21dvh, 196px); }
+/* pasek życia bossa i jego dymek leżą na scenie, nie zabierają osobnego rzędu */
+.bf-arena .hpbar.boss { position: absolute; top: 10px; left: 12px; right: 12px; z-index: 3; order: 0; height: 18px; flex: none; }
+.bf-arena .hpbar.boss span { line-height: 18px; font-size: 11.5px; }
+.bf-arena .boss-say { position: absolute !important; top: 36px !important; right: 12px !important; left: auto !important; margin: 0 !important; max-width: 60%; z-index: 5; display: block; animation: sayFade 3.2s ease forwards; pointer-events: none; }
+.bf-arena .think-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; border-radius: 0; z-index: 3; background: rgba(0,0,0,.4); }
+/* zapowiedź ataku: jedna linijka pod paskiem bossa */
+.bf-arena .boss-intent { top: 36px; left: 12px; max-width: 58%; padding: 4px 10px; border-radius: 10px; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap; overflow: hidden; }
+.bf-arena .boss-intent b { overflow: hidden; text-overflow: ellipsis; min-width: 0; } .bf-arena .boss-intent small { flex: none; }
+.bf-arena .boss-stage { bottom: 9%; width: clamp(96px, 15.5dvh, 150px); height: clamp(96px, 15.5dvh, 150px); right: 26px; }
+.bf-arena .bf-boss > .bf-hero { bottom: 6%; left: 26px; }
+.bf-hero .hero-fig.xs.s8 { width: 74px; height: 74px; } .bf-hero .hero-fig.xs { width: 66px; height: 72px; }
+/* dół areny: życie bohatera i ekwipunek w jednym rzędzie */
+.bf-arena > .boss-me { padding: 8px 12px 9px !important; gap: 6px 8px !important; min-height: 0 !important; }
+.bf-arena > .boss-me .me-col { flex: 1 1 100%; flex-direction: row !important; align-items: center; gap: 8px; }
+.bf-arena > .boss-me .me-col .hpbar { flex: 1 1 0; height: 20px; } .bf-arena > .boss-me .me-col .hpbar span { line-height: 20px; }
+.bf-arena > .boss-me .mc-bar { flex: none; transform: scale(.78); transform-origin: 100% 50%; margin: -5px 0 -5px -22px; }
+/* karta pytania bierze resztę ekranu, a obrazek skaluje się do jej wysokości */
+.bf .boss-q { container-type: size; }
+.bf .boss-q img { max-height: min(30dvh, 64cqh) !important; width: auto; max-width: 100%; object-fit: contain; }
+.bf:has(.boss-q img) .bf-arena .bf-boss, .bf:has(.bf-ctrl .abcd-grid) .bf-arena .bf-boss, .bf:has(.bf-ctrl .pairs) .bf-arena .bf-boss { height: clamp(146px, 17.5dvh, 168px); }
+.bf .abcd-grid .abcd span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-height: 700px) { .bf-arena { padding: 0; gap: 0; } .bf-arena .bf-boss { margin: 0; height: clamp(134px, 21dvh, 150px); } .bf-arena > .bf-top { gap: 0; }
+  .bf-hero .hero-fig.xs.s8 { width: 62px; height: 62px; } .bf-arena .boss-stage { width: 88px; height: 88px; } }
+body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-intent { display: none; } body.kb-open .bf-arena > .boss-me { display: none !important; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .bf > .bf-arena { padding: 0; gap: 0; } .bf-arena > .bf-top { gap: 0; }
+  .bf-arena .bf-boss { margin: 0; height: clamp(126px, 44dvh, 176px); }
+  .bf-arena .boss-stage { right: 18px; width: clamp(78px, 24dvh, 104px); height: clamp(78px, 24dvh, 104px); } .bf-arena .bf-boss > .bf-hero { left: 18px; }
+  .bf-arena .boss-intent { left: 10px; top: 32px; padding: 3px 8px; font-size: 11px; max-width: 62%; }
+  .bf-arena > .boss-me { padding: 6px 10px 7px !important; } .bf .boss-q img { max-height: 70cqh !important; }
+}
+.bf-arena .boss-intent { max-width: 45%; } .bf-arena .boss-say { max-width: 50%; font-size: 12.5px; padding: 6px 10px; }
+/* niski ekran + obrazek w pytaniu: odpowiedzi w dwóch kolumnach, żeby obrazek został czytelny */
+@media (max-height: 720px) and (orientation: portrait) { .bf:has(.boss-q img) .abcd-grid { grid-template-columns: 1fr 1fr; } .bf:has(.boss-q img) .abcd-grid .abcd { font-size: 12.5px; padding: 6px 8px !important; align-items: flex-start; } }

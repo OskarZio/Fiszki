@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '368';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '369';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
