@@ -4366,3 +4366,13 @@ body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-i
 .bf:has(.boss-q .bq-in img:not(.emo8)) .boss-q img, .bf .boss-q img { max-height: 36dvh !important; }
 @media (max-height: 720px) and (orientation: portrait) { .bf:has(.boss-q .bq-in img:not(.emo8)) .abcd-grid { grid-template-columns: 1fr; } .bf:has(.boss-q .bq-in img:not(.emo8)) .abcd-grid .abcd { font-size: 13.5px; padding: 8px 10px !important; } }
 @media (orientation: landscape) and (max-height: 520px) { .bf:has(.boss-q .bq-in img:not(.emo8)) { flex: 1 1 0 !important; } .bf:has(.boss-q .bq-in img:not(.emo8)) .boss-q { container-type: size; overflow: auto; } .bf .boss-q img { max-height: 70cqh !important; } }
+/* zapowiedź ataku w dwóch linijkach: nazwa + obrażenia, pod spodem pełna podpowiedź (nic się nie ucina) */
+.bf-arena .boss-intent { flex-wrap: wrap; white-space: normal; max-width: 64%; row-gap: 1px; column-gap: 5px; padding: 5px 10px; overflow: visible; }
+.bf-arena .boss-intent b { flex: 0 1 auto; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bf-arena .boss-intent small { flex: 1 0 100%; white-space: normal; line-height: 1.2; font-size: 11px; }
+.bf-arena .boss-intent.soon small { font-weight: 800; font-size: 11.5px; }
+.bf-arena .boss-say { max-width: 44%; }
+.bf:has(.boss-q .bq-in img:not(.emo8)) .bf-hero .hero-fig.xs.s8, .bf:has(.bf-ctrl .abcd-grid) .bf-hero .hero-fig.xs.s8, .bf:has(.bf-ctrl .pairs) .bf-hero .hero-fig.xs.s8 { width: 64px; height: 64px; }
+@media (orientation: landscape) and (max-height: 520px) { .bf-arena .boss-intent { max-width: 66%; padding: 3px 8px; } .bf-arena .boss-intent small { font-size: 10.5px; } }
+.bf-arena .boss-intent { display: grid; grid-template-columns: auto minmax(0, auto) auto; justify-content: start; align-items: center; }
+.bf-arena .boss-intent small { grid-column: 1 / -1; }
