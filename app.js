@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '370';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '371';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -2398,16 +2398,45 @@ function askBox({ icon = '', title = '', intro = '', steps = [], warn = '', ok =
     ov.querySelector('[data-a="1"]')?.focus({ preventScroll: true });
   });
 }
-// 🔍 powiększanie obrazka z fiszki: dotknięcie otwiera pełny ekran, drugie dotknięcie przybliża 2×, ✕ / tło zamyka
+// 🔍 powiększanie obrazka z fiszki: dotknięcie otwiera pełny ekran; tam szczypanie dwoma palcami (albo kółko myszy, + / −) przybliża do 6×,
+// przeciąganie przesuwa, stuknięcie obrazka przełącza 1× ↔ 2,5× w miejscu stuknięcia, a ✕ / tło zamyka
 document.addEventListener('click', e => {
   const im = e.target.closest?.('.flash img.cimg, .flash .ctext img');
   if (!im) return;
   e.stopPropagation(); e.preventDefault();
   const ov = document.createElement('div'); ov.className = 'imgzoom';
-  ov.innerHTML = `<button class="iconbtn imgzoom-x" aria-label="Zamknij">✕</button><div class="imgzoom-sc"><img src="${im.src}" alt=""></div>`;
-  const img = ov.querySelector('img');
-  img.addEventListener('click', ev => { ev.stopPropagation(); ov.classList.toggle('big'); });
-  ov.addEventListener('click', () => ov.remove());
+  ov.innerHTML = `<button class="iconbtn imgzoom-x" aria-label="Zamknij">✕</button><div class="imgzoom-sc"><img src="${im.src}" alt="" draggable="false"></div>
+    <div class="imgzoom-ctl"><button class="iconbtn" data-z="-1" aria-label="Oddal">−</button><span class="imgzoom-pct">100%</span><button class="iconbtn" data-z="1" aria-label="Przybliż">+</button></div>`;
+  const img = ov.querySelector('img'), sc = ov.querySelector('.imgzoom-sc'), pct = ov.querySelector('.imgzoom-pct');
+  const MAX = 6; let z = 1, x = 0, y = 0;
+  const apply = anim => {
+    // obrazek nie może uciec poza ekran dalej niż do swojej krawędzi
+    const mx = Math.max(0, (img.offsetWidth * z - sc.clientWidth) / 2), my = Math.max(0, (img.offsetHeight * z - sc.clientHeight) / 2);
+    x = clamp(x, -mx, mx); y = clamp(y, -my, my);
+    img.style.transition = anim ? 'transform .18s ease-out' : 'none';
+    img.style.transform = `translate(${x}px, ${y}px) scale(${z})`; pct.textContent = Math.round(z * 100) + '%'; ov.classList.toggle('zoomed', z > 1.01);
+  };
+  // przybliżenie wokół punktu (cx, cy) ekranu – to, co jest pod palcem, zostaje pod palcem
+  const zoomAt = (nz, cx, cy, anim) => {
+    nz = clamp(nz, 1, MAX); const r = sc.getBoundingClientRect(), px = cx - r.left - r.width / 2, py = cy - r.top - r.height / 2, k = nz / z;
+    x = px - (px - x) * k; y = py - (py - y) * k; z = nz; if (z === 1) { x = 0; y = 0; } apply(anim);
+  };
+  const pts = new Map(); let pinch = null, drag = null, moved = false, downT = 0;
+  sc.addEventListener('pointerdown', ev => { ev.preventDefault(); try { sc.setPointerCapture(ev.pointerId); } catch { /* */ }
+    pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); downT = Date.now();
+    if (pts.size === 1) { drag = { x0: ev.clientX, y0: ev.clientY, ox: x, oy: y, onImg: ev.target === img }; moved = false; }
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: z }; moved = true; } });
+  sc.addEventListener('pointermove', ev => { if (!pts.has(ev.pointerId)) return; pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (pts.size >= 2 && pinch) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1; zoomAt(pinch.z0 * d / pinch.d, (a.x + b.x) / 2, (a.y + b.y) / 2); }
+    else if (drag) { const dx = ev.clientX - drag.x0, dy = ev.clientY - drag.y0; if (Math.abs(dx) + Math.abs(dy) > 8) moved = true; if (z > 1 && moved) { x = drag.ox + dx; y = drag.oy + dy; apply(); } } });
+  const up = ev => { if (!pts.has(ev.pointerId)) return; pts.delete(ev.pointerId);
+    if (pts.size < 2) pinch = null;
+    if (pts.size === 1) { const p = [...pts.values()][0]; drag = { x0: p.x, y0: p.y, ox: x, oy: y, onImg: false }; }   // po szczypaniu drugi palec dalej przesuwa
+    if (pts.size === 0) { if (!moved && Date.now() - downT < 400) { if (drag?.onImg) zoomAt(z > 1.01 ? 1 : 2.5, ev.clientX, ev.clientY, true); else ov.remove(); } drag = null; } };
+  sc.addEventListener('pointerup', up); sc.addEventListener('pointercancel', up);
+  sc.addEventListener('wheel', ev => { ev.preventDefault(); zoomAt(z * (ev.deltaY < 0 ? 1.2 : 1 / 1.2), ev.clientX, ev.clientY); }, { passive: false });
+  ov.addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; ev.stopPropagation();
+    if (b.dataset.z) { const r = sc.getBoundingClientRect(); zoomAt(z * (b.dataset.z > 0 ? 1.5 : 1 / 1.5), r.left + r.width / 2, r.top + r.height / 2, true); } else ov.remove(); });
   document.body.append(ov);
 }, true);
 on('start', () => { try { dropSampleDecks(); } catch { /* */ } });
