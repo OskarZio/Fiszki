@@ -4133,3 +4133,52 @@ img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline
 .kum-cups { grid-template-columns: repeat(7, minmax(0, 1fr)); } .kum-cupb { min-width: 0; overflow: hidden; } .kum-cupb small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 9px; }
 .kum-cupb .kcup { width: 30px; height: 30px; }
 .kum-rules { padding: 8px 10px; border-radius: 10px; background: var(--card2); } .kum-rules ul { margin: 6px 0 0; padding-left: 18px; } .kum-rules li { margin-bottom: 4px; line-height: 1.4; }
+
+/* wartość nowej fiszki według szacowanej trudności: łatwa → bardzo trudna */
+.k-new.t0 .kg-val { background: #dcfce7; color: #15803d; } .k-new.t1 .kg-val { background: #e0f2fe; color: #0369a1; } .k-new.t2 .kg-val { background: #ffedd5; color: #c2410c; } .k-new.t3 .kg-val { background: #fee2e2; color: #b91c1c; }
+
+/* ============ ⚔️ Walka z bossem: arena (pion) + układ poziomy po obróceniu telefonu ============ */
+/* scena: boss u góry na podeście, bohater pod nim – jedna ciemna arena zamiast kratki z zeszytu */
+.bf-top { position: relative; padding: 10px 12px 12px; border-radius: 18px 18px 0 0; color: #f4f2ff; overflow: hidden; isolation: isolate;
+  background: radial-gradient(120% 95% at 50% 105%, #4a3489 0%, #25204f 48%, #121229 100%); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08); }
+.bf-top::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(60% 34% at 32% 62%, rgba(255,255,255,.16), transparent 70%), repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 2px, transparent 2px 46px); }
+.bf .bf-boss { justify-content: space-between; gap: 12px; }
+.bf .boss-stage { width: clamp(104px, 23dvh, 190px); height: clamp(104px, 23dvh, 190px); filter: drop-shadow(0 10px 6px rgba(0,0,0,.45)); animation: bfIdle 3.2s ease-in-out infinite; }
+.bf .boss-stage.hit, .bf .boss-stage.attack { animation: none; }
+@keyframes bfIdle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.bf .boss-intent { background: rgba(10,10,30,.55); color: #fff; border: 1.5px solid rgba(255,255,255,.2); backdrop-filter: blur(2px); flex: 1; max-width: none; padding: 8px 10px; text-align: center; }
+.bf .boss-intent small { color: #c9c4f0; }
+.bf .boss-intent.soon { background: rgba(190,30,45,.82); color: #fff; border-color: #ffb4b4; } .bf .boss-intent.soon small { color: #ffe1e1; }
+.bf .hpbar { height: 20px; background: rgba(0,0,0,.45); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.22); }
+.bf .hpbar span { line-height: 20px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.75), 0 0 4px rgba(0,0,0,.6); font-size: 12px; }
+.bf .boss-me { margin-top: -6px; padding: 8px 12px 10px; border-radius: 0 0 18px 18px; background: linear-gradient(#121229, #1b1a3a); color: #f4f2ff; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08); flex-wrap: wrap; }
+.bf .boss-me .hero-fig.xs { width: 48px; height: 48px; filter: drop-shadow(0 4px 3px rgba(0,0,0,.5)); }
+.bf .boss-me .me-col { flex: 1; min-width: 0; }
+.bf .boss-log { padding: 2px 0; }
+@media (prefers-reduced-motion: reduce) { .bf .boss-stage { animation: none; } }
+/* 📱 poziomo: arena po lewej, pytanie i odpowiedzi po prawej – wszystko na jednym ekranie */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.focus main:has(> .bf) { max-width: none; padding-top: calc(4px + var(--sat, 0px)); padding-bottom: 4px; padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
+  main:has(> .bf) > .studybar { margin-bottom: 4px; min-height: 0; } main:has(> .bf) > .studybar .iconbtn { min-height: 30px; padding: 2px 8px; }
+  .bf { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); grid-template-rows: auto auto minmax(0, 1fr) auto; column-gap: 10px; row-gap: 5px;
+    min-height: 0; height: calc(100dvh - 46px - var(--sat, 0px) - env(safe-area-inset-bottom)); }
+  .bf > .bf-top { grid-column: 1; grid-row: 1; padding: 6px 10px 8px; } .bf > .boss-me { grid-column: 1; grid-row: 2; margin-top: -5px; padding: 6px 10px; }
+  .bf > .boss-log { grid-column: 1; grid-row: 3; align-self: start; font-size: 11.5px; overflow: hidden; max-height: 100%; }
+  .bf > .bf-bottom { grid-column: 1; grid-row: 4; margin: 0; padding-bottom: 0; }
+  .bf > .boss-q { grid-column: 2; grid-row: 1 / 3; max-height: none; min-height: 0; margin: 0; padding: 10px 12px; }
+  .bf > .bf-ctrl { grid-column: 2; grid-row: 3 / 5; align-self: end; max-height: 100%; overflow: auto; }
+  .bf > p { grid-column: 2; grid-row: 3; align-self: start; }
+  .bf .boss-stage { width: clamp(84px, 30dvh, 130px); height: clamp(84px, 30dvh, 130px); }
+  .bf .boss-q .ctext { font-size: 17px; line-height: 1.3; } .bf .boss-q img { max-height: 34dvh; }
+  .bf .boss-say { font-size: 12px; padding: 4px 10px; } .bf .boss-intent { font-size: 12px; padding: 5px 8px; }
+  .bf .boss-me .hero-fig.xs { width: 38px; height: 38px; }
+  .bf .abcd-grid { grid-template-columns: 1fr 1fr; gap: 6px; } .bf .abcd-grid .abcd { min-height: 44px; padding: 6px 10px; }
+  .bf .boss-grades button { min-height: 50px; font-size: 22px; } .bf .boss-go { min-height: 48px; }
+  .bf .pot-bar button { width: 40px; height: 40px; } .bf .ult-btn { min-height: 40px; }
+}
+.bf .boss-me { margin-top: -8px; padding-bottom: 12px; } .bf .boss-me .me-col { flex: 1 1 0; max-width: calc(100% - 62px); }
+@media (orientation: landscape) and (max-height: 520px) { .bf > .boss-me { margin-top: -7px; padding-bottom: 8px; } .bf .boss-me .me-col { max-width: calc(100% - 50px); } }
+.bf > .boss-me { margin-top: -8px !important; padding: 10px 12px 12px !important; }
+@media (orientation: landscape) and (max-height: 520px) { .bf > .boss-me { margin-top: -7px !important; padding: 6px 10px 8px !important; min-height: 0; } .bf .boss-me .hero-fig.xs.s8, .bf .boss-me .hero-fig.xs { width: 52px; height: 52px; margin-top: 0; } }
+@media (orientation: landscape) and (max-height: 520px) { .bf > .boss-log { display: flex; max-height: none; overflow: visible; min-height: 18px; align-items: flex-start; padding-left: 4px; } }

@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '365';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '366';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -17186,6 +17186,17 @@ var KUM_J = {
   echo:    { ic: '🔁', r: 'l', n: 'Echo', d: 'Pierwsza fiszka w zagraniu liczy się podwójnie', p: 8 },
   prof:    { ic: '🎓', r: 'l', n: 'Profesor', d: 'Mnożnik ×(1 + 0,25 za każdy poziom typów zagrań)', p: 9, f: (x, K) => { const L = Object.values(K.levels).reduce((a, b) => a + b, 0); if (L) { const k = 1 + .25 * L; x.m *= k; return '×' + String(k).replace('.', ','); } } },
   phoenix: { ic: '🪶', r: 'l', n: 'Feniks', d: 'Gdy skończą się zagrania przed celem: +1 zagranie, a Feniks spala się', p: 8 },
+  abc:     { ic: '🔠', r: 'c', n: 'Testowiec', d: 'Dobra odpowiedź w ABCD: +10 wartości', p: 4 },
+  duo:     { ic: '👯', r: 'c', n: 'Bliźniaki', d: 'Dwójka: +4 mnożnik', p: 4, f: (x) => { if (x.type === 'pair') { x.m += kumAdd(4); return '+' + kumAdd(4); } } },
+  first:   { ic: '🌅', r: 'c', n: 'Pierwszy dzwonek', d: 'Pierwsze zagranie w rundzie: +60 podstawy', p: 4, f: (x, K) => { if (!K.roundPlays) { x.c += 60; return '+60 pkt'; } } },
+  poor:    { ic: '🪹', r: 'c', n: 'Asceta', d: 'Gdy masz najwyżej 3 monety: ×2 mnożnik', p: 5, f: (x, K) => { if (K.money <= 3) { x.m *= 2; return '×2'; } } },
+  lucky:   { ic: '🍀', r: 'c', n: 'Fart', d: '1 szansa na 3: ×2 mnożnik', p: 4, f: (x) => { if (Math.random() < 1 / 3) { x.m *= 2; return '×2'; } } },
+  rich:    { ic: '🤑', r: 'r', n: 'Bogacz', d: '+1 mnożnik za każde 5 monet (najwyżej +8)', p: 6, f: (x, K) => { const v = Math.min(8, Math.floor(K.money / 5)); if (v) { x.m += kumAdd(v); return '+' + kumAdd(v); } } },
+  stampf:  { ic: '📮', r: 'r', n: 'Filatelista', d: '+25 podstawy za każdą dobrze zagraną fiszkę z pieczątką', p: 6, f: (x) => { if (x.stamped) { x.c += 25 * x.stamped; return '+' + 25 * x.stamped + ' pkt'; } } },
+  skipper: { ic: '🏃', r: 'r', n: 'Wagarowicz', d: '+2 mnożnik za każdą pominiętą rundę w tym biegu', p: 6, f: (x, K) => { if (K.skips) { x.m += kumAdd(2 * K.skips); return '+' + kumAdd(2 * K.skips); } } },
+  prymus:  { ic: '🎖️', r: 'r', n: 'Prymus', d: 'W rundzie Egzaminatora: ×2 mnożnik', p: 7, f: (x, K) => { if (K.boss) { x.m *= 2; return '×2'; } } },
+  rainbow: { ic: '🎨', r: 'l', n: 'Erudyta', d: 'Mnożnik ×1,5 za 2 różne talie w zagraniu, ×2 za 3', p: 8, f: (x) => { if (x.decks >= 2) { const k = 1 + .5 * (x.decks - 1); x.m *= k; return '×' + String(k).replace('.', ','); } } },
+  marathon:{ ic: '🏅', r: 'l', n: 'Maratończyk', d: 'Rośnie: mnożnik ×(1 + 0,1 za każde zagranie od zakupu)', p: 9, grows: true, f: (x, K, j) => { if (j.v) { const k = Math.round((1 + .1 * j.v) * 10) / 10; x.m *= k; return '×' + String(k).replace('.', ','); } } },
 };
 var kumAdd = v => KUM?.boss === 'noplus' ? Math.round(v / 2 * 10) / 10 : v;   // 🧊 Mróz: dodawanie do mnożnika w połowie
 var KUM_RAR = { c: { n: 'zwykły', w: 70 }, r: { n: 'rzadki', w: 25 }, l: { n: 'legendarny', w: 5 } };
@@ -17222,6 +17233,11 @@ var KUM_TICKETS = {
   book:   { ic: '📘', n: 'Ściąga', d: '+1 poziom losowego typu zagrania' },
   reroll: { ic: '🎲', n: 'Kupon', d: '3 darmowe nowe oferty w następnym sklepie' },
   depo:   { ic: '🏦', n: 'Lokata', d: 'Podwójne odsetki po następnej wygranej rundzie' },
+  play:   { ic: '▶️', n: 'Dogrywka', d: '+1 zagranie w następnej rundzie' },
+  sale:   { ic: '🏷️', n: 'Wyprzedaż', d: 'W następnym sklepie wszystko tańsze o 2 monety' },
+  pocket: { ic: '👝', n: 'Kieszonka', d: '+1 miejsce na pomoce do końca biegu' },
+  stamps: { ic: '📬', n: 'Paczka pieczątek', d: '2 losowe fiszki z talii dostają losowe pieczątki' },
+  lacq:   { ic: '💅', n: 'Lakier', d: 'Losowy atut dostaje losowe wykończenie (bez atutu: +5 monet)' },
 };
 var KUM_KITS = {
   classic: { ic: '🎒', n: 'Klasyczny', d: '4 monety, bez niespodzianek' },
@@ -17239,9 +17255,10 @@ var kumHas = id => !!kumJ(id);
 var kumIcon = s => `<span class="kum-ic">${s}</span>`;
 var kumFree = () => KUM.slots - KUM.jokers.filter(j => j.e !== 'ghost').length;
 var kumSell = j => Math.floor(KUM_J[j.id].p / 2) + (KUM_J[j.id].grows ? Math.floor((j.v || 0) / 2) : 0) + (j.e ? 1 : 0);
-var kumJVal = j => j.id === 'grow' ? '+' + j.v : j.id === 'turtle' ? '+' + String(j.v / 2).replace('.', ',') : j.v;
+var kumJVal = j => j.id === 'grow' ? '+' + j.v : j.id === 'turtle' ? '+' + String(j.v / 2).replace('.', ',') : j.id === 'marathon' ? '×' + String(Math.round((1 + .1 * j.v) * 10) / 10).replace('.', ',') : j.v;
 var kumStats = () => (S.stats.kum = S.stats.kum || { runs: 0, best: 0, bestPts: 0, wins: 0 });
 var kumCupMax = () => kumStats().cup || 0;
+var kumISlots = () => KUM_ITEM_SLOTS + (KUM?.xslot || 0);
 var kumTyping = () => KUM.kit === 'lang' || KUM.boss === 'type';
 function kumAddJoker(k, e, sleepy) {
   KUM.jokers.push({ id: k, ...(e ? { e } : {}), ...(sleepy ? { sleepy: true } : {}) });
@@ -17256,10 +17273,22 @@ function kumPool(deckId) {
   return [...shuffle(cs.filter(isDue)), ...shuffle(cs.filter(c => !isDue(c)))].map(c => c.id);
 }
 var kumCard = id => cardById(id);
+// 🎚️ fiszki, których jeszcze nikt się nie uczył, nie są warte tyle samo: trudność szacujemy z odpowiedzi
+// (długość, liczba słów, liczby i daty, wyliczenia) i dzielimy pulę biegu na 4 równe progi – 12 / 16 / 20 / 25 pkt.
+var KUM_NEW = [{ base: 12, t: 'nowa · łatwa' }, { base: 16, t: 'nowa · średnia' }, { base: 20, t: 'nowa · trudna' }, { base: 25, t: 'nowa · b. trudna' }];
+function kumRawDiff(c) {
+  const v = cardView(c), a = stripHtml(v.ans || '').trim(), q = stripHtml(v.label || '');
+  return a.length + 6 * (a.split(/\s+/).length - 1) + (/\d/.test(a) ? 8 : 0) + (/[\n,;]/.test(v.ans || '') ? 6 : 0) + Math.min(10, q.length / 15);
+}
+function kumTiers(ids) {
+  const rows = ids.map(id => { const c = kumCard(id); return [id, c ? kumRawDiff(c) : 0, hashStr(id)]; }).sort((a, b) => a[1] - b[1] || a[2] - b[2]), out = {};
+  rows.forEach((r, i) => { out[r[0]] = Math.min(3, Math.floor(i / rows.length * 4)); });
+  return out;
+}
 function kumKind(c) {
   if (!c) return { k: 'mid', base: 10, t: '' };
-  if (c.srs.state === 'new') return { k: 'new', base: 20, t: 'nowa' };
-  if (isLearning(c) || (c.srs.lapses || 0) >= 2) return { k: 'hard', base: 25, t: 'trudna' };
+  if (c.srs.state === 'new') { const tr = KUM?.tierOf?.[c.id] ?? 1; return { k: 'new', base: KUM_NEW[tr].base, t: KUM_NEW[tr].t, heavy: tr >= 2, tr }; }
+  if (isLearning(c) || (c.srs.lapses || 0) >= 2) return { k: 'hard', base: 25, t: 'trudna', heavy: true };
   if ((c.srs.ivl || 0) >= 7) return { k: 'mature', base: 10, t: 'utrwalona' };
   return { k: 'mid', base: 15, t: '' };
 }
@@ -17272,7 +17301,7 @@ function kumDraw() {
 function kumTypeOf(ids) {
   const n = ids.length; if (!n) return null;
   const cs = ids.map(kumCard), decks = new Set(cs.map(c => c?.deckId)), kinds = cs.map(kumKind);
-  if (n === 3 && kinds.every(k => k.k === 'new' || k.k === 'hard')) return 'hard';
+  if (n === 3 && kinds.every(k => k.heavy)) return 'hard';
   if (n === 3 && decks.size === 3) return 'mix';
   if (n >= 2 && decks.size === 1) return 'same';
   return n === 3 ? 'triple' : n === 2 ? 'pair' : 'single';
@@ -17287,7 +17316,8 @@ function kumPrepRound() {
 }
 function kumStartRound() {
   const K = KUM;
-  K.score = 0; K.plays = 3 + (K.kit === 'nerd' ? 1 : 0) + (kumHas('extra') ? 1 : 0) - (K.round === KUM_LAST ? 1 : 0);
+  K.score = 0; K.plays = 3 + (K.kit === 'nerd' ? 1 : 0) + (kumHas('extra') ? 1 : 0) - (K.round === KUM_LAST ? 1 : 0) + (K.bonusPlay ? 1 : 0);
+  K.bonusPlay = false; K.roundPlays = 0;
   K.disc = (K.kit === 'gamble' ? 2 : K.kit === 'nerd' ? 2 : K.kit === 'lang' ? 4 : 3) + (kumHas('swap') ? 2 : 0);
   K.usedSecond = false; K.sel = []; K.phase = 'pick'; K.hand = []; kumDraw();
 }
@@ -17298,6 +17328,7 @@ function kumStart(deckId, kit, tier) {
   const slots = (tier >= 7 ? 4 : 5) + (kit === 'shelf' ? 1 : 0) - (kit === 'scholar' ? (tier >= 7 ? 1 : 2) : 0);
   KUM = { deckId, kit, tier, all, deck: all.slice(), hand: [], round: 1, money: kit === 'gamble' ? 12 : kit === 'shelf' ? 0 : 4, jokers: [], slots, items: [], levels: {}, stamps: {},
     streak: 0, total: 0, best: 0, spent: 0, shield: false, phase: 'pre', endless: false, slotBought: false, playNo: 0, skips: 0, freeRerolls: 0, freeRare: false, dblInt: false };
+  KUM.tierOf = kumTiers(all);
   if (kit === 'pen') kumAddJoker('writer');
   if (kit === 'scholar') for (const t of Object.keys(KUM_TYPES)) KUM.levels[t] = 1;
   kumStats().runs++; save();
@@ -17310,6 +17341,11 @@ function kumSkip() {
   else if (T === 'rare') K.freeRare = true;
   else if (T === 'reroll') K.freeRerolls += 3;
   else if (T === 'depo') K.dblInt = true;
+  else if (T === 'play') K.bonusPlay = true;
+  else if (T === 'sale') K.sale = true;
+  else if (T === 'pocket') K.xslot = (K.xslot || 0) + 1;
+  else if (T === 'stamps') shuffle(K.all.filter(id => !K.stamps[id])).slice(0, 2).forEach(id => { K.stamps[id] = shuffle(Object.keys(KUM_STAMPS))[0]; });
+  else if (T === 'lacq') { const j = shuffle(K.jokers.filter(j => !j.e))[0]; if (j) { j.e = shuffle(Object.keys(KUM_ED).filter(e => e !== 'ghost'))[0]; toast(`💅 ${KUM_J[j.id].n} dostaje wykończenie: ${KUM_ED[j.e].n}`, 3000); return render(); } K.money += 5; }
   else if (T === 'book') { const t = shuffle(Object.keys(KUM_TYPES))[0]; kumLevelUp(t); toast(`📘 ${KUM_TYPES[t].n} – poziom ${K.levels[t] + 1}`, 2500); return render(); }
   else if (T === 'pack') return kumOpenPack('jok', 'pre');
   toast(`${KUM_TICKETS[T].ic} ${KUM_TICKETS[T].n}: ${KUM_TICKETS[T].d}`, 3000); render();
@@ -17353,7 +17389,7 @@ function kumScore() {
   const K = KUM, steps = [], goodQ = K.q.filter(q => q.res.good);
   const type = kumTypeOf(goodQ.map(q => q.id)), money0 = K.money;
   const flawless = K.q.every(q => q.res.good && !q.res.saved);
-  const x = { type, c: 0, m: 0, flawless };
+  const x = { type, c: 0, m: 0, flawless, stamped: goodQ.filter(q => K.stamps[q.id]).length, decks: new Set(goodQ.map(q => kumCard(q.id)?.deckId)).size };
   if (type) { const tv = kumTypeVal(type); x.c = tv.c; x.m = tv.m; steps.push({ ic: '📘', t: `${KUM_TYPES[type].n}${tv.L ? ` (poz. ${tv.L + 1})` : ''}`, v: `${tv.c} × ${tv.m}` }); }
   let glass = false;
   K.q.forEach((q, i) => {
@@ -17365,6 +17401,7 @@ function kumScore() {
     if (kumHas('owl') && q.due) b *= 3;
     if (q.res.how === 'type') b *= (K.kit === 'lang' ? 2 : 1.5) + (kumHas('writer') ? .5 : 0);
     if (kumHas('quick') && q.res.fast) b += 15;
+    if (kumHas('abc') && q.res.how === 'abcd') b += 10;
     if (st === 'stone') b += 50;
     if (q.res.saved === 'half') b /= 2;
     if (kumHas('echo') && i === 0) b *= 2;
@@ -17386,7 +17423,8 @@ function kumScore() {
     });
   }
   if (kumHas('tip') && K.q.length === 3 && flawless) { K.money += 2; steps.push({ ic: '💵', t: 'Napiwek', v: '+2 🪙' }); }
-  K.jokers.forEach(j => { if (j.id === 'turtle') j.v = flawless ? (j.v || 0) + 1 : 0; });
+  K.jokers.forEach(j => { if (j.id === 'turtle') j.v = flawless ? (j.v || 0) + 1 : 0; if (j.id === 'marathon') j.v = (j.v || 0) + 1; });
+  K.roundPlays = (K.roundPlays || 0) + 1;
   const mult = Math.round(x.m * 10) / 10, pts = type ? Math.round(x.c * mult) : 0;
   K.score += pts; K.total += pts; K.best = Math.max(K.best, pts); K.plays--; K.playNo++;
   K.last = { chips: x.c, mult, pts, steps, good: goodQ.length, n: K.q.length, type, coins: K.money - money0 };
@@ -17439,7 +17477,7 @@ function kumShopRoll() {
   return [...offers, ...[...books, ...rest].map(k => ({ t: 'i', k }))];
 }
 var kumDef = o => o.t === 'j' ? KUM_J[o.k] : o.t === 'p' ? KUM_PACKS[o.k] : KUM_I[o.k];
-var kumPrice = o => o.free ? 0 : kumDef(o).p + (o.e ? KUM_ED[o.e].p : 0) - (o.sleepy ? 1 : 0) + (kumTier() >= 5 ? 1 : 0);
+var kumPrice = o => o.free ? 0 : Math.max(0, kumDef(o).p + (o.e ? KUM_ED[o.e].p : 0) - (o.sleepy ? 1 : 0) + (kumTier() >= 5 ? 1 : 0) - (KUM.sale ? 2 : 0));
 var kumRerollCost = () => KUM.freeRerolls > 0 ? 0 : 2 + KUM.rerolls + (kumTier() >= 5 ? 1 : 0);
 function kumSpend(n) { const K = KUM; K.money -= n; K.spent += n; K.jokers.forEach(j => { if (j.id === 'piggy') j.v = (j.v || 0) + n; }); }
 function kumOpenPack(kind, ret) {
@@ -17470,8 +17508,8 @@ function kumIntroHTML() {
   return `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🃏 Kumulacja</h1><span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></div>
   <div class="card kum-intro"><p style="margin-top:0"><b>8 rund z rosnącym progiem.</b> Wybierz 1–3 fiszki z ręki, odpowiedz i zbieraj <b>(podstawa + wartości fiszek) × mnożnik</b>.</p>
     <details class="small kum-rules"${st.runs ? '' : ' open'}><summary><b>📖 Instrukcja gry</b></summary><ul>
-      <li><b>Typ zagrania</b> daje podstawę i mnożnik: Pojedyncza, Dwójka, Trójka, Jedna talia (2–3 z tej samej), Przekrój (3 różne talie), Ciężka trójka (3 nowe/trudne). Liczą się tylko dobrze odpowiedziane fiszki.</li>
-      <li>Fiszki mają wartość: trudna 25, nowa 20, zwykła 15, utrwalona 10. Wpisanie zamiast ABCD: ×1,5.</li>
+      <li><b>Typ zagrania</b> daje podstawę i mnożnik: Pojedyncza, Dwójka, Trójka, Jedna talia (2–3 z tej samej), Przekrój (3 różne talie), Ciężka trójka (3 trudne). Liczą się tylko dobrze odpowiedziane fiszki.</li>
+      <li>Fiszki mają wartość: trudna 25, zwykła 15, utrwalona 10. <b>Nowe, jeszcze nieuczone</b>: od 12 do 25 – gra szacuje trudność z odpowiedzi (długość, liczby, wyliczenia) i dzieli talię na cztery progi. Do „Ciężkiej trójki” liczą się trudne oraz nowe z dwóch górnych progów. Wpisanie zamiast ABCD: ×1,5.</li>
       <li><b>Atuty</b> liczą się po kolei od lewej – ustaw kolejność w sklepie (najpierw „+”, potem „×”). Niektóre rosną, niektóre mają wykończenie: ✨ Brokat +30 podstawy, 🌈 Neon +5 mnożnika, 🥇 Złocenie ×1,5, 👻 Duch nie zajmuje miejsca.</li>
       <li><b>Koperty</b> w sklepie: otwierasz i wybierasz 1 z 3. <b>Podręczniki</b> podnoszą poziom typu zagrania, <b>pieczątki</b> zostają na fiszce do końca biegu.</li>
       <li>Przed zwykłą rundą możesz ją <b>pominąć</b> i wziąć bilet (nagrodę) – ale tracisz zarobek z rundy i sklep.</li>
@@ -17526,9 +17564,9 @@ function kgTop() {
     ${K.jokers.map((j, i) => { const J = KUM_J[j.id], off = inRound && ((K.boss === 'mute' && i === 0) || !kumAwake(j));
       return `<button class="kg-j r-${J.r}${j.e ? ' ed-' + j.e : ''}${off ? ' off' : ''}${P?.t === 'j' && P.i === i ? ' on' : ''}" data-act="kum-info" data-i="${i}" aria-label="${esc(J.n)}">${kumIcon(J.ic)}<small>${esc(J.n)}</small>${J.grows && j.v ? `<i class="kg-jv">${kumJVal(j)}</i>` : ''}${j.sleepy ? `<i class="kg-zz">${off ? '💤' : 'z'}</i>` : ''}${j.e ? `<i class="kg-ed">${KUM_ED[j.e].ic}</i>` : ''}</button>`; }).join('')}
     ${Array(Math.max(0, kumFree())).fill('<span class="kg-j empty"></span>').join('')}</div>
-    <div class="kg-irow"><span class="kg-cap">Pomoce ${K.items.length}/${KUM_ITEM_SLOTS}</span>
+    <div class="kg-irow"><span class="kg-cap">Pomoce ${K.items.length}/${kumISlots()}</span>
     ${K.items.map((k, i) => `<button class="kg-j it${P?.t === 'i' && P.i === i ? ' on' : ''}" data-act="kum-iteminfo" data-i="${i}" aria-label="${esc(KUM_I[k].n)}">${kumIcon(KUM_I[k].ic)}<small>${esc(KUM_I[k].n.replace('Podręcznik: ', '').replace(' pieczątka', ''))}</small></button>`).join('')}
-    ${Array(Math.max(0, KUM_ITEM_SLOTS - K.items.length)).fill('<span class="kg-j it empty"></span>').join('')}</div></div>`;
+    ${Array(Math.max(0, kumISlots() - K.items.length)).fill('<span class="kg-j it empty"></span>').join('')}</div></div>`;
 }
 // panel wybranego atutu / pomocy: opis + przesuń, sprzedaj, użyj
 function kgPopHTML() {
@@ -17543,11 +17581,11 @@ function kgPopHTML() {
     <button class="kg-b kg-x" data-act="kum-popx" aria-label="Zamknij">✕</button></div>`;
 }
 var kgLevelsHTML = () => `<div class="kg-lv" data-act="kum-levels"><div class="kg-lv-in"><b>📘 Typy zagrań</b>${Object.entries(KUM_TYPES).map(([k, T]) => { const v = kumTypeVal(k); return `<div><span>${T.n}${v.L ? ` <em>poz. ${v.L + 1}</em>` : ''}</span><span><b class="kg-chips">${v.c}</b> × <b class="kg-mult">${v.m}</b></span></div>`; }).join('')}
-  <small>Dwójka: 2 fiszki z różnych talii · Jedna talia: 2–3 z tej samej · Przekrój: 3 różne talie · Ciężka trójka: 3 nowe lub trudne. Liczą się tylko dobre odpowiedzi.</small><button class="kg-b">Zamknij</button></div></div>`;
+  <small>Dwójka: 2 fiszki z różnych talii · Jedna talia: 2–3 z tej samej · Przekrój: 3 różne talie · Ciężka trójka: 3 trudne (też nowe z górnych progów). Liczą się tylko dobre odpowiedzi.</small><button class="kg-b">Zamknij</button></div></div>`;
 // fiszka w ręce: kartka z zeszytu z kolorem talii i wartością w rogu
 function kumCardHTML(id, sel) {
   const c = kumCard(id), v = c && cardView(c), kd = kumKind(c), d = c && deckById(c.deckId), st = KUM.stamps[id];
-  return `<button class="kg-card${sel ? ' on' : ''} k-${kd.k}${st ? ' st-' + st : ''}" data-act="kum-sel" data-id="${id}" style="--dh:${kgDeckHue(c?.deckId)}"><span class="kg-val">${KUM.boss === 'nonew' && kd.k === 'new' ? 0 : kd.base}</span>${st ? `<span class="kg-stamp" title="Pieczątka ${KUM_STAMPS[st].n}">${KUM_STAMPS[st].ic}</span>` : ''}
+  return `<button class="kg-card${sel ? ' on' : ''} k-${kd.k}${kd.tr != null ? ' t' + kd.tr : ''}${st ? ' st-' + st : ''}" data-act="kum-sel" data-id="${id}" style="--dh:${kgDeckHue(c?.deckId)}"><span class="kg-val">${KUM.boss === 'nonew' && kd.k === 'new' ? 0 : kd.base}</span>${st ? `<span class="kg-stamp" title="Pieczątka ${KUM_STAMPS[st].n}">${KUM_STAMPS[st].ic}</span>` : ''}
     <span class="kg-qw"><span class="kg-q">${esc(stripHtml(v?.label || '').slice(0, 90))}</span></span><span class="kg-deck"><i></i>${esc((d?.name || '').replace(/^🏫\s*/, '').slice(0, 20))}${kd.t ? ` · ${kd.t}` : ''}</span></button>`;
 }
 function kumPreHTML() {
@@ -17581,7 +17619,7 @@ function kumScoredHTML() {
 }
 function kumOfferHTML(o, i, act) {
   const K = KUM, D = kumDef(o), price = act === 'kum-buy' ? kumPrice(o) : 0;
-  const full = o.t === 'j' ? kumFree() <= 0 && o.e !== 'ghost' : o.t === 'i' && !(D.book && act === 'kum-pack') ? K.items.length >= KUM_ITEM_SLOTS : false;
+  const full = o.t === 'j' ? kumFree() <= 0 && o.e !== 'ghost' : o.t === 'i' && !(D.book && act === 'kum-pack') ? K.items.length >= kumISlots() : false;
   const kind = o.t === 'j' ? KUM_RAR[D.r].n : o.t === 'p' ? 'koperta' : D.book ? 'podręcznik' : D.stamp ? 'pieczątka' : 'pomoc';
   return `<div class="kg-off ${o.t === 'j' ? 'j r-' + D.r + (o.e ? ' ed-' + o.e : '') : o.t === 'p' ? 'p' : D.book ? 'b' : D.stamp ? 's' : 'i'}"><span class="kg-kind">${kind}</span>${kumIcon(D.ic)}<b>${esc(D.book ? KUM_TYPES[D.book].n : D.n)}</b>
     <small>${o.e ? `<em>${KUM_ED[o.e].ic} ${KUM_ED[o.e].n}: ${KUM_ED[o.e].d}.</em> ` : ''}${o.sleepy ? '<em class="zz">💤 Senny (co drugie zagranie).</em> ' : ''}${esc(D.d)}</small>
@@ -17654,14 +17692,14 @@ Object.assign(ACTIONS, {
   'kum-next': () => kumAfterPlay(),
   'kum-buy': el => { const K = KUM, o = K.shop[+el.dataset.i]; if (!o || o.bought) return; const D = kumDef(o), price = kumPrice(o); if (K.money < price) return;
     if (o.t === 'j') { if (kumFree() <= 0 && o.e !== 'ghost') return; kumAddJoker(o.k, o.e, o.sleepy); }
-    else if (o.t === 'i') { if (K.items.length >= KUM_ITEM_SLOTS) return; K.items.push(o.k); }
+    else if (o.t === 'i') { if (K.items.length >= kumISlots()) return; K.items.push(o.k); }
     kumSpend(price); o.bought = true;
     if (o.t === 'p') return kumOpenPack(o.k, 'shop');
     toast(`${D.ic} ${D.n}`, 1500); render(); },
   'kum-pack': el => { const K = KUM, P = K.pack, o = P?.opts[+el.dataset.i]; if (!o) return; const D = kumDef(o);
     if (o.t === 'j') { if (kumFree() <= 0 && o.e !== 'ghost') return toast('Brak miejsca na atut'); kumAddJoker(o.k, o.e, o.sleepy); }
     else if (D.book) { kumLevelUp(D.book); toast(`📘 ${KUM_TYPES[D.book].n} – poziom ${K.levels[D.book] + 1}`, 2000); }
-    else { if (K.items.length >= KUM_ITEM_SLOTS) return toast('Brak miejsca na pomoc'); K.items.push(o.k); }
+    else { if (K.items.length >= kumISlots()) return toast('Brak miejsca na pomoc'); K.items.push(o.k); }
     K.phase = P.ret; K.pack = null; render(); },
   'kum-packskip': () => { const K = KUM; if (!K?.pack) return; K.phase = K.pack.ret; K.pack = null; render(); },
   'kum-slot': () => { const K = KUM, p = 8 + (kumTier() >= 5 ? 1 : 0); if (K.slotBought || K.money < p) return; kumSpend(p); K.slots++; K.slotBought = true; render(); },
@@ -17669,7 +17707,7 @@ Object.assign(ACTIONS, {
   'kum-sell': el => { const K = KUM, i = +el.dataset.i, j = K.jokers[i]; if (!j) return; K.money += kumSell(j); K.jokers.splice(i, 1); K.pop = null; render(); },
   'kum-sellitem': el => { const K = KUM, i = +el.dataset.i; if (K.items[i] == null) return; K.items.splice(i, 1); K.money += 1; K.pop = null; render(); },
   'kum-reroll': () => { const K = KUM, rc = kumRerollCost(); if (K.money < rc) return; if (K.freeRerolls > 0) K.freeRerolls--; else { kumSpend(rc); K.rerolls++; } K.shop = kumShopRoll(); render(); },
-  'kum-nextround': () => { KUM.round++; kumPrepRound(); render(); },
+  'kum-nextround': () => { KUM.sale = false; KUM.round++; kumPrepRound(); render(); },
   'kum-endless': () => { const K = KUM; K.endless = true; K.phase = 'shop'; K.shop = kumShopRoll(); K.rerolls = 0; render(); },
   'kum-claim': () => kumEnd(true),
   'kum-use': el => { const K = KUM, i = +el.dataset.i, k = K.items[i]; if (!k) return; const D = KUM_I[k], q = K.phase === 'answer' ? K.q[K.qi] : null; K.pop = null;
