@@ -4385,3 +4385,60 @@ body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-i
 .cup-prog small { font-size: 12px; line-height: 1.4; color: var(--muted); } .cup-prog small b { color: var(--text); } .cup-prog small i { font-style: normal; font-weight: 700; color: var(--text); }
 .cup-prog.done { background: color-mix(in srgb, #22d3ee 14%, var(--card2)); }
 .mode-pick button em { font-style: normal; font-size: 9.5px; font-weight: 700; color: #b45309; margin-top: 1px; }
+
+/* ============ ⚔️ Te same sceny i animacje w pozostałych walkach: Hydra w drużynie i pojedynek 1 na 1 ============ */
+/* 🐉 Hydra / tarcze bossa w drużynie: głowy stoją po prawej stronie sceny, każda ze swoim paskiem życia */
+.bf-arena .bf-boss:has(.hydra) { height: clamp(180px, 26dvh, 232px); }
+.bf-arena .bf-boss > .hydra { position: absolute; left: 108px; right: 12px; top: 46px; bottom: 5%; display: flex; gap: 6px; justify-content: flex-end; align-items: flex-end; flex: none; }
+.bf-arena .hhead { flex: 0 1 92px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+.bf-arena .hhead .boss-art { width: 100%; max-width: 86px; aspect-ratio: 1; filter: drop-shadow(0 6px 4px rgba(0,0,0,.45)); animation: bossIdle 2.8s ease-in-out infinite; }
+.bf-arena .hhead .boss-art img { width: 100%; height: 100%; object-fit: contain; }
+.bf-arena .hhead small { font-size: 9.5px; line-height: 1.1; color: #fff; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+.bf-arena .hhead .hpbar { position: static; width: 100%; height: 12px; flex: none; order: 0; } .bf-arena .hhead .hpbar span { line-height: 12px; font-size: 9px; }
+.bf-arena .hhead.mine small { color: #ffe08a; font-weight: 800; } .bf-arena .hhead.dead { opacity: .4; filter: grayscale(1); }
+.bf-arena .hhead.hit .boss-art { animation: bfBossHit .56s linear .2s both; } .bf-arena .hhead.attack .boss-art { animation: bfLunge .5s cubic-bezier(.3,1.5,.5,1) both; }
+.bf-arena .hhead .dmg { top: -6%; font-size: 26px; }
+.bf-arena .bf-boss:has(.hydra) .boss-intent { top: 8px; }
+/* 🥊 pojedynek 1 na 1: nocna arena zamiast łąki, ciemne tabliczki, te same ciosy */
+.darena, :root[data-theme="dark"] .darena, :root:not([data-theme="light"]) .darena { color: #f4f2ff; isolation: isolate; box-shadow: inset 0 0 0 2px rgba(170,160,255,.28), 0 10px 24px rgba(20,16,60,.3);
+  background:
+    radial-gradient(1.6px 1.6px at 8% 10%, #fff 55%, transparent 60%), radial-gradient(1.2px 1.2px at 24% 22%, #d5d9ff 55%, transparent 60%), radial-gradient(1.6px 1.6px at 44% 7%, #fff 55%, transparent 60%),
+    radial-gradient(1.2px 1.2px at 63% 18%, #d5d9ff 55%, transparent 60%), radial-gradient(1.8px 1.8px at 82% 9%, #fff 55%, transparent 60%), radial-gradient(1.2px 1.2px at 93% 26%, #d5d9ff 55%, transparent 60%),
+    radial-gradient(60% 34% at 74% 22%, rgba(190,120,255,.45), transparent 72%), radial-gradient(50% 30% at 22% 40%, rgba(80,170,255,.28), transparent 72%),
+    linear-gradient(180deg, #0d0e2c 0%, #26236a 30%, #6b4bb8 43%, #f08bb0 45.5%, #4b3aa6 46%, #2a2470 68%, #191747 100%); }
+.darena::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; top: 46%; z-index: -1; pointer-events: none;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.09) 0 2px, transparent 2px 9%), linear-gradient(180deg, rgba(255,255,255,.18) 0 2px, transparent 2px 18%, rgba(255,255,255,.09) 18% calc(18% + 2px), transparent calc(18% + 2px) 46%, rgba(255,255,255,.07) 46% calc(46% + 2px), transparent calc(46% + 2px)); }
+.darena .dbox { background: rgba(10,9,34,.78); color: #fff; border: 2px solid rgba(255,255,255,.3); border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.3); backdrop-filter: blur(3px); }
+.darena .dbox small, .darena .dhp-n { color: #e6e3ff; }
+.darena .dplat::before { background: radial-gradient(closest-side, rgba(10,6,40,.6), rgba(10,6,40,.25) 65%, transparent 100%); }
+.darena .duel-fig { filter: drop-shadow(0 6px 4px rgba(0,0,0,.45)); }
+/* trafienie: biały błysk i drżenie postaci, cięcie przez nią, podskakująca liczba */
+.darena .duel-fig.op.hit { animation: bfBossHit .56s linear .16s both; }
+.darena .duel-fig.me.hit { animation: dMeHit .6s linear .12s both; }
+@keyframes dMeHit { 0% { transform: scaleX(-1); filter: brightness(4) saturate(0); } 12% { transform: scaleX(-1) translate(14px, 5px) rotate(8deg); filter: brightness(4) saturate(0); } 26% { transform: scaleX(-1) translate(-9px, 0) rotate(-4deg); filter: none; }
+  42% { transform: scaleX(-1) translate(7px, 2px); } 58% { transform: scaleX(-1) translate(-5px, 0); } 74% { transform: scaleX(-1) translate(3px, 0); } 100% { transform: scaleX(-1); } }
+.darena .dplat:has(.dmg:not(.heal))::after { content: ''; position: absolute; left: 4%; right: 4%; top: 52%; height: 9px; margin-top: -4.5px; border-radius: 50%; z-index: 2; pointer-events: none;
+  background: linear-gradient(90deg, transparent, #fff 18%, #fff 82%, transparent); box-shadow: 0 0 10px 3px #ff5a6e, 0 0 28px 9px rgba(255,90,110,.55);
+  transform: rotate(-38deg) scaleX(0); transform-origin: 0 50%; animation: bfSlash .34s cubic-bezier(.2,.8,.2,1) .12s both; }
+.darena .dplat:has(.dmg.crit)::after { box-shadow: 0 0 10px 3px #ffd43b, 0 0 30px 10px rgba(255,212,59,.6); height: 11px; }
+.darena .dplat .dmg:not(.heal) { top: 0; font: 900 32px/1 Rubik, system-ui, sans-serif; color: #ff5063; -webkit-text-stroke: 0; z-index: 4;
+  text-shadow: 2px 0 #14081a, -2px 0 #14081a, 0 2px #14081a, 0 -2px #14081a, 2px 2px #14081a, -2px 2px #14081a, 0 5px 0 rgba(0,0,0,.45); animation: bfDmg 1s linear .18s both; }
+.darena .dplat .dmg.crit:not(.heal) { font-size: 42px; color: #ffd43b; }
+/* atakujący doskakuje do rywala; trafiony gracz – czerwony błysk areny */
+.darena.shake-opp .duel-fig.me { animation: dDashMe .46s cubic-bezier(.3,.9,.3,1) both; z-index: 3; }
+@keyframes dDashMe { 0% { transform: scaleX(-1); } 12% { transform: scaleX(-1) translate(10px, 5px) scale(.94); } 42% { transform: scaleX(-1) translate(-26vw, -64px) scale(1.12) rotate(10deg); } 58% { transform: scaleX(-1) translate(-24vw, -58px) scale(1.08); } 100% { transform: scaleX(-1); } }
+.darena.shake-me .duel-fig.op { animation: dLungeOp .5s cubic-bezier(.3,1.5,.5,1) both; z-index: 3; }
+@keyframes dLungeOp { 0% { transform: none; } 18% { transform: translate(8px, -8px) scale(1.04); } 48% { transform: translate(-26vw, 62px) scale(1.16) rotate(-8deg); } 100% { transform: none; } }
+.darena.shake-me::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 5; box-shadow: inset 0 0 0 3px #ff3b4e, inset 0 0 70px rgba(255,40,60,.7); animation: bfArenaHurt .6s ease-out .1s both; }
+.darena.shake-me { animation: bfShake .34s linear .12s both; } .darena.shake-opp { animation: none; }
+@media (prefers-reduced-motion: reduce) { .darena *, .darena::after { animation: none !important; } .darena .dplat::after { display: none; } }
+/* poprawki: paski życia głów Hydry trzymają swój rozmiar; animacje pojedynku nie ruszają powiększenia postaci (osobne właściwości translate / rotate / scale) */
+.bf-arena .hhead .hpbar { position: relative; top: auto; left: auto; right: auto; width: 100%; height: 12px; flex: none; }
+.darena .duel-fig.op.hit { animation: dHitT .56s linear .16s both; }
+.darena .duel-fig.me.hit { animation: dHitT .6s linear .12s both; }
+@keyframes dHitT { 0% { translate: 0 0; rotate: 0deg; filter: brightness(4) saturate(0) drop-shadow(0 6px 4px rgba(0,0,0,.45)); } 12% { translate: -14px 4px; rotate: -6deg; filter: brightness(4) saturate(0); } 26% { translate: 11px 0; rotate: 4deg; filter: drop-shadow(0 6px 4px rgba(0,0,0,.45)); }
+  42% { translate: -8px 2px; rotate: 0deg; } 58% { translate: 6px 0; } 74% { translate: -3px 0; } 100% { translate: 0 0; rotate: 0deg; } }
+.darena.shake-opp .duel-fig.me { animation: dDashT .46s cubic-bezier(.3,.9,.3,1) both; z-index: 3; }
+@keyframes dDashT { 0% { translate: 0 0; scale: 1; rotate: 0deg; } 12% { translate: -10px 5px; scale: .94; } 42% { translate: 26vw -64px; scale: 1.12; rotate: -10deg; } 58% { translate: 24vw -58px; scale: 1.08; rotate: -6deg; } 100% { translate: 0 0; scale: 1; rotate: 0deg; } }
+.darena.shake-me .duel-fig.op { animation: dLungeT .5s cubic-bezier(.3,1.5,.5,1) both; z-index: 3; }
+@keyframes dLungeT { 0% { translate: 0 0; scale: 1; rotate: 0deg; } 18% { translate: 8px -8px; scale: 1.04; } 48% { translate: -26vw 62px; scale: 1.16; rotate: -8deg; } 100% { translate: 0 0; scale: 1; rotate: 0deg; } }
