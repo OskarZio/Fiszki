@@ -4250,3 +4250,54 @@ img.px8.mv-ic { width: 24px !important; height: 24px !important; display: inline
 .bf-hero .dmg.me { left: 96%; top: -46%; transform-origin: 0 50%; z-index: 6; } .bf-hero .dmg.dodge { color: #d6eeff; font-size: 24px; }
 @keyframes bfDodge { 0% { transform: none; opacity: 1; } 30%, 60% { transform: translate(-18px, 4px) skewX(10deg); opacity: .55; } 100% { transform: none; opacity: 1; } }
 @media (orientation: landscape) and (max-height: 520px) { .bf-arena .boss-say { display: none; } }
+
+/* ============ ⚔️ Arena v3: scena z niebem i podłogą – stoją na niej tylko postacie, z zapasem od krawędzi; paski życia nad i pod sceną ============ */
+.bf-arena { padding: 14px 16px 14px; gap: 12px; border-radius: 22px; --dx: 33vw; --dy: -54px;
+  background: linear-gradient(180deg, #17163d 0%, #1c1a47 100%); box-shadow: inset 0 0 0 2px rgba(170,160,255,.28), 0 10px 24px rgba(20,16,60,.3); }
+.bf-arena > .bf-top { gap: 12px; }
+.bf-arena .hpbar.boss { order: -2; } .bf-arena .boss-say { order: -1; }
+/* scena: od krawędzi do krawędzi areny, postacie 28 px od boków */
+.bf-arena .bf-boss { position: relative; display: block; height: clamp(150px, 25dvh, 214px); margin: 0 -16px; border-block: 2px solid rgba(170,160,255,.22); overflow: hidden; isolation: isolate;
+  background:
+    radial-gradient(1.6px 1.6px at 8% 16%, #fff 55%, transparent 60%), radial-gradient(1.2px 1.2px at 21% 30%, #d5d9ff 55%, transparent 60%), radial-gradient(1.6px 1.6px at 37% 10%, #fff 55%, transparent 60%),
+    radial-gradient(1.2px 1.2px at 52% 24%, #d5d9ff 55%, transparent 60%), radial-gradient(1.8px 1.8px at 68% 8%, #fff 55%, transparent 60%), radial-gradient(1.2px 1.2px at 88% 20%, #d5d9ff 55%, transparent 60%),
+    radial-gradient(60% 46% at 76% 30%, rgba(190,120,255,.5), transparent 72%), radial-gradient(46% 40% at 18% 46%, rgba(80,170,255,.32), transparent 72%),
+    linear-gradient(180deg, #0d0e2c 0%, #26236a 44%, #6b4bb8 61%, #f08bb0 64.5%); }
+/* podłoga z perspektywą: jasny horyzont, linie zbiegające się w dal */
+.bf-arena .bf-boss::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 36%; z-index: -1;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.1) 0 2px, transparent 2px 9%), linear-gradient(180deg, rgba(255,255,255,.2) 0 2px, transparent 2px 22%, rgba(255,255,255,.1) 22% calc(22% + 2px), transparent calc(22% + 2px) 52%, rgba(255,255,255,.08) 52% calc(52% + 2px), transparent calc(52% + 2px)),
+    linear-gradient(180deg, #4b3aa6 0%, #2a2470 45%, #191747 100%); box-shadow: 0 -1px 18px 4px rgba(240,139,176,.45); }
+.bf-arena .bf-boss::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; box-shadow: inset 0 0 44px rgba(8,6,30,.55); }
+.bf-arena .boss-stage { position: absolute; right: 28px; bottom: 15%; margin: 0; width: clamp(104px, 19dvh, 164px); height: clamp(104px, 19dvh, 164px); }
+.bf-arena .bf-boss > .bf-hero { position: absolute; left: 28px; bottom: 7%; margin: 0; }
+.bf-arena .boss-stage::before { left: 2%; right: 2%; bottom: -7%; height: 22%; background: radial-gradient(closest-side, rgba(10,6,40,.6), rgba(10,6,40,.25) 65%, transparent 100%); }
+.bf-hero::before { left: -6%; right: -6%; bottom: -8%; height: 24%; background: radial-gradient(closest-side, rgba(10,6,40,.6), rgba(10,6,40,.25) 65%, transparent 100%); }
+/* zapowiedź ataku: zwarta tabliczka w lewym górnym rogu sceny */
+.bf-arena .boss-intent { position: absolute; left: 14px; top: 12px; flex: none; width: auto; max-width: min(56%, 230px); margin: 0; padding: 7px 11px; border-radius: 13px; font-size: 12.5px; line-height: 1.25; text-align: left; align-items: flex-start;
+  background: rgba(10,9,34,.72); border: 1.5px solid rgba(255,255,255,.26); backdrop-filter: blur(3px); }
+.bf-arena .boss-intent small { font-size: 11px; }
+/* dół: pasek życia bohatera, ekwipunek, znaczniki */
+.bf-arena > .boss-me { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 8px !important; }
+.bf-arena > .boss-me .me-col { flex: 1 1 100%; max-width: none; }
+/* ruch: doskok i rzut przez całą scenę */
+@keyframes bfDash { 0% { transform: none; } 12% { transform: translate(-10px, 5px) scale(.94); } 42% { transform: translate(var(--dx), var(--dy)) scale(1.14) rotate(-10deg); } 58% { transform: translate(calc(var(--dx) - 8px), calc(var(--dy) + 6px)) scale(1.1) rotate(-6deg); } 100% { transform: none; } }
+@keyframes bfLunge { 0% { transform: none; } 18% { transform: translate(10px, -8px) scale(1.04); } 48% { transform: translate(calc(-1 * var(--dx)), 30px) scale(1.18) rotate(-8deg); } 100% { transform: none; } }
+.bf-arena.atk .bf-boss > .bf-hero, .bf-arena.got-hit .bf-boss > .bf-hero { z-index: 4; } .bf-arena .boss-stage.attack { z-index: 4; }
+.bf-hero .dmg.me { left: 88%; top: -30%; }
+@media (max-height: 700px) { .bf-arena { padding: 12px 14px; gap: 9px; } .bf-arena .bf-boss { margin: 0 -14px; height: clamp(128px, 23dvh, 170px); } .bf-arena > .bf-top { gap: 9px; } }
+body.kb-open .bf-arena .bf-boss { height: 92px; } body.kb-open .bf-arena .boss-intent { max-width: 62%; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .bf > .bf-arena { padding: 9px 12px; gap: 7px; --dx: 13vw; --dy: -34px; } .bf-arena > .bf-top { gap: 7px; }
+  .bf-arena .bf-boss { margin: 0 -12px; height: clamp(112px, 36dvh, 150px); }
+  .bf-arena .boss-stage { right: 20px; width: clamp(78px, 24dvh, 104px); height: clamp(78px, 24dvh, 104px); margin: 0; } .bf-arena .bf-boss > .bf-hero { left: 20px; }
+  .bf-arena .boss-intent { left: 10px; top: 8px; padding: 5px 9px; font-size: 11.5px; max-width: 58%; }
+}
+/* bohater na scenie: te same zasady rozmiaru co wcześniej w pasku, tylko większy */
+.bf-hero .hero-fig.xs { width: 76px; height: 82px; flex: none; position: relative; }
+.bf-hero .hero-fig.xs img, .bf-hero .hero-fig.xs svg { width: 100%; height: 100%; object-fit: contain; }
+.bf-hero .hero-fig.xs.s8 { width: 86px; height: 86px; margin: 0; transform-origin: calc((var(--x0) + var(--x1)) / 2 * 1%) calc(var(--y1) * 1%);
+  transform: scale(min(calc(96 / var(--bh)), calc(100 / (var(--x1) - var(--x0))), 2.6)); }
+@media (max-height: 700px) { .bf-hero .hero-fig.xs.s8 { width: 70px; height: 70px; } .bf-hero .hero-fig.xs { width: 62px; height: 68px; } }
+body.kb-open .bf-hero .hero-fig.xs.s8, body.kb-open .bf-hero .hero-fig.xs { width: 46px; height: 46px; }
+@media (orientation: landscape) and (max-height: 520px) { .bf-hero .hero-fig.xs.s8, .bf-hero .hero-fig.xs { width: 58px; height: 58px; } }
+.bf-hero .dmg.dodge { color: #eaf6ff; text-shadow: 2px 0 #14081a, -2px 0 #14081a, 0 2px #14081a, 0 -2px #14081a; }
