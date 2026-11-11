@@ -353,31 +353,17 @@ function kumEnd(win) {
   const st = kumStats();
   if (full) st.wins = (st.wins || 0) + 1;
   st.best = Math.max(st.best || 0, rounds); st.bestPts = Math.max(st.bestPts || 0, K.total); st.bestPlay = Math.max(st.bestPlay || 0, K.best);
-  save(); K.phase = 'end'; K.result = { win: full, rounds, gold, xp }; render();
+  save(); kumUnlock(); K.phase = 'end'; K.result = { win: full, rounds, gold, xp }; render();
 }
 
 // ---------- widoki
-function kumHead() {
-  const K = KUM, t = kumTarget(K.round), B = K.boss && KUM_BOSSES[K.boss], inRound = ['pick', 'answer', 'scored'].includes(K.phase);
-  return `<div class="kum-top"><button class="iconbtn" data-act="kum-quit" aria-label="Zakończ bieg">✕</button>${kumCupImg(K.tier, 'sm')}
-    <div class="grow"><b>Runda ${K.round}${K.round <= KUM_LAST ? '/' + KUM_LAST : ' · bez końca'}</b>${inRound ? `<div class="kum-prog"><i style="width:${Math.min(100, K.score / t * 100)}%"></i></div><small>${K.score.toLocaleString('pl')} / ${t.toLocaleString('pl')} pkt</small>` : `<small>${KUM_CUPS[K.tier].n} · ${KUM_KITS[K.kit].ic} ${KUM_KITS[K.kit].n}</small>`}</div>
-    <div class="kum-stats">${inRound ? `<span title="Zagrania">▶ ${K.plays}</span><span title="Wymiany">🔄 ${K.disc}</span>` : ''}<span title="Monety">🪙 ${K.money}</span></div></div>
-  ${B && inRound ? `<div class="kum-boss">${kumIcon(B.ic)}<div><b>Egzaminator: ${B.n}</b><small>${B.d}</small></div></div>` : ''}
-  <div class="kum-jokers">${K.jokers.map((j, i) => { const J = KUM_J[j.id], off = inRound && ((K.boss === 'mute' && i === 0) || !kumAwake(j));
-    return `<button class="kum-j r-${J.r}${j.e ? ' ed-' + j.e : ''}${off ? ' muted' : ''}" data-act="kum-info" data-i="${i}" title="${esc(J.n)}">${kumIcon(J.ic)}${J.grows && j.v ? `<i class="kum-jv">${kumJVal(j)}</i>` : ''}${j.sleepy ? `<i class="kum-zz">${inRound && !kumAwake(j) ? '💤' : 'z'}</i>` : ''}${j.e ? `<i class="kum-ed">${KUM_ED[j.e].ic}</i>` : ''}</button>`; }).join('')}${Array(Math.max(0, kumFree())).fill('<span class="kum-j empty"></span>').join('')}
-    <span class="kum-sep"></span>${K.items.map((k, i) => `<button class="kum-j item" data-act="kum-use" data-i="${i}" title="${esc(KUM_I[k].n)} – użyj">${kumIcon(KUM_I[k].ic)}</button>`).join('')}${Array(Math.max(0, KUM_ITEM_SLOTS - K.items.length)).fill('<span class="kum-j empty item"></span>').join('')}</div>`;
-}
-function kumCardHTML(id, sel) {
-  const c = kumCard(id), v = c && cardView(c), kd = kumKind(c), d = c && deckById(c.deckId), st = KUM.stamps[id];
-  return `<button class="kum-card${sel ? ' on' : ''} k-${kd.k}${st ? ' st-' + st : ''}" data-act="kum-sel" data-id="${id}"><span class="kum-val">${KUM.boss === 'nonew' && kd.k === 'new' ? 0 : kd.base}</span>${st ? `<span class="kum-stamp" title="Pieczątka ${KUM_STAMPS[st].n}">${KUM_STAMPS[st].ic}</span>` : ''}<span class="kum-q">${esc(stripHtml(v?.label || '').slice(0, 90))}</span><small>${esc((d?.name || '').replace(/^🏫\s*/, '').slice(0, 22))}${kd.t ? ' · ' + kd.t : ''}</small></button>`;
-}
 let KUM_KIT_SEL = 'classic', KUM_TIER_SEL = null;
 function kumIntroHTML() {
   const st = kumStats(), decks = S.decks.filter(d => S.cards.some(c => c.deckId === d.id && !c.sus)), kit = KUM_KIT_SEL, max = Math.min(KUM_TOP, (st.cup || 0) + 1);
   const tier = Math.min(max, KUM_TIER_SEL || max), seen = st.seen || {}, nSeen = Object.keys(KUM_J).filter(k => seen[k]).length;
   return `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🃏 Kumulacja</h1><span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></div>
   <div class="card kum-intro"><p style="margin-top:0"><b>8 rund z rosnącym progiem.</b> Wybierz 1–3 fiszki z ręki, odpowiedz i zbieraj <b>(podstawa + wartości fiszek) × mnożnik</b>.</p>
-    <details class="small"><summary><b>Zasady w skrócie</b></summary><ul>
+    <details class="small kum-rules"${st.runs ? '' : ' open'}><summary><b>📖 Instrukcja gry</b></summary><ul>
       <li><b>Typ zagrania</b> daje podstawę i mnożnik: Pojedyncza, Dwójka, Trójka, Jedna talia (2–3 z tej samej), Przekrój (3 różne talie), Ciężka trójka (3 nowe/trudne). Liczą się tylko dobrze odpowiedziane fiszki.</li>
       <li>Fiszki mają wartość: trudna 25, nowa 20, zwykła 15, utrwalona 10. Wpisanie zamiast ABCD: ×1,5.</li>
       <li><b>Atuty</b> liczą się po kolei od lewej – ustaw kolejność w sklepie (najpierw „+”, potem „×”). Niektóre rosną, niektóre mają wykończenie: ✨ Brokat +30 podstawy, 🌈 Neon +5 mnożnika, 🥇 Złocenie ×1,5, 👻 Duch nie zajmuje miejsca.</li>
@@ -386,9 +372,10 @@ function kumIntroHTML() {
       <li>Rundy 3, 6 i 8 prowadzi <b>Egzaminator</b> z utrudnieniem (+3 monety za wygraną).</li>
       <li>Plecak <b>⌨️ Poliglota</b>: same wpisywanie – najlepszy do języków.</li>
       <li>Zaległe fiszki liczą się jak powtórki.</li></ul></details>
+    <p class="small muted kum-rotnote">📱 Tu wybierasz ustawienia w pionie. Sam bieg toczy się <b>w poziomie</b> – po starcie obróć telefon.</p>
     <p class="small muted" style="margin:12px 0 6px">🏆 Puchar, o który grasz:</p>
     <div class="kum-cups">${KUM_CUPS.slice(1).map((C, i) => { const t = i + 1, lock = t > max;
-      return `<button class="kum-cupb${t === tier ? ' on' : ''}${lock ? ' lock' : ''}${t <= (st.cup || 0) ? ' won' : ''}" data-act="kum-tier" data-t="${t}" ${lock ? 'disabled' : ''}>${kumCupImg(t)}<small>${lock ? '🔒 ' : ''}${C.n}</small></button>`; }).join('')}</div>
+      return `<button class="kum-cupb${t === tier ? ' on' : ''}${lock ? ' lock' : ''}${t <= (st.cup || 0) ? ' won' : ''}" data-act="kum-tier" data-t="${t}" ${lock ? 'disabled' : ''}>${kumCupImg(t)}<small>${C.n}</small></button>`; }).join('')}</div>
     <div class="kum-cupinfo small"><b>${KUM_CUPS[tier].n}</b>${tier <= (st.cup || 0) ? ' · ✓ zdobyty' : ''}<ul>${KUM_CUPS.slice(1, tier + 1).map(C => `<li>${C.d}</li>`).join('')}</ul>${tier > 1 ? `<span class="muted">Nagroda za bieg +${(tier - 1) * 20}%</span>` : ''}</div>
     <label class="small muted">Z jakich fiszek?</label>
     <select id="kum-deck"><option value="all">Wszystkie talie</option>${decks.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}</select>
@@ -400,70 +387,114 @@ function kumIntroHTML() {
       ? `<div class="kum-own r-${J.r}">${kumIcon(J.ic)}<div class="grow"><b>${esc(J.n)}</b><small>${esc(J.d)}</small></div></div>`
       : `<div class="kum-own unk">${kumIcon('❔')}<div class="grow"><b>???</b><small>Atut ${KUM_RAR[J.r].n} – zdobądź go, żeby poznać</small></div></div>`).join('')}</div></details></div>`;
 }
-const kumLevelsHTML = () => `<details class="kum-levels small"><summary>📘 Poziomy typów zagrań</summary>${Object.entries(KUM_TYPES).map(([k, T]) => { const v = kumTypeVal(k); return `<div class="row nowrap"><span class="grow">${T.n}${v.L ? ` <b>poz. ${v.L + 1}</b>` : ''}</span><span>${v.c} × ${v.m}</span></div>`; }).join('')}</details>`;
+// ---------- 🎲 stół gry (poziomo): lewy panel z wynikiem, u góry atuty i pomoce, na środku scena, na dole akcje
+const KG_ACTIVE = ['pre', 'pick', 'answer', 'scored', 'shop', 'pack'];
+const kgNum = n => Number(n).toLocaleString('pl');
+const kgDeckHue = id => hashStr(String(id)) % 360;
+const kgCanManage = () => ['pre', 'pick', 'shop'].includes(KUM.phase);
+function kgPop() { const K = KUM, P = K.pop; if (!P || P.ph !== K.phase) return null; return (P.t === 'j' ? K.jokers[P.i] : K.items[P.i]) != null ? P : null; }
+// lewy panel: runda, egzaminator, cel i wynik, podstawa × mnożnik (na żywo), liczniki
+function kgSide() {
+  const K = KUM, t = kumTarget(K.round), B = K.boss && KUM_BOSSES[K.boss], inRound = ['pick', 'answer', 'scored'].includes(K.phase);
+  const selT = K.phase === 'pick' ? kumTypeOf(K.sel) : K.phase === 'answer' ? kumTypeOf(K.q.map(q => q.id)) : null, tv = selT && kumTypeVal(selT), L = K.phase === 'scored' ? K.last : null;
+  const calc = L ? { n: L.type ? KUM_TYPES[L.type].n : 'Pudło', c: L.chips, m: String(L.mult).replace('.', ','), pts: L.pts }
+    : tv ? { n: KUM_TYPES[selT].n + (tv.L ? ` · poz. ${tv.L + 1}` : ''), c: tv.c, m: tv.m } : { n: K.phase === 'pick' ? 'Wybierz fiszki' : '—', c: 0, m: 0 };
+  const info = K.phase === 'shop' ? `<div class="kg-box kg-info win"><b>🏁 Runda ${K.round} wygrana</b><small>+${K.won.earn} 🪙 · odsetki +${K.won.interest}${K.won.dbl ? ' (×2)' : ''}${K.won.bossBonus ? ` · egzaminator +${K.won.bossBonus}` : ''}</small></div>`
+    : B ? `<div class="kg-box kg-info boss"><b>${B.ic} ${B.n}</b><small>${B.d}</small></div>`
+    : `<div class="kg-box kg-info"><b>📝 Zwykła runda</b><small>bez utrudnień</small></div>`;
+  return `<aside class="kg-side">
+    <div class="kg-round">${kumCupImg(K.tier, 'sm')}<div><b>Runda ${K.round}${K.round <= KUM_LAST ? '/' + KUM_LAST : ''}</b><small>${K.round > KUM_LAST ? 'bez końca · ' : ''}${KUM_CUPS[K.tier].n} · ${KUM_KITS[K.kit].n}</small></div></div>
+    ${info}
+    <div class="kg-two"><div class="kg-box"><small>Cel</small><b class="kg-goal">${kgNum(t)}</b></div>
+      <div class="kg-box"><small>${inRound ? 'Wynik' : 'Łącznie'}</small><b class="kg-pts">${kgNum(inRound ? K.score : K.total)}</b></div></div>
+    <div class="kg-prog"><i style="width:${inRound ? Math.min(100, K.score / t * 100) : 0}%"></i></div>
+    <div class="kg-box kg-calc${L ? ' done' : ''}"><small>${esc(calc.n)}</small><div><b class="kg-chips">${calc.c}</b><i>×</i><b class="kg-mult">${calc.m}</b>${L ? `<i>=</i><b class="kg-res">${kgNum(calc.pts)}</b>` : ''}</div></div>
+    <div class="kg-ctr"><div class="kg-box"><small>Zagrania</small><b class="c-play">${inRound ? K.plays : '–'}</b></div><div class="kg-box"><small>Wymiany</small><b class="c-disc">${inRound ? K.disc : '–'}</b></div><div class="kg-box"><small>Monety</small><b class="c-money">${K.money}</b></div></div>
+    <div class="kg-sbtns"><button class="kg-b" data-act="kum-levels">📘 Typy</button><button class="kg-b" data-act="kum-quit">✕ Koniec</button></div>
+  </aside>`;
+}
+// górny pasek: atuty (kolejność od lewej) i pomoce; stuknięcie pokazuje opis i akcje
+function kgTop() {
+  const K = KUM, inRound = ['pick', 'answer', 'scored'].includes(K.phase), P = kgPop(), used = K.jokers.filter(j => j.e !== 'ghost').length;
+  return `<div class="kg-top"><div class="kg-jrow"><span class="kg-cap">Atuty ${used}/${K.slots}</span>
+    ${K.jokers.map((j, i) => { const J = KUM_J[j.id], off = inRound && ((K.boss === 'mute' && i === 0) || !kumAwake(j));
+      return `<button class="kg-j r-${J.r}${j.e ? ' ed-' + j.e : ''}${off ? ' off' : ''}${P?.t === 'j' && P.i === i ? ' on' : ''}" data-act="kum-info" data-i="${i}" aria-label="${esc(J.n)}">${kumIcon(J.ic)}<small>${esc(J.n)}</small>${J.grows && j.v ? `<i class="kg-jv">${kumJVal(j)}</i>` : ''}${j.sleepy ? `<i class="kg-zz">${off ? '💤' : 'z'}</i>` : ''}${j.e ? `<i class="kg-ed">${KUM_ED[j.e].ic}</i>` : ''}</button>`; }).join('')}
+    ${Array(Math.max(0, kumFree())).fill('<span class="kg-j empty"></span>').join('')}</div>
+    <div class="kg-irow"><span class="kg-cap">Pomoce ${K.items.length}/${KUM_ITEM_SLOTS}</span>
+    ${K.items.map((k, i) => `<button class="kg-j it${P?.t === 'i' && P.i === i ? ' on' : ''}" data-act="kum-iteminfo" data-i="${i}" aria-label="${esc(KUM_I[k].n)}">${kumIcon(KUM_I[k].ic)}<small>${esc(KUM_I[k].n.replace('Podręcznik: ', '').replace(' pieczątka', ''))}</small></button>`).join('')}
+    ${Array(Math.max(0, KUM_ITEM_SLOTS - K.items.length)).fill('<span class="kg-j it empty"></span>').join('')}</div></div>`;
+}
+// panel wybranego atutu / pomocy: opis + przesuń, sprzedaj, użyj
+function kgPopHTML() {
+  const K = KUM, P = kgPop(); if (!P) return '';
+  if (P.t === 'j') { const j = K.jokers[P.i], J = KUM_J[j.id], can = kgCanManage();
+    return `<div class="kg-pop r-${J.r}">${kumIcon(J.ic)}<div class="kg-pop-t"><b>${esc(J.n)} <em>${KUM_RAR[J.r].n}</em>${J.grows && j.v ? ` · ${kumJVal(j)}` : ''}</b><small>${esc(J.d)}${j.e ? ` · ${KUM_ED[j.e].ic} ${KUM_ED[j.e].n}: ${KUM_ED[j.e].d}` : ''}${j.sleepy ? ' · 💤 działa w co drugim zagraniu' : ''}</small></div>
+      ${can ? `<button class="kg-b" data-act="kum-move" data-i="${P.i}" data-d="-1" ${P.i ? '' : 'disabled'} aria-label="W lewo">◀</button><button class="kg-b" data-act="kum-move" data-i="${P.i}" data-d="1" ${P.i < K.jokers.length - 1 ? '' : 'disabled'} aria-label="W prawo">▶</button><button class="kg-b kg-sell" data-act="kum-sell" data-i="${P.i}">Sprzedaj +${kumSell(j)} 🪙</button>` : ''}
+      <button class="kg-b kg-x" data-act="kum-popx" aria-label="Zamknij">✕</button></div>`; }
+  const k = K.items[P.i], D = KUM_I[k];
+  return `<div class="kg-pop">${kumIcon(D.ic)}<div class="kg-pop-t"><b>${esc(D.n)}</b><small>${esc(D.d)}</small></div>
+    ${K.phase !== 'scored' ? `<button class="kg-b kg-use" data-act="kum-use" data-i="${P.i}">Użyj</button>` : ''}${kgCanManage() ? `<button class="kg-b kg-sell" data-act="kum-sellitem" data-i="${P.i}">Sprzedaj +1 🪙</button>` : ''}
+    <button class="kg-b kg-x" data-act="kum-popx" aria-label="Zamknij">✕</button></div>`;
+}
+const kgLevelsHTML = () => `<div class="kg-lv" data-act="kum-levels"><div class="kg-lv-in"><b>📘 Typy zagrań</b>${Object.entries(KUM_TYPES).map(([k, T]) => { const v = kumTypeVal(k); return `<div><span>${T.n}${v.L ? ` <em>poz. ${v.L + 1}</em>` : ''}</span><span><b class="kg-chips">${v.c}</b> × <b class="kg-mult">${v.m}</b></span></div>`; }).join('')}
+  <small>Dwójka: 2 fiszki z różnych talii · Jedna talia: 2–3 z tej samej · Przekrój: 3 różne talie · Ciężka trójka: 3 nowe lub trudne. Liczą się tylko dobre odpowiedzi.</small><button class="kg-b">Zamknij</button></div></div>`;
+// fiszka w ręce: kartka z zeszytu z kolorem talii i wartością w rogu
+function kumCardHTML(id, sel) {
+  const c = kumCard(id), v = c && cardView(c), kd = kumKind(c), d = c && deckById(c.deckId), st = KUM.stamps[id];
+  return `<button class="kg-card${sel ? ' on' : ''} k-${kd.k}${st ? ' st-' + st : ''}" data-act="kum-sel" data-id="${id}" style="--dh:${kgDeckHue(c?.deckId)}"><span class="kg-val">${KUM.boss === 'nonew' && kd.k === 'new' ? 0 : kd.base}</span>${st ? `<span class="kg-stamp" title="Pieczątka ${KUM_STAMPS[st].n}">${KUM_STAMPS[st].ic}</span>` : ''}
+    <span class="kg-qw"><span class="kg-q">${esc(stripHtml(v?.label || '').slice(0, 90))}</span></span><span class="kg-deck"><i></i>${esc((d?.name || '').replace(/^🏫\s*/, '').slice(0, 20))}${kd.t ? ` · ${kd.t}` : ''}</span></button>`;
+}
 function kumPreHTML() {
   const K = KUM, t = kumTarget(K.round), B = K.boss && KUM_BOSSES[K.boss], T = K.ticket && KUM_TICKETS[K.ticket];
-  return `${kumHead()}<div class="card kum-pre${B ? ' boss' : ''}">
-    <div class="kum-pre-r">${B ? kumIcon(B.ic) : kumIcon('📝')}<div class="grow"><small>Runda ${K.round}${K.round === KUM_LAST ? ' · finał' : ''}</small><b>${B ? 'Egzaminator: ' + B.n : 'Zwykła runda'}</b>${B ? `<small>${B.d}</small>` : ''}</div></div>
-    <div class="kum-pre-t">Cel: <b>${t.toLocaleString('pl')}</b> pkt</div>
-    <button class="primary block" data-act="kum-go" style="min-height:50px">▶ Graj rundę</button>
-    ${T ? `<div class="kum-ticket">${kumIcon(T.ic)}<div class="grow"><b>Bilet: ${T.n}</b><small>${T.d}</small></div><button class="sm" data-act="kum-skip">⏭ Pomiń rundę</button></div>
-      <p class="small muted" style="margin:6px 0 0">Pominięcie = bez zarobku za rundę i bez sklepu, ale bilet jest Twój.</p>` : ''}</div>
-  ${kumLevelsHTML()}`;
+  return { stage: `<div class="kg-pre"><button class="kg-tile go${B ? ' boss' : ''}" data-act="kum-go"><small>Runda ${K.round}${K.round === KUM_LAST ? ' · finał' : ''}</small><b>${B ? `${B.ic} Egzaminator: ${B.n}` : '📝 Zwykła runda'}</b>
+      <span class="kg-tile-d">${B ? B.d + ' · +3 🪙 za wygraną' : 'Bez utrudnień'}</span><span class="kg-tile-goal">Cel <b>${kgNum(t)}</b> pkt</span><span class="kg-cta">▶ Graj</span></button>
+    ${T ? `<button class="kg-tile skip" data-act="kum-skip"><small>Pomiń rundę</small><b>${T.ic} Bilet: ${T.n}</b><span class="kg-tile-d">${T.d}</span><span class="kg-tile-goal">Bez zarobku i bez sklepu</span><span class="kg-cta ghost">⏭ Pomiń</span></button>`
+      : `<div class="kg-tile lock"><small>Pomiń rundę</small><b>🔒 Egzaminatora nie ominiesz</b><span class="kg-tile-d">Bilety są tylko przed zwykłą rundą.</span></div>`}</div>`, bar: '' };
 }
 function kumPickHTML() {
-  const K = KUM, t = kumTypeOf(K.sel), tv = t && kumTypeVal(t);
-  return `${kumHead()}
-  ${K.pendingStamp ? `<div class="kum-boss">${kumIcon(KUM_STAMPS[K.pendingStamp].ic)}<div><b>Stuknij fiszkę</b><small>Przybijesz na nią pieczątkę ${KUM_STAMPS[K.pendingStamp].n}</small></div></div>` : ''}
-  <div class="kum-preview">${t ? `<b>${KUM_TYPES[t].n}${tv.L ? ` · poz. ${tv.L + 1}` : ''}</b><span class="kum-chips sm">${tv.c}</span>×<span class="kum-mult sm">${tv.m}</span>` : `<span class="muted">Wybierz 1–${kumMaxPlay()} fiszki · wartość w rogu</span>`}</div>
-  <div class="kum-hand">${K.hand.map(id => kumCardHTML(id, K.sel.includes(id))).join('')}</div>
-  <div class="kum-actions"><button class="primary grow" data-act="kum-play" ${K.sel.length ? '' : 'disabled'}>▶ Zagraj (${K.sel.length})</button>
-    <button class="grow" data-act="kum-disc" ${K.sel.length && K.disc > 0 ? '' : 'disabled'}>🔄 Wymień (${K.disc})${K.boss === 'discpay' ? ' · 1 🪙' : ''}</button></div>
-  ${kumLevelsHTML()}`;
+  const K = KUM, n = K.sel.length;
+  return { stage: `${K.pendingStamp ? `<div class="kg-hint">${KUM_STAMPS[K.pendingStamp].ic} Stuknij fiszkę, na którą przybić pieczątkę (${KUM_STAMPS[K.pendingStamp].n})</div>` : `<div class="kg-hint">${n ? `Wybrane ${n}/${kumMaxPlay()}` : `Wybierz 1–${kumMaxPlay()} fiszki · liczba w rogu to wartość`}</div>`}
+    <div class="kg-hand n${K.hand.length}">${K.hand.map(id => kumCardHTML(id, K.sel.includes(id))).join('')}</div>`,
+    bar: `<button class="kg-b kg-play" data-act="kum-play" ${n ? '' : 'disabled'}>▶ Zagraj${n ? ` (${n})` : ''}</button><button class="kg-b kg-disc" data-act="kum-disc" ${n && K.disc > 0 ? '' : 'disabled'}>🔄 Wymień${K.boss === 'discpay' ? ' · 1 🪙' : ''}</button>` };
 }
 function kumAnswerHTML() {
-  const K = KUM, q = K.q[K.qi], c = kumCard(q.id), v = cardView(c), ans = v.ans;
-  const opts = q.opts ? q.opts.map((o, i) => q.hidden.includes(i) ? '' : `<button class="abcd${q.res ? (norm(o) === norm(ans) ? ' right' : q.pick === i ? ' wrong' : '') : ''}" data-act="kum-opt" data-i="${i}" ${q.res ? 'disabled' : ''}><b>${'ABCD'[i]}</b> ${esc(o)}</button>`).join('') : '';
-  return `${kumHead()}<div class="kum-qn">Fiszka ${K.qi + 1}/${K.q.length}${K.streak ? ` · 🔥 seria ${K.streak}` : ''}${K.shield ? ' · 🛡️ tarcza' : ''}${K.stamps[q.id] ? ' · ' + KUM_STAMPS[K.stamps[q.id]].ic : ''}${q.due ? ' · 🦉 zaległa' : ''}${K.boss === 'rush' ? ' · ⏱️ 15 s' : ''}</div>
-  <div class="card flash qfit">${v.q}${q.letter ? `<div class="small muted" style="margin-top:8px">Zaczyna się na: <b>${esc(ans.trim().slice(0, 1).toUpperCase())}…</b></div>` : ''}</div>
-  ${q.res ? `<div class="kum-res ${q.res.good ? 'ok' : 'bad'}">${q.res.saved === true ? '🛡️ Tarcza uratowała!' : q.res.saved === 'half' ? '🛟 Druga szansa – połowa wartości' : q.res.good ? (q.res.close ? `✓ Prawie – poprawnie: ${esc(ans)}` : '✓ Dobrze') : `${q.res.late ? '⏱️ Za późno! ' : '✗ '}Odpowiedź: ${esc(ans)}${q.res.lost ? ` · ⚠️ −${q.res.lost} pkt` : ''}`}</div>` : ''}
-  ${q.mode === 'abcd' && !q.typing ? `<div class="abcd-grid">${opts}</div>${q.res ? '' : '<button class="ghost block" data-act="kum-type">✍️ Wpiszę odpowiedź (×1,5 wartości)</button>'}`
-    : q.res ? '' : `<div class="row nowrap"><input id="kum-in" class="grow" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="primary" data-act="kum-send">✓</button></div>${q.opts ? '<button class="ghost block" data-act="kum-abcd">Wróć do ABCD</button>' : ''}`}`;
+  const K = KUM, q = K.q[K.qi], c = kumCard(q.id), v = cardView(c), ans = v.ans, typing = !(q.mode === 'abcd' && !q.typing);
+  const opts = q.opts ? q.opts.map((o, i) => q.hidden.includes(i) ? '<span class="kg-opt gone"></span>' : `<button class="kg-opt${q.res ? (norm(o) === norm(ans) ? ' right' : q.pick === i ? ' wrong' : '') : ''}" data-act="kum-opt" data-i="${i}" ${q.res ? 'disabled' : ''}><b>${'ABCD'[i]}</b><span>${esc(o)}</span></button>`).join('') : '';
+  const dots = K.q.map((x, i) => `<i class="${x.res ? (x.res.good ? 'ok' : 'bad') : i === K.qi ? 'cur' : ''}"></i>`).join('');
+  const res = q.res ? `<div class="kg-res ${q.res.good ? 'ok' : 'bad'}">${q.res.saved === true ? '🛡️ Tarcza uratowała!' : q.res.saved === 'half' ? '🛟 Druga szansa – połowa wartości' : q.res.good ? (q.res.close ? `✓ Prawie – poprawnie: ${esc(ans)}` : '✓ Dobrze') : `${q.res.late ? '⏱️ Za późno! ' : '✗ '}Odpowiedź: ${esc(ans)}${q.res.lost ? ` · ⚠️ −${q.res.lost} pkt` : ''}`}</div>` : '';
+  return { stage: `<div class="kg-ans${typing ? ' typing' : ''}"><div class="kg-qcard" style="--dh:${kgDeckHue(c?.deckId)}"><div class="kg-qmeta"><span class="kg-dots">${dots}</span>${K.streak ? `<span>🔥 ${K.streak}</span>` : ''}${K.shield ? '<span>🛡️</span>' : ''}${K.stamps[q.id] ? `<span>${KUM_STAMPS[K.stamps[q.id]].ic}</span>` : ''}${q.due ? '<span>🦉 zaległa</span>' : ''}${K.boss === 'rush' ? '<span>⏱️ 15 s</span>' : ''}</div>
+      <div class="kg-qtext">${v.q}</div>${q.letter ? `<div class="kg-letter">Zaczyna się na: <b>${esc(ans.trim().slice(0, 1).toUpperCase())}…</b></div>` : ''}</div>
+    <div class="kg-aside">${res}${typing ? (q.res ? '' : `<div class="kg-type"><input id="kum-in" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"><button class="kg-b kg-play" data-act="kum-send">✓</button></div>`) : `<div class="kg-opts">${opts}</div>`}</div></div>`,
+    bar: q.res ? '' : typing ? (q.opts ? '<button class="kg-b" data-act="kum-abcd">↩ Wróć do ABCD</button>' : `<span class="kg-note">Wpisanie: ×${K.kit === 'lang' ? 2 : '1,5'} wartości fiszki</span>`) : '<button class="kg-b" data-act="kum-type">✍️ Wpiszę odpowiedź · ×1,5 wartości</button>' };
 }
 function kumScoredHTML() {
-  const K = KUM, L = K.last, t = kumTarget(K.round);
-  return `${kumHead()}<div class="card kum-score">
-    <ul class="kum-steps">${L.steps.map((s, i) => `<li class="${s.bad ? 'bad' : ''}" style="animation-delay:${i * 120}ms"><span>${s.ic}</span><span class="grow">${esc(s.t)}</span><b>${esc(s.v)}</b></li>`).join('')}</ul>
-    <div class="kum-eq" style="animation-delay:${L.steps.length * 120}ms">${L.type ? `<span class="kum-chips">${L.chips}</span><span class="kum-x">×</span><span class="kum-mult">${String(L.mult).replace('.', ',')}</span><span class="kum-x">=</span><b>${L.pts.toLocaleString('pl')}</b>` : '<b>0</b>'}</div>
-    <p class="small muted center" style="margin:4px 0 10px">${L.good}/${L.n} dobrze${L.coins ? ` · +${L.coins} 🪙` : ''}</p>
-    <button class="primary block" data-act="kum-next">${K.score >= t ? '🏁 Runda wygrana – dalej' : K.plays > 0 ? '▶ Następne zagranie' : K.jokers.some(j => j.id === 'phoenix') ? '🪶 Feniks…' : 'Koniec zagrań…'}</button></div>`;
+  const K = KUM, L = K.last, t = kumTarget(K.round), won = K.score >= t;
+  return { stage: `<div class="kg-scored"><ul class="kg-steps">${L.steps.map((s, i) => `<li class="${s.bad ? 'bad' : ''}" style="animation-delay:${i * 90}ms"><span>${s.ic}</span><span class="g">${esc(s.t)}</span><b>${esc(s.v)}</b></li>`).join('')}</ul>
+    <div class="kg-total" style="animation-delay:${L.steps.length * 90}ms">${L.type ? `<b class="kg-chips">${L.chips}</b><i>×</i><b class="kg-mult">${String(L.mult).replace('.', ',')}</b>` : ''}<strong>${L.type ? '+' : ''}${kgNum(L.pts)}</strong><small>${L.good}/${L.n} dobrze${L.coins ? ` · +${L.coins} 🪙` : ''}${won ? ' · cel zdobyty!' : ` · brakuje ${kgNum(t - K.score)}`}</small></div></div>`,
+    bar: `<button class="kg-b kg-play" data-act="kum-next">${won ? '🏁 Runda wygrana – dalej' : K.plays > 0 ? '▶ Następne zagranie' : K.jokers.some(j => j.id === 'phoenix') ? '🪶 Feniks…' : 'Koniec zagrań…'}</button>` };
 }
 function kumOfferHTML(o, i, act) {
   const K = KUM, D = kumDef(o), price = act === 'kum-buy' ? kumPrice(o) : 0;
   const full = o.t === 'j' ? kumFree() <= 0 && o.e !== 'ghost' : o.t === 'i' && !(D.book && act === 'kum-pack') ? K.items.length >= KUM_ITEM_SLOTS : false;
-  const kind = o.t === 'j' ? 'atut ' + KUM_RAR[D.r].n : o.t === 'p' ? 'koperta' : D.book ? 'podręcznik' : D.stamp ? 'pieczątka' : 'pomoc';
-  return `<div class="kum-off ${o.t === 'j' ? 'j r-' + D.r + (o.e ? ' ed-' + o.e : '') : o.t === 'p' ? 'p' : D.book ? 'b' : D.stamp ? 's' : 'i'}">${kumIcon(D.ic)}<b>${esc(D.n)}</b>
-    ${o.e ? `<span class="kum-edtag">${KUM_ED[o.e].ic} ${KUM_ED[o.e].n}: ${KUM_ED[o.e].d}</span>` : ''}${o.sleepy ? '<span class="kum-edtag zz">💤 Senny: działa w co drugim zagraniu</span>' : ''}
-    <small>${esc(D.d)}</small><button class="sm primary" data-act="${act}" data-i="${i}" ${full || K.money < price ? 'disabled' : ''}>${full ? 'Brak miejsca' : act === 'kum-buy' ? (o.free ? '🎟️ Za darmo' : `Kup · ${price} 🪙`) : 'Biorę'}</button><span class="kum-type">${kind}</span></div>`;
+  const kind = o.t === 'j' ? KUM_RAR[D.r].n : o.t === 'p' ? 'koperta' : D.book ? 'podręcznik' : D.stamp ? 'pieczątka' : 'pomoc';
+  return `<div class="kg-off ${o.t === 'j' ? 'j r-' + D.r + (o.e ? ' ed-' + o.e : '') : o.t === 'p' ? 'p' : D.book ? 'b' : D.stamp ? 's' : 'i'}"><span class="kg-kind">${kind}</span>${kumIcon(D.ic)}<b>${esc(D.book ? KUM_TYPES[D.book].n : D.n)}</b>
+    <small>${o.e ? `<em>${KUM_ED[o.e].ic} ${KUM_ED[o.e].n}: ${KUM_ED[o.e].d}.</em> ` : ''}${o.sleepy ? '<em class="zz">💤 Senny (co drugie zagranie).</em> ' : ''}${esc(D.d)}</small>
+    <button class="kg-b kg-buy" data-act="${act}" data-i="${i}" ${full || K.money < price ? 'disabled' : ''}>${full ? 'Brak miejsca' : act === 'kum-buy' ? (o.free ? '🎟️ Gratis' : `${price} 🪙`) : 'Biorę'}</button></div>`;
 }
 function kumShopHTML() {
   const K = KUM, rc = kumRerollCost(), slotP = 8 + (kumTier() >= 5 ? 1 : 0);
-  return `${kumHead()}<div class="card kum-won"><b>🏁 Runda ${K.round} wygrana!</b> <span class="small muted">+${K.won.earn} 🪙 · odsetki +${K.won.interest}${K.won.dbl ? ' (🏦 ×2)' : ''}${K.won.bossBonus ? ` · egzaminator +${K.won.bossBonus}` : ''} 🪙</span></div>
-  <h2 style="margin:10px 0 6px">🛒 Sklep</h2>
-  <div class="kum-shop">${K.shop.map((o, i) => o.bought ? '<div class="kum-off sold">Kupione</div>' : kumOfferHTML(o, i, 'kum-buy')).join('')}
-    ${!K.slotBought ? `<div class="kum-off i">${kumIcon('🧳')}<b>Większy plecak</b><small>+1 miejsce na atut (raz na bieg)</small><button class="sm primary" data-act="kum-slot" ${K.money >= slotP ? '' : 'disabled'}>Kup · ${slotP} 🪙</button><span class="kum-type">ulepszenie</span></div>` : ''}</div>
-  ${K.jokers.length ? `<p class="small muted" style="margin:12px 0 4px">Twoje atuty – liczą się od lewej; przesuń ◀ ▶ albo sprzedaj:</p><div class="kum-owned">${K.jokers.map((j, i) => { const J = KUM_J[j.id];
-    return `<div class="kum-own r-${J.r}${j.e ? ' ed-' + j.e : ''}">${kumIcon(J.ic)}<div class="grow"><b>${esc(J.n)}${J.grows && j.v ? ` · ${kumJVal(j)}` : ''}${j.e ? ` ${KUM_ED[j.e].ic}` : ''}${j.sleepy ? ' 💤' : ''}</b><small>${esc(J.d)}${j.e ? ` · ${KUM_ED[j.e].n}: ${KUM_ED[j.e].d}` : ''}</small></div>
-      <button class="sm ghost" data-act="kum-move" data-i="${i}" data-d="-1" ${i ? '' : 'disabled'} aria-label="W lewo">◀</button><button class="sm ghost" data-act="kum-move" data-i="${i}" data-d="1" ${i < K.jokers.length - 1 ? '' : 'disabled'} aria-label="W prawo">▶</button>
-      <button class="sm" data-act="kum-sell" data-i="${i}">Sprzedaj +${kumSell(j)} 🪙</button></div>`; }).join('')}</div>` : ''}
-  ${K.items.length ? `<div class="kum-owned" style="margin-top:6px">${K.items.map((k, i) => `<button class="sm ghost" data-act="kum-sellitem" data-i="${i}">${KUM_I[k].ic} ${esc(KUM_I[k].n)} · sprzedaj +1 🪙</button>`).join('')}</div>` : ''}
-  <div class="kum-actions"><button class="grow" data-act="kum-reroll" ${K.money >= rc ? '' : 'disabled'}>🎲 Nowa oferta · ${rc ? rc + ' 🪙' : `za darmo (${K.freeRerolls})`}</button><button class="primary grow" data-act="kum-nextround">▶ Dalej: runda ${K.round + 1}</button></div>`;
+  return { stage: `<div class="kg-shop">${K.shop.map((o, i) => o.bought ? '<div class="kg-off sold">Kupione</div>' : kumOfferHTML(o, i, 'kum-buy')).join('')}
+      ${!K.slotBought ? `<div class="kg-off i"><span class="kg-kind">ulepszenie</span>${kumIcon('🧳')}<b>Większy plecak</b><small>+1 miejsce na atut (raz na bieg)</small><button class="kg-b kg-buy" data-act="kum-slot" ${K.money >= slotP ? '' : 'disabled'}>${slotP} 🪙</button></div>` : ''}</div>`,
+    bar: `<span class="kg-note">🛒 Sklep · stuknij swój atut u góry, żeby go przesunąć albo sprzedać</span><button class="kg-b" data-act="kum-reroll" ${K.money >= rc ? '' : 'disabled'}>🎲 Nowa oferta · ${rc ? rc + ' 🪙' : `gratis (${K.freeRerolls})`}</button><button class="kg-b kg-play" data-act="kum-nextround">▶ Runda ${K.round + 1}</button>` };
 }
 function kumPackHTML() {
   const K = KUM, P = K.pack, D = KUM_PACKS[P.kind];
-  return `${kumHead()}<h2 style="margin:10px 0 6px">${D.ic} ${D.n}</h2><p class="small muted" style="margin:0 0 8px">Wybierz jedno.</p>
-  <div class="kum-shop">${P.opts.map((o, i) => kumOfferHTML(o, i, 'kum-pack')).join('')}</div>
-  <button class="ghost block" data-act="kum-packskip" style="margin-top:10px">Pomiń kopertę</button>`;
+  return { stage: `<div class="kg-hint">${D.ic} ${D.n} – wybierz jedno</div><div class="kg-shop pack">${P.opts.map((o, i) => kumOfferHTML(o, i, 'kum-pack')).join('')}</div>`,
+    bar: '<button class="kg-b" data-act="kum-packskip">Pomiń kopertę</button>' };
+}
+function kgTableHTML() {
+  const K = KUM, v = { pre: kumPreHTML, pick: kumPickHTML, answer: kumAnswerHTML, scored: kumScoredHTML, shop: kumShopHTML, pack: kumPackHTML }[K.phase]();
+  return `<div class="kg ph-${K.phase}${K.boss && K.phase !== 'shop' ? ' is-boss' : ''}">${kgSide()}<section class="kg-main">${kgTop()}<div class="kg-stage">${v.stage}</div>${kgPopHTML() || (v.bar ? `<div class="kg-bar">${v.bar}</div>` : '')}</section>${K.showLv ? kgLevelsHTML() : ''}</div>`;
 }
 function kumVictoryHTML() {
   const K = KUM, C = KUM_CUPS[K.tier];
@@ -480,15 +511,16 @@ function kumEndHTML() {
     <div class="kum-actions"><button class="primary grow" data-act="kum-again">▶ Jeszcze raz</button><button class="grow" data-act="kum-quit2">Wyjdź</button></div></div>`;
 }
 // 📱 tryb wymaga telefonu w poziomie: w pionie zasłania go plansza „Obróć telefon” (CSS: orientation: portrait)
-const KUM_ROTATE = `<div class="kum-rotate" role="dialog" aria-label="Obróć telefon"><div class="kum-rot-ph"><span>🃏</span></div><b>Obróć telefon poziomo</b><small>Kumulacja gra się na szerokim ekranie – karty, atuty i sklep mieszczą się wtedy w jednym rzędzie.</small><button class="ghost" data-act="kum-leave">‹ Wróć do Przygody</button></div>`;
+const KUM_ROTATE = `<div class="kum-rotate" role="dialog" aria-label="Obróć telefon"><div class="kum-rot-ph"><span>🃏</span></div><b>Obróć telefon poziomo</b><small>Bieg toczy się na stole gry w poziomie. Obróć telefon, a gra pojawi się sama – nic nie przepadnie.</small><button class="ghost" data-act="kum-leave">‹ Wróć do Przygody</button></div>`;
 function kumLock() { try { screen.orientation?.lock?.('landscape').catch(() => {}); } catch { /* telefon nie pozwala – zostaje plansza */ } }
 function kumUnlock() { try { screen.orientation?.unlock?.(); } catch { /* */ } }
 ROUTES.kumul = () => {
   if (!kumAdmin()) return { tab: 'arena', html: '<p class="muted center" style="padding:40px 0">Ten tryb jest jeszcze w testach.</p>' };
-  if (!KUM) return { tab: 'arena', html: KUM_ROTATE + kumIntroHTML() };
-  const K = KUM, html = { pre: kumPreHTML, pick: kumPickHTML, answer: kumAnswerHTML, scored: kumScoredHTML, shop: kumShopHTML, pack: kumPackHTML, victory: kumVictoryHTML, end: kumEndHTML }[K.phase]();
-  if (K.phase === 'answer') onMount(() => { const i = $('#kum-in'); if (i) { i.focus(); i.onkeydown = e => { if (e.key === 'Enter') ACTIONS['kum-send'](); }; } });
-  return { tab: 'arena', focus: true, html: KUM_ROTATE + `<div class="kum">${html}</div>` };
+  if (!KUM) return { tab: 'arena', html: kumIntroHTML() };
+  const K = KUM;
+  if (!KG_ACTIVE.includes(K.phase)) return { tab: 'arena', focus: true, html: `<div class="kum">${(K.phase === 'victory' ? kumVictoryHTML : kumEndHTML)()}</div>` };
+  if (K.phase === 'answer') onMount(() => { const i = $('#kum-in'); if (i) { i.focus({ preventScroll: true }); i.onkeydown = e => { if (e.key === 'Enter') ACTIONS['kum-send'](); }; } });
+  return { tab: 'arena', focus: true, html: KUM_ROTATE + kgTableHTML() };
 };
 // wejście w zakładce Przygoda – admin i testerzy
 const kumBoss0 = ROUTES.boss;
@@ -527,14 +559,14 @@ Object.assign(ACTIONS, {
     K.phase = P.ret; K.pack = null; render(); },
   'kum-packskip': () => { const K = KUM; if (!K?.pack) return; K.phase = K.pack.ret; K.pack = null; render(); },
   'kum-slot': () => { const K = KUM, p = 8 + (kumTier() >= 5 ? 1 : 0); if (K.slotBought || K.money < p) return; kumSpend(p); K.slots++; K.slotBought = true; render(); },
-  'kum-move': el => { const K = KUM, i = +el.dataset.i, j = i + +el.dataset.d; if (j < 0 || j >= K.jokers.length) return; [K.jokers[i], K.jokers[j]] = [K.jokers[j], K.jokers[i]]; render(); },
-  'kum-sell': el => { const K = KUM, i = +el.dataset.i, j = K.jokers[i]; if (!j) return; K.money += kumSell(j); K.jokers.splice(i, 1); render(); },
-  'kum-sellitem': el => { const K = KUM, i = +el.dataset.i; if (K.items[i] == null) return; K.items.splice(i, 1); K.money += 1; render(); },
+  'kum-move': el => { const K = KUM, i = +el.dataset.i, j = i + +el.dataset.d; if (j < 0 || j >= K.jokers.length) return; [K.jokers[i], K.jokers[j]] = [K.jokers[j], K.jokers[i]]; if (K.pop?.t === 'j') K.pop.i = j; render(); },
+  'kum-sell': el => { const K = KUM, i = +el.dataset.i, j = K.jokers[i]; if (!j) return; K.money += kumSell(j); K.jokers.splice(i, 1); K.pop = null; render(); },
+  'kum-sellitem': el => { const K = KUM, i = +el.dataset.i; if (K.items[i] == null) return; K.items.splice(i, 1); K.money += 1; K.pop = null; render(); },
   'kum-reroll': () => { const K = KUM, rc = kumRerollCost(); if (K.money < rc) return; if (K.freeRerolls > 0) K.freeRerolls--; else { kumSpend(rc); K.rerolls++; } K.shop = kumShopRoll(); render(); },
   'kum-nextround': () => { KUM.round++; kumPrepRound(); render(); },
   'kum-endless': () => { const K = KUM; K.endless = true; K.phase = 'shop'; K.shop = kumShopRoll(); K.rerolls = 0; render(); },
   'kum-claim': () => kumEnd(true),
-  'kum-use': el => { const K = KUM, i = +el.dataset.i, k = K.items[i]; if (!k) return; const D = KUM_I[k], q = K.phase === 'answer' ? K.q[K.qi] : null;
+  'kum-use': el => { const K = KUM, i = +el.dataset.i, k = K.items[i]; if (!k) return; const D = KUM_I[k], q = K.phase === 'answer' ? K.q[K.qi] : null; K.pop = null;
     if (k === 'half') { if (!q || q.res || !q.opts || q.mode !== 'abcd') return toast('Użyj podczas odpowiedzi ABCD'); const ans = cardView(kumCard(q.id)).ans; q.hidden = shuffle(q.opts.map((o, j) => j).filter(j => norm(q.opts[j]) !== norm(ans))).slice(0, 2); }
     else if (k === 'letter') { if (!q || q.res) return toast('Użyj podczas odpowiedzi'); q.letter = true; }
     else if (k === 'disc') { if (K.phase !== 'pick') return toast('Użyj przy wybieraniu fiszek'); K.disc++; }
@@ -542,7 +574,10 @@ Object.assign(ACTIONS, {
     else if (D.book) { kumLevelUp(D.book); toast(`📘 ${KUM_TYPES[D.book].n} – poziom ${K.levels[D.book] + 1}`); K.items.splice(i, 1); return render(); }
     else if (D.stamp) { if (K.phase !== 'pick') return toast('Użyj przy wybieraniu fiszek – potem stuknij fiszkę'); K.pendingStamp = D.stamp; K.items.splice(i, 1); return render(); }
     K.items.splice(i, 1); toast(`${D.ic} ${D.n}`); render(); },
-  'kum-info': el => { const j = KUM?.jokers[+el.dataset.i]; const J = j && KUM_J[j.id]; if (J) toast(`${J.ic} ${J.n} (${KUM_RAR[J.r].n}): ${J.d}${j.e ? ` · ${KUM_ED[j.e].ic} ${KUM_ED[j.e].n}: ${KUM_ED[j.e].d}` : ''}${j.sleepy ? ' · 💤 działa w co drugim zagraniu' : ''}`, 5000); },
+  'kum-info': el => { const K = KUM, i = +el.dataset.i, P = kgPop(); K.pop = P?.t === 'j' && P.i === i ? null : { t: 'j', i, ph: K.phase }; render(); },
+  'kum-iteminfo': el => { const K = KUM, i = +el.dataset.i, P = kgPop(); K.pop = P?.t === 'i' && P.i === i ? null : { t: 'i', i, ph: K.phase }; render(); },
+  'kum-popx': () => { if (KUM) { KUM.pop = null; render(); } },
+  'kum-levels': () => { if (KUM) { KUM.showLv = !KUM.showLv; render(); } },
   'kum-quit': () => { if (!KUM) return go('#/boss'); askBox({ icon: '🃏', title: 'Zakończyć bieg?', intro: 'Dostaniesz nagrodę za ukończone rundy.', ok: 'Zakończ', cancel: 'Graj dalej', danger: true }).then(ok => { if (ok && KUM && KUM.phase !== 'end') kumEnd(KUM.round > KUM_LAST); }); },
   'kum-again': () => { const d = KUM?.deckId || 'all', kit = KUM?.kit || 'classic', t = KUM?.tier || 1; KUM = null; kumStart(d, kit, t); },
   'kum-quit2': () => { KUM = null; kumUnlock(); go('#/boss'); },
