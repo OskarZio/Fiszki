@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '381';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '382';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -635,7 +635,7 @@ function proofGems(s, c, verdict, ivl0) {
     s.tStreak = verdict === 'ok' ? (s.tStreak || 0) + 1 : verdict === 'close' ? (s.tStreak || 0) : 0;
     if (s.tStreak && s.tStreak % PROOF_STREAK === 0) {
       const k = S.wallet.filter(w => w.why === 'type-streak' && dayKey(w.t) === day).length;
-      if (k < PROOF_STREAK_MAX) { S.wallet.push({ id: `tstreak-${day}-${k}`, n: PROOF_STREAK_GEMS, why: 'type-streak', t: Date.now() }); toast(`🔥 ${s.tStreak} wpisanych dobrze z rzędu! +${PROOF_STREAK_GEMS} 💎`, 2500); }
+      if (k < PROOF_STREAK_MAX) { const gn = typeof crystN === 'function' ? crystN(PROOF_STREAK_GEMS) : PROOF_STREAK_GEMS; S.wallet.push({ id: `tstreak-${day}-${k}`, n: gn, why: 'type-streak', t: Date.now() }); toast(`🔥 ${s.tStreak} wpisanych dobrze z rzędu! +${gn} 💎`, 2500); }
     }
   }
   if (ivl0 < MATURE_IVL && (c.srs.ivl || 0) >= MATURE_IVL) {
@@ -652,7 +652,7 @@ function setDoneReward(s) {
   for (const m of ['flip', 'type']) {
     const k = Object.keys(s.got[m]).length, id = `setdone-${s.deckId}-${day}-${m}`;
     if (k < SET_MIN || S.wallet.some(w => w.id === id)) continue;
-    const g = Math.min(SET_CAP, Math.max(3, Math.round(k * SET_GEM * (m === 'type' ? SET_TYPE_MUL : 1))));
+    const g = Math.round(Math.min(SET_CAP, Math.max(3, Math.round(k * SET_GEM * (m === 'type' ? SET_TYPE_MUL : 1)))) * (typeof crystMul === 'function' ? crystMul() : 1));
     S.wallet.push({ id, n: g, why: 'set-done', t: Date.now() }); n += g; parts.push({ m, k, g });
   }
   if (!n) return;
@@ -5370,6 +5370,8 @@ function spend(n, why) {
 }
 var itemCount = (kind, key) => S.items.filter(i => i.kind === kind && i.key === key).reduce((a, i) => a + (i.q ?? 1), 0);
 var hasItem = (kind, key) => itemCount(kind, key) > 0;
+// 🎁 następna darmowa skrzynka: najpierw ta sama, potem dowolna inna, którą masz w ekwipunku
+var nextFreeCase = k => hasItem('case', k) ? k : Object.keys(CASES).find(x => hasItem('case', x)) || null;
 var addItem = (kind, key, q = 1, id = uid()) => { if (S.items.some(i => i.id === id)) return; S.items.push({ id, kind, key, q, t: Date.now() }); save(); };
 var ownedStickers = () => [...new Set([...FREE_STICKERS, ...STICKERS.filter(s => hasItem('sticker', s.id) || hasItem('shiny', s.id)).map(s => s.id)])];
 var stickerTile = (id, extra = '') => { const s = stickerById(id); if (!s) return ''; return `<span class="mini-st${fxCls(shinyLv(id))}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}"${extra}>${stE(s)}</span>`; };
@@ -5526,7 +5528,7 @@ ROUTES.case = (parts, q) => {
       <div class="big-st">${prIco(won)}</div><b style="font-size:22px">${won.kind === 'gems' ? `+${won.n} kryształów` : won.kind === 'gold' ? `+${won.n} złota` : won.kind === 'respin' ? 'Losuj jeszcze raz!' : esc(won.name)}</b>
       <div style="color:${RARITY[won.r].color};font-weight:700">${won.kind === 'tok' ? `Żeton ulepszenia · ${RARITY[won.r].name}` : `${CASE_CAT[won.kind]?.[1] || ''} · ${RARITY[won.r].name}`}</div>
       <p class="small muted">${SPIN.test ? '🧪 Tryb testowy – nic nie trafia na konto.' : prizeMsg(won)}</p>
-      <div class="row"><button class="primary grow${won.kind === 'respin' ? ' pulse' : ''}" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">${won.kind === 'respin' ? '🔁 Losuj jeszcze raz' : 'Otwórz kolejną'}</button><button class="grow" data-go="${SPIN.test ? '#/host' : won.kind === 'tok' ? '#/inv' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? '#/hero' : '#/shop'}">${SPIN.test ? 'Panel hosta' : won.kind === 'tok' ? 'Użyj żetonu' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? 'Do bohatera' : 'Sklep'}</button></div></div>`
+      <div class="row"><button class="primary grow${won.kind === 'respin' ? ' pulse' : ''}" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">${won.kind === 'respin' ? '🔁 Losuj jeszcze raz' : (() => { const nk = !SPIN.test && nextFreeCase(k); return nk ? `🎁 Otwórz kolejną darmową${nk !== k ? ` · ${CASES[nk].name}` : ''}` : 'Otwórz kolejną'; })()}</button><button class="grow" data-go="${SPIN.test ? '#/host' : won.kind === 'tok' ? '#/inv' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? '#/hero' : '#/shop'}">${SPIN.test ? 'Panel hosta' : won.kind === 'tok' ? 'Użyj żetonu' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? 'Do bohatera' : 'Sklep'}</button></div></div>`
     : `<div class="odds center">${(() => { const sum = Object.values(c.pool).reduce((a, b) => a + b, 0); return Object.entries(c.pool).map(([x, p]) => `<span style="color:${CASE_CAT[x][2]}">${CASE_CAT[x][0]} ${CASE_CAT[x][1]} ${Math.round(p / sum * 100)}%</span>`).join(' '); })()}</div>
        <button class="ghost block" data-act="case-drops" data-k="${k}">📋 Zobacz cały drop i szanse</button>
        <button class="primary block" data-act="case-spin" data-k="${k}" data-free="${free ? 1 : ''}" data-test="${test}" ${SPIN.phase === 'spinning' ? 'disabled' : ''} style="min-height:58px;font-size:18px">
@@ -5588,7 +5590,7 @@ function spinCase(k, free, test) {
 
 Object.assign(ACTIONS, {
   'case-spin': el => spinCase(el.dataset.k, !!el.dataset.free, el.dataset.test || ''),
-  'case-again': el => { SPIN = null; const k = el.dataset.k, t = el.dataset.test;
+  'case-again': el => { SPIN = null; const t = el.dataset.test, k = t ? el.dataset.k : nextFreeCase(el.dataset.k) || el.dataset.k;
     go(`#/case/${k}${t ? `?test=1${t !== 'any' ? '&r=' + t : ''}` : hasItem('case', k) ? '?free=1' : ''}`); render(); },
   'case-close': () => { if (SPIN?.phase === 'spinning') return; const t = SPIN?.test; SPIN = null; go(t ? '#/host' : '#/shop'); },
   upgrade: el => {
@@ -5756,7 +5758,7 @@ function upTokHTML(compact) {
 function goalWallet() {
   const perDay = {}; for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); }
   let ch = 0; const have = new Set(S.wallet.map(w => w.id));
-  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: k >= '2026-11-13' ? 40 : 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
+  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: k >= '2026-11-13' ? (k === dayKey(Date.now()) && typeof crystN === 'function' ? crystN(40) : 40) : 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
   if (ch) save();
 }
 on('start', () => setTimeout(goalWallet, 1200));
@@ -8128,8 +8130,8 @@ Object.assign(ACTIONS, {
     const id = el.dataset.id, st = questState();
     const q = id === 'all' ? (st.allClaimed ? { reward: QUEST_BONUS, name: 'Komplet zadań' } : null) : st.list.find(x => x.id === id && x.done);
     if (!q || questClaimed(id)) return;
-    S.wallet.push({ id: questWid(id), n: q.reward, why: 'quest-' + id, t: Date.now() }); save();
-    toast(`+${q.reward} 💎 · ${q.name}`); confetti(id === 'all' ? 120 : 40); render();
+    const qn = typeof crystN === 'function' ? crystN(q.reward) : q.reward; S.wallet.push({ id: questWid(id), n: qn, why: 'quest-' + id, t: Date.now() }); save();
+    toast(`+${qn} 💎 · ${q.name}${qn > q.reward ? ' (bonus postaci)' : ''}`); confetti(id === 'all' ? 120 : 40); render();
   },
 });
 
@@ -8151,7 +8153,7 @@ var quizLenMul = total => Math.pow(Math.min(total, 60) / 10, 1.15);
 function quizReward(pct, total, type) {
   if (total < 10) return { n: 0, why: 'kryształy od 10 pytań' };
   const tier = (QUIZ_TIERS.find(([p]) => pct >= p) || [0, 0])[1];
-  const base = Math.round(tier * quizLenMul(total) * (type === 'type' ? 1.5 : 1));
+  const base = Math.round(tier * quizLenMul(total) * (type === 'type' ? 1.5 : 1) * (typeof crystMul === 'function' ? crystMul() : 1));
   const t0 = dayStart(), already = S.wallet.filter(w => w.why === 'quiz' && w.t >= t0).reduce((a, w) => a + w.n, 0);
   const n = Math.max(0, Math.min(base, QUIZ_GEM_CAP - already));
   if (n > 0) { S.wallet.push({ id: uid(), n, why: 'quiz', t: Date.now() }); save(); }
@@ -10796,49 +10798,49 @@ var PR_TITLES = ['Nowicjusz', 'Adept', 'Mistrz', 'Arcymistrz', 'Legenda', 'Mityc
 // ---------- 🎭 postacie: umiejętność bierna + supercios + umiejętności (3 gałęzie × 4 węzły)
 // efekty węzłów (sumują się): dmg %, crit %, hp, def %, dodge %, regen (❤️ za dobrą odp.), second (drugie życie), type/abcd (mnożnik trybu),
 // steady („Ledwo” nie przerywa serii), alch (mikstury), loot (+przedmiot), ultFast (szybszy ult), ultPow %, time % (czas do namysłu),
-// verify % (bonus za sprawdzian), vamp % (leczenie z obrażeń), first (pierwszy cios ×), exec % (boss < 25%), combo % (seria), xp %, gems %, ice (łatwiej rozbić lód), thorns % (odbicie)
+// verify % (bonus za sprawdzian), vamp % (leczenie z obrażeń), first (pierwszy cios ×), exec % (boss < 25%), combo % (seria), xp %, gems % (🪙 z walk), cryst % (💎 z nauki), ice (łatwiej rozbić lód), thorns % (odbicie)
 var SKN = (id, name, desc, eff, v) => ({ id, name, desc, eff, v });
 var LINES = {
   cat: { passive: ['🐾 Koci refleks', '10% szans na unik ataku', { dodge: 10 }], ult: ['😼 Dziewięć żyć', 'cios ×3 i leczy 30% ❤️'],
     tree: [['🗡️ Pazury', [SKN('c1', 'Ostre pazury', '+12% obrażeń', 'dmg', 12), SKN('c2', 'Skok na cel', 'pierwszy cios ×2', 'first', 2), SKN('c3', 'Krwawe drapnięcie', '+12% krytyka', 'crit', 12), SKN('c4', 'Dobicie', 'boss < 25% ❤️ → +50%', 'exec', 50)]],
       ['💤 Drzemka', [SKN('c5', 'Mruczenie', '+25 ❤️', 'hp', 25), SKN('c6', 'Kocia regeneracja', 'dobra odpowiedź leczy 3 ❤️', 'regen', 3), SKN('c7', 'Spadanie na 4 łapy', '−12% obrażeń', 'def', 12), SKN('c8', 'Dziewiąte życie', 'raz na walkę przeżyjesz z 1 ❤️', 'second', 1)]],
-      ['✨ Ciekawość', [SKN('c9', 'Nadstawione uszy', '+30% czasu do namysłu', 'time', 30), SKN('c10', 'Kot uczony', 'sprawdzian bossa: bonus +50%', 'verify', 50), SKN('c11', 'Szybki ult', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('c12', 'Kocia magia', 'supercios +40%', 'ultPow', 40)]]] },
+      ['✨ Ciekawość', [SKN('c9', 'Nadstawione uszy', '+15% 🪙 z walk', 'gems', 15), SKN('c10', 'Kot uczony', '+15% 💎 z nauki i zadań', 'cryst', 15), SKN('c11', 'Szybki ult', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('c12', 'Kocia magia', 'supercios +40%', 'ultPow', 40)]]] },
   frog: { passive: ['👅 Długi język', 'wpisywanie: cios ×1,2 więcej', { type: .2 }], ult: ['🐸 Język-lasso', 'cios ×3,5, zrywa tarczę i leczy 15 ❤️'],
     tree: [['🌊 Staw', [SKN('f1', 'Śliska skóra', '+8% uniku', 'dodge', 8), SKN('f2', 'Kumkanie', '+20 ❤️', 'hp', 20), SKN('f3', 'Wilgoć', 'dobra odpowiedź leczy 2 ❤️', 'regen', 2), SKN('f4', 'Rechot odwetu', 'odbija 20% obrażeń', 'thorns', 20)]],
-      ['⌨️ Słowa', [SKN('f5', 'Pisarz z bagien', 'wpisywanie: cios +25%', 'type', .25), SKN('f6', 'Literówka? Nie', '+10% krytyka', 'crit', 10), SKN('f7', 'Słownik', 'sprawdzian: bonus +60%', 'verify', 60), SKN('f8', 'Mistrz pióra', 'wpisywanie: cios +35%', 'type', .35)]],
+      ['⌨️ Słowa', [SKN('f5', 'Pisarz z bagien', 'wpisywanie: cios +25%', 'type', .25), SKN('f6', 'Złota mucha', '+15% 🪙 z walk', 'gems', 15), SKN('f7', 'Słownik', '+15% 💎 z nauki i zadań', 'cryst', 15), SKN('f8', 'Mistrz pióra', 'wpisywanie: cios +35%', 'type', .35)]],
       ['🪷 Skok', [SKN('f9', 'Daleki skok', '+15% obrażeń', 'dmg', 15), SKN('f10', 'Seria skoków', 'seria rośnie +50% szybciej', 'combo', 50), SKN('f11', 'Wielki skok', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('f12', 'Żabi król', 'supercios +50%', 'ultPow', 50)]]] },
   dog: { passive: ['🦴 Wytrzymałość', '+25 ❤️ na start', { hp: 25 }], ult: ['🐶 Wierny kumpel', 'cios ×2,5 i blokuje 3 kolejne ataki'],
     tree: [['🛡️ Stróż', [SKN('d1', 'Gruba skóra', '+30 ❤️', 'hp', 30), SKN('d2', 'Szczek ostrzegawczy', '−15% obrażeń', 'def', 15), SKN('d3', 'Lizanie ran', 'dobra odpowiedź leczy 3 ❤️', 'regen', 3), SKN('d4', 'Nie poddam się', 'drugie życie raz na walkę', 'second', 1)]],
       ['🎾 Aport', [SKN('d5', 'Szybki aport', '+12% obrażeń', 'dmg', 12), SKN('d6', 'Węch', '+8% krytyka', 'crit', 8), SKN('d7', 'Spokój', '„Ledwo” nie przerywa serii', 'steady', 1), SKN('d8', 'Pogoń', 'seria rośnie +60% szybciej', 'combo', 60)]],
-      ['🏅 Medal', [SKN('d9', 'Dobry piesek', '+15% doświadczenia', 'xp', 15), SKN('d10', 'Kopanie', '+1 przedmiot w skrzyni', 'loot', 1), SKN('d11', 'Merdanie', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('d12', 'Najlepszy przyjaciel', 'supercios +40%', 'ultPow', 40)]]] },
+      ['🏅 Medal', [SKN('d9', 'Dobry piesek', '+15% 🪙 z walk', 'gems', 15), SKN('d10', 'Kopanie skarbów', '+15% 💎 z nauki i zadań', 'cryst', 15), SKN('d11', 'Merdanie', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('d12', 'Najlepszy przyjaciel', 'supercios +40%', 'ultPow', 40)]]] },
   owl: { passive: ['🌙 Nocny marek', '+35% czasu do namysłu', { time: 35 }], ult: ['🦉 Nocna mądrość', 'cios ×2,5, boss traci 2 tury, lód i robaki znikają'],
-    tree: [['📚 Wiedza', [SKN('o1', 'Oczytanie', '+12% obrażeń', 'dmg', 12), SKN('o2', 'Pewność', 'sprawdzian: bonus +80%', 'verify', 80), SKN('o3', 'Kujon', '+20% doświadczenia', 'xp', 20), SKN('o4', 'Profesor', 'boss < 25% ❤️ → +60%', 'exec', 60)]],
-      ['🪶 Lot', [SKN('o5', 'Ciche skrzydła', '+10% uniku', 'dodge', 10), SKN('o6', 'Bystre oko', '+12% krytyka', 'crit', 12), SKN('o7', 'Wysoki lot', '+25% czasu do namysłu', 'time', 25), SKN('o8', 'Pióra', 'lód pęka 2× szybciej', 'ice', 1)]],
+    tree: [['📚 Wiedza', [SKN('o1', 'Oczytanie', '+12% obrażeń', 'dmg', 12), SKN('o2', 'Pewność', 'sprawdzian: bonus +80%', 'verify', 80), SKN('o3', 'Kujon', '+20% 💎 z nauki i zadań', 'cryst', 20), SKN('o4', 'Profesor', 'boss < 25% ❤️ → +60%', 'exec', 60)]],
+      ['🪶 Lot', [SKN('o5', 'Ciche skrzydła', '+10% uniku', 'dodge', 10), SKN('o6', 'Bystre oko', '+12% krytyka', 'crit', 12), SKN('o7', 'Wysoki lot', '+25% czasu do namysłu', 'time', 25), SKN('o8', 'Błyszczące pióra', '+15% 🪙 z walk', 'gems', 15)]],
       ['🔮 Mądrość', [SKN('o9', 'Test ABCD', 'ABCD: cios ×0,7 zamiast ×0,5', 'abcd', .2), SKN('o10', 'Spokój nocy', '„Ledwo” nie przerywa serii', 'steady', 1), SKN('o11', 'Olśnienie', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('o12', 'Sowa mędrczyni', 'supercios +50%', 'ultPow', 50)]]] },
   hamster: { passive: ['🌰 Chomikowanie', '+20% doświadczenia', { xp: 20 }], ult: ['🎡 Kołowrotek', '4 szybkie ciosy (razem ×3,6) i seria +3'],
-    tree: [['🌻 Zapasy', [SKN('h1', 'Pełne policzki', '+20 ❤️', 'hp', 20), SKN('h2', 'Ziarenko', '+10% 🪙 z walk', 'gems', 10), SKN('h3', 'Spiżarnia', '+1 przedmiot w skrzyni', 'loot', 1), SKN('h4', 'Skarbiec', '+20% 🪙 z walk', 'gems', 20)]],
+    tree: [['🌻 Zapasy', [SKN('h1', 'Pełne policzki', '+20 ❤️', 'hp', 20), SKN('h2', 'Ziarenko', '+15% 💎 z nauki i zadań', 'cryst', 15), SKN('h3', 'Spiżarnia', '+1 przedmiot w skrzyni', 'loot', 1), SKN('h4', 'Skarbiec', '+20% 🪙 z walk', 'gems', 20)]],
       ['🏃 Bieg', [SKN('h5', 'Truchcik', 'seria rośnie +50% szybciej', 'combo', 50), SKN('h6', 'Rozpęd', '+12% obrażeń', 'dmg', 12), SKN('h7', 'Zwinne łapki', '+8% uniku', 'dodge', 8), SKN('h8', 'Turbo', 'pierwszy cios ×2,5', 'first', 2.5)]],
       ['🧪 Alchemia', [SKN('h9', 'Kieszonkowiec', 'mikstury mocniejsze, +1 użycie', 'alch', 1), SKN('h10', 'Przekąska', 'dobra odpowiedź leczy 2 ❤️', 'regen', 2), SKN('h11', 'Chomiczy zapał', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('h12', 'Wielki kołowrotek', 'supercios +50%', 'ultPow', 50)]]] },
   fox: { passive: ['🦊 Przebiegłość', '+8% krytyka', { crit: 8 }], ult: ['🔥 Lisi spryt', 'pewny krytyk ×4, usuwa przeszkadzajki i truciznę'],
     tree: [['🗡️ Zasadzka', [SKN('x1', 'Z ukrycia', 'pierwszy cios ×2,5', 'first', 2.5), SKN('x2', 'Ostry ząb', '+12% krytyka', 'crit', 12), SKN('x3', 'Szybkie łapy', '+12% obrażeń', 'dmg', 12), SKN('x4', 'Polowanie', 'boss < 25% ❤️ → +60%', 'exec', 60)]],
       ['🌲 Las', [SKN('x5', 'Ruda kita', '+10% uniku', 'dodge', 10), SKN('x6', 'Nora', '−12% obrażeń', 'def', 12), SKN('x7', 'Wampirzy kęs', '10% obrażeń wraca jako ❤️', 'vamp', 10), SKN('x8', 'Kontra', 'odbija 25% obrażeń', 'thorns', 25)]],
-      ['🎲 Fortel', [SKN('x9', 'Chytry plan', '+1 przedmiot w skrzyni', 'loot', 1), SKN('x10', 'Pułapka', 'ABCD: cios ×0,7 zamiast ×0,5', 'abcd', .2), SKN('x11', 'Lisi ogień', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('x12', 'Dziewięć ogonów', 'supercios +60%', 'ultPow', 60)]]] },
+      ['🎲 Fortel', [SKN('x9', 'Chytry plan', '+15% 💎 z nauki i zadań', 'cryst', 15), SKN('x10', 'Lisi łup', '+15% 🪙 z walk', 'gems', 15), SKN('x11', 'Lisi ogień', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('x12', 'Dziewięć ogonów', 'supercios +60%', 'ultPow', 60)]]] },
   beast: { passive: ['🐲 Dzikość', '+10% obrażeń', { dmg: 10 }], ult: ['💥 Ryk bestii', 'cios ×4,5 (kosztuje 10 ❤️)'],
     tree: [['💢 Furia', [SKN('b1', 'Kły', '+15% obrażeń', 'dmg', 15), SKN('b2', 'Szał', 'seria rośnie +60% szybciej', 'combo', 60), SKN('b3', 'Rozszarpanie', '+12% krytyka', 'crit', 12), SKN('b4', 'Rzeź', 'boss < 25% ❤️ → +70%', 'exec', 70)]],
       ['🪨 Łuska', [SKN('b5', 'Twarda łuska', '+30 ❤️', 'hp', 30), SKN('b6', 'Kolce', 'odbija 25% obrażeń', 'thorns', 25), SKN('b7', 'Krew bestii', '12% obrażeń wraca jako ❤️', 'vamp', 12), SKN('b8', 'Odrodzenie', 'drugie życie raz na walkę', 'second', 1)]],
-      ['🌋 Pradawna moc', [SKN('b9', 'Instynkt', '+20% czasu do namysłu', 'time', 20), SKN('b10', 'Łowca', '+1 przedmiot w skrzyni', 'loot', 1), SKN('b11', 'Gniew', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('b12', 'Kataklizm', 'supercios +50%', 'ultPow', 50)]]] },
+      ['🌋 Pradawna moc', [SKN('b9', 'Łup bestii', '+15% 🪙 z walk', 'gems', 15), SKN('b10', 'Łowca', '+15% 💎 z nauki i zadań', 'cryst', 15), SKN('b11', 'Gniew', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('b12', 'Kataklizm', 'supercios +50%', 'ultPow', 50)]]] },
   rabbit: { passive: ['⚡ Sprint', '+12% uniku i +10% czasu do namysłu', { dodge: 12, time: 10 }], ult: ['🌠 Księżycowy skok', 'cios ×3 i unika 2 kolejnych ataków'],
     tree: [['🪶 Zwinność', [SKN('k1', 'Lekkie łapki', '+8% uniku', 'dodge', 8), SKN('k2', 'Hyc!', 'pierwszy cios ×2', 'first', 2), SKN('k3', 'Kicanie', 'seria rośnie +50% szybciej', 'combo', 50), SKN('k4', 'Unik w ostatniej chwili', '+10% uniku', 'dodge', 10)]],
-      ['⏳ Czujność', [SKN('k5', 'Długie uszy', '+30% czasu do namysłu', 'time', 30), SKN('k6', 'Marchewka', 'dobra odpowiedź leczy 3 ❤️', 'regen', 3), SKN('k7', 'Nora', '+20 ❤️', 'hp', 20), SKN('k8', 'Spokojny nos', '„Ledwo” nie przerywa serii', 'steady', 1)]],
-      ['✨ Księżyc', [SKN('k9', 'Blask księżyca', '+12% obrażeń', 'dmg', 12), SKN('k10', 'Szczęśliwa łapka', '+10% krytyka', 'crit', 10), SKN('k11', 'Pełnia', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('k12', 'Księżycowa moc', 'supercios +40%', 'ultPow', 40)]]] },
+      ['⏳ Czujność', [SKN('k5', 'Długie uszy', '+30% czasu do namysłu', 'time', 30), SKN('k6', 'Marchewka', 'dobra odpowiedź leczy 3 ❤️', 'regen', 3), SKN('k7', 'Nora', '+20 ❤️', 'hp', 20), SKN('k8', 'Marchewkowy skarb', '+15% 🪙 z walk', 'gems', 15)]],
+      ['✨ Księżyc', [SKN('k9', 'Blask księżyca', '+12% obrażeń', 'dmg', 12), SKN('k10', 'Szczęśliwa łapka', '+15% 💎 z nauki i zadań', 'cryst', 15), SKN('k11', 'Pełnia', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('k12', 'Księżycowa moc', 'supercios +40%', 'ultPow', 40)]]] },
   phoenix: { passive: ['🔥 Żar', '+8% krytyka i raz na walkę odradza się z 1 ❤️', { crit: 8, second: 1 }], ult: ['🌈 Odrodzenie z popiołów', 'cios ×3,5 i leczy 40% ❤️'],
     tree: [['🔥 Płomień', [SKN('n1', 'Gorące pióra', '+12% obrażeń', 'dmg', 12), SKN('n2', 'Iskra', '+10% krytyka', 'crit', 10), SKN('n3', 'Pożoga', 'seria rośnie +50% szybciej', 'combo', 50), SKN('n4', 'Ognisty finał', 'boss < 25% ❤️ → +60%', 'exec', 60)]],
       ['🛡️ Pióra', [SKN('n5', 'Puch', '+25 ❤️', 'hp', 25), SKN('n6', 'Ciepło gniazda', 'dobra odpowiedź leczy 3 ❤️', 'regen', 3), SKN('n7', 'Twarde skrzydła', '−12% obrażeń', 'def', 12), SKN('n8', 'Parzące pióra', 'odbija 20% obrażeń', 'thorns', 20)]],
-      ['🌈 Odrodzenie', [SKN('n9', 'Popiół', '12% obrażeń wraca jako ❤️', 'vamp', 12), SKN('n10', 'Poranne pianie', '+20% doświadczenia', 'xp', 20), SKN('n11', 'Wieczny ogień', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('n12', 'Słoneczny ptak', 'supercios +50%', 'ultPow', 50)]]] },
+      ['🌈 Odrodzenie', [SKN('n9', 'Złoty popiół', '+15% 🪙 z walk', 'gems', 15), SKN('n10', 'Złote pióra', '+15% 💎 z nauki i zadań', 'cryst', 15), SKN('n11', 'Wieczny ogień', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('n12', 'Słoneczny ptak', 'supercios +50%', 'ultPow', 50)]]] },
   dragon: { passive: ['🐉 Smocza łuska', '+12% obrażeń i −8% obrażeń', { dmg: 12, def: 8 }], ult: ['💥 Zianie ogniem', 'cios ×5 i zrywa tarczę bossa'],
     tree: [['🔥 Ogień', [SKN('g1', 'Żar w paszczy', '+15% obrażeń', 'dmg', 15), SKN('g2', 'Smocze oko', '+12% krytyka', 'crit', 12), SKN('g3', 'Atak z powietrza', 'pierwszy cios ×2,5', 'first', 2.5), SKN('g4', 'Spopielenie', 'boss < 25% ❤️ → +60%', 'exec', 60)]],
       ['🛡️ Łuska', [SKN('g5', 'Gruba łuska', '+35 ❤️', 'hp', 35), SKN('g6', 'Pancerz', '−15% obrażeń', 'def', 15), SKN('g7', 'Kolce na ogonie', 'odbija 25% obrażeń', 'thorns', 25), SKN('g8', 'Smocza krew', '12% obrażeń wraca jako ❤️', 'vamp', 12)]],
-      ['🔮 Otchłań', [SKN('g9', 'Skarbiec', '+15% 🪙 z walk', 'gems', 15), SKN('g10', 'Łup smoka', '+1 przedmiot w skrzyni', 'loot', 1), SKN('g11', 'Gniew otchłani', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('g12', 'Pradawny ogień', 'supercios +50%', 'ultPow', 50)]]] },
+      ['🔮 Otchłań', [SKN('g9', 'Skarbiec', '+15% 🪙 z walk', 'gems', 15), SKN('g10', 'Smoczy skarb', '+20% 💎 z nauki i zadań', 'cryst', 20), SKN('g11', 'Gniew otchłani', 'supercios ładuje się szybciej', 'ultFast', 1), SKN('g12', 'Pradawny ogień', 'supercios +50%', 'ultPow', 50)]]] },
 };
 // pozostałe postacie z heroes.js (gdyby doszły nowe) dostają umiejętności kota
 var CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefined' ? CHARS : {}).map(([k, c]) => [k, { name: c.name, icon: c.icon, forms: c.forms, desc: c.desc, draw: true }])),
@@ -10869,7 +10871,7 @@ var EFF_ALT = { second: ['hp', 20], steady: ['combo', 30], alch: ['gems', 10], u
 var EFF_DESC = { dmg: v => `+${v}% obrażeń`, crit: v => `+${v}% krytyka`, hp: v => `+${v} ❤️`, def: v => `−${v}% obrażeń`, dodge: v => `+${v}% uniku`, regen: v => `dobra odpowiedź leczy ${v} ❤️`,
   type: v => `wpisywanie: cios +${Math.round(v * 100)}%`, abcd: v => `ABCD: cios +${Math.round(v * 100)}%`, loot: v => `+${v} przedmiot w skrzyni`, ultPow: v => `supercios +${v}%`, time: v => `+${v}% czasu do namysłu`,
   verify: v => `sprawdzian: bonus +${v}%`, vamp: v => `${v}% obrażeń wraca jako ❤️`, first: v => `pierwszy cios ×${v}`, exec: v => `boss < 25% ❤️ → +${v}%`, combo: v => `seria rośnie +${v}% szybciej`,
-  xp: v => `+${v}% doświadczenia`, gems: v => `+${v}% 🪙 z walk`, thorns: v => `odbija ${v}% obrażeń` };
+  xp: v => `+${v}% doświadczenia`, gems: v => `+${v}% 🪙 z walk`, cryst: v => `+${v}% 💎 z nauki i zadań`, thorns: v => `odbija ${v}% obrażeń` };
 var roundV = (eff, v) => ['type', 'abcd'].includes(eff) ? Math.round(v * 100) / 100 : eff === 'first' ? Math.round(v * 4) / 4 : Math.max(1, Math.round(v));
 var PAGES_CACHE = {};
 function treePages(l = heroLine()) {
@@ -10892,6 +10894,9 @@ function skVal(eff) {
   return v * heroTierMul(heroLine());
 }
 var hasSk = eff => skVal(eff) > 0;
+// 💎 bonus z drzewka postaci do kryształów za naukę (zestawy, serie wpisywania, testy, cel dnia, zadania); tylko tryb gry
+var crystMul = () => { try { return appMode() === 'full' ? 1 + skVal('cryst') / 100 : 1; } catch { return 1; } };
+var crystN = n => Math.round(n * crystMul());
 // 🌳 punkty umiejętności osobno dla każdej postaci: zdobywa je ta postać, którą grasz, gdy bohater awansuje (1 na start)
 function linePts(l = heroLine()) {
   const h = hero();
@@ -12919,7 +12924,7 @@ function towerEnd(B, won) {
   TW_GK = !!B.b.gk;
   const h = hero(), T = h[twKey()]; if (!T) return;
   if (won) {
-    const f = T.floor, xp = Math.round((B.ok * 3 + 30 + 15 * f) * (TW_GK ? 1 : 2) * xpMul()), gems = Math.round(Math.min(TW_GK ? 40 : 90, TW_GK ? 5 + 1.5 * f : 10 + 3.5 * f) * gemMul());   // ⚖️ wolniej rosnące, z limitem na piętro   // wieża wiedzy (quiz): mniej 🪙
+    const f = T.floor, xp = Math.round((B.ok * 3 + 30 + 15 * f) * (TW_GK ? 1 : 2) * xpMul()), gems = Math.round(Math.min(TW_GK ? 40 : 90, TW_GK ? 5 + 1.5 * f : 10 + 3.5 * f) * gemMul() * (1 + skVal('gems') / 100));   // ⚖️ wolniej rosnące, z limitem na piętro   // wieża wiedzy (quiz): mniej 🪙
     const m = 1 + (T.buff.gold || 0), gx = Math.round(xp * m), gg = Math.round(gems * m);
     giveXP(gx, 'wieża'); S.wallet.push({ id: 'tower-' + uid(), n: gg, why: 'tower', t: Date.now() });
     T.bank.xp += gx; T.bank.gems += gg; B.towerGain = { xp: gx, gems: gg };

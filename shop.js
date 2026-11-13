@@ -137,6 +137,8 @@ function spend(n, why) {
 }
 const itemCount = (kind, key) => S.items.filter(i => i.kind === kind && i.key === key).reduce((a, i) => a + (i.q ?? 1), 0);
 const hasItem = (kind, key) => itemCount(kind, key) > 0;
+// 🎁 następna darmowa skrzynka: najpierw ta sama, potem dowolna inna, którą masz w ekwipunku
+const nextFreeCase = k => hasItem('case', k) ? k : Object.keys(CASES).find(x => hasItem('case', x)) || null;
 const addItem = (kind, key, q = 1, id = uid()) => { if (S.items.some(i => i.id === id)) return; S.items.push({ id, kind, key, q, t: Date.now() }); save(); };
 let ownedStickers = () => [...new Set([...FREE_STICKERS, ...STICKERS.filter(s => hasItem('sticker', s.id) || hasItem('shiny', s.id)).map(s => s.id)])];
 const stickerTile = (id, extra = '') => { const s = stickerById(id); if (!s) return ''; return `<span class="mini-st${fxCls(shinyLv(id))}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}"${extra}>${stE(s)}</span>`; };
@@ -293,7 +295,7 @@ ROUTES.case = (parts, q) => {
       <div class="big-st">${prIco(won)}</div><b style="font-size:22px">${won.kind === 'gems' ? `+${won.n} kryształów` : won.kind === 'gold' ? `+${won.n} złota` : won.kind === 'respin' ? 'Losuj jeszcze raz!' : esc(won.name)}</b>
       <div style="color:${RARITY[won.r].color};font-weight:700">${won.kind === 'tok' ? `Żeton ulepszenia · ${RARITY[won.r].name}` : `${CASE_CAT[won.kind]?.[1] || ''} · ${RARITY[won.r].name}`}</div>
       <p class="small muted">${SPIN.test ? '🧪 Tryb testowy – nic nie trafia na konto.' : prizeMsg(won)}</p>
-      <div class="row"><button class="primary grow${won.kind === 'respin' ? ' pulse' : ''}" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">${won.kind === 'respin' ? '🔁 Losuj jeszcze raz' : 'Otwórz kolejną'}</button><button class="grow" data-go="${SPIN.test ? '#/host' : won.kind === 'tok' ? '#/inv' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? '#/hero' : '#/shop'}">${SPIN.test ? 'Panel hosta' : won.kind === 'tok' ? 'Użyj żetonu' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? 'Do bohatera' : 'Sklep'}</button></div></div>`
+      <div class="row"><button class="primary grow${won.kind === 'respin' ? ' pulse' : ''}" data-act="case-again" data-k="${k}" data-test="${SPIN.test || ''}">${won.kind === 'respin' ? '🔁 Losuj jeszcze raz' : (() => { const nk = !SPIN.test && nextFreeCase(k); return nk ? `🎁 Otwórz kolejną darmową${nk !== k ? ` · ${CASES[nk].name}` : ''}` : 'Otwórz kolejną'; })()}</button><button class="grow" data-go="${SPIN.test ? '#/host' : won.kind === 'tok' ? '#/inv' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? '#/hero' : '#/shop'}">${SPIN.test ? 'Panel hosta' : won.kind === 'tok' ? 'Użyj żetonu' : won.kind === 'skin' || won.kind === 'gear' || won.kind === 'mat' ? 'Do bohatera' : 'Sklep'}</button></div></div>`
     : `<div class="odds center">${(() => { const sum = Object.values(c.pool).reduce((a, b) => a + b, 0); return Object.entries(c.pool).map(([x, p]) => `<span style="color:${CASE_CAT[x][2]}">${CASE_CAT[x][0]} ${CASE_CAT[x][1]} ${Math.round(p / sum * 100)}%</span>`).join(' '); })()}</div>
        <button class="ghost block" data-act="case-drops" data-k="${k}">📋 Zobacz cały drop i szanse</button>
        <button class="primary block" data-act="case-spin" data-k="${k}" data-free="${free ? 1 : ''}" data-test="${test}" ${SPIN.phase === 'spinning' ? 'disabled' : ''} style="min-height:58px;font-size:18px">
@@ -355,7 +357,7 @@ function spinCase(k, free, test) {
 
 Object.assign(ACTIONS, {
   'case-spin': el => spinCase(el.dataset.k, !!el.dataset.free, el.dataset.test || ''),
-  'case-again': el => { SPIN = null; const k = el.dataset.k, t = el.dataset.test;
+  'case-again': el => { SPIN = null; const t = el.dataset.test, k = t ? el.dataset.k : nextFreeCase(el.dataset.k) || el.dataset.k;
     go(`#/case/${k}${t ? `?test=1${t !== 'any' ? '&r=' + t : ''}` : hasItem('case', k) ? '?free=1' : ''}`); render(); },
   'case-close': () => { if (SPIN?.phase === 'spinning') return; const t = SPIN?.test; SPIN = null; go(t ? '#/host' : '#/shop'); },
   upgrade: el => {
@@ -523,7 +525,7 @@ function upTokHTML(compact) {
 function goalWallet() {
   const perDay = {}; for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); }
   let ch = 0; const have = new Set(S.wallet.map(w => w.id));
-  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: k >= '2026-11-13' ? 40 : 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
+  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: k >= '2026-11-13' ? (k === dayKey(Date.now()) && typeof crystN === 'function' ? crystN(40) : 40) : 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
   if (ch) save();
 }
 on('start', () => setTimeout(goalWallet, 1200));

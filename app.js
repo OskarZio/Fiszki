@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '381';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '382';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -631,7 +631,7 @@ function proofGems(s, c, verdict, ivl0) {
     s.tStreak = verdict === 'ok' ? (s.tStreak || 0) + 1 : verdict === 'close' ? (s.tStreak || 0) : 0;
     if (s.tStreak && s.tStreak % PROOF_STREAK === 0) {
       const k = S.wallet.filter(w => w.why === 'type-streak' && dayKey(w.t) === day).length;
-      if (k < PROOF_STREAK_MAX) { S.wallet.push({ id: `tstreak-${day}-${k}`, n: PROOF_STREAK_GEMS, why: 'type-streak', t: Date.now() }); toast(`🔥 ${s.tStreak} wpisanych dobrze z rzędu! +${PROOF_STREAK_GEMS} 💎`, 2500); }
+      if (k < PROOF_STREAK_MAX) { const gn = typeof crystN === 'function' ? crystN(PROOF_STREAK_GEMS) : PROOF_STREAK_GEMS; S.wallet.push({ id: `tstreak-${day}-${k}`, n: gn, why: 'type-streak', t: Date.now() }); toast(`🔥 ${s.tStreak} wpisanych dobrze z rzędu! +${gn} 💎`, 2500); }
     }
   }
   if (ivl0 < MATURE_IVL && (c.srs.ivl || 0) >= MATURE_IVL) {
@@ -648,7 +648,7 @@ function setDoneReward(s) {
   for (const m of ['flip', 'type']) {
     const k = Object.keys(s.got[m]).length, id = `setdone-${s.deckId}-${day}-${m}`;
     if (k < SET_MIN || S.wallet.some(w => w.id === id)) continue;
-    const g = Math.min(SET_CAP, Math.max(3, Math.round(k * SET_GEM * (m === 'type' ? SET_TYPE_MUL : 1))));
+    const g = Math.round(Math.min(SET_CAP, Math.max(3, Math.round(k * SET_GEM * (m === 'type' ? SET_TYPE_MUL : 1)))) * (typeof crystMul === 'function' ? crystMul() : 1));
     S.wallet.push({ id, n: g, why: 'set-done', t: Date.now() }); n += g; parts.push({ m, k, g });
   }
   if (!n) return;

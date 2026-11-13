@@ -57,8 +57,8 @@ Object.assign(ACTIONS, {
     const id = el.dataset.id, st = questState();
     const q = id === 'all' ? (st.allClaimed ? { reward: QUEST_BONUS, name: 'Komplet zadań' } : null) : st.list.find(x => x.id === id && x.done);
     if (!q || questClaimed(id)) return;
-    S.wallet.push({ id: questWid(id), n: q.reward, why: 'quest-' + id, t: Date.now() }); save();
-    toast(`+${q.reward} 💎 · ${q.name}`); confetti(id === 'all' ? 120 : 40); render();
+    const qn = typeof crystN === 'function' ? crystN(q.reward) : q.reward; S.wallet.push({ id: questWid(id), n: qn, why: 'quest-' + id, t: Date.now() }); save();
+    toast(`+${qn} 💎 · ${q.name}${qn > q.reward ? ' (bonus postaci)' : ''}`); confetti(id === 'all' ? 120 : 40); render();
   },
 });
 
@@ -80,7 +80,7 @@ const quizLenMul = total => Math.pow(Math.min(total, 60) / 10, 1.15);
 function quizReward(pct, total, type) {
   if (total < 10) return { n: 0, why: 'kryształy od 10 pytań' };
   const tier = (QUIZ_TIERS.find(([p]) => pct >= p) || [0, 0])[1];
-  const base = Math.round(tier * quizLenMul(total) * (type === 'type' ? 1.5 : 1));
+  const base = Math.round(tier * quizLenMul(total) * (type === 'type' ? 1.5 : 1) * (typeof crystMul === 'function' ? crystMul() : 1));
   const t0 = dayStart(), already = S.wallet.filter(w => w.why === 'quiz' && w.t >= t0).reduce((a, w) => a + w.n, 0);
   const n = Math.max(0, Math.min(base, QUIZ_GEM_CAP - already));
   if (n > 0) { S.wallet.push({ id: uid(), n, why: 'quiz', t: Date.now() }); save(); }
