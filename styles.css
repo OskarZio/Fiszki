@@ -4498,37 +4498,3 @@ body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-i
 .drop-row .drop-ic { flex: none; }
 .drops-box > .row .grow { min-width: 0; }
 
-/* ── 🐾 Wspinaczka (gra beta) ── */
-.wsp { position: fixed; inset: 0; z-index: 60; background: #0c0c28; display: grid; justify-items: center; touch-action: none; user-select: none; -webkit-user-select: none; overflow: hidden; }
-.wsp canvas { display: block; }
-.wsp-hero { position: absolute; left: 50%; top: 0; width: 0; height: 0; pointer-events: none; will-change: transform; }
-.wsp > .wsp-hero { left: calc(50% - min(100vw, 520px) / 2); }
-.wsp-hero .hero-fig { position: absolute; left: 0; bottom: 0; translate: -50% 0; filter: drop-shadow(0 3px 0 rgba(0,0,0,.25)); }
-.wsp > .wsp-hero { transform-origin: 0 0; }
-.wsp-hud { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 50%; translate: -50% 0; width: min(100vw, 520px); padding: 0 12px; display: flex; align-items: center; gap: 10px; pointer-events: none; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
-.wsp-hud > b { flex: 1; text-align: center; font: 800 30px/1 Rubik, sans-serif; font-variant-numeric: tabular-nums; }
-.wsp-hud > span { display: flex; align-items: center; gap: 5px; font: 800 17px/1 Rubik, sans-serif; min-width: 44px; justify-content: flex-end; } .wsp-hud em { font-style: normal; }
-.wsp-gemic, .wsp-intro-art .gem { width: 14px; height: 18px; background: #38bdf8; clip-path: polygon(50% 0, 100% 40%, 50% 100%, 0 40%); display: inline-block; }
-.wsp-x { pointer-events: auto; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0,0,0,.35); color: #fff; font-size: 17px; }
-.wsp-hint { position: absolute; bottom: calc(18px + env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center; color: #fff; font-weight: 700; font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.4); pointer-events: none; animation: wsp-hint 4s forwards; }
-@keyframes wsp-hint { 0%, 70% { opacity: .9; } 100% { opacity: 0; } }
-.wsp-ov { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(8,8,30,.55); animation: wsp-in .25s; }
-@keyframes wsp-in { from { opacity: 0; } }
-.wsp-card { width: min(340px, 100%); background: var(--card); color: var(--text); border-radius: 22px; padding: 22px 18px 18px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.4); }
-.wsp-card small { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.wsp-big { display: block; font: 800 54px/1.1 Rubik, sans-serif; margin: 4px 0 12px; font-variant-numeric: tabular-nums; }
-.wsp-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .wsp-row span { font-size: 12px; color: var(--muted); display: grid; } .wsp-row b { font-size: 17px; color: var(--text); }
-.wsp-card p { margin: 14px 0; font-size: 14px; } .wsp-card p span { color: var(--muted); white-space: nowrap; }
-.wsp-btns { display: grid; gap: 8px; } .wsp-btns button { min-height: 48px; border-radius: 14px; border: 0; font-weight: 800; font-size: 16px; background: var(--bg); color: var(--text); }
-button.wsp-go { min-height: 52px; border-radius: 14px; border: 0; font-weight: 800; font-size: 17px; background: #2f6fed; color: #fff; box-shadow: 0 4px 0 #1d4fbf; width: 100%; } button.wsp-go:active { translate: 0 3px; box-shadow: 0 1px 0 #1d4fbf; }
-.wsp-intro { margin-top: 14px; } .wsp-intro h2 { margin: 16px 0 6px; } .wsp-intro ul { padding-left: 20px; margin: 10px 0 18px; display: grid; gap: 6px; } .wsp-rec { text-align: center; color: var(--muted); font-size: 13px; margin-top: 12px; }
-.wsp-intro-art { position: relative; height: 190px; border-radius: 20px; overflow: hidden; background: linear-gradient(#7ecdf4, #def4fa); }
-.wsp-intro-art .b { position: absolute; height: 15px; width: 86px; border-radius: 4px; box-shadow: inset 0 -4px 0 #fffaf0, 2px 4px 0 rgba(0,0,0,.15); }
-.wsp-intro-art .b1 { left: 10%; bottom: 26px; background: #e5484d; } .wsp-intro-art .b2 { left: 42%; bottom: 84px; background: #22a06b; } .wsp-intro-art .b3 { right: 8%; bottom: 140px; background: #8b5cf6; }
-.wsp-intro-art .gem { position: absolute; right: calc(8% + 36px); bottom: 166px; }
-.wsp-hero.demo { left: calc(42% + 43px); top: auto; bottom: 99px; animation: wsp-demo 1s infinite cubic-bezier(.3,0,.7,1) alternate; }
-@keyframes wsp-demo { to { translate: 0 -46px; } }
-.wsp-cta { cursor: pointer; gap: 12px; background: linear-gradient(120deg, color-mix(in srgb, #38bdf8 16%, var(--card)), var(--card) 60%); } .wsp-cta-ic { font-size: 30px; }
-@media (prefers-reduced-motion: reduce) { .wsp-hero.demo, .wsp-hint { animation: none; } }
-.wsp > .wsp-hero > span { position: absolute; left: 0; bottom: 0; scale: 1.5; transform-origin: 50% 100%; display: block; width: 0; height: 0; }
-.wsp-big { color: var(--text); }

@@ -66,4 +66,3 @@ premium.js
 kumul.js
 skoj.js
 rys.js
-skok.js
