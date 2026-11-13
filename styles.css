@@ -4590,3 +4590,11 @@ body.kb-open .bf-arena .bf-boss { height: 96px; } body.kb-open .bf-arena .boss-i
 @media (max-height: 640px) and (orientation: portrait) { .sz-q { min-height: 58px; } .sz-qt, .sz-q > b { font-size: 15.5px; } .sz .sz-o { min-height: 44px; font-size: 13px; } .sz-hud { padding: 10px 16px 4px; } }
 @media (prefers-reduced-motion: reduce) { .sz-blob, .sz-e.on::before, .sz-banner, .sz.leak { animation: none !important; } }
 .sz-o > span { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; } @media (max-width: 380px) { .sz .sz-o { font-size: 12.5px; gap: 6px; padding: 6px 8px; } }
+/* 📦 szanse ze skrzynki: okienko zawsze w szerokości ekranu (wcześniej rozpychał je najdłuższy napis), długie nazwy się zawijają, procent nie ucieka */
+.drops-ov { grid-template-columns: minmax(0, 1fr); }
+.drops-box { min-width: 0; width: min(520px, 100%); justify-self: center; box-sizing: border-box; }
+.drops-list, .drop-row { min-width: 0; }
+.drop-row .grow b, .drop-row > .grow b { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; font-size: 14.5px; }
+.drop-row .drop-p { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.drop-row .drop-ic { flex: none; }
+.drops-box > .row .grow { min-width: 0; }
