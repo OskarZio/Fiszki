@@ -142,7 +142,12 @@ let ownedStickers = () => [...new Set([...FREE_STICKERS, ...STICKERS.filter(s =>
 const stickerTile = (id, extra = '') => { const s = stickerById(id); if (!s) return ''; return `<span class="mini-st${fxCls(shinyLv(id))}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}"${extra}>${stE(s)}</span>`; };
 const showcaseHTML = ids => (ids || []).filter(id => stickerById(id) || (typeof cosById === 'function' && cosById(id))).slice(0, 3).map(id => stickerById(id) ? stickerTile(id) : cosShowTile(id)).join('');
 const cosShowTile = id => { const c = cosById(id); return `<span class="cos-sc r-${c.r}" style="--rc:${COS_R[c.r].c}" title="${esc(c.n)} · ${COS_R[c.r].n}">${cosIconHTML(c)}</span>`; };
-const coinsHTML = () => `<span class="coins-pair"><span class="coins">💎 ${coins()}</span>${S.stats.goldT ? `<span class="coins gold">🪙 ${gold()}</span>` : ''}</span>`;
+const coinsHTML = () => `<button class="coins-pair" data-act="cur-help" aria-label="Twoje waluty – co to jest"><span class="coins">💎 ${coins()}</span>${S.stats.goldT ? `<span class="coins gold">🪙 ${gold()}</span>` : ''}</button>`;
+// 💰 jedno wyjaśnienie wszystkich walut: skąd są i na co idą (stuknij saldo w dowolnym miejscu)
+ACTIONS['cur-help'] = () => askBox({ icon: '💰', title: 'Twoje waluty', intro: 'Dwie główne waluty – każda z czegoś innego:', cancel: 'Zamknij', ok: 'Do sklepu',
+  steps: [['💎', `<b>Kryształy: ${coins()}</b><br><small>Zarabiasz <b>nauką</b>: wpisane odpowiedzi, cel dnia, zadania, sezon, liga. Wydajesz na skrzynki mistrza i skinów, motywy, naklejki.</small>`],
+    ['🪙', `<b>Złoto: ${gold()}</b><br><small>Zarabiasz <b>walką</b>: bossowie, wieża, pojedynki, Kumulacja, sezon. Wydajesz na skrzynie z bronią, kowala, bohaterów i 👑 Skarbiec legend.</small>`],
+    ...(typeof PREM !== 'undefined' && PREM.bal != null ? [['💠', `<b>Premium: ${PREM.bal}</b><br><small>Osobna waluta właściciela – tylko na rzeczy premium.</small>`]] : [])] }).then(ok => { if (ok) go('#/shop'); });
 
 function rollRarity(odds) {
   let r = Math.random() * 100;

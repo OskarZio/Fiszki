@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '380';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '381';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -324,7 +324,16 @@ function examCardHTML(d) {
   return `<div class="exam-box${e.ok ? '' : ' warn'}"><div class="row nowrap"><b class="grow">🎓 Egzamin ${inDays(e.daysLeft)} · ${fmtDay(e.date)}</b><button class="sm ghost" data-act="exam-clear" data-id="${d.id}" title="Usuń datę">✕</button></div>
     ${progress(pct / 100)}<div class="small">${e.learned}/${e.total} kart rozpoczętych (${pct}%)</div>
     <div class="small">${e.newLeft > 0 ? `📅 Plan: <b>${e.perDay}</b> nowych dziennie${e.daysLeft > 2 ? ' · ostatnie 2 dni tylko powtórki' : ''}` : '✅ Wszystkie karty rozpoczęte – teraz już tylko powtórki'}</div>
-    ${e.ok ? '' : `<div class="small c-hard">⚠️ Dużo na dzień – zacznij od razu albo przejrzyj całą talię kilka razy („Przejrzyj całą talię”).</div>`}</div>`;
+    ${e.ok ? '' : `<div class="small c-hard">⚠️ Dużo na dzień – zacznij od razu albo przejrzyj całą talię kilka razy („Przejrzyj całą talię”).</div>`}
+    ${examPlanHTML(e)}
+    ${e.learned >= 5 ? `<button class="sm block" data-act="exam-mock" data-id="${d.id}" style="margin-top:8px">📝 Egzamin próbny – ${Math.min(20, e.learned)} losowych fiszek, wpisujesz odpowiedzi</button>` : ''}</div>`;
+}
+// 📅 plan na najbliższe dni: ile nowych każdego dnia (ostatnie 2 dni przed egzaminem = tylko powtórki)
+function examPlanHTML(e) {
+  if (e.daysLeft < 1) return '';
+  const n = Math.min(7, e.daysLeft + 1); let left = e.newLeft; const days = [];
+  for (let i = 0; i < n; i++) { const t = dayStart() + i * DAY, last2 = e.daysLeft - i <= 2, k = i === e.daysLeft ? -1 : last2 ? 0 : Math.min(left, e.perDay); if (k > 0) left -= k; days.push({ t, k }); }
+  return `<div class="ex-plan">${days.map((x, i) => `<span class="${x.k < 0 ? 'ex' : i === 0 ? 'now' : ''}"><small>${i === 0 ? 'dziś' : new Date(x.t).toLocaleDateString('pl', { weekday: 'short' })}</small><b>${x.k < 0 ? '🎓' : x.k ? '+' + x.k : '🔁'}</b></span>`).join('')}</div>`;
 }
 function deckCounts(deckId, noLimit) {
   const eod = addDays(dayStart(), 1), intro = introducedToday();
@@ -522,7 +531,7 @@ function saveSess() {
   try {
     if (!s.card) return localStorage.removeItem(SESS_KEY);   // skończona – nie ma czego wznawiać
     localStorage.setItem(SESS_KEY, JSON.stringify({ key: s.key, hash: location.hash, deckId: s.deckId, mode: s.mode, all: s.all, cram: s.cram, done: s.done, only: s.only ? [...s.only] : null,
-      cardId: s.card.id, shown: !!s.shown, timeMs: s.timeMs || 0, t: Date.now() }));
+      cardId: s.card.id, shown: !!s.shown, timeMs: s.timeMs || 0, first: s.first || {}, t: Date.now() }));
   } catch { /* */ }
 }
 function loadSess() { try { const j = JSON.parse(localStorage.getItem(SESS_KEY) || 'null'); return j && Date.now() - j.t < SESS_TTL ? j : null; } catch { return null; } }
@@ -530,7 +539,7 @@ var dropSess = () => { try { localStorage.removeItem(SESS_KEY); } catch { /* */ 
 function restoreSess(key) {
   const j = loadSess(); if (!j || j.key !== key) return false;
   const card = cardById(j.cardId);
-  SESSION = { all: j.all, only: j.only ? new Set(j.only) : null, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
+  SESSION = { first: j.first || {}, all: j.all, only: j.only ? new Set(j.only) : null, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
     done: j.done || 0, timeMs: j.timeMs || 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: Date.now() };
   if (card && (!SESSION.cram || SESSION.cram[0] === card.id)) { SESSION.card = card; SESSION.shown = !!j.shown && j.mode === 'flip'; }
   else nextCard();
@@ -584,6 +593,7 @@ function nextCard() {
 function answer(g) {
   const s = SESSION, c = s.card; if (!c) return;
   const spent = Math.min(60000, Date.now() - (s.shownAt || Date.now())); s.timeMs = (s.timeMs || 0) + spent;
+  const F = s.first = s.first || {}; if (!(c.id in F)) F[c.id] = g; else if (g === 1) F[c.id] = Math.min(F[c.id], 1.5);   // 📊 do podsumowania: pierwsza ocena (+ znacznik, że uciekła później)
   // do nagrody za ukończony zestaw: wpisane karty liczą się zawsze, przewijane – tylko gdy nie były „przeklikane”
   const viaType = s.mode === 'type' && s.verdict;
   if (viaType || spent >= FLIP_MIN_MS) ((s.got = s.got || { flip: {}, type: {} })[viaType ? 'type' : 'flip'])[c.id] = 1;
@@ -761,6 +771,15 @@ function greeting() {
   const g = h >= 5 && h < 11 ? 'Dzień dobry' : h < 18 && h >= 11 ? 'Cześć' : h < 23 && h >= 18 ? 'Dobry wieczór' : 'Nocna nauka 🦉';
   return `${g}${nick ? ', ' + esc(nick) : ''} 👋`;
 }
+// 📈 opanowanie talii: opanowane (odstęp ≥ 21 dni) · w nauce · nowe – pasek pod nazwą talii i w widoku talii
+var deckMastery = id => dataMemo('dkm', () => { const m = {}; for (const c of S.cards) { if (c.sus) continue; const x = m[c.deckId] = m[c.deckId] || { all: 0, mat: 0, lrn: 0 }; x.all++; if (c.srs.ivl >= 21) x.mat++; else if (c.srs.state !== 'new') x.lrn++; } return m; })[id] || { all: 0, mat: 0, lrn: 0 };
+function masteryBarHTML(id, big) {
+  const m = deckMastery(id); if (!m.all) return '';
+  const p = n => (100 * n / m.all).toFixed(1), pm = Math.round(100 * m.mat / m.all), pl = Math.round(100 * m.lrn / m.all);
+  return big ? `<div class="dk-mast"><div class="dk-bar big"><i class="mat" style="width:${p(m.mat)}%"></i><i class="lrn" style="width:${p(m.lrn)}%"></i></div>
+      <div class="dk-leg"><span><i class="mat"></i>opanowane ${pm}%</span><span><i class="lrn"></i>w nauce ${pl}%</span><span><i></i>nowe ${100 - pm - pl}%</span></div></div>`
+    : `<span class="dk-bar" title="Opanowane ${pm}% · w nauce ${pl}%"><i class="mat" style="width:${p(m.mat)}%"></i><i class="lrn" style="width:${p(m.lrn)}%"></i></span>`;
+}
 function viewHome() {
   if (appMode() === 'zen') return viewHomeZen();
   const all = deckCounts('all'), today = reviewsToday(), st = streak(), hard = difficultCards().length;
@@ -776,7 +795,7 @@ function viewHome() {
       <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div><span class="small done-tag">🎓 zdane</span>
       <button class="sm" data-act="deck-menu" data-id="${d.id}" title="Opcje talii">⋯</button></div>`;
     return `<div class="deck">
-      <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div>
+      <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div>${masteryBarHTML(d.id)}
       ${countsHTML(k)}
       <button class="sm ${k.total ? 'primary' : ''}" data-go="#/study/${d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz</button>
       <button class="sm" data-act="deck-menu" data-id="${d.id}" title="Opcje talii">⋯</button>
@@ -807,10 +826,10 @@ function viewHome() {
     <div class="tc-top"><span class="tc-date">${date}</span><span class="tc-streak" title="Dni nauki z rzędu">${st ? '🔥 ' + st + ' ' + plural(st, 'dzień', 'dni', 'dni') : 'Zacznij serię'}</span></div>
     ${all.total
       ? `<div class="tc-main"><span class="tc-num">${all.total}</span><span class="tc-lbl"><b>${plural(all.total, 'fiszka', 'fiszki', 'fiszek')} na dziś</b><small>ok. ${mins} min</small></span></div>`
-      : `<div class="tc-done">${S.cards.length ? 'Na dziś wszystko powtórzone.' : 'Dodaj pierwsze fiszki, żeby zacząć.'}</div>${S.cards.length ? `<div class="muted">${nextDueText().replace('<br>', '')}</div>` : ''}`}
+      : `<div class="tc-done">${S.cards.length ? 'Na dziś wszystko powtórzone.' : 'Dodaj pierwsze fiszki, żeby zacząć.'}</div>${S.cards.length ? '' : `<div class="row nowrap" style="margin-top:10px"><button class="primary grow" data-go="#/library">📚 Gotowa talia</button><button class="grow" data-go="#/add">✏️ Własna</button></div>`}${S.cards.length ? `<div class="muted">${nextDueText().replace('<br>', '')}</div>` : ''}`}
     <div class="tc-meta"><span>Dziś: <b>${today}</b> ${plural(today, 'powtórka', 'powtórki', 'powtórek')}</span><span>Cel: <b>${Math.min(pts, goal)}/${goal}</b> pkt</span></div>
     <div class="tc-goal${gf >= 1 ? ' full' : ''}" role="progressbar" aria-label="Cel dzienny" aria-valuenow="${Math.round(gf * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${(gf * 100).toFixed(0)}%"></i></div>
-    ${all.total ? `<button class="primary block" data-go="#/study/all/flip">Ucz się teraz</button>` : ''}
+    ${all.total ? `<button class="primary block tc-go" data-go="#/study/all/flip"><b>▶ Ucz się teraz</b><small>${all.total} ${plural(all.total, 'fiszka', 'fiszki', 'fiszek')} · ok. ${mins} min</small></button>` : ''}
     ${(() => { const h = hiddenNew('all'); return h ? `<button class="ghost block all-new-link" data-go="#/study/all/flip?all=1">Dołóż wszystkie nowe (+${h})</button>` : ''; })()}
   </section>`; })()}
   ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
@@ -826,17 +845,16 @@ function viewHome() {
     if (!ex) return '';
     const k = deckCounts(ex.d.id);
     return `<div class="banner row nowrap exam-banner"><span class="grow">🎓 <b>${esc(ex.d.name)}</b> – egzamin ${inDays(ex.e.daysLeft)}. Dziś: ${k.nw} nowych + ${k.lrn + k.rev} powtórek</span><button class="sm primary" data-go="#/study/${ex.d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz się</button></div>`; })()}
-  ${(() => {   // ⭐ oznaczone – osobno dla każdej talii (zestawu)
+  ${(() => {   // ⚡ szybkie powtórki (bez wpływu na harmonogram): trudne + oznaczone ⭐ z każdej talii – jeden rząd zamiast kilku banerów
     const per = S.decks.map(d => ({ d, n: starredCards(d.id).length })).filter(x => x.n);
-    return per.length ? `<div class="banner star-banner"><span>⭐ Oznaczone fiszki – powtórz osobno:</span>
-      <div class="star-decks">${per.map(x => `<button class="sm" data-act="cram-star" data-id="${x.d.id}">${esc(x.d.name)} <b>${x.n}</b></button>`).join('')}</div></div>` : ''; })()}
-  ${hard ? `<div class="banner row nowrap"><span class="grow">🧠 <b>${hard}</b> ${plural(hard, 'trudna fiszka', 'trudne fiszki', 'trudnych fiszek')} – powtórz bez wpływu na harmonogram</span><button class="sm" data-act="cram-hard">Powtórz</button></div>` : ''}
+    if (!hard && !per.length) return '';
+    return `<div class="banner quick-rev"><span class="small muted">⚡ Szybka powtórka (nie zmienia harmonogramu)</span><div class="star-decks">${hard ? `<button class="sm" data-act="cram-hard">🧠 Trudne <b>${hard}</b></button>` : ''}${per.map(x => `<button class="sm" data-act="cram-star" data-id="${x.d.id}">⭐ ${esc(x.d.name)} <b>${x.n}</b></button>`).join('')}</div></div>`; })()}
   <div class="card">
     <div class="row nowrap"><h2 class="grow" style="margin:0">Talie</h2>
       <span class="small muted"><span class="c-new">nowe</span> · <span class="c-lrn">nauka</span> · <span class="c-rev">powt.</span></span></div>
     ${decks || '<p class="muted">Brak talii.</p>'}
     <div class="spacer"></div>
-    <div class="row"><button data-act="new-deck">➕ Nowa talia</button>${appMode() === 'full' && typeof topicDecks === 'function' ? '<button data-act="topic-new" title="Kategoria grupuje talie i materiały (notatki, linki, filmy)">📁 Nowa kategoria</button>' : ''}<button data-go="#/add">✏️ Dodaj fiszki</button></div>
+    <div class="row"><button data-go="#/library">📚 Gotowe talie</button><button data-act="new-deck">➕ Nowa talia</button>${appMode() === 'full' && typeof topicDecks === 'function' ? '<button data-act="topic-new" title="Kategoria grupuje talie i materiały (notatki, linki, filmy)">📁 Nowa kategoria</button>' : ''}<button data-go="#/add">✏️ Dodaj fiszki</button></div>
   </div>
   ${S.settings.sync.token ? `<p class="small muted center">Synchronizacja: ${ago(S.settings.lastSync)}</p>` : ''}`;
 }
@@ -863,7 +881,7 @@ function viewDeck(id, q) {
     <button class="iconbtn" data-act="rename-deck" data-id="${id}">✏️</button></div>
   <div class="card">
     <div class="row"><span class="grow">Dziś: ${countsHTML(k)}</span><span class="small muted">${cards.length} kart · ${mature} opanowanych</span></div>
-    ${progress(cards.length ? mature / cards.length : 0, true)}
+    ${masteryBarHTML(id, true) || progress(0, true)}
     <div class="spacer"></div>
     <div class="row">
       ${(() => {   // gdy na dziś nic nie zostało: nowe ponad limit albo swobodna powtórka całej talii (bez wpływu na harmonogram)
@@ -1001,6 +1019,18 @@ var fmtClock = ms => { const t = Math.floor(ms / 1000), h = Math.floor(t / 3600)
 var sessLiveMs = s => (s.timeMs || 0) + (s.card ? Math.min(60000, Date.now() - (s.shownAt || Date.now())) : 0);
 // fiszki oznaczone gwiazdką (⭐ = „cięższe”) – gwiazdka jest na notatce, więc dotyczy obu kierunków
 var starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && !deckPassed(c.deckId) && noteById(c.noteId)?.star);
+// 📊 podsumowanie sesji: celność za pierwszym razem, nowe karty, czas na kartę i lista fiszek, które uciekły (+ powtórka tylko ich)
+function sessSummaryHTML(s, deckId, mode) {
+  const F = s.first || {}, ids = Object.keys(F); if (ids.length < 3) return '';
+  const ok = ids.filter(id => F[id] >= 3).length, acc = Math.round(100 * ok / ids.length), miss = ids.filter(id => F[id] < 2).map(cardById).filter(Boolean);
+  const per = Math.round((s.timeMs || 0) / 1000 / Math.max(1, s.done));
+  const verdict = acc >= 90 ? ['🏆', 'Świetnie – prawie wszystko z pamięci.'] : acc >= 70 ? ['💪', 'Dobra robota. Kilka fiszek warto jeszcze dobić.'] : acc >= 50 ? ['🧠', 'Połowa siedzi. Powtórz te, które uciekły – teraz utrwalą się najszybciej.'] : ['🌱', 'Trudny materiał – to normalne na początku. Krótka powtórka uciekających zrobi największą różnicę.'];
+  const txt = c => { const v = cardView(c); return esc(String(v.q || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 70) || '…'); };
+  return `<div class="ssum"><div class="ssum-tiles"><span><b>${acc}%</b>za 1. razem</span><span><b>${ids.length}</b>${plural(ids.length, 'fiszka', 'fiszki', 'fiszek')}</span><span><b>${s.newN || 0}</b>nowych</span><span><b>${per} s</b>na fiszkę</span></div>
+    <div class="ssum-bar"><i style="width:${acc}%"></i></div><p class="ssum-v">${verdict[0]} ${verdict[1]}</p>
+    ${miss.length ? `<div class="ssum-miss"><small>Uciekły (${miss.length}):</small>${miss.slice(0, 5).map(c => `<span>${txt(c)}</span>`).join('')}${miss.length > 5 ? `<span class="muted">…i ${miss.length - 5} więcej</span>` : ''}</div>
+    <button class="primary block" data-act="end-study" data-href="#/study/${deckId}/${mode}?cram=list&ids=${miss.map(c => c.id).join(',')}">🔁 Powtórz tylko te, które uciekły (${miss.length})</button>` : ''}</div>`;
+}
 function viewStudy(deckId, mode, q) {
   const all = q.get('all') === '1', cq = q.get('cram') || '', only = q.get('only') || '', key = `${deckId}/${mode}/${cq}${cq === 'list' ? ':' + idHash(q.get('ids') || '') : ''}${all ? '/all' : ''}${only ? '/only:' + idHash(only) : ''}`;
   if (!SESSION || SESSION.key !== key) {
@@ -1035,6 +1065,7 @@ function viewStudy(deckId, mode, q) {
   if (!c) {
     return head + `<div class="card flash"><div style="font-size:54px">🎉</div><h2>Gratulacje!</h2>
       <p class="muted">${s.done ? `Powtórzono ${s.done} ${plural(s.done, 'kartę', 'karty', 'kart')} w ⏱ <b>${fmtDur(s.timeMs || 0)}</b>.` : 'Na teraz nie ma nic do powtórki.'}</p>
+      ${sessSummaryHTML(s, deckId, mode)}
       ${setRewardHTML(s.reward)}
       ${s.all && S.cards.some(c => !c.sus && c.srs.state === 'new' && (s.deckId === 'all' || c.deckId === s.deckId) && (!s.only || s.only.has(c.id))) ? `<button class="primary block" data-act="more-new" style="margin:10px 0">➕ Kolejne 20 nowych fiszek</button>` : ''}
       <p class="small muted">Dziś uczysz się już ${fmtDur(studyMsBetween(dayStart()))}.</p>
@@ -2055,6 +2086,7 @@ var ACTIONS = {
     touch(n); save();
     SESSION.editHint = false; SESSION.hintDraft = null; SESSION.hint = true; toast(n.hint || n.hintImg ? '💡 Skojarzenie zapisane' : 'Usunięto skojarzenie', 1600); render();
   },
+  'exam-mock': el => { const id = el.dataset.id, ids = shuffle(S.cards.filter(c => c.deckId === id && !c.sus && c.srs.state !== 'new').map(c => c.id)).slice(0, 20); if (!ids.length) return; SESSION = null; go(`#/study/${id}/type?cram=list&ids=${ids.join(',')}`); },
   'exam-clear': el => { const d = deckById(el.dataset.id); if (!d) return; delete d.exam; touch(d); save(); render(); },
   'pt-toggle': el => { const s = SESSION; if (!s?.pts) return; const i = +el.dataset.i; s.pts.has(i) ? s.pts.delete(i) : s.pts.add(i); render(); },
   'cram-img': el => { const d = el.dataset.id || 'all'; SESSION = null; dropSess(); go(`#/study/${d}/flip?cram=img`); },
@@ -5343,7 +5375,12 @@ var ownedStickers = () => [...new Set([...FREE_STICKERS, ...STICKERS.filter(s =>
 var stickerTile = (id, extra = '') => { const s = stickerById(id); if (!s) return ''; return `<span class="mini-st${fxCls(shinyLv(id))}" style="--rc:${RARITY[s.r].color}" title="${esc(s.name)}"${extra}>${stE(s)}</span>`; };
 var showcaseHTML = ids => (ids || []).filter(id => stickerById(id) || (typeof cosById === 'function' && cosById(id))).slice(0, 3).map(id => stickerById(id) ? stickerTile(id) : cosShowTile(id)).join('');
 var cosShowTile = id => { const c = cosById(id); return `<span class="cos-sc r-${c.r}" style="--rc:${COS_R[c.r].c}" title="${esc(c.n)} · ${COS_R[c.r].n}">${cosIconHTML(c)}</span>`; };
-var coinsHTML = () => `<span class="coins-pair"><span class="coins">💎 ${coins()}</span>${S.stats.goldT ? `<span class="coins gold">🪙 ${gold()}</span>` : ''}</span>`;
+var coinsHTML = () => `<button class="coins-pair" data-act="cur-help" aria-label="Twoje waluty – co to jest"><span class="coins">💎 ${coins()}</span>${S.stats.goldT ? `<span class="coins gold">🪙 ${gold()}</span>` : ''}</button>`;
+// 💰 jedno wyjaśnienie wszystkich walut: skąd są i na co idą (stuknij saldo w dowolnym miejscu)
+ACTIONS['cur-help'] = () => askBox({ icon: '💰', title: 'Twoje waluty', intro: 'Dwie główne waluty – każda z czegoś innego:', cancel: 'Zamknij', ok: 'Do sklepu',
+  steps: [['💎', `<b>Kryształy: ${coins()}</b><br><small>Zarabiasz <b>nauką</b>: wpisane odpowiedzi, cel dnia, zadania, sezon, liga. Wydajesz na skrzynki mistrza i skinów, motywy, naklejki.</small>`],
+    ['🪙', `<b>Złoto: ${gold()}</b><br><small>Zarabiasz <b>walką</b>: bossowie, wieża, pojedynki, Kumulacja, sezon. Wydajesz na skrzynie z bronią, kowala, bohaterów i 👑 Skarbiec legend.</small>`],
+    ...(typeof PREM !== 'undefined' && PREM.bal != null ? [['💠', `<b>Premium: ${PREM.bal}</b><br><small>Osobna waluta właściciela – tylko na rzeczy premium.</small>`]] : [])] }).then(ok => { if (ok) go('#/shop'); });
 
 function rollRarity(odds) {
   let r = Math.random() * 100;
@@ -10039,7 +10076,25 @@ function leagueTable(ws) {
     .sort((a, b) => b.pts - a.pts || (b.me ? 1 : 0) - (a.me ? 1 : 0));
 }
 // nagroda za poprzedni tydzień (gdy było min. 2 grających z punktami)
+// 🎖️ dywizje: awans za tygodniowy próg punktów albo miejsce 1 w lidze znajomych, spadek poniżej progu utrzymania. Wyższa dywizja = większe nagrody.
+var LG_DIVS = [['🥉', 'Brąz', '#b45309'], ['🥈', 'Srebro', '#64748b'], ['🥇', 'Złoto', '#ca8a04'], ['💚', 'Szmaragd', '#059669'], ['💎', 'Diament', '#0284c7'], ['👑', 'Mistrz', '#7c3aed']];
+var LG_PROMO = [150, 250, 350, 500, 700, Infinity], LG_KEEP = [0, 60, 120, 180, 250, 350];
+var lgDiv = () => Math.max(0, Math.min(LG_DIVS.length - 1, S.stats.lgDiv || 0));
+var lgMult = () => 1 + .25 * lgDiv();
+function leagueDivisions() {
+  const prev = addDays(weekStart(), -7), key = dayKey(prev);
+  if (S.stats.lgDivWeek && S.stats.lgDivWeek >= key) return;
+  const tab = leagueTable(prev), me = tab.find(r => r.me), pts = me?.pts || 0, d = lgDiv(), first = tab.length >= 2 && tab[0]?.me && pts > 0;
+  S.stats.lgDivWeek = key;
+  if (!S.stats.lgDivSeen) { S.stats.lgDivSeen = 1; save(); return; }   // pierwszy tydzień: start w Brązie, bez zmian
+  let nd = d; if (pts >= LG_PROMO[d] || first) nd = d + 1; else if (pts < LG_KEEP[d]) nd = d - 1;
+  nd = Math.max(0, Math.min(LG_DIVS.length - 1, nd));
+  if (nd !== d) { S.stats.lgDiv = nd; const v = LG_DIVS[nd];
+    setTimeout(() => celebrate(nd > d ? `${v[0]} Awans: dywizja ${v[1]}!` : `Dywizja ${v[1]}`, nd > d ? `Zeszły tydzień: ${pts} pkt. Nagrody ligi są teraz ×${String(lgMult()).replace('.', ',')}.` : `Zeszły tydzień: ${pts} pkt – zabrakło do utrzymania (${LG_KEEP[d]}). Wrócisz szybko!`), 1600); }
+  save();
+}
 function leagueAward() {
+  try { leagueDivisions(); } catch (e) { console.warn(e); }
   const prev = addDays(weekStart(), -7), key = dayKey(prev);
   // raz na tydzień: znacznik albo już wypłacona nagroda (synchronizacja z innym urządzeniem)
   if (S.stats.leagueDone === key || (typeof S.stats.leagueDone === 'string' && S.stats.leagueDone > key)) return;
@@ -10049,7 +10104,7 @@ function leagueAward() {
   S.stats.leagueDone = key;
   const place = tab.findIndex(r => r.me);
   if (tab.length >= 2 && place >= 0 && place < 3) {
-    const n = LEAGUE_PRIZE[place], id = 'league-' + key;
+    const n = Math.round(LEAGUE_PRIZE[place] * lgMult()), id = 'league-' + key;
     if (!S.wallet.some(w => w.id === id)) S.wallet.push({ id, n, why: 'league', t: Date.now() });
     for (const k of LEAGUE_CASES[place]) if (typeof CASES !== 'undefined' && CASES[k]) addItem('case', k, 1, `league-${key}-${k}`);
     S.stats.leagueStreak = (S.stats.leagueLast === dayKey(addDays(prev, -7)) ? S.stats.leagueStreak || 0 : 0) + 1; S.stats.leagueLast = key;
@@ -10063,8 +10118,12 @@ function leagueCardHTML() {
   const dd = Math.floor(end / DAY), hh = Math.floor(end % DAY / HOUR);
   const prev = leagueTable(addDays(ws, -7)).filter(r => r.pts > 0).slice(0, 3);
   const solo = tab.length < 2;
+  const dv = lgDiv(), D = LG_DIVS[dv], myPts = tab.find(r => r.me)?.pts || 0, promo = LG_PROMO[dv], keep = LG_KEEP[dv];
   return `<div class="card league"><div class="row nowrap"><h2 class="grow" style="margin:0">🏆 Liga znajomych</h2><span class="small muted">koniec za ${dd ? dd + ' d ' : ''}${hh} h</span></div>
-    <p class="small muted" style="margin:4px 0 8px">Punkty = powtórki od poniedziałku. Grasz tylko ze znajomymi. W niedzielę o północy podium dostaje:</p><div class="lg-prizes">${[0, 1, 2].map(i => `<span>${['🥇', '🥈', '🥉'][i]} ${leagueCaseTxt(i)} + ${LEAGUE_PRIZE[i]} 💎</span>`).join('')}</div><p class="small muted" style="margin:4px 0 8px">${S.stats.leagueStreak > 1 ? ` · Twoja seria podium: <b>${S.stats.leagueStreak} tyg.</b>` : ''}</p>
+    <div class="lg-div" style="--dc:${D[2]}"><span class="lg-dv-ic">${D[0]}</span><div class="grow"><b>Dywizja ${D[1]}</b>${dv ? ` <small>nagrody ×${String(lgMult()).replace('.', ',')}</small>` : ''}
+      <div class="lg-dv-bar"><i style="width:${Math.min(100, promo === Infinity ? 100 : 100 * myPts / promo)}%"></i>${keep ? `<em style="left:${promo === Infinity ? 50 : 100 * keep / promo}%"></em>` : ''}</div>
+      <small>${promo === Infinity ? `Najwyższa dywizja · utrzymanie: ${keep} pkt tygodniowo (masz ${myPts})` : `Ten tydzień: <b>${myPts}</b> pkt · awans: ${promo} pkt albo 1. miejsce${keep ? ` · utrzymanie: ${keep}` : ''}`}</small></div></div>
+    <p class="small muted" style="margin:4px 0 8px">Punkty = powtórki od poniedziałku. Grasz tylko ze znajomymi. W niedzielę o północy podium dostaje:</p><div class="lg-prizes">${[0, 1, 2].map(i => `<span>${['🥇', '🥈', '🥉'][i]} ${leagueCaseTxt(i)} + ${Math.round(LEAGUE_PRIZE[i] * lgMult())} 💎</span>`).join('')}</div><p class="small muted" style="margin:4px 0 8px">${S.stats.leagueStreak > 1 ? ` · Twoja seria podium: <b>${S.stats.leagueStreak} tyg.</b>` : ''}</p>
     ${solo ? '<p class="small">Dodaj znajomych (kod albo zaproszenie), żeby rywalizować w lidze.</p>' : tab.map((r, i) => `<div class="lg-row${r.me ? ' me' : ''}"><span class="lg-pl">${i < 3 && r.pts ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>
       <span class="av">${avatarHTML({ avatar: r.avatar, avatarImg: r.avatarImg, cos: r.cos }, 30)}</span><b class="grow nm">${esc(r.nick)}${r.me ? ' (Ty)' : ''}</b><span class="lg-pts">${r.pts}</span></div>`).join('')}
     ${prev.length >= 2 ? `<p class="small muted" style="margin:8px 0 0">Zeszły tydzień: ${prev.map((r, i) => `${['🥇', '🥈', '🥉'][i]} ${esc(r.nick)} (${r.pts})`).join(' · ')}</p>` : ''}</div>`;
@@ -11301,8 +11360,9 @@ function chapterJustLearned(c) {
   const k = 'chl_' + d.id + '_' + i; if (S.stats[k]) return null; S.stats[k] = 1; return i;
 }
 var bossChestImg = t => `<img class="crate-img bchest" src="assets/crates/bc_${t >= 5 ? 'fire' : t >= 4 ? 'void' : t >= 2 ? 'holy' : 'nature'}.webp" alt="" draggable="false">`;   // 📦 skrzynie bossów wg poziomu łupu
-// 🏆 puchar bossa talii = najniższy medal ze wszystkich trybów (brąz we wszystkich 4 → brązowy puchar itd.)
-var cupOf = (rec, k) => { const m = rec.m?.[k] || {}; return Math.min(...['abcd', 'flip', 'type', 'mix'].map(x => m[x] || 0)); };
+// 🏆 puchar bossa talii = 3 najlepsze medale z 4 metod (liczy się trzeci najlepszy) – jedna nielubiana metoda nie blokuje pucharu
+var cup3 = lv => [...lv].sort((a, b) => b - a)[2] || 0;
+var cupOf = (rec, k) => { const m = rec.m?.[k] || {}; return cup3(['abcd', 'flip', 'type', 'mix'].map(x => m[x] || 0)); };
 var CAT_EMB = ['war', 'book', 'tree', 'holy', 'skull', 'ice', 'paw', 'storm', 'void', 'fire', 'time', 'shadow'];   // 🛡️ herby kategorii
 // ---------- 🐉 definicje bossów
 function bossFor(kind, id, i) {
@@ -12069,17 +12129,17 @@ function nodeHTML(b, sel) {
     <span class="bn-art">${b.ok || b.stars ? bossArt(b) : '<span class="mq">🔒</span>'}</span><small>${b.kind === 'ch' ? (b.final ? '👑' : `Rozdz. ${b.i + 1}`) : b.final ? '👑 Finał' : ''}</small>
     ${b.ok ? (['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) : b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : starsHTML(b.stars)) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
 }
-// 🏆 postęp do następnego pucharu: puchar = najniższy medal z 4 metod, więc pokazujemy, w których metodach czego brakuje
+// 🏆 postęp do następnego pucharu: puchar = 3 najlepsze medale z 4 metod, więc pokazujemy, ile metod już ma dany medal i co najłatwiej dobić
 function cupProgHTML(b) {
-  const m = mastery(b) || {}, lv = MASTER_MODES.map(k => m[k] || 0), cup = Math.min(...lv);
-  if (cup >= 4) return `<div class="cup-prog done"><div class="cp-head"><img class="cup t4" src="assets/cups/diamond.webp" alt=""><b>Diamentowy puchar zdobyty</b></div><small>Masz diament we wszystkich 4 metodach. Możesz wejść na prestiż: medale od nowa, mocniejszy boss, większe nagrody.</small></div>`;
-  const next = cup + 1, have = lv.filter(x => x >= next).length;
-  const miss = MASTER_MODES.filter(k => (m[k] || 0) < next).map(k => { const w = next - (m[k] || 0); return `${MODES[k].icon} ${MODES[k].name} <i>${w} ${plural(w, 'wygrana', 'wygrane', 'wygranych')}</i>`; });
-  const top = Math.max(...lv);
-  return `<div class="cup-prog"><div class="cp-head"><img class="cup t${next}" src="assets/cups/${CUP[next]}.webp" alt=""><b>Do pucharu: ${CUP_N[next]}</b><span>${have}/4 metod</span></div>
+  const m = mastery(b) || {}, lv = MASTER_MODES.map(k => m[k] || 0), cup = cup3(lv);
+  if (cup >= 4) return `<div class="cup-prog done"><div class="cp-head"><img class="cup t4" src="assets/cups/diamond.webp" alt=""><b>Diamentowy puchar zdobyty</b></div><small>Masz diament w ${lv.filter(x => x >= 4).length} z 4 metod. Możesz wejść na prestiż: medale od nowa, mocniejszy boss, większe nagrody.</small></div>`;
+  const next = cup + 1, have = lv.filter(x => x >= next).length, need = 3 - have;
+  const cand = MASTER_MODES.filter(k => (m[k] || 0) < next).sort((a, b) => (m[b] || 0) - (m[a] || 0)).slice(0, need);
+  const miss = cand.map(k => { const w = next - (m[k] || 0); return `${MODES[k].icon} ${MODES[k].name} <i>${w} ${plural(w, 'wygrana', 'wygrane', 'wygranych')}</i>`; });
+  return `<div class="cup-prog"><div class="cp-head"><img class="cup t${next}" src="assets/cups/${CUP[next]}.webp" alt=""><b>Do pucharu: ${CUP_N[next]}</b><span>${Math.min(have, 3)}/3 metod</span></div>
     <div class="cp-bar">${MASTER_MODES.map(k => `<i class="${(m[k] || 0) >= next ? 'on' : ''}"></i>`).join('')}</div>
-    <small>Puchar to <b>najniższy medal z 4 metod</b>. Brakuje: ${miss.join(' · ')}.</small>
-    <small>Z pucharem rośnie trudność bossa (teraz ${b.diff + 1}/5). Medal w wybranej metodzie dodatkowo wzmacnia bossa tylko w niej${top > cup + 1 ? ` – dlatego w metodzie z wyższym medalem boss jest dużo mocniejszy niż w pozostałych` : ''}.</small></div>`;
+    <small>Puchar liczy się z <b>3 najlepszych metod z 4</b> – jedną możesz pominąć. Najbliżej: ${miss.join(' · ')}${need > 1 ? ` (wystarczy ${need} z pozostałych)` : ''}.</small>
+    <small>Z pucharem rośnie trudność bossa (teraz ${b.diff + 1}/5). Medal w wybranej metodzie dodatkowo wzmacnia bossa tylko w niej.</small></div>`;
 }
 function setupSheetHTML() {
   const s = BOSS_SEL; if (!s) return ''; const b = bossFor(s.kind, s.id, s.i); if (!b) return '';
@@ -15221,6 +15281,182 @@ updateTabBadges = function () {
 };
 ;
 
+/* ===== season.js ===== */
+'use strict';
+/* 🗓️ Sezony: co 4 tygodnie nowy sezon z własną ścieżką 25 poziomów nagród.
+   Punkty sezonu liczą się z historii nauki (S.log – synchronizuje się, więc działa na każdym urządzeniu):
+   fiszka wpisana dobrze = 2 pkt, inna wpisana / wybrana w teście = 1 pkt, przewinięta (min. 1,5 s) = 1 pkt, przeklikana = 0.
+   40 pkt = 1 poziom → 1000 pkt na komplet (~36 fiszek dziennie). Na 25. poziomie czeka Skarbiec legend.
+   Nagrody odbiera się ręcznie (stałe id → bez dublowania między urządzeniami). */
+var SEASON_EPOCH = new Date('2026-11-02T00:00').getTime(), SEASON_LEN = 28, SEASON_STEP = 40, SEASON_TIERS = 25;
+var SEASON_THEMES = [['🍂', 'Opadające liście', '#d97706'], ['❄️', 'Szron', '#0ea5e9'], ['🌸', 'Kwitnienie', '#ec4899'], ['🌊', 'Ocean', '#0891b2'],
+  ['⚡', 'Burza', '#7c3aed'], ['🌋', 'Wulkan', '#dc2626'], ['🌌', 'Gwiazdy', '#4338ca'], ['🏔️', 'Szczyt', '#0f766e']];
+// nagroda poziomu: g = złoto 🪙, d = kryształy 💎, c = skrzynka; co 5. poziom większa
+function seasonReward(t) {
+  const big = { 5: { c: 'forge' }, 10: { c: 'epic' }, 15: { c: 'weapon' }, 20: { c: 'skin' }, 25: { c: 'royal' } }[t];
+  if (big) return big;
+  return [{ g: 80 }, { d: 60 }, { c: 'daily' }, { g: 120 }][(t - 1) % 4];
+}
+var seasonRewardTxt = r => r.g ? `${r.g} 🪙` : r.d ? `${r.d} 💎` : (typeof CASES !== 'undefined' && CASES[r.c] ? `${CASES[r.c].icon} ${CASES[r.c].name}` : r.c);
+var seasonIdx = (t = Date.now()) => Math.max(0, Math.floor((dayStart(t) - SEASON_EPOCH) / (SEASON_LEN * DAY)));
+function seasonInfo() {
+  const i = seasonIdx(), start = SEASON_EPOCH + i * SEASON_LEN * DAY, end = start + SEASON_LEN * DAY, th = SEASON_THEMES[i % SEASON_THEMES.length];
+  const pts = logMemo('season' + i, () => { let p = 0; for (const l of S.log) if (l.t >= start && l.t < end) p += !l.m ? 1 : l.m === 'flip' ? (l.ms >= 1500 ? 1 : 0) : l.v === 'ok' ? 2 : 1; return p; });
+  const tier = Math.min(SEASON_TIERS, Math.floor(pts / SEASON_STEP));
+  const claimed = new Set(S.items.filter(x => String(x.id).startsWith(`season-${i}-`)).map(x => +String(x.id).split('-')[2]).concat(S.wallet.filter(w => String(w.id).startsWith(`season-${i}-`)).map(w => +String(w.id).split('-')[2])));
+  const open = []; for (let t = 1; t <= tier; t++) if (!claimed.has(t)) open.push(t);
+  return { i, n: i + 1, start, end, icon: th[0], name: th[1], color: th[2], pts, tier, into: pts - tier * SEASON_STEP, claimed, open, daysLeft: Math.ceil((end - Date.now()) / DAY) };
+}
+function seasonClaim(t) {
+  const s = seasonInfo(); if (t > s.tier || s.claimed.has(t)) return null;
+  const r = seasonReward(t), id = `season-${s.i}-${t}`;
+  if (r.g) S.wallet.push({ id, n: r.g, why: 'sgold', t: Date.now() });
+  else if (r.d) S.wallet.push({ id, n: r.d, why: 'season', t: Date.now() });
+  else if (typeof CASES !== 'undefined' && CASES[r.c]) addItem('case', r.c, 1, id);
+  return r;
+}
+if (typeof GOLD_WHY !== 'undefined') GOLD_WHY.add('sgold');
+function seasonCardHTML(compact) {
+  const s = seasonInfo(), full = s.tier >= SEASON_TIERS, nextR = full ? null : seasonReward(s.tier + 1);
+  const bar = full ? 100 : Math.round(100 * s.into / SEASON_STEP);
+  return `<div class="card season-cta" data-go="#/season" style="--sc:${s.color}"><div class="row nowrap" style="gap:12px"><span class="se-ic">${s.icon}</span>
+    <div class="grow"><b>Sezon ${s.n}: ${esc(s.name)}</b><div class="small muted">poziom ${s.tier}/${SEASON_TIERS} · koniec za ${s.daysLeft} ${plural(s.daysLeft, 'dzień', 'dni', 'dni')}</div>
+    <div class="se-bar"><i style="width:${bar}%"></i></div><div class="small muted">${full ? 'Komplet! Nowy sezon niedługo.' : `do poziomu ${s.tier + 1}: ${SEASON_STEP - s.into} pkt → ${seasonRewardTxt(nextR)}`}</div></div>
+    ${s.open.length ? `<span class="se-open">${s.open.length}</span>` : '<span>›</span>'}</div>${compact ? '' : ''}</div>`;
+}
+ROUTES.season = () => {
+  const s = seasonInfo();
+  const rows = Array.from({ length: SEASON_TIERS }, (_, k) => k + 1).map(t => {
+    const r = seasonReward(t), got = s.claimed.has(t), can = t <= s.tier && !got, big = t % 5 === 0;
+    return `<div class="se-t${got ? ' got' : can ? ' can' : t === s.tier + 1 ? ' next' : ''}${big ? ' big' : ''}"><span class="se-n">${t}</span><span class="grow se-r">${seasonRewardTxt(r)}</span>
+      ${got ? '<span class="small muted">✓ odebrane</span>' : can ? `<button class="sm primary" data-act="season-claim" data-t="${t}">Odbierz</button>` : `<small class="muted">${t * SEASON_STEP} pkt</small>`}</div>`;
+  }).join('');
+  return { tab: 'profile', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/quests">‹</button><h1 class="grow">Sezon ${s.n}</h1></div>
+    <div class="se-hero" style="--sc:${s.color}"><span class="se-big">${s.icon}</span><div><b>${esc(s.name)}</b><small>${new Date(s.start).toLocaleDateString('pl', { day: 'numeric', month: 'short' })} – ${new Date(s.end - DAY).toLocaleDateString('pl', { day: 'numeric', month: 'short' })} · zostało ${s.daysLeft} ${plural(s.daysLeft, 'dzień', 'dni', 'dni')}</small></div>
+      <div class="se-pts"><b>${s.pts}</b><small>pkt sezonu</small></div></div>
+    <p class="small muted">Punkty zdobywasz nauką: fiszka wpisana dobrze = 2 pkt, inna odpowiedź albo przewinięta fiszka = 1 pkt (przeklikane się nie liczą). Co ${SEASON_STEP} pkt nowy poziom. Na ${SEASON_TIERS}. poziomie: 👑 Skarbiec legend. Po 4 tygodniach ścieżka startuje od nowa z nowym motywem – nieodebrane nagrody przepadają.</p>
+    ${s.open.length > 1 ? `<button class="primary block" data-act="season-claim" data-t="all">🎁 Odbierz wszystko (${s.open.length})</button><div class="spacer"></div>` : ''}
+    <div class="card se-track">${rows}</div>` };
+};
+Object.assign(ACTIONS, {
+  'season-claim': el => {
+    const s = seasonInfo(), ts = el.dataset.t === 'all' ? s.open : [+el.dataset.t], got = ts.map(seasonClaim).filter(Boolean);
+    if (!got.length) return; save();
+    if (typeof celebrate === 'function') celebrate(`🗓️ Nagrody sezonu`, got.map(seasonRewardTxt).join(' · '));
+    if (got.some(r => r.c === 'royal') && typeof confetti === 'function') confetti(160);
+    render();
+  },
+});
+// karta sezonu w Zadaniach, a na Starcie tylko gdy jest coś do odebrania
+var seQuests0 = ROUTES.quests;
+ROUTES.quests = (...a) => { const v = seQuests0(...a); if (!v?.html) return v; const i = v.html.indexOf('</div>'); return { ...v, html: v.html.slice(0, i + 6) + seasonCardHTML() + v.html.slice(i + 6) }; };
+if (typeof homeExtrasHTML === 'function') { const seHome0 = homeExtrasHTML; homeExtrasHTML = function () { let h = seHome0(); try { if (appMode() === 'full' && seasonInfo().open.length) h = seasonCardHTML() + h; } catch { /* */ } return h; }; }
+;
+
+/* ===== starter.js ===== */
+'use strict';
+/* 📚 Gotowe talie (#/library): kilka sprawdzonych zestawów do dodania jednym stuknięciem – dla nowych osób i na szybki start.
+   🚀 Pierwsze kroki: karta na Starcie dla nowych kont – dodaj talię → powtórz 10 fiszek → pokonaj bossa → nagroda.
+   🔔 Przypomnienie o serii: po 3 dniach nauki z rzędu Start proponuje włączenie powiadomień (raz, można zamknąć). */
+var LIB = [
+  { id: 'en-irr', icon: '🇬🇧', name: 'Angielski – czasowniki nieregularne', desc: '30 najczęstszych: forma podstawowa → 2. i 3. forma. Najlepiej w trybie „Wpisz”.', cards: [
+    ['be (być)', 'was/were – been'], ['have (mieć)', 'had – had'], ['do (robić)', 'did – done'], ['go (iść)', 'went – gone'], ['make (robić, tworzyć)', 'made – made'],
+    ['take (brać)', 'took – taken'], ['come (przychodzić)', 'came – come'], ['see (widzieć)', 'saw – seen'], ['get (dostawać)', 'got – got'], ['give (dawać)', 'gave – given'],
+    ['know (wiedzieć, znać)', 'knew – known'], ['think (myśleć)', 'thought – thought'], ['say (powiedzieć)', 'said – said'], ['tell (mówić komuś)', 'told – told'], ['find (znaleźć)', 'found – found'],
+    ['leave (opuszczać)', 'left – left'], ['feel (czuć)', 'felt – felt'], ['bring (przynosić)', 'brought – brought'], ['begin (zaczynać)', 'began – begun'], ['keep (trzymać)', 'kept – kept'],
+    ['write (pisać)', 'wrote – written'], ['buy (kupować)', 'bought – bought'], ['speak (mówić)', 'spoke – spoken'], ['eat (jeść)', 'ate – eaten'], ['drink (pić)', 'drank – drunk'],
+    ['swim (pływać)', 'swam – swum'], ['run (biegać)', 'ran – run'], ['teach (uczyć)', 'taught – taught'], ['catch (łapać)', 'caught – caught'], ['choose (wybierać)', 'chose – chosen']] },
+  { id: 'capitals', icon: '🌍', name: 'Stolice Europy', desc: '25 państw Europy i ich stolice.', cards: [
+    ['Francja', 'Paryż'], ['Niemcy', 'Berlin'], ['Hiszpania', 'Madryt'], ['Portugalia', 'Lizbona'], ['Włochy', 'Rzym'], ['Wielka Brytania', 'Londyn'], ['Irlandia', 'Dublin'],
+    ['Holandia', 'Amsterdam'], ['Belgia', 'Bruksela'], ['Szwajcaria', 'Berno'], ['Austria', 'Wiedeń'], ['Czechy', 'Praga'], ['Słowacja', 'Bratysława'], ['Węgry', 'Budapeszt'],
+    ['Ukraina', 'Kijów'], ['Litwa', 'Wilno'], ['Łotwa', 'Ryga'], ['Estonia', 'Tallinn'], ['Finlandia', 'Helsinki'], ['Szwecja', 'Sztokholm'], ['Norwegia', 'Oslo'],
+    ['Dania', 'Kopenhaga'], ['Grecja', 'Ateny'], ['Rumunia', 'Bukareszt'], ['Bułgaria', 'Sofia']] },
+  { id: 'elements', icon: '⚗️', name: 'Chemia – symbole pierwiastków', desc: '25 najważniejszych pierwiastków: symbol → nazwa.', cards: [
+    ['H', 'wodór'], ['He', 'hel'], ['Li', 'lit'], ['C', 'węgiel'], ['N', 'azot'], ['O', 'tlen'], ['F', 'fluor'], ['Na', 'sód'], ['Mg', 'magnez'], ['Al', 'glin'],
+    ['Si', 'krzem'], ['P', 'fosfor'], ['S', 'siarka'], ['Cl', 'chlor'], ['K', 'potas'], ['Ca', 'wapń'], ['Fe', 'żelazo'], ['Cu', 'miedź'], ['Zn', 'cynk'], ['Ag', 'srebro'],
+    ['Au', 'złoto'], ['Hg', 'rtęć'], ['Pb', 'ołów'], ['Sn', 'cyna'], ['I', 'jod']] },
+  { id: 'cell', icon: '🧬', name: 'Biologia – budowa komórki', desc: '16 pytań o organella i ich funkcje.', cards: [
+    ['Organellum, w którym zachodzi oddychanie komórkowe (powstaje najwięcej ATP)', 'mitochondrium'], ['Organellum, w którym zachodzi fotosynteza', 'chloroplast'],
+    ['Struktury, na których zachodzi synteza białek', 'rybosomy'], ['Gdzie przechowywana jest większość DNA komórki eukariotycznej?', 'w jądrze komórkowym'],
+    ['Organellum, które modyfikuje, sortuje i pakuje białka do wydzielenia', 'aparat Golgiego'], ['Pęcherzyki z enzymami trawiennymi wewnątrz komórki', 'lizosomy'],
+    ['Siateczka śródplazmatyczna z rybosomami na powierzchni', 'szorstka (ziarnista)'], ['Funkcja gładkiej siateczki śródplazmatycznej', 'synteza lipidów i odtruwanie'],
+    ['Z czego zbudowana jest ściana komórkowa roślin?', 'z celulozy'], ['Z czego zbudowana jest ściana komórkowa grzybów?', 'z chityny'],
+    ['Duży pęcherz w komórce roślinnej, magazyn wody, odpowiada za turgor', 'wakuola'], ['W jakiej strukturze jądra powstają podjednostki rybosomów?', 'w jąderku'],
+    ['Organizmy bez jądra komórkowego', 'prokarionty (np. bakterie)'], ['Sieć białkowych włókien nadająca komórce kształt i umożliwiająca ruch', 'cytoszkielet'],
+    ['Struktury tworzące wrzeciono podziałowe w komórkach zwierzęcych', 'centriole'], ['Organellum rozkładające nadtlenek wodoru', 'peroksysom']] },
+  { id: 'pl-hist', icon: '📜', name: 'Historia Polski – najważniejsze daty', desc: '20 wydarzeń od chrztu Polski do wejścia do Unii.', cards: [
+    ['Chrzest Polski', '966'], ['Koronacja Bolesława Chrobrego', '1025'], ['Bitwa pod Grunwaldem', '1410'], ['II pokój toruński', '1466'], ['Hołd pruski', '1525'],
+    ['Unia lubelska', '1569'], ['Odsiecz wiedeńska', '1683'], ['Konstytucja 3 maja', '1791'], ['III rozbiór Polski', '1795'], ['Wybuch powstania listopadowego', '1830'],
+    ['Wybuch powstania styczniowego', '1863'], ['Odzyskanie niepodległości', '1918'], ['Bitwa Warszawska', '1920'], ['Wybuch II wojny światowej (atak Niemiec na Polskę)', '1 września 1939'],
+    ['Wybuch powstania warszawskiego', '1 sierpnia 1944'], ['Porozumienia sierpniowe, powstanie „Solidarności”', '1980'], ['Wprowadzenie stanu wojennego', '13 grudnia 1981'],
+    ['Wybory czerwcowe', '4 czerwca 1989'], ['Wejście Polski do NATO', '1999'], ['Wejście Polski do Unii Europejskiej', '1 maja 2004']] },
+  { id: 'math', icon: '📐', name: 'Matematyka – wzory', desc: '16 wzorów, które trzeba mieć w głowie.', cards: [
+    ['Pole koła', 'P = πr²'], ['Obwód koła', 'L = 2πr'], ['Pole trójkąta', 'P = ½ · a · h'], ['Twierdzenie Pitagorasa', 'a² + b² = c²'], ['Pole trapezu', 'P = ½ · (a + b) · h'],
+    ['Pole rombu (z przekątnych)', 'P = ½ · d₁ · d₂'], ['Objętość walca', 'V = πr²h'], ['Objętość kuli', 'V = 4/3 · πr³'], ['Pole powierzchni kuli', 'P = 4πr²'],
+    ['Delta równania ax² + bx + c = 0', 'Δ = b² − 4ac'], ['Pierwiastki równania kwadratowego (Δ > 0)', 'x = (−b ± √Δ) / 2a'], ['(a + b)²', 'a² + 2ab + b²'],
+    ['a² − b²', '(a − b)(a + b)'], ['Wyraz ogólny ciągu arytmetycznego', 'aₙ = a₁ + (n − 1) · r'], ['Wyraz ogólny ciągu geometrycznego', 'aₙ = a₁ · qⁿ⁻¹'], ['sin²α + cos²α', '1']] },
+];
+var libAdded = id => S.decks.find(d => d.lib === id);
+function libAdd(id) {
+  const L = LIB.find(x => x.id === id); if (!L || libAdded(id)) return null;
+  const d = newDeck(L.name); d.lib = id; touch(d);
+  L.cards.forEach(([front, back]) => addNote({ deckId: d.id, type: 'basic', front, back }));
+  save(); return d;
+}
+ROUTES.library = () => ({ tab: 'home', html: `<div class="row nowrap"><button class="iconbtn" data-go="#/">‹</button><h1 class="grow">Gotowe talie</h1></div>
+  <p class="small muted">Sprawdzone zestawy do nauki od zaraz. Po dodaniu talia jest Twoja – możesz ją edytować, dopisywać fiszki i walczyć z jej bossami. Własne fiszki dodasz przyciskiem ✏️ albo zaimportujesz z Quizleta / Anki.</p>
+  ${LIB.map(L => { const d = libAdded(L.id); return `<div class="card lib-card"><div class="row nowrap" style="gap:12px"><span class="lib-ic">${L.icon}</span><div class="grow"><b>${esc(L.name)}</b><div class="small muted">${esc(L.desc)}</div></div></div>
+    <details class="lib-prev"><summary class="small">Podgląd (${L.cards.length} ${plural(L.cards.length, 'fiszka', 'fiszki', 'fiszek')})</summary>${L.cards.slice(0, 6).map(([a, b]) => `<div><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}${L.cards.length > 6 ? '<div class="muted">…</div>' : ''}</details>
+    ${d ? `<button class="block" data-go="#/deck/${d.id}">✓ Dodana – otwórz</button>` : `<button class="primary block" data-act="lib-add" data-id="${L.id}">➕ Dodaj talię</button>`}</div>`; }).join('')}
+  <button class="block" data-go="#/add">✏️ Wolę stworzyć własną talię</button>` });
+
+// 🚀 Pierwsze kroki (nowe konta): 3 zadania i nagroda na koniec
+var TUT_REWARD = 150;
+function tutSteps() {
+  const full = appMode() === 'full';
+  return [
+    { k: 'deck', t: 'Dodaj pierwszą talię', s: 'gotową albo własną', ok: S.decks.length > 0, go: '#/library', b: 'Wybierz' },
+    { k: 'learn', t: 'Powtórz 10 fiszek', s: `${Math.min(10, S.log.length)}/10`, ok: S.log.length >= 10, go: '#/study/all/flip', b: 'Ucz się' },
+    ...(full ? [{ k: 'boss', t: 'Pokonaj pierwszego bossa', s: 'Przygoda → boss Twojej talii', ok: (S.stats.bossWins || 0) >= 1, go: '#/boss', b: 'Walcz' }] : []),
+  ];
+}
+var tutShow = () => !S.stats.tutDone && (S.log.length < 400 || !S.decks.length) && appMode() !== 'zen';
+function tutCardHTML() {
+  const st = tutSteps(), done = st.filter(x => x.ok).length, all = done === st.length, cur = st.find(x => !x.ok);
+  return `<div class="card tut-card"><div class="row nowrap"><b class="grow">🚀 Pierwsze kroki · ${done}/${st.length}</b><button class="ghost sm" data-act="tut-hide" aria-label="Ukryj">✕</button></div>
+    <div class="tut-steps">${st.map(x => `<div class="tut-s${x.ok ? ' ok' : x === cur ? ' cur' : ''}"><i>${x.ok ? '✓' : ''}</i><div class="grow"><b>${x.t}</b><small>${x.s}</small></div>${x === cur ? `<button class="sm primary" data-go="${x.go}">${x.b}</button>` : ''}</div>`).join('')}</div>
+    ${all ? `<button class="primary block" data-act="tut-claim">🎁 Odbierz ${TUT_REWARD} 💎 + skrzynkę zapasów</button>` : `<small class="muted">Na koniec: ${TUT_REWARD} 💎 i skrzynka zapasów.</small>`}</div>`;
+}
+// 🔔 po 3 dniach serii: zaproponuj przypomnienia (tylko z kontem, gdy przypomnienia wyłączone)
+var remindShow = () => typeof pushOk === 'function' && pushOk() && typeof cloudOn === 'function' && cloudOn() && typeof PUSH_ST !== 'undefined' && !PUSH_ST.on && !S.stats.remindAsked && streak() >= 3;
+var remindHTML = () => `<div class="banner row nowrap remind-nudge"><span class="grow">🔔 Masz <b>${streak()} dni</b> serii. Włączyć przypomnienie, żeby jej nie stracić?</span><button class="sm primary" data-act="remind-yes">Włącz</button><button class="sm ghost" data-act="remind-no" aria-label="Nie teraz">✕</button></div>`;
+if (typeof homeExtrasHTML === 'function') { const stHome0 = homeExtrasHTML; homeExtrasHTML = function () { let h = stHome0(); try { if (remindShow()) h = remindHTML() + h; if (tutShow()) h = tutCardHTML() + h; } catch (e) { console.warn(e); } return h; }; }
+Object.assign(ACTIONS, {
+  'lib-add': el => { const d = libAdd(el.dataset.id); if (!d) return; toast(`📚 Dodano: ${d.name}`); if (typeof confetti === 'function') confetti(50); render(); },
+  'tut-hide': () => { S.stats.tutDone = 1; save(); render(); },
+  'tut-claim': () => {
+    if (S.stats.tutDone || !tutSteps().every(x => x.ok)) return; S.stats.tutDone = 1;
+    if (!S.wallet.some(w => w.id === 'tut-reward')) S.wallet.push({ id: 'tut-reward', n: TUT_REWARD, why: 'tut', t: Date.now() });
+    if (typeof CASES !== 'undefined' && CASES.basic) addItem('case', 'basic', 1, 'tut-case');
+    save(); if (typeof celebrate === 'function') celebrate('🚀 Pierwsze kroki zaliczone!', `+${TUT_REWARD} 💎 · 📦 skrzynka zapasów w ekwipunku`); render();
+  },
+  'remind-yes': () => { S.stats.remindAsked = 1; save(); pushEnable(); },
+  'remind-no': () => { S.stats.remindAsked = 1; save(); render(); },
+});
+
+// 🧭 Przygoda: dodatkowe tryby jako kafelki „Więcej trybów” (nic nie znika – mniej przewijania)
+var stBoss0 = ROUTES.boss;
+ROUTES.boss = (...a) => { const v = stBoss0(...a); if (v?.html && !v.focus && !(a[0] && a[0][1])) onMount(advGrid); return v; };
+var ADV_TILES = '.kum-cta, .idle-cta, .coop-cta, .bestiary-cta, .hc-cta, .tower-cta';
+function advGrid() {
+  const v = document.getElementById('view'), cards = [...v.querySelectorAll(`:scope > :is(${ADV_TILES})`)];
+  if (cards.length < 3 || v.querySelector('.adv-grid')) return;
+  const box = document.createElement('div'); box.className = 'adv-wrap';
+  box.innerHTML = '<div class="bm-h adv-h"><b>Więcej trybów</b></div><div class="adv-grid"></div>';
+  cards[0].before(box); const wk = v.querySelector(':scope > .weekly-cta'); if (wk) box.before(wk); const g = box.querySelector('.adv-grid'); cards.forEach(c => { c.classList.add('adv-tile'); g.append(c); });
+}
+;
+
 /* ===== kb.js ===== */
 'use strict';
 /* ⌨️ Klawiatura na telefonie (iOS/Android): gdy wysuwa się klawiatura, aplikacja wie, ile miejsca zostało
@@ -16637,14 +16873,24 @@ async function flagsLoad() {
   try { if (typeof cloudOn === 'function' && cloudOn()) {
     let a = await SB.rpc('am_admin'); if (a.error) a = await SB.rpc('claim_admin');   // starsza baza bez am_admin
     IS_ADMIN = a.data === true; ADMIN_ERR = a.error ? (a.error.message || 'błąd') : (IS_ADMIN ? '' : 'not-admin');
-    const t = await SB.rpc('my_tests'); if (!t.error) testsSet(Array.isArray(t.data) ? t.data : []); render(); }
+    const t = await SB.rpc('my_tests'); if (!t.error) testsSet(Array.isArray(t.data) ? t.data : []); lazyLoad(); render(); }
     else { ADMIN_ERR = 'not-logged'; testsSet([]); } } catch (e) { ADMIN_ERR = e.message || 'błąd'; }
 }
 // 🧪 tryby w testach: admin widzi wszystkie, a tester tylko te, które admin mu przydzielił (tabela app_testers)
-var TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek' };
+var TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek', idle: '🏛️ Akademia (gra)' };
 var MY_TESTS = (() => { try { return JSON.parse(localStorage.getItem('myTests') || '[]'); } catch { return []; } })();
 function testsSet(a) { MY_TESTS = a.filter(f => TEST_FEATS[f]); try { localStorage.setItem('myTests', JSON.stringify(MY_TESTS)); } catch { /* */ } }
 var testOn = f => IS_ADMIN === true || MY_TESTS.includes(f);
+// ⚡ tryby w testach leżą w osobnym pliku bundle-x.js – pobiera go tylko admin / tester (reszta ma mniej kodu do wczytania)
+var LAZY = 0;   // 0 = nie, 1 = wczytuje, 2 = gotowe
+function lazyLoad() {
+  let was = false; try { if (IS_ADMIN === true) localStorage.setItem('wasAdmin', '1'); was = localStorage.getItem('wasAdmin') === '1'; } catch { /* */ }
+  if (LAZY || !(IS_ADMIN === true || MY_TESTS.length || was)) return;
+  LAZY = 1; const el = document.createElement('script'); el.src = 'bundle-x.js?v=' + APP_VERSION;
+  el.onload = () => { LAZY = 2; try { render(); } catch { /* */ } }; el.onerror = () => { LAZY = 0; el.remove(); };
+  document.head.append(el);
+}
+on('start', () => setTimeout(lazyLoad, 50));
 var TESTERS = null;   // lista dla panelu admina: null = nie wczytano
 async function testersLoad() {
   if (typeof SB === 'undefined' || !SB) { TESTERS = { err: 'Brak połączenia z bazą (zaloguj się).' }; return; }
@@ -17174,845 +17420,4 @@ Object.assign(ACTIONS, {
 on('start', () => setTimeout(() => premLoad(true), 2500));
 setTimeout(() => { const sh0 = ROUTES.shop; if (!sh0) return; ROUTES.shop = (...a) => { const v = sh0(...a); premLoad(); if (!v?.html) return v; const pm = premiumHTML(); if (!pm) return v;
   const i = v.html.indexOf('</div>', v.html.indexOf('<h1')) + 6; return { ...v, html: v.html.slice(0, i) + pm + v.html.slice(i) }; }; }, 0);
-;
-
-/* ===== kumul.js ===== */
-'use strict';
-/* 🃏 Kumulacja – tryb gry na fiszkach (admin + testerzy z panelu admina). Bieg przez 8 rund z rosnącym progiem punktów (+ tryb bez końca).
-   Przed rundą: widać cel i egzaminatora; zwykłą rundę można pominąć za bilet (nagrodę).
-   Runda: ręka fiszek, wybierasz 1–3 i odpowiadasz (ABCD albo wpisywanie). Zagranie ma TYP (Pojedyncza, Dwójka, Trójka,
-   Jedna talia, Przekrój, Ciężka trójka) z podstawą i mnożnikiem; podręczniki podnoszą poziom typu.
-   Punkty = (podstawa typu + wartości dobrze zagranych fiszek) × mnożnik. Atuty liczą się po kolei od lewej
-   (kolejność ma znaczenie), część rośnie w trakcie biegu, niektóre mają wykończenie (Brokat, Neon, Złocenie, Duch).
-   Sklep: atuty, koperty (wybierz 1 z 3), podręczniki, pomoce i pieczątki. Pieczątki zostają na fiszkach do końca biegu.
-   🏆 Puchary: Brąz → Srebro → Złoto → Platyna → Diament → Rubin → Mistrz. Każdy kolejny dokłada utrudnienie,
-   wygrana 8 rund zdobywa puchar i odblokowuje następny. Zaległe fiszki liczą się jak powtórki. */
-var kumAdmin = () => typeof testOn === 'function' ? testOn('kumul') : typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
-var KUM_TARGETS = [300, 500, 900, 1300, 2000, 3200, 4500, 7000];
-var KUM_HAND = 5, KUM_MAX_PLAY = 3, KUM_ITEM_SLOTS = 2, KUM_LAST = KUM_TARGETS.length;
-// 🏆 puchary (poziomy trudności) – utrudnienia sumują się
-var KUM_CUPS = [null,
-  { n: 'Brąz', img: 'bronze', d: 'Zwykłe zasady' },
-  { n: 'Srebro', img: 'silver', d: '📈 Progi punktów +20%' },
-  { n: 'Złoto', img: 'silver', cls: 'gold', d: '💤 Senne atuty: część atutów w sklepie drzemie w co drugim zagraniu' },
-  { n: 'Platyna', img: 'platinum', d: '⚔️ Egzaminator w każdej parzystej rundzie' },
-  { n: 'Diament', img: 'diamond', d: '💸 Inflacja: wszystko w sklepie +1 🪙, odsetki najwyżej 3' },
-  { n: 'Rubin', img: 'diamond', cls: 'ruby', d: '⚠️ Zdradliwe fiszki: zła odpowiedź zabiera 10% punktów rundy' },
-  { n: 'Mistrz', img: 'diamond', cls: 'master', d: '🎒 Tylko 4 miejsca na atuty, a finał ma próg ×1,5' },
-];
-var KUM_TOP = KUM_CUPS.length - 1;
-var kumCupImg = (t, cls = '') => t ? `<img class="kcup t${t} ${KUM_CUPS[t].cls || ''} ${cls}" src="assets/cups/${KUM_CUPS[t].img}.webp" alt="${KUM_CUPS[t].n}" title="Puchar: ${KUM_CUPS[t].n}">` : '<i class="kcup0"></i>';
-var kumTier = () => KUM?.tier || 1;
-function kumTarget(r) {
-  const t = kumTier(), base = r <= KUM_LAST ? KUM_TARGETS[r - 1] : KUM_TARGETS[KUM_LAST - 1] * Math.pow(1.6, r - KUM_LAST);
-  return Math.round(base * (t >= 2 ? 1.2 : 1) * (t >= 7 && r === KUM_LAST ? 1.5 : 1) / 10) * 10;
-}
-var kumIsBoss = r => [3, 6, 8].includes(r) || (r > KUM_LAST && r % 2 === 0) || (kumTier() >= 4 && r % 2 === 0);
-// typy zagrań: podstawa, mnożnik; każdy poziom +10 podstawy i +1 mnożnika
-var KUM_TYPES = {
-  single: { n: 'Pojedyncza', c: 10, m: 1 },
-  pair:   { n: 'Dwójka', c: 20, m: 2 },
-  triple: { n: 'Trójka', c: 30, m: 3 },
-  same:   { n: 'Jedna talia', c: 45, m: 3 },
-  mix:    { n: 'Przekrój', c: 45, m: 4 },
-  hard:   { n: 'Ciężka trójka', c: 60, m: 4 },
-};
-// egzaminatorzy – utrudnienia rund 3, 6, 8 (i więcej przy wyższych pucharach)
-var KUM_BOSSES = {
-  type:    { ic: '✍️', n: 'Pisemny', d: 'Tylko wpisywanie – bez ABCD' },
-  nonew:   { ic: '🚫', n: 'Weteran', d: 'Nowe fiszki nie dają podstawy' },
-  two:     { ic: '✌️', n: 'Skąpy', d: 'Najwyżej 2 fiszki na zagranie' },
-  hand4:   { ic: '🤏', n: 'Ciasna ręka', d: 'Ręka ma o 1 fiszkę mniej' },
-  discpay: { ic: '💸', n: 'Celnik', d: 'Każda wymiana kosztuje 1 monetę' },
-  mute:    { ic: '🔇', n: 'Cisza', d: 'Pierwszy atut od lewej nie działa' },
-  noplus:  { ic: '🧊', n: 'Mróz', d: 'Atuty dodające do mnożnika działają w połowie' },
-  rush:    { ic: '⏱️', n: 'Stoper', d: 'Odpowiedź po 15 s to błąd' },
-};
-// atuty: r – rzadkość (c zwykły, r rzadki, l legendarny), f – działanie na mnożnik / podstawę (liczone od lewej)
-var KUM_J = {
-  risk:    { ic: '🎲', r: 'c', n: 'Ryzykant', d: 'Nowe i trudne fiszki ×2 wartości', p: 5 },
-  writer:  { ic: '✍️', r: 'c', n: 'Pisarz', d: 'Wpisane odpowiedzi: +0,5 do mnożnika wartości (×1,5 → ×2)', p: 5 },
-  miser:   { ic: '🪙', r: 'c', n: 'Skąpiec', d: '+1 moneta za każdą niewykorzystaną wymianę', p: 4 },
-  banker:  { ic: '🏦', r: 'c', n: 'Bankier', d: 'Odsetki 2× wyższy limit', p: 5 },
-  swap:    { ic: '🔄', r: 'c', n: 'Wymiennik', d: '+2 wymiany na rundę', p: 4 },
-  quick:   { ic: '⚡', r: 'c', n: 'Szybkie palce', d: 'Dobra odpowiedź w < 5 s (wpisana: < 8 s): +15 wartości', p: 5 },
-  elder:   { ic: '🐘', r: 'c', n: 'Pamięć słonia', d: 'Utrwalone fiszki ×2 wartości', p: 5 },
-  owl:     { ic: '🦉', r: 'c', n: 'Sowa', d: 'Zaległe fiszki (do powtórki) ×3 wartości', p: 5 },
-  magnet:  { ic: '🧲', r: 'c', n: 'Magnes', d: '+1 fiszka w ręce', p: 5 },
-  tip:     { ic: '💵', r: 'c', n: 'Napiwek', d: '+2 monety za bezbłędne zagranie 3 fiszek', p: 4 },
-  plus:    { ic: '➕', r: 'c', n: 'Plusik', d: '+4 do mnożnika', p: 4, f: (x) => { x.m += kumAdd(4); return '+' + kumAdd(4); } },
-  sniper:  { ic: '🏹', r: 'c', n: 'Snajper', d: 'Pojedyncza: ×3 mnożnik', p: 5, f: (x) => { if (x.type === 'single') { x.m *= 3; return '×3'; } } },
-  last:    { ic: '🎬', r: 'c', n: 'Ostatni dzwonek', d: 'Ostatnie zagranie w rundzie: ×3 mnożnik', p: 5, f: (x, K) => { if (K.plays === 1) { x.m *= 3; return '×3'; } } },
-  zen:     { ic: '🧘', r: 'c', n: 'Minimalista', d: '+3 mnożnika za każde wolne miejsce na atut', p: 4, f: (x) => { const n = kumFree(); if (n > 0) { x.m += kumAdd(3 * n); return '+' + kumAdd(3 * n); } } },
-  roll:    { ic: '🔥', r: 'r', n: 'Rozpęd', d: '+1 mnożnik za każdą dobrą odpowiedź z rzędu (błąd zeruje)', p: 7, f: (x, K) => { if (K.streak) { x.m += kumAdd(K.streak); return '+' + kumAdd(K.streak); } } },
-  second:  { ic: '🛟', r: 'r', n: 'Druga szansa', d: 'Pierwszy błąd w rundzie liczy się jak dobra odpowiedź (połowa wartości)', p: 6 },
-  spec:    { ic: '🎯', r: 'r', n: 'Specjalista', d: 'Jedna talia: +6 mnożnik', p: 6, f: (x) => { if (x.type === 'same') { x.m += kumAdd(6); return '+' + kumAdd(6); } } },
-  trav:    { ic: '🧭', r: 'r', n: 'Podróżnik', d: 'Przekrój: ×2 mnożnik', p: 6, f: (x) => { if (x.type === 'mix') { x.m *= 2; return '×2'; } } },
-  extra:   { ic: '▶️', r: 'r', n: 'Dodatkowe zagranie', d: '+1 zagranie na rundę', p: 7 },
-  hoard:   { ic: '💎', r: 'r', n: 'Kolekcjoner', d: '+8 podstawy za każdy posiadany atut', p: 6, f: (x, K) => { const v = 8 * K.jokers.length; x.c += v; return '+' + v + ' pkt'; } },
-  perfect: { ic: '💯', r: 'r', n: 'Perfekcjonista', d: 'Zagranie bez żadnego błędu: ×2 mnożnik', p: 7, f: (x) => { if (x.flawless) { x.m *= 2; return '×2'; } } },
-  grow:    { ic: '🌱', r: 'r', n: 'Ziarenko', d: 'Rośnie: +1 mnożnik na stałe po każdej wygranej rundzie', p: 6, grows: true, f: (x, K, j) => { if (j.v) { x.m += kumAdd(j.v); return '+' + kumAdd(j.v); } } },
-  piggy:   { ic: '🐷', r: 'r', n: 'Skarbonka', d: 'Rośnie: +3 podstawy za każdą monetę wydaną w sklepie', p: 6, grows: true, f: (x, K, j) => { if (j.v) { x.c += 3 * j.v; return '+' + 3 * j.v + ' pkt'; } } },
-  lib:     { ic: '📚', r: 'r', n: 'Bibliotekarz', d: 'Rośnie: +15 podstawy za każdy podręcznik użyty w tym biegu', p: 6, grows: true, f: (x, K, j) => { if (j.v) { x.c += 15 * j.v; return '+' + 15 * j.v + ' pkt'; } } },
-  turtle:  { ic: '🐢', r: 'r', n: 'Żółw', d: 'Rośnie: +0,5 mnożnika za każde bezbłędne zagranie z rzędu (błąd zeruje)', p: 6, grows: true, f: (x, K, j) => { if (j.v) { const v = kumAdd(j.v / 2); x.m += v; return '+' + String(v).replace('.', ','); } } },
-  gold:    { ic: '👑', r: 'l', n: 'Złota rączka', d: 'Każde zagranie ×1,5 mnożnika', p: 9, f: (x) => { x.m *= 1.5; return '×1,5'; } },
-  echo:    { ic: '🔁', r: 'l', n: 'Echo', d: 'Pierwsza fiszka w zagraniu liczy się podwójnie', p: 8 },
-  prof:    { ic: '🎓', r: 'l', n: 'Profesor', d: 'Mnożnik ×(1 + 0,25 za każdy poziom typów zagrań)', p: 9, f: (x, K) => { const L = Object.values(K.levels).reduce((a, b) => a + b, 0); if (L) { const k = 1 + .25 * L; x.m *= k; return '×' + String(k).replace('.', ','); } } },
-  phoenix: { ic: '🪶', r: 'l', n: 'Feniks', d: 'Gdy skończą się zagrania przed celem: +1 zagranie, a Feniks spala się', p: 8 },
-  abc:     { ic: '🔠', r: 'c', n: 'Testowiec', d: 'Dobra odpowiedź w ABCD: +10 wartości', p: 4 },
-  duo:     { ic: '👯', r: 'c', n: 'Bliźniaki', d: 'Dwójka: +4 mnożnik', p: 4, f: (x) => { if (x.type === 'pair') { x.m += kumAdd(4); return '+' + kumAdd(4); } } },
-  first:   { ic: '🌅', r: 'c', n: 'Pierwszy dzwonek', d: 'Pierwsze zagranie w rundzie: +60 podstawy', p: 4, f: (x, K) => { if (!K.roundPlays) { x.c += 60; return '+60 pkt'; } } },
-  poor:    { ic: '🪹', r: 'c', n: 'Asceta', d: 'Gdy masz najwyżej 3 monety: ×2 mnożnik', p: 5, f: (x, K) => { if (K.money <= 3) { x.m *= 2; return '×2'; } } },
-  lucky:   { ic: '🍀', r: 'c', n: 'Fart', d: '1 szansa na 3: ×2 mnożnik', p: 4, f: (x) => { if (Math.random() < 1 / 3) { x.m *= 2; return '×2'; } } },
-  rich:    { ic: '🤑', r: 'r', n: 'Bogacz', d: '+1 mnożnik za każde 5 monet (najwyżej +8)', p: 6, f: (x, K) => { const v = Math.min(8, Math.floor(K.money / 5)); if (v) { x.m += kumAdd(v); return '+' + kumAdd(v); } } },
-  stampf:  { ic: '📮', r: 'r', n: 'Filatelista', d: '+25 podstawy za każdą dobrze zagraną fiszkę z pieczątką', p: 6, f: (x) => { if (x.stamped) { x.c += 25 * x.stamped; return '+' + 25 * x.stamped + ' pkt'; } } },
-  skipper: { ic: '🏃', r: 'r', n: 'Wagarowicz', d: '+2 mnożnik za każdą pominiętą rundę w tym biegu', p: 6, f: (x, K) => { if (K.skips) { x.m += kumAdd(2 * K.skips); return '+' + kumAdd(2 * K.skips); } } },
-  prymus:  { ic: '🎖️', r: 'r', n: 'Prymus', d: 'W rundzie Egzaminatora: ×2 mnożnik', p: 7, f: (x, K) => { if (K.boss) { x.m *= 2; return '×2'; } } },
-  rainbow: { ic: '🎨', r: 'l', n: 'Erudyta', d: 'Mnożnik ×1,5 za 2 różne talie w zagraniu, ×2 za 3', p: 8, f: (x) => { if (x.decks >= 2) { const k = 1 + .5 * (x.decks - 1); x.m *= k; return '×' + String(k).replace('.', ','); } } },
-  marathon:{ ic: '🏅', r: 'l', n: 'Maratończyk', d: 'Rośnie: mnożnik ×(1 + 0,1 za każde zagranie od zakupu)', p: 9, grows: true, f: (x, K, j) => { if (j.v) { const k = Math.round((1 + .1 * j.v) * 10) / 10; x.m *= k; return '×' + String(k).replace('.', ','); } } },
-};
-var kumAdd = v => KUM?.boss === 'noplus' ? Math.round(v / 2 * 10) / 10 : v;   // 🧊 Mróz: dodawanie do mnożnika w połowie
-var KUM_RAR = { c: { n: 'zwykły', w: 70 }, r: { n: 'rzadki', w: 25 }, l: { n: 'legendarny', w: 5 } };
-// wykończenia atutów (rzadko w sklepie, częściej w kopertach)
-var KUM_ED = {
-  shine: { ic: '✨', n: 'Brokat', d: '+30 podstawy', p: 2 },
-  neon:  { ic: '🌈', n: 'Neon', d: '+5 mnożnika', p: 3 },
-  gilt:  { ic: '🥇', n: 'Złocenie', d: '×1,5 mnożnika', p: 4 },
-  ghost: { ic: '👻', n: 'Duch', d: 'nie zajmuje miejsca', p: 3 },
-};
-// pomoce (jednorazowe), podręczniki i pieczątki
-var KUM_I = {
-  half:   { ic: '✂️', n: '50/50', d: 'Usuwa 2 złe odpowiedzi z bieżącej fiszki (ABCD)', p: 2 },
-  letter: { ic: '🔤', n: 'Pierwsza litera', d: 'Pokazuje początek odpowiedzi', p: 2 },
-  disc:   { ic: '🃏', n: 'Dodatkowa wymiana', d: '+1 wymiana w tej rundzie', p: 2 },
-  shield: { ic: '🛡️', n: 'Tarcza', d: 'Następny błąd liczy się jak dobra odpowiedź', p: 3 },
-  st_gold:  { ic: '🟨', n: 'Złota pieczątka', d: 'Na fiszkę z ręki: +3 monety, gdy dobrze zagrana', p: 3, stamp: 'gold' },
-  st_glass: { ic: '🔷', n: 'Szklana pieczątka', d: 'Na fiszkę z ręki: ×2 mnożnik zagrania, ale może pęknąć (1/4)', p: 4, stamp: 'glass' },
-  st_stone: { ic: '🪨', n: 'Kamienna pieczątka', d: 'Na fiszkę z ręki: +50 wartości', p: 3, stamp: 'stone' },
-};
-for (const [k, T] of Object.entries(KUM_TYPES)) KUM_I['bk_' + k] = { ic: '📘', n: `Podręcznik: ${T.n}`, d: `Typ „${T.n}” +1 poziom (+10 podstawy, +1 mnożnik) na cały bieg`, p: 3, book: k };
-var KUM_STAMPS = { gold: { ic: '🟨', n: 'złota' }, glass: { ic: '🔷', n: 'szklana' }, stone: { ic: '🪨', n: 'kamienna' } };
-// koperty: otwierasz i wybierasz 1 z 3
-var KUM_PACKS = {
-  jok:  { ic: '✉️', n: 'Koperta atutów', d: 'Wybierz 1 z 3 atutów (większa szansa na wykończenie)', p: 5 },
-  book: { ic: '📚', n: 'Koperta wiedzy', d: 'Wybierz 1 z 3 podręczników – działa od razu', p: 4 },
-  aid:  { ic: '🎁', n: 'Koperta pomocy', d: 'Wybierz 1 z 3 pomocy lub pieczątek', p: 3 },
-};
-// bilety za pominięcie zwykłej rundy
-var KUM_TICKETS = {
-  cash:   { ic: '💰', n: 'Sakiewka', d: '+10 monet od razu' },
-  rare:   { ic: '🎟️', n: 'Bilet VIP', d: 'W następnym sklepie darmowy rzadki atut' },
-  pack:   { ic: '✉️', n: 'Darmowa koperta', d: 'Od razu otwierasz Kopertę atutów' },
-  book:   { ic: '📘', n: 'Ściąga', d: '+1 poziom losowego typu zagrania' },
-  reroll: { ic: '🎲', n: 'Kupon', d: '3 darmowe nowe oferty w następnym sklepie' },
-  depo:   { ic: '🏦', n: 'Lokata', d: 'Podwójne odsetki po następnej wygranej rundzie' },
-  play:   { ic: '▶️', n: 'Dogrywka', d: '+1 zagranie w następnej rundzie' },
-  sale:   { ic: '🏷️', n: 'Wyprzedaż', d: 'W następnym sklepie wszystko tańsze o 2 monety' },
-  pocket: { ic: '👝', n: 'Kieszonka', d: '+1 miejsce na pomoce do końca biegu' },
-  stamps: { ic: '📬', n: 'Paczka pieczątek', d: '2 losowe fiszki z talii dostają losowe pieczątki' },
-  lacq:   { ic: '💅', n: 'Lakier', d: 'Losowy atut dostaje losowe wykończenie (bez atutu: +5 monet)' },
-};
-var KUM_KITS = {
-  classic: { ic: '🎒', n: 'Klasyczny', d: '4 monety, bez niespodzianek' },
-  lang:    { ic: '⌨️', n: 'Poliglota', d: 'Tylko wpisywanie – do języków. Wpisanie ×2 wartości i +1 wymiana' },
-  nerd:    { ic: '🤓', n: 'Kujon', d: '+1 zagranie w każdej rundzie, ale 1 wymiana mniej' },
-  gamble:  { ic: '🎰', n: 'Hazardzista', d: 'Start z 12 monetami, ale tylko 2 wymiany' },
-  pen:     { ic: '🖋️', n: 'Pisarz', d: 'Start z atutem „Pisarz”' },
-  shelf:   { ic: '📦', n: 'Półka', d: '+1 miejsce na atut, ale start z 0 monet' },
-  scholar: { ic: '🧑‍🏫', n: 'Belfer', d: 'Wszystkie typy zagrań od poziomu 2, ale tylko 3 miejsca na atuty' },
-};
-var KUM = null;
-var kumAwake = j => !j.sleepy || (KUM.playNo % 2 === 0);   // 💤 senny atut działa w co drugim zagraniu (1., 3., 5.…)
-var kumJ = id => KUM?.jokers.find(j => j.id === id && !(KUM.boss === 'mute' && KUM.jokers[0] === j) && kumAwake(j));
-var kumHas = id => !!kumJ(id);
-var kumIcon = s => `<span class="kum-ic">${s}</span>`;
-var kumFree = () => KUM.slots - KUM.jokers.filter(j => j.e !== 'ghost').length;
-var kumSell = j => Math.floor(KUM_J[j.id].p / 2) + (KUM_J[j.id].grows ? Math.floor((j.v || 0) / 2) : 0) + (j.e ? 1 : 0);
-var kumJVal = j => j.id === 'grow' ? '+' + j.v : j.id === 'turtle' ? '+' + String(j.v / 2).replace('.', ',') : j.id === 'marathon' ? '×' + String(Math.round((1 + .1 * j.v) * 10) / 10).replace('.', ',') : j.v;
-var kumStats = () => (S.stats.kum = S.stats.kum || { runs: 0, best: 0, bestPts: 0, wins: 0 });
-var kumCupMax = () => kumStats().cup || 0;
-var kumISlots = () => KUM_ITEM_SLOTS + (KUM?.xslot || 0);
-var kumTyping = () => KUM.kit === 'lang' || KUM.boss === 'type';
-function kumAddJoker(k, e, sleepy) {
-  KUM.jokers.push({ id: k, ...(e ? { e } : {}), ...(sleepy ? { sleepy: true } : {}) });
-  const st = kumStats(); (st.seen = st.seen || {})[k] = 1;
-}
-function kumLevelUp(t) { KUM.levels[t] = (KUM.levels[t] || 0) + 1; KUM.jokers.forEach(j => { if (j.id === 'lib') j.v = (j.v || 0) + 1; }); }
-
-// ---------- pula fiszek
-function kumPool(deckId) {
-  const ok = c => !c.sus && (deckId === 'all' || c.deckId === deckId) && (() => { const a = cardView(c).ans; return a && a.trim() && a.length <= 200; })();
-  const cs = S.cards.filter(ok), now = Date.now(), isDue = c => c.srs.state !== 'new' && c.srs.due <= now;
-  return [...shuffle(cs.filter(isDue)), ...shuffle(cs.filter(c => !isDue(c)))].map(c => c.id);
-}
-var kumCard = id => cardById(id);
-// 🎚️ fiszki, których jeszcze nikt się nie uczył, nie są warte tyle samo: trudność szacujemy z odpowiedzi
-// (długość, liczba słów, liczby i daty, wyliczenia) i dzielimy pulę biegu na 4 równe progi – 12 / 16 / 20 / 25 pkt.
-var KUM_NEW = [{ base: 12, t: 'nowa · łatwa' }, { base: 16, t: 'nowa · średnia' }, { base: 20, t: 'nowa · trudna' }, { base: 25, t: 'nowa · b. trudna' }];
-function kumRawDiff(c) {
-  const v = cardView(c), a = stripHtml(v.ans || '').trim(), q = stripHtml(v.label || '');
-  return a.length + 6 * (a.split(/\s+/).length - 1) + (/\d/.test(a) ? 8 : 0) + (/[\n,;]/.test(v.ans || '') ? 6 : 0) + Math.min(10, q.length / 15);
-}
-function kumTiers(ids) {
-  const rows = ids.map(id => { const c = kumCard(id); return [id, c ? kumRawDiff(c) : 0, hashStr(id)]; }).sort((a, b) => a[1] - b[1] || a[2] - b[2]), out = {};
-  rows.forEach((r, i) => { out[r[0]] = Math.min(3, Math.floor(i / rows.length * 4)); });
-  return out;
-}
-function kumKind(c) {
-  if (!c) return { k: 'mid', base: 10, t: '' };
-  if (c.srs.state === 'new') { const tr = KUM?.tierOf?.[c.id] ?? 1; return { k: 'new', base: KUM_NEW[tr].base, t: KUM_NEW[tr].t, heavy: tr >= 2, tr }; }
-  if (isLearning(c) || (c.srs.lapses || 0) >= 2) return { k: 'hard', base: 25, t: 'trudna', heavy: true };
-  if ((c.srs.ivl || 0) >= 7) return { k: 'mature', base: 10, t: 'utrwalona' };
-  return { k: 'mid', base: 15, t: '' };
-}
-var kumHandSize = () => KUM_HAND - (KUM.boss === 'hand4' ? 1 : 0) + (kumHas('magnet') ? 1 : 0);
-var kumMaxPlay = () => KUM.boss === 'two' ? 2 : KUM_MAX_PLAY;
-function kumDraw() {
-  const K = KUM; while (K.hand.length < kumHandSize()) { if (!K.deck.length) K.deck = shuffle(K.all.filter(id => !K.hand.includes(id))); const id = K.deck.shift(); if (id == null) break; if (!K.hand.includes(id)) K.hand.push(id); }
-}
-// typ zagrania z listy fiszek (dla podglądu: wszystkie wybrane; do punktów: tylko dobrze odpowiedziane)
-function kumTypeOf(ids) {
-  const n = ids.length; if (!n) return null;
-  const cs = ids.map(kumCard), decks = new Set(cs.map(c => c?.deckId)), kinds = cs.map(kumKind);
-  if (n === 3 && kinds.every(k => k.heavy)) return 'hard';
-  if (n === 3 && decks.size === 3) return 'mix';
-  if (n >= 2 && decks.size === 1) return 'same';
-  return n === 3 ? 'triple' : n === 2 ? 'pair' : 'single';
-}
-var kumTypeVal = t => { const T = KUM_TYPES[t], L = KUM.levels[t] || 0; return { c: T.c + 10 * L, m: T.m + L, L }; };
-// ---------- przed rundą: cel, egzaminator, bilet za pominięcie
-function kumPrepRound() {
-  const K = KUM;
-  K.boss = kumIsBoss(K.round) ? shuffle(Object.keys(KUM_BOSSES).filter(b => !(K.kit === 'lang' && b === 'type')))[0] : null;
-  K.ticket = K.boss ? null : shuffle(Object.keys(KUM_TICKETS))[0];
-  K.phase = 'pre';
-}
-function kumStartRound() {
-  const K = KUM;
-  K.score = 0; K.plays = 3 + (K.kit === 'nerd' ? 1 : 0) + (kumHas('extra') ? 1 : 0) - (K.round === KUM_LAST ? 1 : 0) + (K.bonusPlay ? 1 : 0);
-  K.bonusPlay = false; K.roundPlays = 0;
-  K.disc = (K.kit === 'gamble' ? 2 : K.kit === 'nerd' ? 2 : K.kit === 'lang' ? 4 : 3) + (kumHas('swap') ? 2 : 0);
-  K.usedSecond = false; K.sel = []; K.phase = 'pick'; K.hand = []; kumDraw();
-}
-function kumStart(deckId, kit, tier) {
-  const all = kumPool(deckId);
-  if (all.length < 12) return toast('Za mało fiszek – potrzeba min. 12 (z krótką odpowiedzią)', 4000);
-  tier = Math.max(1, Math.min(tier || 1, kumCupMax() + 1, KUM_TOP));
-  const slots = (tier >= 7 ? 4 : 5) + (kit === 'shelf' ? 1 : 0) - (kit === 'scholar' ? (tier >= 7 ? 1 : 2) : 0);
-  KUM = { deckId, kit, tier, all, deck: all.slice(), hand: [], round: 1, money: kit === 'gamble' ? 12 : kit === 'shelf' ? 0 : 4, jokers: [], slots, items: [], levels: {}, stamps: {},
-    streak: 0, total: 0, best: 0, spent: 0, shield: false, phase: 'pre', endless: false, slotBought: false, playNo: 0, skips: 0, freeRerolls: 0, freeRare: false, dblInt: false };
-  KUM.tierOf = kumTiers(all);
-  if (kit === 'pen') kumAddJoker('writer');
-  if (kit === 'scholar') for (const t of Object.keys(KUM_TYPES)) KUM.levels[t] = 1;
-  kumStats().runs++; save();
-  kumPrepRound(); render();
-}
-function kumSkip() {
-  const K = KUM, T = K.ticket; if (!T || K.phase !== 'pre') return;
-  K.skips++; K.round++; kumPrepRound();
-  if (T === 'cash') K.money += 10;
-  else if (T === 'rare') K.freeRare = true;
-  else if (T === 'reroll') K.freeRerolls += 3;
-  else if (T === 'depo') K.dblInt = true;
-  else if (T === 'play') K.bonusPlay = true;
-  else if (T === 'sale') K.sale = true;
-  else if (T === 'pocket') K.xslot = (K.xslot || 0) + 1;
-  else if (T === 'stamps') shuffle(K.all.filter(id => !K.stamps[id])).slice(0, 2).forEach(id => { K.stamps[id] = shuffle(Object.keys(KUM_STAMPS))[0]; });
-  else if (T === 'lacq') { const j = shuffle(K.jokers.filter(j => !j.e))[0]; if (j) { j.e = shuffle(Object.keys(KUM_ED).filter(e => e !== 'ghost'))[0]; toast(`💅 ${KUM_J[j.id].n} dostaje wykończenie: ${KUM_ED[j.e].n}`, 3000); return render(); } K.money += 5; }
-  else if (T === 'book') { const t = shuffle(Object.keys(KUM_TYPES))[0]; kumLevelUp(t); toast(`📘 ${KUM_TYPES[t].n} – poziom ${K.levels[t] + 1}`, 2500); return render(); }
-  else if (T === 'pack') return kumOpenPack('jok', 'pre');
-  toast(`${KUM_TICKETS[T].ic} ${KUM_TICKETS[T].n}: ${KUM_TICKETS[T].d}`, 3000); render();
-}
-// ---------- odpowiadanie
-function kumOpts(c) {
-  const e = distractorEntry(c), pool = S.cards.filter(x => x.id !== c.id).slice(0, 2000).map(distractorEntry).filter(x => x.a && norm(x.a) !== norm(e.a));
-  const wrong = pickDistractors(e, pool, 3); if (wrong.length < 3) return null;
-  return shuffle([e.a, ...wrong]);
-}
-function kumPlay() {
-  const K = KUM; if (!K.sel.length) return toast('Wybierz fiszki');
-  K.q = K.sel.map(id => ({ id, res: null })); K.qi = 0; K.phase = 'answer'; kumAsk(); render();
-}
-function kumAsk() {
-  const K = KUM, q = K.q[K.qi], c = kumCard(q.id);
-  q.opts = kumTyping() ? null : kumOpts(c); q.mode = q.opts ? 'abcd' : 'type'; q.at = Date.now(); q.hidden = []; q.letter = false;
-  q.due = !!c && c.srs.state !== 'new' && c.srs.due <= Date.now();
-}
-function kumAnswer(ok, how, typedVerdict) {
-  const K = KUM, q = K.q[K.qi], c = kumCard(q.id); if (!q || q.res) return;
-  const now = Date.now(), ms = Math.min(60000, now - q.at), late = K.boss === 'rush' && ms > 15000;
-  if (late) ok = false;
-  let good = ok, saved = false, lost = 0;
-  if (!good && K.shield) { K.shield = false; good = true; saved = true; }
-  else if (!good && kumHas('second') && !K.usedSecond) { K.usedSecond = true; good = true; saved = 'half'; }
-  if (!good && K.tier >= 6) { lost = Math.floor(K.score * .1); K.score -= lost; K.total -= lost; }   // ⚠️ Rubin: zdradliwe fiszki
-  if (c && c.srs.due <= now && c.srs.state !== 'new') {   // zaległa fiszka = powtórka (jak w walce z bossem)
-    const g = ok ? (how === 'type' && typedVerdict === 'close' ? 2 : 3) : 1;
-    S.log.push({ id: uid(), c: c.id, d: c.deckId, t: now, g, n: 0, ms, m: how === 'type' ? 'type' : 'flip', kum: 1, ...(how === 'type' ? { v: typedVerdict } : {}) });
-    c.srs = schedule(c.srs, g); touch(c); emit('review', c, g, false);
-  } else (S.tlog = S.tlog || []).push({ id: uid(), t: now, d: c?.deckId, ms });
-  q.res = { good, ok, saved, how, fast: ms < (how === 'type' ? 8000 : 5000), lost, late, close: typedVerdict === 'close' };
-  if (good && !saved) K.streak++; else if (!good) K.streak = 0;
-  save();
-  setTimeout(() => { if (KUM !== K || K.phase !== 'answer') return; if (K.qi < K.q.length - 1) { K.qi++; kumAsk(); render(); } else kumScore(); }, lost || late || (how === 'type' && !ok) ? 1500 : 700);
-  render();
-}
-// ---------- liczenie: typ zagrania → wartości fiszek → pieczątki → atuty od lewej (z wykończeniami)
-function kumScore() {
-  const K = KUM, steps = [], goodQ = K.q.filter(q => q.res.good);
-  const type = kumTypeOf(goodQ.map(q => q.id)), money0 = K.money;
-  const flawless = K.q.every(q => q.res.good && !q.res.saved);
-  const x = { type, c: 0, m: 0, flawless, stamped: goodQ.filter(q => K.stamps[q.id]).length, decks: new Set(goodQ.map(q => kumCard(q.id)?.deckId)).size };
-  if (type) { const tv = kumTypeVal(type); x.c = tv.c; x.m = tv.m; steps.push({ ic: '📘', t: `${KUM_TYPES[type].n}${tv.L ? ` (poz. ${tv.L + 1})` : ''}`, v: `${tv.c} × ${tv.m}` }); }
-  let glass = false;
-  K.q.forEach((q, i) => {
-    const c = kumCard(q.id), kd = kumKind(c), st = K.stamps[q.id];
-    if (!q.res.good) { steps.push({ ic: '✗', t: stripHtml(cardView(c).label || '').slice(0, 36), v: q.res.lost ? `−${q.res.lost} pkt rundy` : '0', bad: 1 }); return; }
-    let b = K.boss === 'nonew' && kd.k === 'new' ? 0 : kd.base;
-    if (kumHas('risk') && (kd.k === 'new' || kd.k === 'hard')) b *= 2;
-    if (kumHas('elder') && kd.k === 'mature') b *= 2;
-    if (kumHas('owl') && q.due) b *= 3;
-    if (q.res.how === 'type') b *= (K.kit === 'lang' ? 2 : 1.5) + (kumHas('writer') ? .5 : 0);
-    if (kumHas('quick') && q.res.fast) b += 15;
-    if (kumHas('abc') && q.res.how === 'abcd') b += 10;
-    if (st === 'stone') b += 50;
-    if (q.res.saved === 'half') b /= 2;
-    if (kumHas('echo') && i === 0) b *= 2;
-    b = Math.round(b); x.c += b;
-    steps.push({ ic: st ? KUM_STAMPS[st].ic : '✓', t: stripHtml(cardView(c).label || '').slice(0, 36) + (q.res.close ? ' (literówka)' : ''), v: '+' + b });
-    if (st === 'gold') { K.money += 3; steps.push({ ic: '🟨', t: 'Złota pieczątka', v: '+3 🪙' }); }
-    if (st === 'glass') { glass = true; if (Math.random() < .25) { delete K.stamps[q.id]; steps.push({ ic: '💥', t: 'Szklana pieczątka pękła', v: '' }); } }
-  });
-  if (type) {
-    if (glass) { x.m *= 2; steps.push({ ic: '🔷', t: 'Szklana pieczątka', v: '×2' }); }
-    K.jokers.forEach((j, idx) => {
-      const J = KUM_J[j.id];
-      if (K.boss === 'mute' && idx === 0) return (J.f || j.e) && steps.push({ ic: '🔇', t: J.n + ' – wyciszony', v: '' });
-      if (!kumAwake(j)) return (J.f || j.e) && steps.push({ ic: '💤', t: J.n + ' – drzemie', v: '' });
-      if (J.f) { const r = J.f(x, K, j); if (r) steps.push({ ic: J.ic, t: J.n, v: r }); }
-      if (j.e === 'shine') { x.c += 30; steps.push({ ic: '✨', t: J.n + ' · Brokat', v: '+30 pkt' }); }
-      if (j.e === 'neon') { x.m += kumAdd(5); steps.push({ ic: '🌈', t: J.n + ' · Neon', v: '+' + kumAdd(5) }); }
-      if (j.e === 'gilt') { x.m *= 1.5; steps.push({ ic: '🥇', t: J.n + ' · Złocenie', v: '×1,5' }); }
-    });
-  }
-  if (kumHas('tip') && K.q.length === 3 && flawless) { K.money += 2; steps.push({ ic: '💵', t: 'Napiwek', v: '+2 🪙' }); }
-  K.jokers.forEach(j => { if (j.id === 'turtle') j.v = flawless ? (j.v || 0) + 1 : 0; if (j.id === 'marathon') j.v = (j.v || 0) + 1; });
-  K.roundPlays = (K.roundPlays || 0) + 1;
-  const mult = Math.round(x.m * 10) / 10, pts = type ? Math.round(x.c * mult) : 0;
-  K.score += pts; K.total += pts; K.best = Math.max(K.best, pts); K.plays--; K.playNo++;
-  K.last = { chips: x.c, mult, pts, steps, good: goodQ.length, n: K.q.length, type, coins: K.money - money0 };
-  K.hand = K.hand.filter(id => !K.sel.includes(id)); K.sel = []; kumDraw();
-  K.phase = 'scored'; render();
-}
-function kumAfterPlay() {
-  const K = KUM, target = kumTarget(K.round);
-  if (K.score >= target) {
-    const cap = (K.tier >= 5 ? 3 : 5) * (kumHas('banker') ? 2 : 1);
-    const earn = 3 + K.plays + (kumHas('miser') ? K.disc : 0), interest = Math.min(cap, Math.floor(K.money / 5)) * (K.dblInt ? 2 : 1), bossBonus = K.boss ? 3 : 0;
-    K.money += earn + interest + bossBonus; K.won = { earn, interest, bossBonus, dbl: K.dblInt }; K.dblInt = false;
-    K.jokers.forEach(j => { if (j.id === 'grow') j.v = (j.v || 0) + 1; });
-    if (K.round === KUM_LAST && !K.endless) { kumAward(); K.phase = 'victory'; return render(); }
-    K.phase = 'shop'; K.shop = kumShopRoll(); K.rerolls = 0; return render();
-  }
-  if (K.plays <= 0) {
-    const i = K.jokers.findIndex(j => j.id === 'phoenix');
-    if (i >= 0) { K.jokers.splice(i, 1); K.plays = 1; K.phase = 'pick'; toast('🪶 Feniks spłonął – masz jeszcze 1 zagranie!', 3500); return render(); }
-    return kumEnd(false);
-  }
-  K.phase = 'pick'; render();
-}
-// 🏆 puchar za wygranie 8 rund (raz, w chwili wygranej – tryb bez końca już go nie zabierze)
-function kumAward() {
-  const K = KUM, st = kumStats(); if (K.cupDone) return; K.cupDone = true;
-  K.newCup = K.tier > (st.cup || 0); st.cup = Math.max(st.cup || 0, K.tier);
-  st.kitCup = st.kitCup || {}; st.kitCup[K.kit] = Math.max(st.kitCup[K.kit] || 0, K.tier); save();
-}
-// ---------- sklep
-function kumRollJoker(except, forceR) {
-  const roll = Math.random() * 100, r = forceR || (roll < KUM_RAR.l.w ? 'l' : roll < KUM_RAR.l.w + KUM_RAR.r.w ? 'r' : 'c');
-  let opts = Object.keys(KUM_J).filter(k => KUM_J[k].r === r && !except.has(k)); if (!opts.length) opts = Object.keys(KUM_J).filter(k => !except.has(k));
-  return shuffle(opts)[0];
-}
-function kumJokerOffer(k, edChance) {
-  const o = { t: 'j', k };
-  if (Math.random() < edChance) o.e = shuffle(Object.keys(KUM_ED))[0];
-  if (kumTier() >= 3 && Math.random() < 1 / 3) o.sleepy = true;
-  return o;
-}
-function kumShopRoll() {
-  const K = KUM, taken = new Set(K.jokers.map(j => j.id)), js = [];
-  for (let i = 0; i < 2; i++) { const k = kumRollJoker(new Set([...taken, ...js])); if (k) js.push(k); }
-  const offers = js.map(k => kumJokerOffer(k, .12));
-  if (K.freeRare) { const k = kumRollJoker(new Set([...taken, ...js]), 'r'); if (k) offers.unshift({ ...kumJokerOffer(k, .12), free: true }); K.freeRare = false; }
-  offers.push({ t: 'p', k: shuffle(Object.keys(KUM_PACKS))[0] });
-  const books = shuffle(Object.keys(KUM_I).filter(k => k.startsWith('bk_'))).slice(0, 1);
-  const rest = shuffle(Object.keys(KUM_I).filter(k => !k.startsWith('bk_') && !(K.kit === 'lang' && k === 'half'))).slice(0, 2);
-  return [...offers, ...[...books, ...rest].map(k => ({ t: 'i', k }))];
-}
-var kumDef = o => o.t === 'j' ? KUM_J[o.k] : o.t === 'p' ? KUM_PACKS[o.k] : KUM_I[o.k];
-var kumPrice = o => o.free ? 0 : Math.max(0, kumDef(o).p + (o.e ? KUM_ED[o.e].p : 0) - (o.sleepy ? 1 : 0) + (kumTier() >= 5 ? 1 : 0) - (KUM.sale ? 2 : 0));
-var kumRerollCost = () => KUM.freeRerolls > 0 ? 0 : 2 + KUM.rerolls + (kumTier() >= 5 ? 1 : 0);
-function kumSpend(n) { const K = KUM; K.money -= n; K.spent += n; K.jokers.forEach(j => { if (j.id === 'piggy') j.v = (j.v || 0) + n; }); }
-function kumOpenPack(kind, ret) {
-  const K = KUM, taken = new Set(K.jokers.map(j => j.id)); let opts = [];
-  if (kind === 'jok') { const ks = []; for (let i = 0; i < 3; i++) { const k = kumRollJoker(new Set([...taken, ...ks])); if (k) ks.push(k); } opts = ks.map(k => kumJokerOffer(k, .3)); }
-  else if (kind === 'book') opts = shuffle(Object.keys(KUM_I).filter(k => k.startsWith('bk_'))).slice(0, 3).map(k => ({ t: 'i', k }));
-  else opts = shuffle(Object.keys(KUM_I).filter(k => !k.startsWith('bk_') && !(K.kit === 'lang' && k === 'half'))).slice(0, 3).map(k => ({ t: 'i', k }));
-  K.pack = { kind, opts, ret }; K.phase = 'pack'; render();
-}
-function kumEnd(win) {
-  const K = KUM, rounds = win ? K.round : K.round - 1, full = rounds >= KUM_LAST;
-  if (full) kumAward();
-  const mul = 1 + .2 * (K.tier - 1);
-  const gold = Math.round(Math.min(600, rounds * 25 + (full ? 150 : 0)) * mul), xp = Math.round(Math.min(300, rounds * 15 + (full ? 60 : 0)) * mul);
-  if (gold) S.wallet.push({ id: 'kum-' + uid(), n: gold, why: 'boss-kum', t: Date.now() });
-  if (xp && typeof giveXP === 'function') giveXP(xp, 'kum');
-  const st = kumStats();
-  if (full) st.wins = (st.wins || 0) + 1;
-  st.best = Math.max(st.best || 0, rounds); st.bestPts = Math.max(st.bestPts || 0, K.total); st.bestPlay = Math.max(st.bestPlay || 0, K.best);
-  save(); kumUnlock(); K.phase = 'end'; K.result = { win: full, rounds, gold, xp }; render();
-}
-
-// ---------- widoki
-var KUM_KIT_SEL = 'classic', KUM_TIER_SEL = null;
-function kumIntroHTML() {
-  const st = kumStats(), decks = S.decks.filter(d => S.cards.some(c => c.deckId === d.id && !c.sus)), kit = KUM_KIT_SEL, max = Math.min(KUM_TOP, (st.cup || 0) + 1);
-  const tier = Math.min(max, KUM_TIER_SEL || max), seen = st.seen || {}, nSeen = Object.keys(KUM_J).filter(k => seen[k]).length;
-  return `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🃏 Kumulacja</h1><span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></div>
-  <div class="card kum-intro"><p style="margin-top:0"><b>8 rund z rosnącym progiem.</b> Wybierz 1–3 fiszki z ręki, odpowiedz i zbieraj <b>(podstawa + wartości fiszek) × mnożnik</b>.</p>
-    <details class="small kum-rules"${st.runs ? '' : ' open'}><summary><b>📖 Instrukcja gry</b></summary><ul>
-      <li><b>Typ zagrania</b> daje podstawę i mnożnik: Pojedyncza, Dwójka, Trójka, Jedna talia (2–3 z tej samej), Przekrój (3 różne talie), Ciężka trójka (3 trudne). Liczą się tylko dobrze odpowiedziane fiszki.</li>
-      <li>Fiszki mają wartość: trudna 25, zwykła 15, utrwalona 10. <b>Nowe, jeszcze nieuczone</b>: od 12 do 25 – gra szacuje trudność z odpowiedzi (długość, liczby, wyliczenia) i dzieli talię na cztery progi. Do „Ciężkiej trójki” liczą się trudne oraz nowe z dwóch górnych progów. Wpisanie zamiast ABCD: ×1,5.</li>
-      <li><b>Atuty</b> liczą się po kolei od lewej – ustaw kolejność w sklepie (najpierw „+”, potem „×”). Niektóre rosną, niektóre mają wykończenie: ✨ Brokat +30 podstawy, 🌈 Neon +5 mnożnika, 🥇 Złocenie ×1,5, 👻 Duch nie zajmuje miejsca.</li>
-      <li><b>Koperty</b> w sklepie: otwierasz i wybierasz 1 z 3. <b>Podręczniki</b> podnoszą poziom typu zagrania, <b>pieczątki</b> zostają na fiszce do końca biegu.</li>
-      <li>Przed zwykłą rundą możesz ją <b>pominąć</b> i wziąć bilet (nagrodę) – ale tracisz zarobek z rundy i sklep.</li>
-      <li>Rundy 3, 6 i 8 prowadzi <b>Egzaminator</b> z utrudnieniem (+3 monety za wygraną).</li>
-      <li>Plecak <b>⌨️ Poliglota</b>: same wpisywanie – najlepszy do języków.</li>
-      <li>Zaległe fiszki liczą się jak powtórki.</li></ul></details>
-    <p class="small muted kum-rotnote">📱 Tu wybierasz ustawienia w pionie. Sam bieg toczy się <b>w poziomie</b> – po starcie obróć telefon.</p>
-    <p class="small muted" style="margin:12px 0 6px">🏆 Puchar, o który grasz:</p>
-    <div class="kum-cups">${KUM_CUPS.slice(1).map((C, i) => { const t = i + 1, lock = t > max;
-      return `<button class="kum-cupb${t === tier ? ' on' : ''}${lock ? ' lock' : ''}${t <= (st.cup || 0) ? ' won' : ''}" data-act="kum-tier" data-t="${t}" ${lock ? 'disabled' : ''}>${kumCupImg(t)}<small>${C.n}</small></button>`; }).join('')}</div>
-    <div class="kum-cupinfo small"><b>${KUM_CUPS[tier].n}</b>${tier <= (st.cup || 0) ? ' · ✓ zdobyty' : ''}<ul>${KUM_CUPS.slice(1, tier + 1).map(C => `<li>${C.d}</li>`).join('')}</ul>${tier > 1 ? `<span class="muted">Nagroda za bieg +${(tier - 1) * 20}%</span>` : ''}</div>
-    <label class="small muted">Z jakich fiszek?</label>
-    <select id="kum-deck"><option value="all">Wszystkie talie</option>${decks.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}</select>
-    <p class="small muted" style="margin:12px 0 6px">Plecak na start:</p>
-    <div class="kum-kits">${Object.entries(KUM_KITS).map(([k, K]) => `<button class="kum-kit${kit === k ? ' on' : ''}" data-act="kum-kit" data-k="${k}">${kumIcon(K.ic)}<b>${K.n} ${st.kitCup?.[k] ? kumCupImg(st.kitCup[k], 'xs') : ''}</b><small>${K.d}</small></button>`).join('')}</div>
-    <div class="spacer"></div><button class="primary block" data-act="kum-start" style="min-height:52px">▶ Zacznij bieg · ${KUM_CUPS[tier].n}</button>
-    ${st.runs ? `<p class="small muted center" style="margin:10px 0 0">Biegi: ${st.runs} · wygrane: ${st.wins || 0} · rekord: runda ${st.best || 0} · ${(st.bestPts || 0).toLocaleString('pl')} pkt · najlepsze zagranie ${(st.bestPlay || 0).toLocaleString('pl')}</p>` : ''}
-    <details class="small kum-album"><summary><b>📖 Album atutów</b> · ${nSeen}/${Object.keys(KUM_J).length}</summary><div class="kum-albumg">${Object.entries(KUM_J).map(([k, J]) => seen[k]
-      ? `<div class="kum-own r-${J.r}">${kumIcon(J.ic)}<div class="grow"><b>${esc(J.n)}</b><small>${esc(J.d)}</small></div></div>`
-      : `<div class="kum-own unk">${kumIcon('❔')}<div class="grow"><b>???</b><small>Atut ${KUM_RAR[J.r].n} – zdobądź go, żeby poznać</small></div></div>`).join('')}</div></details></div>`;
-}
-// ---------- 🎲 stół gry (poziomo): lewy panel z wynikiem, u góry atuty i pomoce, na środku scena, na dole akcje
-var KG_ACTIVE = ['pre', 'pick', 'answer', 'scored', 'shop', 'pack'];
-var kgNum = n => Number(n).toLocaleString('pl');
-var kgDeckHue = id => hashStr(String(id)) % 360;
-var kgCanManage = () => ['pre', 'pick', 'shop'].includes(KUM.phase);
-function kgPop() { const K = KUM, P = K.pop; if (!P || P.ph !== K.phase) return null; return (P.t === 'j' ? K.jokers[P.i] : K.items[P.i]) != null ? P : null; }
-// lewy panel: runda, egzaminator, cel i wynik, podstawa × mnożnik (na żywo), liczniki
-function kgSide() {
-  const K = KUM, t = kumTarget(K.round), B = K.boss && KUM_BOSSES[K.boss], inRound = ['pick', 'answer', 'scored'].includes(K.phase);
-  const selT = K.phase === 'pick' ? kumTypeOf(K.sel) : K.phase === 'answer' ? kumTypeOf(K.q.map(q => q.id)) : null, tv = selT && kumTypeVal(selT), L = K.phase === 'scored' ? K.last : null;
-  const calc = L ? { n: L.type ? KUM_TYPES[L.type].n : 'Pudło', c: L.chips, m: String(L.mult).replace('.', ','), pts: L.pts }
-    : tv ? { n: KUM_TYPES[selT].n + (tv.L ? ` · poz. ${tv.L + 1}` : ''), c: tv.c, m: tv.m } : { n: K.phase === 'pick' ? 'Wybierz fiszki' : '—', c: 0, m: 0 };
-  const info = K.phase === 'shop' ? `<div class="kg-box kg-info win"><b>🏁 Runda ${K.round} wygrana</b><small>+${K.won.earn} 🪙 · odsetki +${K.won.interest}${K.won.dbl ? ' (×2)' : ''}${K.won.bossBonus ? ` · egzaminator +${K.won.bossBonus}` : ''}</small></div>`
-    : B ? `<div class="kg-box kg-info boss"><b>${B.ic} ${B.n}</b><small>${B.d}</small></div>`
-    : `<div class="kg-box kg-info"><b>📝 Zwykła runda</b><small>bez utrudnień</small></div>`;
-  return `<aside class="kg-side">
-    <div class="kg-round">${kumCupImg(K.tier, 'sm')}<div><b>Runda ${K.round}${K.round <= KUM_LAST ? '/' + KUM_LAST : ''}</b><small>${K.round > KUM_LAST ? 'bez końca · ' : ''}${KUM_CUPS[K.tier].n} · ${KUM_KITS[K.kit].n}</small></div></div>
-    ${info}
-    <div class="kg-two"><div class="kg-box"><small>Cel</small><b class="kg-goal">${kgNum(t)}</b></div>
-      <div class="kg-box"><small>${inRound ? 'Wynik' : 'Łącznie'}</small><b class="kg-pts">${kgNum(inRound ? K.score : K.total)}</b></div></div>
-    <div class="kg-prog"><i style="width:${inRound ? Math.min(100, K.score / t * 100) : 0}%"></i></div>
-    <div class="kg-box kg-calc${L ? ' done' : ''}"><small>${esc(calc.n)}</small><div><b class="kg-chips">${calc.c}</b><i>×</i><b class="kg-mult">${calc.m}</b>${L ? `<i>=</i><b class="kg-res">${kgNum(calc.pts)}</b>` : ''}</div></div>
-    <div class="kg-ctr"><div class="kg-box"><small>Zagrania</small><b class="c-play">${inRound ? K.plays : '–'}</b></div><div class="kg-box"><small>Wymiany</small><b class="c-disc">${inRound ? K.disc : '–'}</b></div><div class="kg-box"><small>Monety</small><b class="c-money">${K.money}</b></div></div>
-    <div class="kg-sbtns"><button class="kg-b" data-act="kum-levels">📘 Typy</button><button class="kg-b" data-act="kum-quit">✕ Koniec</button></div>
-  </aside>`;
-}
-// górny pasek: atuty (kolejność od lewej) i pomoce; stuknięcie pokazuje opis i akcje
-function kgTop() {
-  const K = KUM, inRound = ['pick', 'answer', 'scored'].includes(K.phase), P = kgPop(), used = K.jokers.filter(j => j.e !== 'ghost').length;
-  return `<div class="kg-top"><div class="kg-jrow"><span class="kg-cap">Atuty ${used}/${K.slots}</span>
-    ${K.jokers.map((j, i) => { const J = KUM_J[j.id], off = inRound && ((K.boss === 'mute' && i === 0) || !kumAwake(j));
-      return `<button class="kg-j r-${J.r}${j.e ? ' ed-' + j.e : ''}${off ? ' off' : ''}${P?.t === 'j' && P.i === i ? ' on' : ''}" data-act="kum-info" data-i="${i}" aria-label="${esc(J.n)}">${kumIcon(J.ic)}<small>${esc(J.n)}</small>${J.grows && j.v ? `<i class="kg-jv">${kumJVal(j)}</i>` : ''}${j.sleepy ? `<i class="kg-zz">${off ? '💤' : 'z'}</i>` : ''}${j.e ? `<i class="kg-ed">${KUM_ED[j.e].ic}</i>` : ''}</button>`; }).join('')}
-    ${Array(Math.max(0, kumFree())).fill('<span class="kg-j empty"></span>').join('')}</div>
-    <div class="kg-irow"><span class="kg-cap">Pomoce ${K.items.length}/${kumISlots()}</span>
-    ${K.items.map((k, i) => `<button class="kg-j it${P?.t === 'i' && P.i === i ? ' on' : ''}" data-act="kum-iteminfo" data-i="${i}" aria-label="${esc(KUM_I[k].n)}">${kumIcon(KUM_I[k].ic)}<small>${esc(KUM_I[k].n.replace('Podręcznik: ', '').replace(' pieczątka', ''))}</small></button>`).join('')}
-    ${Array(Math.max(0, kumISlots() - K.items.length)).fill('<span class="kg-j it empty"></span>').join('')}</div></div>`;
-}
-// panel wybranego atutu / pomocy: opis + przesuń, sprzedaj, użyj
-function kgPopHTML() {
-  const K = KUM, P = kgPop(); if (!P) return '';
-  if (P.t === 'j') { const j = K.jokers[P.i], J = KUM_J[j.id], can = kgCanManage();
-    return `<div class="kg-pop r-${J.r}">${kumIcon(J.ic)}<div class="kg-pop-t"><b>${esc(J.n)} <em>${KUM_RAR[J.r].n}</em>${J.grows && j.v ? ` · ${kumJVal(j)}` : ''}</b><small>${esc(J.d)}${j.e ? ` · ${KUM_ED[j.e].ic} ${KUM_ED[j.e].n}: ${KUM_ED[j.e].d}` : ''}${j.sleepy ? ' · 💤 działa w co drugim zagraniu' : ''}</small></div>
-      ${can ? `<button class="kg-b" data-act="kum-move" data-i="${P.i}" data-d="-1" ${P.i ? '' : 'disabled'} aria-label="W lewo">◀</button><button class="kg-b" data-act="kum-move" data-i="${P.i}" data-d="1" ${P.i < K.jokers.length - 1 ? '' : 'disabled'} aria-label="W prawo">▶</button><button class="kg-b kg-sell" data-act="kum-sell" data-i="${P.i}">Sprzedaj +${kumSell(j)} 🪙</button>` : ''}
-      <button class="kg-b kg-x" data-act="kum-popx" aria-label="Zamknij">✕</button></div>`; }
-  const k = K.items[P.i], D = KUM_I[k];
-  return `<div class="kg-pop">${kumIcon(D.ic)}<div class="kg-pop-t"><b>${esc(D.n)}</b><small>${esc(D.d)}</small></div>
-    ${K.phase !== 'scored' ? `<button class="kg-b kg-use" data-act="kum-use" data-i="${P.i}">Użyj</button>` : ''}${kgCanManage() ? `<button class="kg-b kg-sell" data-act="kum-sellitem" data-i="${P.i}">Sprzedaj +1 🪙</button>` : ''}
-    <button class="kg-b kg-x" data-act="kum-popx" aria-label="Zamknij">✕</button></div>`;
-}
-var kgLevelsHTML = () => `<div class="kg-lv" data-act="kum-levels"><div class="kg-lv-in"><b>📘 Typy zagrań</b>${Object.entries(KUM_TYPES).map(([k, T]) => { const v = kumTypeVal(k); return `<div><span>${T.n}${v.L ? ` <em>poz. ${v.L + 1}</em>` : ''}</span><span><b class="kg-chips">${v.c}</b> × <b class="kg-mult">${v.m}</b></span></div>`; }).join('')}
-  <small>Dwójka: 2 fiszki z różnych talii · Jedna talia: 2–3 z tej samej · Przekrój: 3 różne talie · Ciężka trójka: 3 trudne (też nowe z górnych progów). Liczą się tylko dobre odpowiedzi.</small><button class="kg-b">Zamknij</button></div></div>`;
-// fiszka w ręce: kartka z zeszytu z kolorem talii i wartością w rogu
-function kumCardHTML(id, sel) {
-  const c = kumCard(id), v = c && cardView(c), kd = kumKind(c), d = c && deckById(c.deckId), st = KUM.stamps[id];
-  return `<button class="kg-card${sel ? ' on' : ''} k-${kd.k}${kd.tr != null ? ' t' + kd.tr : ''}${st ? ' st-' + st : ''}" data-act="kum-sel" data-id="${id}" style="--dh:${kgDeckHue(c?.deckId)}"><span class="kg-val">${KUM.boss === 'nonew' && kd.k === 'new' ? 0 : kd.base}</span>${st ? `<span class="kg-stamp" title="Pieczątka ${KUM_STAMPS[st].n}">${KUM_STAMPS[st].ic}</span>` : ''}
-    <span class="kg-qw"><span class="kg-q">${esc(stripHtml(v?.label || '').slice(0, 90))}</span></span><span class="kg-deck"><i></i>${esc((d?.name || '').replace(/^🏫\s*/, '').slice(0, 20))}${kd.t ? ` · ${kd.t}` : ''}</span></button>`;
-}
-function kumPreHTML() {
-  const K = KUM, t = kumTarget(K.round), B = K.boss && KUM_BOSSES[K.boss], T = K.ticket && KUM_TICKETS[K.ticket];
-  return { stage: `<div class="kg-pre"><button class="kg-tile go${B ? ' boss' : ''}" data-act="kum-go"><small>Runda ${K.round}${K.round === KUM_LAST ? ' · finał' : ''}</small><b>${B ? `${B.ic} Egzaminator: ${B.n}` : '📝 Zwykła runda'}</b>
-      <span class="kg-tile-d">${B ? B.d + ' · +3 🪙 za wygraną' : 'Bez utrudnień'}</span><span class="kg-tile-goal">Cel <b>${kgNum(t)}</b> pkt</span><span class="kg-cta">▶ Graj</span></button>
-    ${T ? `<button class="kg-tile skip" data-act="kum-skip"><small>Pomiń rundę</small><b>${T.ic} Bilet: ${T.n}</b><span class="kg-tile-d">${T.d}</span><span class="kg-tile-goal">Bez zarobku i bez sklepu</span><span class="kg-cta ghost">⏭ Pomiń</span></button>`
-      : `<div class="kg-tile lock"><small>Pomiń rundę</small><b>🔒 Egzaminatora nie ominiesz</b><span class="kg-tile-d">Bilety są tylko przed zwykłą rundą.</span></div>`}</div>`, bar: '' };
-}
-function kumPickHTML() {
-  const K = KUM, n = K.sel.length;
-  return { stage: `${K.pendingStamp ? `<div class="kg-hint">${KUM_STAMPS[K.pendingStamp].ic} Stuknij fiszkę, na którą przybić pieczątkę (${KUM_STAMPS[K.pendingStamp].n})</div>` : `<div class="kg-hint">${n ? `Wybrane ${n}/${kumMaxPlay()}` : `Wybierz 1–${kumMaxPlay()} fiszki · liczba w rogu to wartość`}</div>`}
-    <div class="kg-hand n${K.hand.length}">${K.hand.map(id => kumCardHTML(id, K.sel.includes(id))).join('')}</div>`,
-    bar: `<button class="kg-b kg-play" data-act="kum-play" ${n ? '' : 'disabled'}>▶ Zagraj${n ? ` (${n})` : ''}</button><button class="kg-b kg-disc" data-act="kum-disc" ${n && K.disc > 0 ? '' : 'disabled'}>🔄 Wymień${K.boss === 'discpay' ? ' · 1 🪙' : ''}</button>` };
-}
-function kumAnswerHTML() {
-  const K = KUM, q = K.q[K.qi], c = kumCard(q.id), v = cardView(c), ans = v.ans, typing = !(q.mode === 'abcd' && !q.typing);
-  const opts = q.opts ? q.opts.map((o, i) => q.hidden.includes(i) ? '<span class="kg-opt gone"></span>' : `<button class="kg-opt${q.res ? (norm(o) === norm(ans) ? ' right' : q.pick === i ? ' wrong' : '') : ''}" data-act="kum-opt" data-i="${i}" ${q.res ? 'disabled' : ''}><b>${'ABCD'[i]}</b><span>${esc(o)}</span></button>`).join('') : '';
-  const dots = K.q.map((x, i) => `<i class="${x.res ? (x.res.good ? 'ok' : 'bad') : i === K.qi ? 'cur' : ''}"></i>`).join('');
-  const res = q.res ? `<div class="kg-res ${q.res.good ? 'ok' : 'bad'}">${q.res.saved === true ? '🛡️ Tarcza uratowała!' : q.res.saved === 'half' ? '🛟 Druga szansa – połowa wartości' : q.res.good ? (q.res.close ? `✓ Prawie – poprawnie: ${esc(ans)}` : '✓ Dobrze') : `${q.res.late ? '⏱️ Za późno! ' : '✗ '}Odpowiedź: ${esc(ans)}${q.res.lost ? ` · ⚠️ −${q.res.lost} pkt` : ''}`}</div>` : '';
-  return { stage: `<div class="kg-ans${typing ? ' typing' : ''}"><div class="kg-qcard" style="--dh:${kgDeckHue(c?.deckId)}"><div class="kg-qmeta"><span class="kg-dots">${dots}</span>${K.streak ? `<span>🔥 ${K.streak}</span>` : ''}${K.shield ? '<span>🛡️</span>' : ''}${K.stamps[q.id] ? `<span>${KUM_STAMPS[K.stamps[q.id]].ic}</span>` : ''}${q.due ? '<span>🦉 zaległa</span>' : ''}${K.boss === 'rush' ? '<span>⏱️ 15 s</span>' : ''}</div>
-      <div class="kg-qtext">${v.q}</div>${q.letter ? `<div class="kg-letter">Zaczyna się na: <b>${esc(ans.trim().slice(0, 1).toUpperCase())}…</b></div>` : ''}</div>
-    <div class="kg-aside">${res}${typing ? (q.res ? '' : `<div class="kg-type"><input id="kum-in" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"><button class="kg-b kg-play" data-act="kum-send">✓</button></div>`) : `<div class="kg-opts">${opts}</div>`}</div></div>`,
-    bar: q.res ? '' : typing ? (q.opts ? '<button class="kg-b" data-act="kum-abcd">↩ Wróć do ABCD</button>' : `<span class="kg-note">Wpisanie: ×${K.kit === 'lang' ? 2 : '1,5'} wartości fiszki</span>`) : '<button class="kg-b" data-act="kum-type">✍️ Wpiszę odpowiedź · ×1,5 wartości</button>' };
-}
-function kumScoredHTML() {
-  const K = KUM, L = K.last, t = kumTarget(K.round), won = K.score >= t;
-  return { stage: `<div class="kg-scored"><ul class="kg-steps">${L.steps.map((s, i) => `<li class="${s.bad ? 'bad' : ''}" style="animation-delay:${i * 90}ms"><span>${s.ic}</span><span class="g">${esc(s.t)}</span><b>${esc(s.v)}</b></li>`).join('')}</ul>
-    <div class="kg-total" style="animation-delay:${L.steps.length * 90}ms">${L.type ? `<b class="kg-chips">${L.chips}</b><i>×</i><b class="kg-mult">${String(L.mult).replace('.', ',')}</b>` : ''}<strong>${L.type ? '+' : ''}${kgNum(L.pts)}</strong><small>${L.good}/${L.n} dobrze${L.coins ? ` · +${L.coins} 🪙` : ''}${won ? ' · cel zdobyty!' : ` · brakuje ${kgNum(t - K.score)}`}</small></div></div>`,
-    bar: `<button class="kg-b kg-play" data-act="kum-next">${won ? '🏁 Runda wygrana – dalej' : K.plays > 0 ? '▶ Następne zagranie' : K.jokers.some(j => j.id === 'phoenix') ? '🪶 Feniks…' : 'Koniec zagrań…'}</button>` };
-}
-function kumOfferHTML(o, i, act) {
-  const K = KUM, D = kumDef(o), price = act === 'kum-buy' ? kumPrice(o) : 0;
-  const full = o.t === 'j' ? kumFree() <= 0 && o.e !== 'ghost' : o.t === 'i' && !(D.book && act === 'kum-pack') ? K.items.length >= kumISlots() : false;
-  const kind = o.t === 'j' ? KUM_RAR[D.r].n : o.t === 'p' ? 'koperta' : D.book ? 'podręcznik' : D.stamp ? 'pieczątka' : 'pomoc';
-  return `<div class="kg-off ${o.t === 'j' ? 'j r-' + D.r + (o.e ? ' ed-' + o.e : '') : o.t === 'p' ? 'p' : D.book ? 'b' : D.stamp ? 's' : 'i'}"><span class="kg-kind">${kind}</span>${kumIcon(D.ic)}<b>${esc(D.book ? KUM_TYPES[D.book].n : D.n)}</b>
-    <small>${o.e ? `<em>${KUM_ED[o.e].ic} ${KUM_ED[o.e].n}: ${KUM_ED[o.e].d}.</em> ` : ''}${o.sleepy ? '<em class="zz">💤 Senny (co drugie zagranie).</em> ' : ''}${esc(D.d)}</small>
-    <button class="kg-b kg-buy" data-act="${act}" data-i="${i}" ${full || K.money < price ? 'disabled' : ''}>${full ? 'Brak miejsca' : act === 'kum-buy' ? (o.free ? '🎟️ Gratis' : `${price} 🪙`) : 'Biorę'}</button></div>`;
-}
-function kumShopHTML() {
-  const K = KUM, rc = kumRerollCost(), slotP = 8 + (kumTier() >= 5 ? 1 : 0);
-  return { stage: `<div class="kg-shop">${K.shop.map((o, i) => o.bought ? '<div class="kg-off sold">Kupione</div>' : kumOfferHTML(o, i, 'kum-buy')).join('')}
-      ${!K.slotBought ? `<div class="kg-off i"><span class="kg-kind">ulepszenie</span>${kumIcon('🧳')}<b>Większy plecak</b><small>+1 miejsce na atut (raz na bieg)</small><button class="kg-b kg-buy" data-act="kum-slot" ${K.money >= slotP ? '' : 'disabled'}>${slotP} 🪙</button></div>` : ''}</div>`,
-    bar: `<span class="kg-note">🛒 Sklep · stuknij swój atut u góry, żeby go przesunąć albo sprzedać</span><button class="kg-b" data-act="kum-reroll" ${K.money >= rc ? '' : 'disabled'}>🎲 Nowa oferta · ${rc ? rc + ' 🪙' : `gratis (${K.freeRerolls})`}</button><button class="kg-b kg-play" data-act="kum-nextround">▶ Runda ${K.round + 1}</button>` };
-}
-function kumPackHTML() {
-  const K = KUM, P = K.pack, D = KUM_PACKS[P.kind];
-  return { stage: `<div class="kg-hint">${D.ic} ${D.n} – wybierz jedno</div><div class="kg-shop pack">${P.opts.map((o, i) => kumOfferHTML(o, i, 'kum-pack')).join('')}</div>`,
-    bar: '<button class="kg-b" data-act="kum-packskip">Pomiń kopertę</button>' };
-}
-function kgTableHTML() {
-  const K = KUM, v = { pre: kumPreHTML, pick: kumPickHTML, answer: kumAnswerHTML, scored: kumScoredHTML, shop: kumShopHTML, pack: kumPackHTML }[K.phase]();
-  return `<div class="kg ph-${K.phase}${K.boss && K.phase !== 'shop' ? ' is-boss' : ''}">${kgSide()}<section class="kg-main">${kgTop()}<div class="kg-stage">${v.stage}</div>${kgPopHTML() || (v.bar ? `<div class="kg-bar">${v.bar}</div>` : '')}</section>${K.showLv ? kgLevelsHTML() : ''}</div>`;
-}
-function kumVictoryHTML() {
-  const K = KUM, C = KUM_CUPS[K.tier];
-  return `<div class="card center kum-end"><div class="kum-bigcup">${kumCupImg(K.tier, 'big')}</div><h2>${K.newCup ? `Nowy puchar: ${C.n}!` : `8 rund zaliczone – ${C.n}`}</h2><p>Łącznie <b>${K.total.toLocaleString('pl')}</b> pkt · najlepsze zagranie ${K.best.toLocaleString('pl')}</p>
-    ${K.newCup && K.tier < KUM_TOP ? `<p class="small">🔓 Odblokowany puchar <b>${KUM_CUPS[K.tier + 1].n}</b>: ${KUM_CUPS[K.tier + 1].d}</p>` : ''}
-    <p class="small muted">Możesz odebrać nagrodę teraz albo grać dalej w trybie bez końca (progi ×1,6 co rundę, nagroda rośnie).</p>
-    <div class="kum-actions"><button class="primary grow" data-act="kum-endless">♾️ Graj dalej</button><button class="grow" data-act="kum-claim">🏆 Odbierz nagrodę</button></div></div>`;
-}
-function kumEndHTML() {
-  const K = KUM, R = K.result;
-  return `<div class="card center kum-end">${R.win ? `<div class="kum-bigcup">${kumCupImg(K.tier, 'big')}</div>` : '<div style="font-size:52px">💥</div>'}<h2>${R.win ? `Bieg zakończony – ${R.rounds} ${plural(R.rounds, 'runda', 'rundy', 'rund')}` : `Koniec biegu w rundzie ${K.round}`}</h2>
-    <p>Łącznie <b>${K.total.toLocaleString('pl')}</b> pkt · najlepsze zagranie ${K.best.toLocaleString('pl')}${K.skips ? ` · pominięte rundy: ${K.skips}` : ''}</p>
-    <p class="small">Nagroda: <b>+${R.gold} 🪙 złota</b> · <b>+${R.xp} XP</b>${K.tier > 1 ? ` <span class="muted">(${KUM_CUPS[K.tier].n} +${(K.tier - 1) * 20}%)</span>` : ''}</p>
-    <div class="kum-actions"><button class="primary grow" data-act="kum-again">▶ Jeszcze raz</button><button class="grow" data-act="kum-quit2">Wyjdź</button></div></div>`;
-}
-// 📱 tryb wymaga telefonu w poziomie: w pionie zasłania go plansza „Obróć telefon” (CSS: orientation: portrait)
-var KUM_ROTATE = `<div class="kum-rotate" role="dialog" aria-label="Obróć telefon"><div class="kum-rot-ph"><span>🃏</span></div><b>Obróć telefon poziomo</b><small>Bieg toczy się na stole gry w poziomie. Obróć telefon, a gra pojawi się sama – nic nie przepadnie.</small><button class="ghost" data-act="kum-leave">‹ Wróć do Przygody</button></div>`;
-function kumLock() { try { screen.orientation?.lock?.('landscape').catch(() => {}); } catch { /* telefon nie pozwala – zostaje plansza */ } }
-function kumUnlock() { try { screen.orientation?.unlock?.(); } catch { /* */ } }
-ROUTES.kumul = () => {
-  if (!kumAdmin()) return { tab: 'arena', html: '<p class="muted center" style="padding:40px 0">Ten tryb jest jeszcze w testach.</p>' };
-  if (!KUM) return { tab: 'arena', html: kumIntroHTML() };
-  const K = KUM;
-  if (!KG_ACTIVE.includes(K.phase)) return { tab: 'arena', focus: true, html: `<div class="kum">${(K.phase === 'victory' ? kumVictoryHTML : kumEndHTML)()}</div>` };
-  if (K.phase === 'answer') onMount(() => { const i = $('#kum-in'); if (i) { i.focus({ preventScroll: true }); i.onkeydown = e => { if (e.key === 'Enter') ACTIONS['kum-send'](); }; } });
-  return { tab: 'arena', focus: true, html: KUM_ROTATE + kgTableHTML() };
-};
-// wejście w zakładce Przygoda – admin i testerzy
-var kumBoss0 = ROUTES.boss;
-ROUTES.boss = (...a) => { const v = kumBoss0(...a); if (typeof KUM_ROTATE !== 'undefined') kumUnlock(); if (!v?.html || !kumAdmin() || (a[0] && a[0][1])) return v; const st = S.stats.kum || {};
-  return { ...v, html: v.html.replace('<div class="card row nowrap coop-cta"', `<div class="card row nowrap kum-cta" data-go="#/kumul"><span class="kum-cta-ic">🃏</span><div class="grow"><b>Kumulacja <span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></b><div class="small muted">8 rund · atuty, koperty, pieczątki · 7 pucharów${st.best ? ` · rekord: runda ${st.best}` : ''}</div></div>${st.cup ? kumCupImg(st.cup) : ''}<span>›</span></div><div class="card row nowrap coop-cta"`) }; };
-
-Object.assign(ACTIONS, {
-  'kum-kit': el => { KUM_KIT_SEL = el.dataset.k; render(); },
-  'kum-tier': el => { KUM_TIER_SEL = +el.dataset.t; render(); },
-  'kum-leave': () => { kumUnlock(); go('#/boss'); },
-  'kum-start': () => { kumLock(); const max = Math.min(KUM_TOP, kumCupMax() + 1); kumStart($('#kum-deck')?.value || 'all', KUM_KIT_SEL, Math.min(max, KUM_TIER_SEL || max)); },
-  'kum-go': () => { if (KUM?.phase === 'pre') { kumStartRound(); render(); } },
-  'kum-skip': () => kumSkip(),
-  'kum-sel': el => { const K = KUM, id = el.dataset.id; if (!K || K.phase !== 'pick') return;
-    if (K.pendingStamp) { K.stamps[id] = K.pendingStamp; toast(`${KUM_STAMPS[K.pendingStamp].ic} Pieczątka ${KUM_STAMPS[K.pendingStamp].n} na fiszce`); K.pendingStamp = null; return render(); }
-    const i = K.sel.indexOf(id); if (i >= 0) K.sel.splice(i, 1); else if (K.sel.length < kumMaxPlay()) K.sel.push(id); else return toast(`Maksymalnie ${kumMaxPlay()} fiszki na zagranie`); render(); },
-  'kum-play': () => kumPlay(),
-  'kum-disc': () => { const K = KUM; if (!K.sel.length || K.disc <= 0) return; if (K.boss === 'discpay') { if (K.money < 1) return toast('Wymiana kosztuje 1 monetę'); K.money--; }
-    K.hand = K.hand.filter(id => !K.sel.includes(id)); K.sel = []; K.disc--; kumDraw(); render(); },
-  'kum-opt': el => { const K = KUM, q = K?.q?.[K.qi]; if (!q || q.res) return; const i = +el.dataset.i; q.pick = i; kumAnswer(norm(q.opts[i]) === norm(cardView(kumCard(q.id)).ans), 'abcd'); },
-  'kum-type': () => { const q = KUM?.q?.[KUM.qi]; if (q) { q.typing = true; q.mode = 'type'; render(); } },
-  'kum-abcd': () => { const q = KUM?.q?.[KUM.qi]; if (q?.opts) { q.typing = false; q.mode = 'abcd'; render(); } },
-  'kum-send': () => { const K = KUM, q = K?.q?.[K.qi]; if (!q || q.res) return; const t = $('#kum-in')?.value || ''; if (!t.trim()) return;
-    const v = checkAnswer(t, cardView(kumCard(q.id)).ans); kumAnswer(v !== 'wrong', 'type', v); },
-  'kum-next': () => kumAfterPlay(),
-  'kum-buy': el => { const K = KUM, o = K.shop[+el.dataset.i]; if (!o || o.bought) return; const D = kumDef(o), price = kumPrice(o); if (K.money < price) return;
-    if (o.t === 'j') { if (kumFree() <= 0 && o.e !== 'ghost') return; kumAddJoker(o.k, o.e, o.sleepy); }
-    else if (o.t === 'i') { if (K.items.length >= kumISlots()) return; K.items.push(o.k); }
-    kumSpend(price); o.bought = true;
-    if (o.t === 'p') return kumOpenPack(o.k, 'shop');
-    toast(`${D.ic} ${D.n}`, 1500); render(); },
-  'kum-pack': el => { const K = KUM, P = K.pack, o = P?.opts[+el.dataset.i]; if (!o) return; const D = kumDef(o);
-    if (o.t === 'j') { if (kumFree() <= 0 && o.e !== 'ghost') return toast('Brak miejsca na atut'); kumAddJoker(o.k, o.e, o.sleepy); }
-    else if (D.book) { kumLevelUp(D.book); toast(`📘 ${KUM_TYPES[D.book].n} – poziom ${K.levels[D.book] + 1}`, 2000); }
-    else { if (K.items.length >= kumISlots()) return toast('Brak miejsca na pomoc'); K.items.push(o.k); }
-    K.phase = P.ret; K.pack = null; render(); },
-  'kum-packskip': () => { const K = KUM; if (!K?.pack) return; K.phase = K.pack.ret; K.pack = null; render(); },
-  'kum-slot': () => { const K = KUM, p = 8 + (kumTier() >= 5 ? 1 : 0); if (K.slotBought || K.money < p) return; kumSpend(p); K.slots++; K.slotBought = true; render(); },
-  'kum-move': el => { const K = KUM, i = +el.dataset.i, j = i + +el.dataset.d; if (j < 0 || j >= K.jokers.length) return; [K.jokers[i], K.jokers[j]] = [K.jokers[j], K.jokers[i]]; if (K.pop?.t === 'j') K.pop.i = j; render(); },
-  'kum-sell': el => { const K = KUM, i = +el.dataset.i, j = K.jokers[i]; if (!j) return; K.money += kumSell(j); K.jokers.splice(i, 1); K.pop = null; render(); },
-  'kum-sellitem': el => { const K = KUM, i = +el.dataset.i; if (K.items[i] == null) return; K.items.splice(i, 1); K.money += 1; K.pop = null; render(); },
-  'kum-reroll': () => { const K = KUM, rc = kumRerollCost(); if (K.money < rc) return; if (K.freeRerolls > 0) K.freeRerolls--; else { kumSpend(rc); K.rerolls++; } K.shop = kumShopRoll(); render(); },
-  'kum-nextround': () => { KUM.sale = false; KUM.round++; kumPrepRound(); render(); },
-  'kum-endless': () => { const K = KUM; K.endless = true; K.phase = 'shop'; K.shop = kumShopRoll(); K.rerolls = 0; render(); },
-  'kum-claim': () => kumEnd(true),
-  'kum-use': el => { const K = KUM, i = +el.dataset.i, k = K.items[i]; if (!k) return; const D = KUM_I[k], q = K.phase === 'answer' ? K.q[K.qi] : null; K.pop = null;
-    if (k === 'half') { if (!q || q.res || !q.opts || q.mode !== 'abcd') return toast('Użyj podczas odpowiedzi ABCD'); const ans = cardView(kumCard(q.id)).ans; q.hidden = shuffle(q.opts.map((o, j) => j).filter(j => norm(q.opts[j]) !== norm(ans))).slice(0, 2); }
-    else if (k === 'letter') { if (!q || q.res) return toast('Użyj podczas odpowiedzi'); q.letter = true; }
-    else if (k === 'disc') { if (K.phase !== 'pick') return toast('Użyj przy wybieraniu fiszek'); K.disc++; }
-    else if (k === 'shield') { if (K.shield) return toast('Tarcza już działa'); K.shield = true; }
-    else if (D.book) { kumLevelUp(D.book); toast(`📘 ${KUM_TYPES[D.book].n} – poziom ${K.levels[D.book] + 1}`); K.items.splice(i, 1); return render(); }
-    else if (D.stamp) { if (K.phase !== 'pick') return toast('Użyj przy wybieraniu fiszek – potem stuknij fiszkę'); K.pendingStamp = D.stamp; K.items.splice(i, 1); return render(); }
-    K.items.splice(i, 1); toast(`${D.ic} ${D.n}`); render(); },
-  'kum-info': el => { const K = KUM, i = +el.dataset.i, P = kgPop(); K.pop = P?.t === 'j' && P.i === i ? null : { t: 'j', i, ph: K.phase }; render(); },
-  'kum-iteminfo': el => { const K = KUM, i = +el.dataset.i, P = kgPop(); K.pop = P?.t === 'i' && P.i === i ? null : { t: 'i', i, ph: K.phase }; render(); },
-  'kum-popx': () => { if (KUM) { KUM.pop = null; render(); } },
-  'kum-levels': () => { if (KUM) { KUM.showLv = !KUM.showLv; render(); } },
-  'kum-quit': () => { if (!KUM) return go('#/boss'); askBox({ icon: '🃏', title: 'Zakończyć bieg?', intro: 'Dostaniesz nagrodę za ukończone rundy.', ok: 'Zakończ', cancel: 'Graj dalej', danger: true }).then(ok => { if (ok && KUM && KUM.phase !== 'end') kumEnd(KUM.round > KUM_LAST); }); },
-  'kum-again': () => { const d = KUM?.deckId || 'all', kit = KUM?.kit || 'classic', t = KUM?.tier || 1; KUM = null; kumStart(d, kit, t); },
-  'kum-quit2': () => { KUM = null; kumUnlock(); go('#/boss'); },
-});
-;
-
-/* ===== skoj.js ===== */
-'use strict';
-/* 💡 Powtórka skojarzeń (tylko konto admina): trening na samych skojarzeniach z fiszek.
-   Kierunek „skojarzenie → fiszka”: widzisz tylko skojarzenie i przypominasz sobie pytanie i odpowiedź.
-   Kierunek „fiszka → skojarzenie”: widzisz pytanie i przypominasz sobie swoje skojarzenie.
-   To trening – nie zmienia terminów powtórek. Nietrafione wracają raz jeszcze na koniec. */
-var skojAdmin = () => typeof testOn === 'function' ? testOn('skoj') : typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
-var SKOJ = null;
-var skojHasHint = n => n && n.type !== 'occl' && (String(n.hint || '').trim() || (n.hintImg && IMG[n.hintImg]));
-var skojNotes = deckId => S.notes.filter(n => (deckId === 'all' || n.deckId === deckId) && skojHasHint(n) && S.cards.some(c => c.noteId === n.id && !c.sus));
-var skojImg = n => n.hintImg && IMG[n.hintImg] ? `<img class="hint-img" src="${IMG[n.hintImg]}" alt="skojarzenie">` : '';
-var skojHintHTML = n => `<div class="hintbox skoj-hint"><div class="hb-h"><span>💡 Skojarzenie</span></div>${String(n.hint || '').trim() ? `<div class="hb-t">${fmt(n.hint)}</div>` : ''}${skojImg(n)}</div>`;
-var skojCardHTML = n => n.type === 'cloze'
-  ? `<div class="ctext">${typeof clozeHTML === 'function' ? clozeHTML(n.text, 'c1', true) : esc(n.text)}</div>`
-  : `${n.imageId && IMG[n.imageId] ? `<img class="cimg" src="${IMG[n.imageId]}" alt="">` : ''}<div class="ctext"><b>${fmt(n.front || '')}</b></div><hr><div class="ctext">${fmt(n.back || '')}</div>`;
-var skojFront = n => n.type === 'cloze' ? `<div class="ctext">${typeof clozeHTML === 'function' ? clozeHTML(n.text, 'c1', false) : esc(n.text)}</div>`
-  : `${n.imageId && IMG[n.imageId] ? `<img class="cimg" src="${IMG[n.imageId]}" alt="">` : ''}<div class="ctext">${fmt(n.front || '')}</div>`;
-
-function skojStart(deckId, dir) {
-  const ns = skojNotes(deckId); if (!ns.length) return toast('W tej talii nie ma fiszek ze skojarzeniami');
-  SKOJ = { deckId, dir, queue: shuffle(ns.map(n => n.id)), i: 0, shown: false, ok: 0, miss: 0, retry: new Set(), done: false };
-  go('#/skoj/' + deckId); render();
-}
-ROUTES.skoj = parts => {
-  if (!skojAdmin()) return { tab: 'home', html: '<p class="muted center" style="padding:40px 0">Ten tryb jest jeszcze w testach.</p>' };
-  const deckId = parts[1] || 'all', d = deckId === 'all' ? null : deckById(deckId), name = d ? d.name : 'Wszystkie talie';
-  const K = SKOJ && SKOJ.deckId === deckId ? SKOJ : null, cnt = skojNotes(deckId).length;
-  if (!K) return { tab: 'home', html: `<div class="row nowrap"><button class="iconbtn" data-go="${d ? '#/deck/' + d.id : '#/'}">‹</button><h1 class="grow" style="margin:0">💡 Powtórka skojarzeń</h1><span class="tag">admin</span></div>
-    <div class="card"><p style="margin-top:0"><b>${esc(name)}</b> · ${cnt} ${plural(cnt, 'fiszka', 'fiszki', 'fiszek')} ze skojarzeniem</p>
-      <p class="small muted">Trening – nie zmienia terminów powtórek. Fiszki, których nie pamiętasz, wrócą jeszcze raz na końcu.</p>
-      ${cnt ? `<button class="primary block" data-act="skoj-go" data-id="${deckId}" data-dir="h2c" style="min-height:52px">💡 → 🃏 Skojarzenie → fiszka</button>
-      <p class="small muted" style="margin:4px 0 12px">Widzisz samo skojarzenie – przypomnij sobie pytanie i odpowiedź.</p>
-      <button class="block" data-act="skoj-go" data-id="${deckId}" data-dir="c2h" style="min-height:52px">🃏 → 💡 Fiszka → skojarzenie</button>
-      <p class="small muted" style="margin:4px 0 0">Widzisz pytanie – przypomnij sobie swoje skojarzenie.</p>` : '<p class="muted">Dodaj skojarzenia do fiszek (💡 w trakcie nauki albo w edycji fiszki), żeby z nich ćwiczyć.</p>'}</div>` };
-  if (K.done) return { tab: 'home', html: `<div class="card center"><div style="font-size:48px">💡</div><h2>Koniec powtórki skojarzeń</h2>
-    <p>Pamiętałeś <b>${K.ok}</b> z ${K.ok + K.miss}${K.miss ? ` · do poprawy: ${K.miss}` : ''}</p>
-    <div class="row"><button class="primary grow" data-act="skoj-go" data-id="${deckId}" data-dir="${K.dir}">🔁 Jeszcze raz</button><button class="grow" data-act="skoj-dir" data-id="${deckId}" data-dir="${K.dir === 'h2c' ? 'c2h' : 'h2c'}">⇄ Odwrotnie</button></div>
-    <button class="ghost block" data-act="skoj-quit" data-id="${deckId}" style="margin-top:8px">Wyjdź</button></div>` };
-  const n = noteById(K.queue[K.i]); if (!n) { K.i++; if (K.i >= K.queue.length) K.done = true; return ROUTES.skoj(parts); }
-  const total = K.queue.length, prompt = K.dir === 'h2c' ? skojHintHTML(n) : `<div class="card flash qfit">${skojFront(n)}</div>`;
-  const reveal = K.dir === 'h2c' ? `<div class="card flash qfit">${skojCardHTML(n)}</div>` : skojHintHTML(n);
-  return { tab: 'home', focus: true, html: `<div class="studybar"><button class="iconbtn" data-act="skoj-quit" data-id="${deckId}" aria-label="Zakończ">✕</button><div class="title">💡 ${K.dir === 'h2c' ? 'Skojarzenie → fiszka' : 'Fiszka → skojarzenie'}</div><small class="muted">${Math.min(K.i + 1, total)}/${total}</small></div>
-    ${progress(K.i / total)}
-    <p class="small muted center" style="margin:10px 0 6px">${K.dir === 'h2c' ? 'Do jakiej fiszki jest to skojarzenie?' : 'Jakie masz skojarzenie do tej fiszki?'}</p>
-    ${prompt}
-    ${K.shown ? `<div class="skoj-rev">${reveal}</div><div class="row" style="margin-top:12px"><button class="grow skoj-no" data-act="skoj-ans" data-v="0">✗ Nie wiedziałem</button><button class="primary grow" data-act="skoj-ans" data-v="1">✓ Wiedziałem</button></div>`
-      : `<button class="primary block" data-act="skoj-show" style="margin-top:12px;min-height:52px">Pokaż ${K.dir === 'h2c' ? 'fiszkę' : 'skojarzenie'}</button>`}` };
-};
-// wejścia: strona talii i strona główna (tylko admin)
-var skojDeck0 = viewDeck;
-viewDeck = function (id, q) { const html = skojDeck0(id, q); if (!skojAdmin()) return html; const n = skojNotes(id).length;
-  return html + `<div class="card row nowrap skoj-cta" data-go="#/skoj/${id}"><span style="font-size:26px">💡</span><div class="grow"><b>Powtórka skojarzeń <span class="tag">admin</span></b><div class="small muted">${n} ${plural(n, 'fiszka', 'fiszki', 'fiszek')} ze skojarzeniem</div></div><span>›</span></div>`; };
-var skojHome0 = homeExtrasHTML;
-homeExtrasHTML = function () { const base = skojHome0(); if (!skojAdmin()) return base; const n = skojNotes('all').length; if (!n) return base;
-  return base + `<div class="card row nowrap skoj-cta" data-go="#/skoj/all"><span style="font-size:26px">💡</span><div class="grow"><b>Powtórka skojarzeń <span class="tag">admin</span></b><div class="small muted">${n} ${plural(n, 'fiszka', 'fiszki', 'fiszek')} ze skojarzeniem we wszystkich taliach</div></div><span>›</span></div>`; };
-Object.assign(ACTIONS, {
-  'skoj-go': el => skojStart(el.dataset.id, el.dataset.dir || 'h2c'),
-  'skoj-dir': el => skojStart(el.dataset.id, el.dataset.dir),
-  'skoj-show': () => { if (SKOJ) { SKOJ.shown = true; render(); } },
-  'skoj-ans': el => { const K = SKOJ; if (!K) return; const id = K.queue[K.i], ok = el.dataset.v === '1';
-    if (!K.retry.has(id)) { ok ? K.ok++ : K.miss++; }
-    if (!ok && !K.retry.has(id)) { K.retry.add(id); K.queue.push(id); }   // raz jeszcze na koniec
-    K.i++; K.shown = false; if (K.i >= K.queue.length) K.done = true; render(); },
-  'skoj-quit': el => { const id = el.dataset.id; SKOJ = null; go(id && id !== 'all' ? '#/deck/' + id : '#/'); },
-});
-;
-
-/* ===== rys.js ===== */
-'use strict';
-/* ✏️ Rysowanie fiszek (admin + testerzy z panelu admina): widzisz pytanie, rysujesz odpowiedź z pamięci,
-   a potem porównujesz swój rysunek z obrazkiem z fiszki (obok siebie + przybliżona ocena podobieństwa kształtu).
-   Biorą udział: zwykłe fiszki z obrazkiem na odpowiedzi (nowe pole w edytorze „Obrazek-odpowiedź”),
-   fiszki odwrotne z obrazkiem na przodzie oraz obrazy z lukami (rysujesz cały obraz).
-   Ocena własna: ✓ / ~ / ✗ – nietrafione wracają raz na koniec. To trening: nie zmienia terminów powtórek. */
-var rysOn = () => typeof testOn === 'function' ? testOn('rys') : typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
-var RYS = null;
-
-// elementy do rysowania: { key, q (HTML pytania), img (id obrazka-odpowiedzi), label }
-function rysItems(deckId) {
-  const out = [], seenOccl = new Set();
-  for (const c of S.cards) {
-    if (c.sus || (deckId !== 'all' && c.deckId !== deckId)) continue;
-    const n = noteById(c.noteId); if (!n) continue;
-    if (n.type === 'basic') {
-      const fwd = c.ord !== 'r', img = fwd ? n.backImageId : n.imageId, txt = fwd ? n.front : n.back;
-      if (!img || !IMG[img] || !(txt || '').trim()) continue;
-      out.push({ key: c.id, q: `<div class="ctext">${fmt(txt)}</div>`, img, label: txt.trim(), ans: (fwd ? n.back : n.front) || '' });
-    } else if (n.type === 'occl' && n.imageId && IMG[n.imageId] && !seenOccl.has(n.id)) {
-      seenOccl.add(n.id);
-      out.push({ key: 'o' + n.id, q: `<div class="ctext">${fmt(n.title || 'Narysuj cały obraz')}</div><div class="small muted">Zaznacz najważniejsze części: ${esc(n.boxes.map(b => b.label).filter(Boolean).slice(0, 8).join(', '))}</div>`, img: n.imageId, label: n.title || 'Obraz z lukami', ans: '' });
-    }
-  }
-  return out;
-}
-
-// ---------- porównanie kształtu (przybliżone): maska „tuszu” obu obrazków → przycięcie do ramki → 32×32 → dopasowanie z tolerancją
-var RYS_N = 32;
-function rysLoad(src) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }); }
-function rysMask(im) {
-  const W = 96, H = 96, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d', { willReadFrequently: true }); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
-  const k = Math.min(W / im.width, H / im.height), w = im.width * k, h = im.height * k; ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
-  const d = ctx.getImageData(0, 0, W, H).data, L = new Float32Array(W * H);
-  for (let i = 0; i < W * H; i++) L[i] = .299 * d[i * 4] + .587 * d[i * 4 + 1] + .114 * d[i * 4 + 2];
-  // tusz = ciemne piksele albo wyraźne krawędzie (zdjęcia i kolorowe rysunki)
-  const m = new Uint8Array(W * H);
-  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-    const i = y * W + x, gx = L[i + 1] - L[i - 1], gy = L[i + W] - L[i - W];
-    if (L[i] < 170 || Math.hypot(gx, gy) > 60) m[i] = 1;
-  }
-  let x0 = W, y0 = H, x1 = -1, y1 = -1;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (m[y * W + x]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-  const out = new Uint8Array(RYS_N * RYS_N); if (x1 < 0) return out;
-  const s = Math.max(x1 - x0 + 1, y1 - y0 + 1), ox = x0 - (s - (x1 - x0 + 1)) / 2, oy = y0 - (s - (y1 - y0 + 1)) / 2;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (m[y * W + x]) {
-    const u = Math.floor((x - ox) / s * RYS_N), v = Math.floor((y - oy) / s * RYS_N);
-    if (u >= 0 && u < RYS_N && v >= 0 && v < RYS_N) out[v * RYS_N + u] = 1;
-  }
-  return out;
-}
-function rysDilate(m, r) {
-  const o = new Uint8Array(m.length);
-  for (let y = 0; y < RYS_N; y++) for (let x = 0; x < RYS_N; x++) if (m[y * RYS_N + x])
-    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const u = x + dx, v = y + dy; if (u >= 0 && u < RYS_N && v >= 0 && v < RYS_N) o[v * RYS_N + u] = 1; }
-  return o;
-}
-async function rysCompare(drawUrl, refUrl) {
-  const [a, b] = await Promise.all([rysLoad(drawUrl), rysLoad(refUrl)]).then(([x, y]) => [rysMask(x), rysMask(y)]);
-  const na = a.reduce((s, v) => s + v, 0), nb = b.reduce((s, v) => s + v, 0); if (!na || !nb) return 0;
-  const da = rysDilate(a, 2), db = rysDilate(b, 2);
-  let pa = 0, pb = 0; for (let i = 0; i < a.length; i++) { if (a[i] && db[i]) pa++; if (b[i] && da[i]) pb++; }
-  const prec = pa / na, rec = pb / nb, f = prec + rec ? 2 * prec * rec / (prec + rec) : 0;
-  return Math.round(Math.min(1, f * 1.15) * 100);
-}
-
-// ---------- przebieg
-function rysStart(deckId) {
-  const items = shuffle(rysItems(deckId));
-  if (!items.length) return toast('Brak fiszek do rysowania – dodaj „Obrazek-odpowiedź” w edytorze fiszki', 4500);
-  RYS = { deckId, items: Object.fromEntries(items.map(x => [x.key, x])), queue: items.map(x => x.key), i: 0, retry: new Set(), ok: 0, half: 0, miss: 0, drawing: null, score: null, scores: [], done: false };
-  render();
-}
-async function rysDraw() {
-  const K = RYS; if (!K) return;
-  const url = await openDrawPad(K.drawing || null, '✏️ Narysuj z pamięci', '✓ Porównaj');
-  if (!url || RYS !== K) return;
-  K.drawing = url; K.score = '…'; render();
-  try { K.score = await rysCompare(url, IMG[K.items[K.queue[K.i]].img]); } catch { K.score = null; }
-  if (RYS === K) render();
-}
-function rysHTML(deckId) {
-  const K = RYS, d = deckId !== 'all' && deckById(deckId), back = `<button class="iconbtn" data-act="rys-quit" data-id="${deckId}" aria-label="Zakończ">✕</button>`;
-  if (!K || K.deckId !== deckId) {
-    const n = rysItems(deckId).length;
-    return `<div class="row nowrap"><button class="iconbtn" data-go="${d ? '#/deck/' + d.id : '#/'}">‹</button><h1 class="grow" style="margin:0">✏️ Rysowanie fiszek</h1><span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></div>
-    <div class="card"><p style="margin-top:0">Widzisz pytanie, <b>rysujesz odpowiedź z pamięci</b>, a potem porównujesz rysunek z obrazkiem z fiszki.</p>
-      <p class="small muted">${d ? `Talia „${esc(d.name)}”` : 'Wszystkie talie'}: <b>${n}</b> ${plural(n, 'fiszka', 'fiszki', 'fiszek')} do rysowania.</p>
-      <ul class="small muted"><li>Fiszki z <b>obrazkiem-odpowiedzią</b> (w edytorze fiszki: „🎨 Obrazek-odpowiedź”) – np. „Narysuj budowę serca”.</li><li>Fiszki odwrotne z obrazkiem na przodzie i obrazy z lukami (rysujesz cały obraz).</li><li>Ocena podobieństwa jest przybliżona – liczy się Twoja własna ocena. To trening: terminy powtórek się nie zmieniają.</li></ul>
-      <button class="primary block" data-act="rys-start" data-id="${deckId}" ${n ? '' : 'disabled'} style="min-height:52px">▶ Zaczynamy</button></div>`;
-  }
-  if (K.done) {
-    const avg = K.scores.length ? Math.round(K.scores.reduce((a, b) => a + b, 0) / K.scores.length) : null, total = K.ok + K.half + K.miss;
-    return `<div class="card center"><div style="font-size:48px">🎨</div><h2>Koniec rysowania</h2>
-      <p>✓ ${K.ok} · ~ ${K.half} · ✗ ${K.miss} <span class="muted">(z ${total})</span></p>${avg != null ? `<p class="small muted">Średnie podobieństwo kształtu: ${avg}%</p>` : ''}
-      <div class="row"><button class="primary grow" data-act="rys-start" data-id="${deckId}">▶ Jeszcze raz</button><button class="grow" data-act="rys-quit" data-id="${deckId}">Wyjdź</button></div></div>`;
-  }
-  const it = K.items[K.queue[K.i]], total = K.queue.length, sc = K.score;
-  const verdict = typeof sc === 'number' ? (sc >= 70 ? 'bardzo podobne' : sc >= 45 ? 'w miarę podobne' : sc >= 25 ? 'trochę podobne' : 'mało podobne') : '';
-  return `<div class="studybar">${back}<div class="title">✏️ Rysowanie</div><small class="muted">${Math.min(K.i + 1, total)}/${total}</small></div>
-    ${progress(K.i / total)}
-    <p class="small muted center" style="margin:10px 0 6px">Narysuj z pamięci:</p>
-    <div class="card flash qfit">${it.q}</div>
-    ${K.drawing || K.peek ? `<div class="rys-cmp"><figure>${K.drawing ? `<img src="${K.drawing}" alt="Twój rysunek">` : '<div class="rys-empty">🙈</div>'}<figcaption>Twój rysunek</figcaption></figure><figure><img src="${IMG[it.img]}" alt="Obrazek z fiszki"><figcaption>Z fiszki${it.ans ? ': ' + esc(stripHtml(it.ans).slice(0, 40)) : ''}</figcaption></figure></div>
-      <div class="rys-score">${sc === '…' ? 'Porównuję…' : !K.drawing ? '<span class="muted">Bez rysunku – zapamiętaj obrazek i spróbuj następnym razem</span>' : typeof sc === 'number' ? `<b>${sc}%</b> podobieństwa kształtu <span class="muted">· ${verdict} (ocena przybliżona)</span>` : '<span class="muted">Nie udało się porównać – oceń sam</span>'}</div>
-      <p class="small muted center" style="margin:8px 0 4px">Jak Ci poszło?</p>
-      <div class="row nowrap"><button class="grow skoj-no" data-act="rys-ans" data-v="0">✗ Nie</button><button class="grow" data-act="rys-ans" data-v="1">~ Częściowo</button><button class="primary grow" data-act="rys-ans" data-v="2">✓ Dobrze</button></div>
-      <button class="ghost block" data-act="rys-draw" style="margin-top:6px">✏️ Popraw rysunek</button>`
-    : `<button class="primary block" data-act="rys-draw" style="margin-top:12px;min-height:52px">✏️ Rysuj</button><button class="ghost block" data-act="rys-peek" style="margin-top:6px">🙈 Nie wiem – pokaż obrazek</button>`}`;
-}
-ROUTES.rys = parts => { const deckId = parts?.[1] || 'all';
-  if (!rysOn()) return { tab: 'home', html: '<p class="muted center" style="padding:40px 0">Ten tryb jest jeszcze w testach.</p>' };
-  return { tab: 'home', focus: !!RYS, html: rysHTML(deckId) };
-};
-
-// 🎨 edytor fiszki: obrazek-odpowiedź (narysuj albo z pliku) – tylko gdy tryb jest włączony dla tego konta
-function rysBackImgHTML(D) {
-  if (!rysOn()) return '';
-  const src = D.backImageId && IMG[D.backImageId];
-  return `<div class="field rys-back"><span>🎨 Obrazek-odpowiedź <span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span> <small class="muted">– do rysowania z pamięci</small></span>
-    ${src ? `<img src="${src}" alt="" style="max-height:110px;border-radius:8px;display:block;margin:4px 0">` : ''}
-    <div class="row nowrap"><button type="button" class="sm" data-act="rys-bimg-draw">✏️ ${src ? 'Popraw' : 'Narysuj'}</button><button type="button" class="sm" data-act="rys-bimg-file">🖼️ Z pliku</button>${src ? '<button type="button" class="sm ghost" data-act="rys-bimg-del">🗑️</button>' : ''}</div></div>`;
-}
-
-// wejścia: strona talii i strona główna
-var rysDeck0 = viewDeck;
-viewDeck = function (id, q) { const html = rysDeck0(id, q); if (!rysOn()) return html; const n = rysItems(id).length;
-  return html + `<div class="card row nowrap rys-cta" data-go="#/rys/${id}"><span style="font-size:26px">✏️</span><div class="grow"><b>Rysowanie fiszek <span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></b><div class="small muted">${n ? `${n} ${plural(n, 'fiszka', 'fiszki', 'fiszek')} do rysowania` : 'Dodaj fiszce „Obrazek-odpowiedź” w edytorze'}</div></div><span>›</span></div>`; };
-var rysHome0 = homeExtrasHTML;
-homeExtrasHTML = function () { const base = rysHome0(); if (!rysOn()) return base; const n = rysItems('all').length;
-  return base + `<div class="card row nowrap rys-cta" data-go="#/rys/all"><span style="font-size:26px">✏️</span><div class="grow"><b>Rysowanie fiszek <span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></b><div class="small muted">${n ? `${n} ${plural(n, 'fiszka', 'fiszki', 'fiszek')} do rysowania we wszystkich taliach` : 'Narysuj odpowiedź z pamięci i porównaj z obrazkiem'}</div></div><span>›</span></div>`; };
-
-Object.assign(ACTIONS, {
-  'rys-start': el => rysStart(el.dataset.id || 'all'),
-  'rys-draw': () => rysDraw(),
-  'rys-peek': () => { const K = RYS; if (!K) return; K.score = null; K.peek = true; render(); },
-  'rys-ans': el => { const K = RYS; if (!K) return; const key = K.queue[K.i], v = +el.dataset.v;
-    if (!K.retry.has(key)) { if (v === 2) K.ok++; else if (v === 1) K.half++; else K.miss++; if (typeof K.score === 'number' && !K.peek) K.scores.push(K.score); }
-    if (v < 2 && !K.retry.has(key)) { K.retry.add(key); K.queue.push(key); }   // raz jeszcze na koniec
-    K.i++; K.drawing = null; K.score = null; K.peek = false; if (K.i >= K.queue.length) K.done = true; render(); },
-  'rys-quit': el => { const id = el.dataset.id; RYS = null; go(id && id !== 'all' ? '#/deck/' + id : '#/'); },
-  'rys-bimg-draw': async () => { const D = DRAFT; if (!D) return; const url = await openDrawPad(D.backImageId ? IMG[D.backImageId] : null, '🎨 Obrazek-odpowiedź', '✓ Zapisz'); if (!url || DRAFT !== D) return; D.backImageId = await putImage(url); render(); },
-  'rys-bimg-file': async () => { const D = DRAFT; if (!D) return; const id = await getImage('file'); if (id && DRAFT === D) { D.backImageId = id; render(); } },
-  'rys-bimg-del': () => { if (DRAFT) { DRAFT.backImageId = null; render(); } },
-});
 ;

@@ -49,6 +49,8 @@ methods.js
 privacy.js
 install.js
 layout.js
+season.js
+starter.js
 kb.js
 duel.js
 class.js
@@ -63,6 +65,8 @@ welcome.js
 safety.js
 ads.js
 premium.js
+# lazy – poniżej: tryby w testach (bundle-x.js, tylko admin i testerzy)
 kumul.js
 skoj.js
 rys.js
+idle.js

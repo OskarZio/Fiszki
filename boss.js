@@ -140,8 +140,9 @@ function chapterJustLearned(c) {
   const k = 'chl_' + d.id + '_' + i; if (S.stats[k]) return null; S.stats[k] = 1; return i;
 }
 const bossChestImg = t => `<img class="crate-img bchest" src="assets/crates/bc_${t >= 5 ? 'fire' : t >= 4 ? 'void' : t >= 2 ? 'holy' : 'nature'}.webp" alt="" draggable="false">`;   // 📦 skrzynie bossów wg poziomu łupu
-// 🏆 puchar bossa talii = najniższy medal ze wszystkich trybów (brąz we wszystkich 4 → brązowy puchar itd.)
-const cupOf = (rec, k) => { const m = rec.m?.[k] || {}; return Math.min(...['abcd', 'flip', 'type', 'mix'].map(x => m[x] || 0)); };
+// 🏆 puchar bossa talii = 3 najlepsze medale z 4 metod (liczy się trzeci najlepszy) – jedna nielubiana metoda nie blokuje pucharu
+const cup3 = lv => [...lv].sort((a, b) => b - a)[2] || 0;
+const cupOf = (rec, k) => { const m = rec.m?.[k] || {}; return cup3(['abcd', 'flip', 'type', 'mix'].map(x => m[x] || 0)); };
 const CAT_EMB = ['war', 'book', 'tree', 'holy', 'skull', 'ice', 'paw', 'storm', 'void', 'fire', 'time', 'shadow'];   // 🛡️ herby kategorii
 // ---------- 🐉 definicje bossów
 function bossFor(kind, id, i) {
@@ -908,17 +909,17 @@ function nodeHTML(b, sel) {
     <span class="bn-art">${b.ok || b.stars ? bossArt(b) : '<span class="mq">🔒</span>'}</span><small>${b.kind === 'ch' ? (b.final ? '👑' : `Rozdz. ${b.i + 1}`) : b.final ? '👑 Finał' : ''}</small>
     ${b.ok ? (['ch', 'fin', 'cat'].includes(b.kind) ? cupHTML(b) : b.kind === 'world' ? `<span class="boss-lv">Etap ${b.stars + 1}</span>` : starsHTML(b.stars)) : `<small class="bn-prog">${b.learned}/${b.need}</small>`}</button>`;
 }
-// 🏆 postęp do następnego pucharu: puchar = najniższy medal z 4 metod, więc pokazujemy, w których metodach czego brakuje
+// 🏆 postęp do następnego pucharu: puchar = 3 najlepsze medale z 4 metod, więc pokazujemy, ile metod już ma dany medal i co najłatwiej dobić
 function cupProgHTML(b) {
-  const m = mastery(b) || {}, lv = MASTER_MODES.map(k => m[k] || 0), cup = Math.min(...lv);
-  if (cup >= 4) return `<div class="cup-prog done"><div class="cp-head"><img class="cup t4" src="assets/cups/diamond.webp" alt=""><b>Diamentowy puchar zdobyty</b></div><small>Masz diament we wszystkich 4 metodach. Możesz wejść na prestiż: medale od nowa, mocniejszy boss, większe nagrody.</small></div>`;
-  const next = cup + 1, have = lv.filter(x => x >= next).length;
-  const miss = MASTER_MODES.filter(k => (m[k] || 0) < next).map(k => { const w = next - (m[k] || 0); return `${MODES[k].icon} ${MODES[k].name} <i>${w} ${plural(w, 'wygrana', 'wygrane', 'wygranych')}</i>`; });
-  const top = Math.max(...lv);
-  return `<div class="cup-prog"><div class="cp-head"><img class="cup t${next}" src="assets/cups/${CUP[next]}.webp" alt=""><b>Do pucharu: ${CUP_N[next]}</b><span>${have}/4 metod</span></div>
+  const m = mastery(b) || {}, lv = MASTER_MODES.map(k => m[k] || 0), cup = cup3(lv);
+  if (cup >= 4) return `<div class="cup-prog done"><div class="cp-head"><img class="cup t4" src="assets/cups/diamond.webp" alt=""><b>Diamentowy puchar zdobyty</b></div><small>Masz diament w ${lv.filter(x => x >= 4).length} z 4 metod. Możesz wejść na prestiż: medale od nowa, mocniejszy boss, większe nagrody.</small></div>`;
+  const next = cup + 1, have = lv.filter(x => x >= next).length, need = 3 - have;
+  const cand = MASTER_MODES.filter(k => (m[k] || 0) < next).sort((a, b) => (m[b] || 0) - (m[a] || 0)).slice(0, need);
+  const miss = cand.map(k => { const w = next - (m[k] || 0); return `${MODES[k].icon} ${MODES[k].name} <i>${w} ${plural(w, 'wygrana', 'wygrane', 'wygranych')}</i>`; });
+  return `<div class="cup-prog"><div class="cp-head"><img class="cup t${next}" src="assets/cups/${CUP[next]}.webp" alt=""><b>Do pucharu: ${CUP_N[next]}</b><span>${Math.min(have, 3)}/3 metod</span></div>
     <div class="cp-bar">${MASTER_MODES.map(k => `<i class="${(m[k] || 0) >= next ? 'on' : ''}"></i>`).join('')}</div>
-    <small>Puchar to <b>najniższy medal z 4 metod</b>. Brakuje: ${miss.join(' · ')}.</small>
-    <small>Z pucharem rośnie trudność bossa (teraz ${b.diff + 1}/5). Medal w wybranej metodzie dodatkowo wzmacnia bossa tylko w niej${top > cup + 1 ? ` – dlatego w metodzie z wyższym medalem boss jest dużo mocniejszy niż w pozostałych` : ''}.</small></div>`;
+    <small>Puchar liczy się z <b>3 najlepszych metod z 4</b> – jedną możesz pominąć. Najbliżej: ${miss.join(' · ')}${need > 1 ? ` (wystarczy ${need} z pozostałych)` : ''}.</small>
+    <small>Z pucharem rośnie trudność bossa (teraz ${b.diff + 1}/5). Medal w wybranej metodzie dodatkowo wzmacnia bossa tylko w niej.</small></div>`;
 }
 function setupSheetHTML() {
   const s = BOSS_SEL; if (!s) return ''; const b = bossFor(s.kind, s.id, s.i); if (!b) return '';

@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '380';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '381';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -320,7 +320,16 @@ function examCardHTML(d) {
   return `<div class="exam-box${e.ok ? '' : ' warn'}"><div class="row nowrap"><b class="grow">🎓 Egzamin ${inDays(e.daysLeft)} · ${fmtDay(e.date)}</b><button class="sm ghost" data-act="exam-clear" data-id="${d.id}" title="Usuń datę">✕</button></div>
     ${progress(pct / 100)}<div class="small">${e.learned}/${e.total} kart rozpoczętych (${pct}%)</div>
     <div class="small">${e.newLeft > 0 ? `📅 Plan: <b>${e.perDay}</b> nowych dziennie${e.daysLeft > 2 ? ' · ostatnie 2 dni tylko powtórki' : ''}` : '✅ Wszystkie karty rozpoczęte – teraz już tylko powtórki'}</div>
-    ${e.ok ? '' : `<div class="small c-hard">⚠️ Dużo na dzień – zacznij od razu albo przejrzyj całą talię kilka razy („Przejrzyj całą talię”).</div>`}</div>`;
+    ${e.ok ? '' : `<div class="small c-hard">⚠️ Dużo na dzień – zacznij od razu albo przejrzyj całą talię kilka razy („Przejrzyj całą talię”).</div>`}
+    ${examPlanHTML(e)}
+    ${e.learned >= 5 ? `<button class="sm block" data-act="exam-mock" data-id="${d.id}" style="margin-top:8px">📝 Egzamin próbny – ${Math.min(20, e.learned)} losowych fiszek, wpisujesz odpowiedzi</button>` : ''}</div>`;
+}
+// 📅 plan na najbliższe dni: ile nowych każdego dnia (ostatnie 2 dni przed egzaminem = tylko powtórki)
+function examPlanHTML(e) {
+  if (e.daysLeft < 1) return '';
+  const n = Math.min(7, e.daysLeft + 1); let left = e.newLeft; const days = [];
+  for (let i = 0; i < n; i++) { const t = dayStart() + i * DAY, last2 = e.daysLeft - i <= 2, k = i === e.daysLeft ? -1 : last2 ? 0 : Math.min(left, e.perDay); if (k > 0) left -= k; days.push({ t, k }); }
+  return `<div class="ex-plan">${days.map((x, i) => `<span class="${x.k < 0 ? 'ex' : i === 0 ? 'now' : ''}"><small>${i === 0 ? 'dziś' : new Date(x.t).toLocaleDateString('pl', { weekday: 'short' })}</small><b>${x.k < 0 ? '🎓' : x.k ? '+' + x.k : '🔁'}</b></span>`).join('')}</div>`;
 }
 function deckCounts(deckId, noLimit) {
   const eod = addDays(dayStart(), 1), intro = introducedToday();
@@ -518,7 +527,7 @@ function saveSess() {
   try {
     if (!s.card) return localStorage.removeItem(SESS_KEY);   // skończona – nie ma czego wznawiać
     localStorage.setItem(SESS_KEY, JSON.stringify({ key: s.key, hash: location.hash, deckId: s.deckId, mode: s.mode, all: s.all, cram: s.cram, done: s.done, only: s.only ? [...s.only] : null,
-      cardId: s.card.id, shown: !!s.shown, timeMs: s.timeMs || 0, t: Date.now() }));
+      cardId: s.card.id, shown: !!s.shown, timeMs: s.timeMs || 0, first: s.first || {}, t: Date.now() }));
   } catch { /* */ }
 }
 function loadSess() { try { const j = JSON.parse(localStorage.getItem(SESS_KEY) || 'null'); return j && Date.now() - j.t < SESS_TTL ? j : null; } catch { return null; } }
@@ -526,7 +535,7 @@ const dropSess = () => { try { localStorage.removeItem(SESS_KEY); } catch { /* *
 function restoreSess(key) {
   const j = loadSess(); if (!j || j.key !== key) return false;
   const card = cardById(j.cardId);
-  SESSION = { all: j.all, only: j.only ? new Set(j.only) : null, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
+  SESSION = { first: j.first || {}, all: j.all, only: j.only ? new Set(j.only) : null, key: j.key, deckId: j.deckId, mode: j.mode, cram: j.cram ? j.cram.filter(id => S.cards.some(c => c.id === id)) : null,
     done: j.done || 0, timeMs: j.timeMs || 0, card: null, shown: false, hint: false, typed: null, verdict: null, undo: null, lastNote: null, shownAt: Date.now() };
   if (card && (!SESSION.cram || SESSION.cram[0] === card.id)) { SESSION.card = card; SESSION.shown = !!j.shown && j.mode === 'flip'; }
   else nextCard();
@@ -580,6 +589,7 @@ function nextCard() {
 function answer(g) {
   const s = SESSION, c = s.card; if (!c) return;
   const spent = Math.min(60000, Date.now() - (s.shownAt || Date.now())); s.timeMs = (s.timeMs || 0) + spent;
+  const F = s.first = s.first || {}; if (!(c.id in F)) F[c.id] = g; else if (g === 1) F[c.id] = Math.min(F[c.id], 1.5);   // 📊 do podsumowania: pierwsza ocena (+ znacznik, że uciekła później)
   // do nagrody za ukończony zestaw: wpisane karty liczą się zawsze, przewijane – tylko gdy nie były „przeklikane”
   const viaType = s.mode === 'type' && s.verdict;
   if (viaType || spent >= FLIP_MIN_MS) ((s.got = s.got || { flip: {}, type: {} })[viaType ? 'type' : 'flip'])[c.id] = 1;
@@ -757,6 +767,15 @@ function greeting() {
   const g = h >= 5 && h < 11 ? 'Dzień dobry' : h < 18 && h >= 11 ? 'Cześć' : h < 23 && h >= 18 ? 'Dobry wieczór' : 'Nocna nauka 🦉';
   return `${g}${nick ? ', ' + esc(nick) : ''} 👋`;
 }
+// 📈 opanowanie talii: opanowane (odstęp ≥ 21 dni) · w nauce · nowe – pasek pod nazwą talii i w widoku talii
+const deckMastery = id => dataMemo('dkm', () => { const m = {}; for (const c of S.cards) { if (c.sus) continue; const x = m[c.deckId] = m[c.deckId] || { all: 0, mat: 0, lrn: 0 }; x.all++; if (c.srs.ivl >= 21) x.mat++; else if (c.srs.state !== 'new') x.lrn++; } return m; })[id] || { all: 0, mat: 0, lrn: 0 };
+function masteryBarHTML(id, big) {
+  const m = deckMastery(id); if (!m.all) return '';
+  const p = n => (100 * n / m.all).toFixed(1), pm = Math.round(100 * m.mat / m.all), pl = Math.round(100 * m.lrn / m.all);
+  return big ? `<div class="dk-mast"><div class="dk-bar big"><i class="mat" style="width:${p(m.mat)}%"></i><i class="lrn" style="width:${p(m.lrn)}%"></i></div>
+      <div class="dk-leg"><span><i class="mat"></i>opanowane ${pm}%</span><span><i class="lrn"></i>w nauce ${pl}%</span><span><i></i>nowe ${100 - pm - pl}%</span></div></div>`
+    : `<span class="dk-bar" title="Opanowane ${pm}% · w nauce ${pl}%"><i class="mat" style="width:${p(m.mat)}%"></i><i class="lrn" style="width:${p(m.lrn)}%"></i></span>`;
+}
 function viewHome() {
   if (appMode() === 'zen') return viewHomeZen();
   const all = deckCounts('all'), today = reviewsToday(), st = streak(), hard = difficultCards().length;
@@ -772,7 +791,7 @@ function viewHome() {
       <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div><span class="small done-tag">🎓 zdane</span>
       <button class="sm" data-act="deck-menu" data-id="${d.id}" title="Opcje talii">⋯</button></div>`;
     return `<div class="deck">
-      <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div>
+      <div class="name" data-go="#/deck/${d.id}">${esc(d.name)}</div>${masteryBarHTML(d.id)}
       ${countsHTML(k)}
       <button class="sm ${k.total ? 'primary' : ''}" data-go="#/study/${d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz</button>
       <button class="sm" data-act="deck-menu" data-id="${d.id}" title="Opcje talii">⋯</button>
@@ -803,10 +822,10 @@ function viewHome() {
     <div class="tc-top"><span class="tc-date">${date}</span><span class="tc-streak" title="Dni nauki z rzędu">${st ? '🔥 ' + st + ' ' + plural(st, 'dzień', 'dni', 'dni') : 'Zacznij serię'}</span></div>
     ${all.total
       ? `<div class="tc-main"><span class="tc-num">${all.total}</span><span class="tc-lbl"><b>${plural(all.total, 'fiszka', 'fiszki', 'fiszek')} na dziś</b><small>ok. ${mins} min</small></span></div>`
-      : `<div class="tc-done">${S.cards.length ? 'Na dziś wszystko powtórzone.' : 'Dodaj pierwsze fiszki, żeby zacząć.'}</div>${S.cards.length ? `<div class="muted">${nextDueText().replace('<br>', '')}</div>` : ''}`}
+      : `<div class="tc-done">${S.cards.length ? 'Na dziś wszystko powtórzone.' : 'Dodaj pierwsze fiszki, żeby zacząć.'}</div>${S.cards.length ? '' : `<div class="row nowrap" style="margin-top:10px"><button class="primary grow" data-go="#/library">📚 Gotowa talia</button><button class="grow" data-go="#/add">✏️ Własna</button></div>`}${S.cards.length ? `<div class="muted">${nextDueText().replace('<br>', '')}</div>` : ''}`}
     <div class="tc-meta"><span>Dziś: <b>${today}</b> ${plural(today, 'powtórka', 'powtórki', 'powtórek')}</span><span>Cel: <b>${Math.min(pts, goal)}/${goal}</b> pkt</span></div>
     <div class="tc-goal${gf >= 1 ? ' full' : ''}" role="progressbar" aria-label="Cel dzienny" aria-valuenow="${Math.round(gf * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${(gf * 100).toFixed(0)}%"></i></div>
-    ${all.total ? `<button class="primary block" data-go="#/study/all/flip">Ucz się teraz</button>` : ''}
+    ${all.total ? `<button class="primary block tc-go" data-go="#/study/all/flip"><b>▶ Ucz się teraz</b><small>${all.total} ${plural(all.total, 'fiszka', 'fiszki', 'fiszek')} · ok. ${mins} min</small></button>` : ''}
     ${(() => { const h = hiddenNew('all'); return h ? `<button class="ghost block all-new-link" data-go="#/study/all/flip?all=1">Dołóż wszystkie nowe (+${h})</button>` : ''; })()}
   </section>`; })()}
   ${typeof stickiesHTML === 'function' ? stickiesHTML() : ''}
@@ -822,17 +841,16 @@ function viewHome() {
     if (!ex) return '';
     const k = deckCounts(ex.d.id);
     return `<div class="banner row nowrap exam-banner"><span class="grow">🎓 <b>${esc(ex.d.name)}</b> – egzamin ${inDays(ex.e.daysLeft)}. Dziś: ${k.nw} nowych + ${k.lrn + k.rev} powtórek</span><button class="sm primary" data-go="#/study/${ex.d.id}/flip" ${k.total ? '' : 'disabled'}>Ucz się</button></div>`; })()}
-  ${(() => {   // ⭐ oznaczone – osobno dla każdej talii (zestawu)
+  ${(() => {   // ⚡ szybkie powtórki (bez wpływu na harmonogram): trudne + oznaczone ⭐ z każdej talii – jeden rząd zamiast kilku banerów
     const per = S.decks.map(d => ({ d, n: starredCards(d.id).length })).filter(x => x.n);
-    return per.length ? `<div class="banner star-banner"><span>⭐ Oznaczone fiszki – powtórz osobno:</span>
-      <div class="star-decks">${per.map(x => `<button class="sm" data-act="cram-star" data-id="${x.d.id}">${esc(x.d.name)} <b>${x.n}</b></button>`).join('')}</div></div>` : ''; })()}
-  ${hard ? `<div class="banner row nowrap"><span class="grow">🧠 <b>${hard}</b> ${plural(hard, 'trudna fiszka', 'trudne fiszki', 'trudnych fiszek')} – powtórz bez wpływu na harmonogram</span><button class="sm" data-act="cram-hard">Powtórz</button></div>` : ''}
+    if (!hard && !per.length) return '';
+    return `<div class="banner quick-rev"><span class="small muted">⚡ Szybka powtórka (nie zmienia harmonogramu)</span><div class="star-decks">${hard ? `<button class="sm" data-act="cram-hard">🧠 Trudne <b>${hard}</b></button>` : ''}${per.map(x => `<button class="sm" data-act="cram-star" data-id="${x.d.id}">⭐ ${esc(x.d.name)} <b>${x.n}</b></button>`).join('')}</div></div>`; })()}
   <div class="card">
     <div class="row nowrap"><h2 class="grow" style="margin:0">Talie</h2>
       <span class="small muted"><span class="c-new">nowe</span> · <span class="c-lrn">nauka</span> · <span class="c-rev">powt.</span></span></div>
     ${decks || '<p class="muted">Brak talii.</p>'}
     <div class="spacer"></div>
-    <div class="row"><button data-act="new-deck">➕ Nowa talia</button>${appMode() === 'full' && typeof topicDecks === 'function' ? '<button data-act="topic-new" title="Kategoria grupuje talie i materiały (notatki, linki, filmy)">📁 Nowa kategoria</button>' : ''}<button data-go="#/add">✏️ Dodaj fiszki</button></div>
+    <div class="row"><button data-go="#/library">📚 Gotowe talie</button><button data-act="new-deck">➕ Nowa talia</button>${appMode() === 'full' && typeof topicDecks === 'function' ? '<button data-act="topic-new" title="Kategoria grupuje talie i materiały (notatki, linki, filmy)">📁 Nowa kategoria</button>' : ''}<button data-go="#/add">✏️ Dodaj fiszki</button></div>
   </div>
   ${S.settings.sync.token ? `<p class="small muted center">Synchronizacja: ${ago(S.settings.lastSync)}</p>` : ''}`;
 }
@@ -859,7 +877,7 @@ function viewDeck(id, q) {
     <button class="iconbtn" data-act="rename-deck" data-id="${id}">✏️</button></div>
   <div class="card">
     <div class="row"><span class="grow">Dziś: ${countsHTML(k)}</span><span class="small muted">${cards.length} kart · ${mature} opanowanych</span></div>
-    ${progress(cards.length ? mature / cards.length : 0, true)}
+    ${masteryBarHTML(id, true) || progress(0, true)}
     <div class="spacer"></div>
     <div class="row">
       ${(() => {   // gdy na dziś nic nie zostało: nowe ponad limit albo swobodna powtórka całej talii (bez wpływu na harmonogram)
@@ -997,6 +1015,18 @@ const fmtClock = ms => { const t = Math.floor(ms / 1000), h = Math.floor(t / 360
 const sessLiveMs = s => (s.timeMs || 0) + (s.card ? Math.min(60000, Date.now() - (s.shownAt || Date.now())) : 0);
 // fiszki oznaczone gwiazdką (⭐ = „cięższe”) – gwiazdka jest na notatce, więc dotyczy obu kierunków
 const starredCards = deckId => S.cards.filter(c => (deckId === 'all' || c.deckId === deckId) && !deckPassed(c.deckId) && noteById(c.noteId)?.star);
+// 📊 podsumowanie sesji: celność za pierwszym razem, nowe karty, czas na kartę i lista fiszek, które uciekły (+ powtórka tylko ich)
+function sessSummaryHTML(s, deckId, mode) {
+  const F = s.first || {}, ids = Object.keys(F); if (ids.length < 3) return '';
+  const ok = ids.filter(id => F[id] >= 3).length, acc = Math.round(100 * ok / ids.length), miss = ids.filter(id => F[id] < 2).map(cardById).filter(Boolean);
+  const per = Math.round((s.timeMs || 0) / 1000 / Math.max(1, s.done));
+  const verdict = acc >= 90 ? ['🏆', 'Świetnie – prawie wszystko z pamięci.'] : acc >= 70 ? ['💪', 'Dobra robota. Kilka fiszek warto jeszcze dobić.'] : acc >= 50 ? ['🧠', 'Połowa siedzi. Powtórz te, które uciekły – teraz utrwalą się najszybciej.'] : ['🌱', 'Trudny materiał – to normalne na początku. Krótka powtórka uciekających zrobi największą różnicę.'];
+  const txt = c => { const v = cardView(c); return esc(String(v.q || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 70) || '…'); };
+  return `<div class="ssum"><div class="ssum-tiles"><span><b>${acc}%</b>za 1. razem</span><span><b>${ids.length}</b>${plural(ids.length, 'fiszka', 'fiszki', 'fiszek')}</span><span><b>${s.newN || 0}</b>nowych</span><span><b>${per} s</b>na fiszkę</span></div>
+    <div class="ssum-bar"><i style="width:${acc}%"></i></div><p class="ssum-v">${verdict[0]} ${verdict[1]}</p>
+    ${miss.length ? `<div class="ssum-miss"><small>Uciekły (${miss.length}):</small>${miss.slice(0, 5).map(c => `<span>${txt(c)}</span>`).join('')}${miss.length > 5 ? `<span class="muted">…i ${miss.length - 5} więcej</span>` : ''}</div>
+    <button class="primary block" data-act="end-study" data-href="#/study/${deckId}/${mode}?cram=list&ids=${miss.map(c => c.id).join(',')}">🔁 Powtórz tylko te, które uciekły (${miss.length})</button>` : ''}</div>`;
+}
 function viewStudy(deckId, mode, q) {
   const all = q.get('all') === '1', cq = q.get('cram') || '', only = q.get('only') || '', key = `${deckId}/${mode}/${cq}${cq === 'list' ? ':' + idHash(q.get('ids') || '') : ''}${all ? '/all' : ''}${only ? '/only:' + idHash(only) : ''}`;
   if (!SESSION || SESSION.key !== key) {
@@ -1031,6 +1061,7 @@ function viewStudy(deckId, mode, q) {
   if (!c) {
     return head + `<div class="card flash"><div style="font-size:54px">🎉</div><h2>Gratulacje!</h2>
       <p class="muted">${s.done ? `Powtórzono ${s.done} ${plural(s.done, 'kartę', 'karty', 'kart')} w ⏱ <b>${fmtDur(s.timeMs || 0)}</b>.` : 'Na teraz nie ma nic do powtórki.'}</p>
+      ${sessSummaryHTML(s, deckId, mode)}
       ${setRewardHTML(s.reward)}
       ${s.all && S.cards.some(c => !c.sus && c.srs.state === 'new' && (s.deckId === 'all' || c.deckId === s.deckId) && (!s.only || s.only.has(c.id))) ? `<button class="primary block" data-act="more-new" style="margin:10px 0">➕ Kolejne 20 nowych fiszek</button>` : ''}
       <p class="small muted">Dziś uczysz się już ${fmtDur(studyMsBetween(dayStart()))}.</p>
@@ -2051,6 +2082,7 @@ const ACTIONS = {
     touch(n); save();
     SESSION.editHint = false; SESSION.hintDraft = null; SESSION.hint = true; toast(n.hint || n.hintImg ? '💡 Skojarzenie zapisane' : 'Usunięto skojarzenie', 1600); render();
   },
+  'exam-mock': el => { const id = el.dataset.id, ids = shuffle(S.cards.filter(c => c.deckId === id && !c.sus && c.srs.state !== 'new').map(c => c.id)).slice(0, 20); if (!ids.length) return; SESSION = null; go(`#/study/${id}/type?cram=list&ids=${ids.join(',')}`); },
   'exam-clear': el => { const d = deckById(el.dataset.id); if (!d) return; delete d.exam; touch(d); save(); render(); },
   'pt-toggle': el => { const s = SESSION; if (!s?.pts) return; const i = +el.dataset.i; s.pts.has(i) ? s.pts.delete(i) : s.pts.add(i); render(); },
   'cram-img': el => { const d = el.dataset.id || 'all'; SESSION = null; dropSess(); go(`#/study/${d}/flip?cram=img`); },

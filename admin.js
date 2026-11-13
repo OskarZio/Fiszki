@@ -25,14 +25,24 @@ async function flagsLoad() {
   try { if (typeof cloudOn === 'function' && cloudOn()) {
     let a = await SB.rpc('am_admin'); if (a.error) a = await SB.rpc('claim_admin');   // starsza baza bez am_admin
     IS_ADMIN = a.data === true; ADMIN_ERR = a.error ? (a.error.message || 'błąd') : (IS_ADMIN ? '' : 'not-admin');
-    const t = await SB.rpc('my_tests'); if (!t.error) testsSet(Array.isArray(t.data) ? t.data : []); render(); }
+    const t = await SB.rpc('my_tests'); if (!t.error) testsSet(Array.isArray(t.data) ? t.data : []); lazyLoad(); render(); }
     else { ADMIN_ERR = 'not-logged'; testsSet([]); } } catch (e) { ADMIN_ERR = e.message || 'błąd'; }
 }
 // 🧪 tryby w testach: admin widzi wszystkie, a tester tylko te, które admin mu przydzielił (tabela app_testers)
-const TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek' };
+const TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek', idle: '🏛️ Akademia (gra)' };
 let MY_TESTS = (() => { try { return JSON.parse(localStorage.getItem('myTests') || '[]'); } catch { return []; } })();
 function testsSet(a) { MY_TESTS = a.filter(f => TEST_FEATS[f]); try { localStorage.setItem('myTests', JSON.stringify(MY_TESTS)); } catch { /* */ } }
 const testOn = f => IS_ADMIN === true || MY_TESTS.includes(f);
+// ⚡ tryby w testach leżą w osobnym pliku bundle-x.js – pobiera go tylko admin / tester (reszta ma mniej kodu do wczytania)
+let LAZY = 0;   // 0 = nie, 1 = wczytuje, 2 = gotowe
+function lazyLoad() {
+  let was = false; try { if (IS_ADMIN === true) localStorage.setItem('wasAdmin', '1'); was = localStorage.getItem('wasAdmin') === '1'; } catch { /* */ }
+  if (LAZY || !(IS_ADMIN === true || MY_TESTS.length || was)) return;
+  LAZY = 1; const el = document.createElement('script'); el.src = 'bundle-x.js?v=' + APP_VERSION;
+  el.onload = () => { LAZY = 2; try { render(); } catch { /* */ } }; el.onerror = () => { LAZY = 0; el.remove(); };
+  document.head.append(el);
+}
+on('start', () => setTimeout(lazyLoad, 50));
 let TESTERS = null;   // lista dla panelu admina: null = nie wczytano
 async function testersLoad() {
   if (typeof SB === 'undefined' || !SB) { TESTERS = { err: 'Brak połączenia z bazą (zaloguj się).' }; return; }

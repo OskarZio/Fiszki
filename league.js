@@ -23,7 +23,25 @@ function leagueTable(ws) {
     .sort((a, b) => b.pts - a.pts || (b.me ? 1 : 0) - (a.me ? 1 : 0));
 }
 // nagroda za poprzedni tydzień (gdy było min. 2 grających z punktami)
+// 🎖️ dywizje: awans za tygodniowy próg punktów albo miejsce 1 w lidze znajomych, spadek poniżej progu utrzymania. Wyższa dywizja = większe nagrody.
+const LG_DIVS = [['🥉', 'Brąz', '#b45309'], ['🥈', 'Srebro', '#64748b'], ['🥇', 'Złoto', '#ca8a04'], ['💚', 'Szmaragd', '#059669'], ['💎', 'Diament', '#0284c7'], ['👑', 'Mistrz', '#7c3aed']];
+const LG_PROMO = [150, 250, 350, 500, 700, Infinity], LG_KEEP = [0, 60, 120, 180, 250, 350];
+const lgDiv = () => Math.max(0, Math.min(LG_DIVS.length - 1, S.stats.lgDiv || 0));
+const lgMult = () => 1 + .25 * lgDiv();
+function leagueDivisions() {
+  const prev = addDays(weekStart(), -7), key = dayKey(prev);
+  if (S.stats.lgDivWeek && S.stats.lgDivWeek >= key) return;
+  const tab = leagueTable(prev), me = tab.find(r => r.me), pts = me?.pts || 0, d = lgDiv(), first = tab.length >= 2 && tab[0]?.me && pts > 0;
+  S.stats.lgDivWeek = key;
+  if (!S.stats.lgDivSeen) { S.stats.lgDivSeen = 1; save(); return; }   // pierwszy tydzień: start w Brązie, bez zmian
+  let nd = d; if (pts >= LG_PROMO[d] || first) nd = d + 1; else if (pts < LG_KEEP[d]) nd = d - 1;
+  nd = Math.max(0, Math.min(LG_DIVS.length - 1, nd));
+  if (nd !== d) { S.stats.lgDiv = nd; const v = LG_DIVS[nd];
+    setTimeout(() => celebrate(nd > d ? `${v[0]} Awans: dywizja ${v[1]}!` : `Dywizja ${v[1]}`, nd > d ? `Zeszły tydzień: ${pts} pkt. Nagrody ligi są teraz ×${String(lgMult()).replace('.', ',')}.` : `Zeszły tydzień: ${pts} pkt – zabrakło do utrzymania (${LG_KEEP[d]}). Wrócisz szybko!`), 1600); }
+  save();
+}
 function leagueAward() {
+  try { leagueDivisions(); } catch (e) { console.warn(e); }
   const prev = addDays(weekStart(), -7), key = dayKey(prev);
   // raz na tydzień: znacznik albo już wypłacona nagroda (synchronizacja z innym urządzeniem)
   if (S.stats.leagueDone === key || (typeof S.stats.leagueDone === 'string' && S.stats.leagueDone > key)) return;
@@ -33,7 +51,7 @@ function leagueAward() {
   S.stats.leagueDone = key;
   const place = tab.findIndex(r => r.me);
   if (tab.length >= 2 && place >= 0 && place < 3) {
-    const n = LEAGUE_PRIZE[place], id = 'league-' + key;
+    const n = Math.round(LEAGUE_PRIZE[place] * lgMult()), id = 'league-' + key;
     if (!S.wallet.some(w => w.id === id)) S.wallet.push({ id, n, why: 'league', t: Date.now() });
     for (const k of LEAGUE_CASES[place]) if (typeof CASES !== 'undefined' && CASES[k]) addItem('case', k, 1, `league-${key}-${k}`);
     S.stats.leagueStreak = (S.stats.leagueLast === dayKey(addDays(prev, -7)) ? S.stats.leagueStreak || 0 : 0) + 1; S.stats.leagueLast = key;
@@ -47,8 +65,12 @@ function leagueCardHTML() {
   const dd = Math.floor(end / DAY), hh = Math.floor(end % DAY / HOUR);
   const prev = leagueTable(addDays(ws, -7)).filter(r => r.pts > 0).slice(0, 3);
   const solo = tab.length < 2;
+  const dv = lgDiv(), D = LG_DIVS[dv], myPts = tab.find(r => r.me)?.pts || 0, promo = LG_PROMO[dv], keep = LG_KEEP[dv];
   return `<div class="card league"><div class="row nowrap"><h2 class="grow" style="margin:0">🏆 Liga znajomych</h2><span class="small muted">koniec za ${dd ? dd + ' d ' : ''}${hh} h</span></div>
-    <p class="small muted" style="margin:4px 0 8px">Punkty = powtórki od poniedziałku. Grasz tylko ze znajomymi. W niedzielę o północy podium dostaje:</p><div class="lg-prizes">${[0, 1, 2].map(i => `<span>${['🥇', '🥈', '🥉'][i]} ${leagueCaseTxt(i)} + ${LEAGUE_PRIZE[i]} 💎</span>`).join('')}</div><p class="small muted" style="margin:4px 0 8px">${S.stats.leagueStreak > 1 ? ` · Twoja seria podium: <b>${S.stats.leagueStreak} tyg.</b>` : ''}</p>
+    <div class="lg-div" style="--dc:${D[2]}"><span class="lg-dv-ic">${D[0]}</span><div class="grow"><b>Dywizja ${D[1]}</b>${dv ? ` <small>nagrody ×${String(lgMult()).replace('.', ',')}</small>` : ''}
+      <div class="lg-dv-bar"><i style="width:${Math.min(100, promo === Infinity ? 100 : 100 * myPts / promo)}%"></i>${keep ? `<em style="left:${promo === Infinity ? 50 : 100 * keep / promo}%"></em>` : ''}</div>
+      <small>${promo === Infinity ? `Najwyższa dywizja · utrzymanie: ${keep} pkt tygodniowo (masz ${myPts})` : `Ten tydzień: <b>${myPts}</b> pkt · awans: ${promo} pkt albo 1. miejsce${keep ? ` · utrzymanie: ${keep}` : ''}`}</small></div></div>
+    <p class="small muted" style="margin:4px 0 8px">Punkty = powtórki od poniedziałku. Grasz tylko ze znajomymi. W niedzielę o północy podium dostaje:</p><div class="lg-prizes">${[0, 1, 2].map(i => `<span>${['🥇', '🥈', '🥉'][i]} ${leagueCaseTxt(i)} + ${Math.round(LEAGUE_PRIZE[i] * lgMult())} 💎</span>`).join('')}</div><p class="small muted" style="margin:4px 0 8px">${S.stats.leagueStreak > 1 ? ` · Twoja seria podium: <b>${S.stats.leagueStreak} tyg.</b>` : ''}</p>
     ${solo ? '<p class="small">Dodaj znajomych (kod albo zaproszenie), żeby rywalizować w lidze.</p>' : tab.map((r, i) => `<div class="lg-row${r.me ? ' me' : ''}"><span class="lg-pl">${i < 3 && r.pts ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>
       <span class="av">${avatarHTML({ avatar: r.avatar, avatarImg: r.avatarImg, cos: r.cos }, 30)}</span><b class="grow nm">${esc(r.nick)}${r.me ? ' (Ty)' : ''}</b><span class="lg-pts">${r.pts}</span></div>`).join('')}
     ${prev.length >= 2 ? `<p class="small muted" style="margin:8px 0 0">Zeszły tydzień: ${prev.map((r, i) => `${['🥇', '🥈', '🥉'][i]} ${esc(r.nick)} (${r.pts})`).join(' · ')}</p>` : ''}</div>`;

@@ -391,7 +391,20 @@ function kumEnd(win) {
   const st = kumStats();
   if (full) st.wins = (st.wins || 0) + 1;
   st.best = Math.max(st.best || 0, rounds); st.bestPts = Math.max(st.bestPts || 0, K.total); st.bestPlay = Math.max(st.bestPlay || 0, K.best);
-  save(); kumUnlock(); K.phase = 'end'; K.result = { win: full, rounds, gold, xp }; render();
+  if (K.daily) { const D = st.daily = st.daily || {}, prev = D[K.daily]; D[K.daily] = { pts: Math.max(prev?.pts || 0, K.total), rounds: Math.max(prev?.rounds || 0, rounds) };
+    for (const k of Object.keys(D)) if (k < dayKey(Date.now() - 30 * DAY)) delete D[k];
+    if (rounds >= 3 && !S.wallet.some(w => w.id === 'kumd-' + K.daily)) S.wallet.push({ id: 'kumd-' + K.daily, n: 60, why: 'kumd', t: Date.now() }); }
+  save(); kumUnlock(); K.phase = 'end'; K.result = { win: full, rounds, gold, xp, daily: K.daily }; render();
+}
+// 🗓️ Wyzwanie dnia: dla wszystkich ten sam plecak i to samo losowanie (atuty, bossowie, bilety, sklep) – ziarno z daty; fiszki Twoje.
+// Jedna próba dziennie, nagroda 60 💎 za dojście do 3. rundy. Losowość podmieniamy tylko na czas akcji Kumulacji.
+const kumDayKey = () => dayKey(Date.now());
+const kumDailyKit = d => { const ks = Object.keys(KUM_KITS).filter(k => k !== 'lang'); return ks[hashStr('kd' + d) % ks.length]; };
+function kumSeeded(fn) {
+  const K = KUM; if (!K?.daily) return fn();
+  const r0 = Math.random; let a = K.rs >>> 0;
+  Math.random = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  try { return fn(); } finally { Math.random = r0; K.rs = a; if (KUM && KUM !== K && KUM.daily === K.daily) KUM.rs = a; }
 }
 
 // ---------- widoki
@@ -399,7 +412,10 @@ let KUM_KIT_SEL = 'classic', KUM_TIER_SEL = null;
 function kumIntroHTML() {
   const st = kumStats(), decks = S.decks.filter(d => S.cards.some(c => c.deckId === d.id && !c.sus)), kit = KUM_KIT_SEL, max = Math.min(KUM_TOP, (st.cup || 0) + 1);
   const tier = Math.min(max, KUM_TIER_SEL || max), seen = st.seen || {}, nSeen = Object.keys(KUM_J).filter(k => seen[k]).length;
+  const dd = kumDayKey(), dk = KUM_KITS[kumDailyKit(dd)], dres = st.daily?.[dd], played = st.dailyTry === dd;
   return `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🃏 Kumulacja</h1><span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></div>
+  <div class="card kum-daily"><div class="row nowrap" style="gap:10px"><span style="font-size:30px">🗓️</span><div class="grow"><b>Wyzwanie dnia</b><div class="small muted">Plecak: ${kumIcon(dk.ic)} ${dk.n} · to samo losowanie dla wszystkich · 1 próba · 60 💎 za 3. rundę</div></div></div>
+    ${played ? `<p class="small" style="margin:8px 0 0">Dzisiejszy wynik: <b>${(dres?.pts || 0).toLocaleString('pl')} pkt</b> · runda ${dres?.rounds || 0}. Nowe wyzwanie jutro.</p>` : `<button class="primary block" data-act="kum-daily" style="margin-top:8px">▶ Zagraj wyzwanie dnia</button>`}</div>
   <div class="card kum-intro"><p style="margin-top:0"><b>8 rund z rosnącym progiem.</b> Wybierz 1–3 fiszki z ręki, odpowiedz i zbieraj <b>(podstawa + wartości fiszek) × mnożnik</b>.</p>
     <details class="small kum-rules"${st.runs ? '' : ' open'}><summary><b>📖 Instrukcja gry</b></summary><ul>
       <li><b>Typ zagrania</b> daje podstawę i mnożnik: Pojedyncza, Dwójka, Trójka, Jedna talia (2–3 z tej samej), Przekrój (3 różne talie), Ciężka trójka (3 trudne). Liczą się tylko dobrze odpowiedziane fiszki.</li>
@@ -569,6 +585,9 @@ Object.assign(ACTIONS, {
   'kum-kit': el => { KUM_KIT_SEL = el.dataset.k; render(); },
   'kum-tier': el => { KUM_TIER_SEL = +el.dataset.t; render(); },
   'kum-leave': () => { kumUnlock(); go('#/boss'); },
+  'kum-daily': () => { const d = kumDayKey(), st = kumStats(); if (st.dailyTry === d) return toast('Wyzwanie dnia już rozegrane – kolejne jutro'); kumLock();
+    KUM = { daily: d, rs: hashStr('kum' + d) }; const fake = KUM; kumSeeded(() => kumStart($('#kum-deck')?.value || 'all', kumDailyKit(d), 1));
+    if (KUM && KUM !== fake && KUM.deckId) { KUM.daily = d; KUM.rs = fake.rs; st.dailyTry = d; save(); } else KUM = null; },
   'kum-start': () => { kumLock(); const max = Math.min(KUM_TOP, kumCupMax() + 1); kumStart($('#kum-deck')?.value || 'all', KUM_KIT_SEL, Math.min(max, KUM_TIER_SEL || max)); },
   'kum-go': () => { if (KUM?.phase === 'pre') { kumStartRound(); render(); } },
   'kum-skip': () => kumSkip(),
@@ -620,3 +639,5 @@ Object.assign(ACTIONS, {
   'kum-again': () => { const d = KUM?.deckId || 'all', kit = KUM?.kit || 'classic', t = KUM?.tier || 1; KUM = null; kumStart(d, kit, t); },
   'kum-quit2': () => { KUM = null; kumUnlock(); go('#/boss'); },
 });
+// 🗓️ w wyzwaniu dnia każda akcja Kumulacji losuje z ziarna dnia
+for (const k of Object.keys(ACTIONS)) if (k.startsWith('kum-') && k !== 'kum-daily') { const f = ACTIONS[k]; ACTIONS[k] = (...a) => kumSeeded(() => f(...a)); }
