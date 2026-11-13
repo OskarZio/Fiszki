@@ -63,13 +63,13 @@ if (typeof ACHIEVEMENTS !== 'undefined') for (const [id, n] of [['album_full', S
 const CASES = {
   // 📦 skrzynki ulepszeń i skinów: tylko cegły do kuźni, żetony ulepszeń (poziom postaci, ulepszenie broni, wyższa rzadkość) i skiny.
   // cur: 'gold' = płacisz 🪙 złotem (zarobione w walkach); bez cur = 💎 kryształy. Broń wypada tylko ze skrzyń z bronią.
-  weapon: { name: 'Skrzynia z bronią', icon: '⚔️', cur: 'gold', price: 2000, pool: { gear: 100 }, gear: { common: 42, rare: 33, epic: 18, legendary: 6, mythic: 1 } },
-  forge: { name: 'Skrzynka kowala', icon: '🛠️', cur: 'gold', price: 2500, pool: { mat: 72, wup: 18, lvl: 7, rar: 3 },
+  weapon: { name: 'Skrzynia z bronią', icon: '⚔️', cur: 'gold', price: 600, pool: { gear: 100 }, gear: { common: 40, rare: 33, epic: 19, legendary: 7, mythic: 1 } },
+  forge: { name: 'Skrzynka kowala', icon: '🛠️', cur: 'gold', price: 800, pool: { mat: 72, wup: 18, lvl: 7, rar: 3 },
     mat: { common: 30, rare: 30, epic: 20, legendary: 10, mythic: 4, ice: 3, void: 3 } },
-  epic: { name: 'Skrzynka mistrza', icon: '🎁', price: 3000, pool: { lvl: 28, wup: 25, mat: 22, skin: 15, rar: 10 },
+  epic: { name: 'Skrzynka mistrza', icon: '🎁', price: 900, pool: { lvl: 28, wup: 25, mat: 22, skin: 15, rar: 10 },
     mat: { rare: 30, epic: 30, legendary: 20, mythic: 10, ice: 5, void: 5 } },
-  skin: { name: 'Skrzynka skinów', icon: '🎨', price: 4000, pool: { skin: 100 } },
-  royal: { name: 'Skarbiec legend', icon: '👑', price: 6000, pool: { gear: 100 }, gear: { epic: 55, legendary: 35, mythic: 10 } },
+  skin: { name: 'Skrzynka skinów', icon: '🎨', price: 1500, pool: { skin: 100 } },
+  royal: { name: 'Skarbiec legend', icon: '👑', price: 6000, pool: { gear: 100 }, gear: { epic: 25, legendary: 50, mythic: 25 } },   // 👑 jedyna naprawdę droga skrzynia: zawsze epicki lub lepszy, co czwarta mityczna
   basic: { name: 'Skrzynka zapasów', icon: '📦', price: 0, freeOnly: true, pool: { mat: 80, wup: 12, lvl: 6, rar: 2 }, mat: { common: 50, rare: 30, epic: 14, legendary: 6 } },
   daily: { name: 'Codzienna skrzynka', icon: '🌞', price: 0, freeOnly: true, pool: { mat: 70, wup: 15, lvl: 12, rar: 3 }, mat: { common: 40, rare: 32, epic: 18, legendary: 8, ice: 2 } },
 };
@@ -518,7 +518,7 @@ function upTokHTML(compact) {
 function goalWallet() {
   const perDay = {}; for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); }
   let ch = 0; const have = new Set(S.wallet.map(w => w.id));
-  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
+  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: k >= '2026-11-13' ? 40 : 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
   if (ch) save();
 }
 on('start', () => setTimeout(goalWallet, 1200));

@@ -29,7 +29,7 @@ async function flagsLoad() {
     else { ADMIN_ERR = 'not-logged'; testsSet([]); } } catch (e) { ADMIN_ERR = e.message || 'błąd'; }
 }
 // 🧪 tryby w testach: admin widzi wszystkie, a tester tylko te, które admin mu przydzielił (tabela app_testers)
-const TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek', straz: '🏰 Strażnica' };
+const TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek', skok: '🐾 Wspinaczka (gra)' };
 let MY_TESTS = (() => { try { return JSON.parse(localStorage.getItem('myTests') || '[]'); } catch { return []; } })();
 function testsSet(a) { MY_TESTS = a.filter(f => TEST_FEATS[f]); try { localStorage.setItem('myTests', JSON.stringify(MY_TESTS)); } catch { /* */ } }
 const testOn = f => IS_ADMIN === true || MY_TESTS.includes(f);

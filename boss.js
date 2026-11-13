@@ -792,8 +792,8 @@ function bossEnd(won, why) {
   const styleXP = (B.badges || []).reduce((a, x) => a + x[3], 0);
   B.xp = Math.round((B.ok * 2 + B.verOk * 2 + (won ? 40 + 20 * b.diff + kindXP : 5) + styleXP) * modeR * xpMul() * (rep ? .5 : 1)); giveXP(B.xp, 'za walkę');
   if (won) {
-    const base = { ch: 10 + 5 * b.diff, fin: 30 + 15 * b.diff, cat: 25 + 10 * b.diff, world: 30 + 10 * b.stars, hydra: 30 + 10 * b.diff, duo: Math.min(40, 6 + 2 * (b.i || 1)) }[b.kind] || (b.gk ? 3 : 10);   // wieża wiedzy (quiz): mniej 💎
-    B.gems = Math.round(base * (B.midas ? 1.5 : 1) * gemMul() * hs.gems * modeR * (rep ? .25 : 1) * (1 + .25 * (b.bp || 0)) * (S.settings.hardcore ? 1.5 : 1)); S.wallet.push({ id: 'boss-' + uid(), n: B.gems, why: 'boss', t: Date.now() });
+    const base = { ch: 25 + 10 * b.diff, fin: 70 + 30 * b.diff, cat: 55 + 20 * b.diff, world: 70 + 20 * b.stars, hydra: 70 + 20 * b.diff, duo: Math.min(80, 14 + 4 * (b.i || 1)) }[b.kind] || (b.gk ? 3 : 10);   // wieża wiedzy (quiz): mniej 💎
+    B.gems = Math.round(base * (B.midas ? 1.5 : 1) * gemMul() * hs.gems * modeR * (rep ? .5 : 1) * (1 + .25 * (b.bp || 0)) * (S.settings.hardcore ? 1.5 : 1)); S.wallet.push({ id: 'boss-' + uid(), n: B.gems, why: 'boss', t: Date.now() });
     let n = 1 + (b.diff >= 2 ? 1 : 0) + (b.kind !== 'ch' ? 1 : 0) + hs.loot + (flawless ? 1 : 0) + (boostOn('loot2') ? 1 : 0) - (B.caught >= 2 ? 1 : 0);
     if (rep) n = acc >= .8 ? 1 : 0;
     if (b.duo && !b.final) n = 0;   // wieża duetu: skrzynia tylko u strażnika (co 5. piętro)

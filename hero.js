@@ -74,10 +74,10 @@ const CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'unde
 // 🎟️ zdobywanie postaci: Kot Wojak za darmo; reszta – kupno za 🪙, poziom konta albo skrzynka bohaterów.
 // Droższa (rzadsza) postać = mocniejsze umiejętności (mnożnik umiejętności biernej, drzewka i superciosu).
 const HERO_TIER = { basic: ['Podstawowa', '#64748b', 1], rare: ['Rzadka', '#8b5cf6', 1.15], epic: ['Epicka', '#ec4899', 1.3], legendary: ['Legendarna', '#f59e0b', 1.5], mythic: ['Mityczna', '#dc2626', 1.7] };
-const HERO_GET = { cat: { t: 'basic' }, hamster: { t: 'rare', price: 3000 }, frog: { t: 'rare', price: 5000 }, dog: { t: 'epic', price: 8000 }, owl: { t: 'epic', acc: 12 },
-  fox: { t: 'legendary', price: 15000 }, beast: { t: 'mythic', acc: 20 },
-  rabbit: { t: 'rare', price: 4000 }, phoenix: { t: 'legendary', price: 18000 }, dragon: { t: 'mythic', price: 30000 } };
-const HERO_CASE = { price: 2000, odds: { rare: 60, epic: 28, legendary: 9, mythic: 3 }, dupPts: 3 };
+const HERO_GET = { cat: { t: 'basic' }, hamster: { t: 'rare', price: 1200 }, frog: { t: 'rare', price: 2000 }, dog: { t: 'epic', price: 3500 }, owl: { t: 'epic', acc: 12 },
+  fox: { t: 'legendary', price: 7000 }, beast: { t: 'mythic', acc: 20 },
+  rabbit: { t: 'rare', price: 1600 }, phoenix: { t: 'legendary', price: 9000 }, dragon: { t: 'mythic', price: 20000 } };
+const HERO_CASE = { price: 800, odds: { rare: 60, epic: 28, legendary: 9, mythic: 3 }, dupPts: 3 };
 let ACC_LV = { t: 0, v: 1 };
 const accLevel = () => { if (Date.now() - ACC_LV.t > 2000) ACC_LV = { t: Date.now(), v: typeof levelOf === 'function' ? levelOf(xpTotal()) : 1 }; return ACC_LV.v; };
 const heroTierMul = (l = hero().line) => HERO_TIER[HERO_GET[l]?.t || 'basic'][2];

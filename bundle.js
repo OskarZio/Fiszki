@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '378';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '379';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -5264,13 +5264,13 @@ if (typeof ACHIEVEMENTS !== 'undefined') for (const [id, n] of [['album_full', S
 var CASES = {
   // 📦 skrzynki ulepszeń i skinów: tylko cegły do kuźni, żetony ulepszeń (poziom postaci, ulepszenie broni, wyższa rzadkość) i skiny.
   // cur: 'gold' = płacisz 🪙 złotem (zarobione w walkach); bez cur = 💎 kryształy. Broń wypada tylko ze skrzyń z bronią.
-  weapon: { name: 'Skrzynia z bronią', icon: '⚔️', cur: 'gold', price: 2000, pool: { gear: 100 }, gear: { common: 42, rare: 33, epic: 18, legendary: 6, mythic: 1 } },
-  forge: { name: 'Skrzynka kowala', icon: '🛠️', cur: 'gold', price: 2500, pool: { mat: 72, wup: 18, lvl: 7, rar: 3 },
+  weapon: { name: 'Skrzynia z bronią', icon: '⚔️', cur: 'gold', price: 600, pool: { gear: 100 }, gear: { common: 40, rare: 33, epic: 19, legendary: 7, mythic: 1 } },
+  forge: { name: 'Skrzynka kowala', icon: '🛠️', cur: 'gold', price: 800, pool: { mat: 72, wup: 18, lvl: 7, rar: 3 },
     mat: { common: 30, rare: 30, epic: 20, legendary: 10, mythic: 4, ice: 3, void: 3 } },
-  epic: { name: 'Skrzynka mistrza', icon: '🎁', price: 3000, pool: { lvl: 28, wup: 25, mat: 22, skin: 15, rar: 10 },
+  epic: { name: 'Skrzynka mistrza', icon: '🎁', price: 900, pool: { lvl: 28, wup: 25, mat: 22, skin: 15, rar: 10 },
     mat: { rare: 30, epic: 30, legendary: 20, mythic: 10, ice: 5, void: 5 } },
-  skin: { name: 'Skrzynka skinów', icon: '🎨', price: 4000, pool: { skin: 100 } },
-  royal: { name: 'Skarbiec legend', icon: '👑', price: 6000, pool: { gear: 100 }, gear: { epic: 55, legendary: 35, mythic: 10 } },
+  skin: { name: 'Skrzynka skinów', icon: '🎨', price: 1500, pool: { skin: 100 } },
+  royal: { name: 'Skarbiec legend', icon: '👑', price: 6000, pool: { gear: 100 }, gear: { epic: 25, legendary: 50, mythic: 25 } },   // 👑 jedyna naprawdę droga skrzynia: zawsze epicki lub lepszy, co czwarta mityczna
   basic: { name: 'Skrzynka zapasów', icon: '📦', price: 0, freeOnly: true, pool: { mat: 80, wup: 12, lvl: 6, rar: 2 }, mat: { common: 50, rare: 30, epic: 14, legendary: 6 } },
   daily: { name: 'Codzienna skrzynka', icon: '🌞', price: 0, freeOnly: true, pool: { mat: 70, wup: 15, lvl: 12, rar: 3 }, mat: { common: 40, rare: 32, epic: 18, legendary: 8, ice: 2 } },
 };
@@ -5719,7 +5719,7 @@ function upTokHTML(compact) {
 function goalWallet() {
   const perDay = {}; for (const l of S.log) { const k = dayKey(l.t); perDay[k] = (perDay[k] || 0) + studyPoints(l); }
   let ch = 0; const have = new Set(S.wallet.map(w => w.id));
-  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
+  for (const [k, n] of Object.entries(perDay)) if (n >= (S.settings.goal || 50) && !have.has('goal-' + k)) { S.wallet.push({ id: 'goal-' + k, n: k >= '2026-11-13' ? 40 : 20, why: 'goal', t: Math.min(Date.parse(k) || 0, ST_OLD_T) }); ch = 1; }
   if (ch) save();
 }
 on('start', () => setTimeout(goalWallet, 1200));
@@ -8042,18 +8042,18 @@ var todayPoints = () => Math.floor(todayLog().reduce((a, l) => a + studyPoints(l
 var todayGood = () => todayLog().filter(l => l.m === 'type' && l.v === 'ok').length + (S.stats['quizok_' + dayKey(Date.now())] || 0);
 var todayOf = arr => { const t0 = dayStart(); return (arr || []).filter(x => (x.t || x.created || 0) >= t0); };
 var QUESTS = [
-  { id: 'rev20', icon: '🔁', name: 'Zdobądź 20 pkt nauki', goal: 20, reward: 30, v: todayPoints },
-  { id: 'rev50', icon: '🔥', name: 'Zdobądź 50 pkt nauki', goal: 50, reward: 60, v: todayPoints },
-  { id: 'good15', icon: '✅', name: '15 poprawnie wpisanych lub w teście', goal: 15, reward: 30, v: todayGood },
-  { id: 'new5', icon: '🌱', name: 'Naucz się 5 nowych kart', goal: 5, reward: 30, v: () => todayLog().filter(l => l.n).length },
-  { id: 'add5', icon: '➕', name: 'Dodaj 5 nowych fiszek', goal: 5, reward: 30, v: () => todayOf(S.notes).length },
-  { id: 'game', icon: '🧠', name: 'Zagraj w grę pamięciową', goal: 1, reward: 20, v: () => todayOf(S.games).length },
-  { id: 'battle', icon: '⚔️', name: 'Stocz bitwę (może być z botem)', goal: 1, reward: 30, v: () => todayOf(S.battles).length },
-  { id: 'win', icon: '🏆', name: 'Wygraj bitwę', goal: 1, reward: 50, v: () => todayOf(S.battles).filter(b => b.won === 1).length },
-  { id: 'social', icon: '💬', name: 'Wyślij znajomemu przypomnienie lub prezent', goal: 1, reward: 20, v: () => S.stats['soc_' + dayKey(Date.now())] || 0,
+  { id: 'rev20', icon: '🔁', name: 'Zdobądź 20 pkt nauki', goal: 20, reward: 45, v: todayPoints },
+  { id: 'rev50', icon: '🔥', name: 'Zdobądź 50 pkt nauki', goal: 50, reward: 90, v: todayPoints },
+  { id: 'good15', icon: '✅', name: '15 poprawnie wpisanych lub w teście', goal: 15, reward: 45, v: todayGood },
+  { id: 'new5', icon: '🌱', name: 'Naucz się 5 nowych kart', goal: 5, reward: 45, v: () => todayLog().filter(l => l.n).length },
+  { id: 'add5', icon: '➕', name: 'Dodaj 5 nowych fiszek', goal: 5, reward: 45, v: () => todayOf(S.notes).length },
+  { id: 'game', icon: '🧠', name: 'Zagraj w grę pamięciową', goal: 1, reward: 30, v: () => todayOf(S.games).length },
+  { id: 'battle', icon: '⚔️', name: 'Stocz bitwę (może być z botem)', goal: 1, reward: 45, v: () => todayOf(S.battles).length },
+  { id: 'win', icon: '🏆', name: 'Wygraj bitwę', goal: 1, reward: 75, v: () => todayOf(S.battles).filter(b => b.won === 1).length },
+  { id: 'social', icon: '💬', name: 'Wyślij znajomemu przypomnienie lub prezent', goal: 1, reward: 30, v: () => S.stats['soc_' + dayKey(Date.now())] || 0,
     ok: () => typeof cloudOn === 'function' && cloudOn() && CLOUD_FRIENDS.length > 0 },
 ];
-var QUEST_BONUS = 25;
+var QUEST_BONUS = 50;
 // losowanie zestawu na dziś – takie samo na każdym urządzeniu (ziarno = data)
 function todaysQuests() {
   const day = dayKey(Date.now());
@@ -10787,10 +10787,10 @@ var CHAR_LINES = { ...Object.fromEntries(Object.entries(typeof CHARS !== 'undefi
 // 🎟️ zdobywanie postaci: Kot Wojak za darmo; reszta – kupno za 🪙, poziom konta albo skrzynka bohaterów.
 // Droższa (rzadsza) postać = mocniejsze umiejętności (mnożnik umiejętności biernej, drzewka i superciosu).
 var HERO_TIER = { basic: ['Podstawowa', '#64748b', 1], rare: ['Rzadka', '#8b5cf6', 1.15], epic: ['Epicka', '#ec4899', 1.3], legendary: ['Legendarna', '#f59e0b', 1.5], mythic: ['Mityczna', '#dc2626', 1.7] };
-var HERO_GET = { cat: { t: 'basic' }, hamster: { t: 'rare', price: 3000 }, frog: { t: 'rare', price: 5000 }, dog: { t: 'epic', price: 8000 }, owl: { t: 'epic', acc: 12 },
-  fox: { t: 'legendary', price: 15000 }, beast: { t: 'mythic', acc: 20 },
-  rabbit: { t: 'rare', price: 4000 }, phoenix: { t: 'legendary', price: 18000 }, dragon: { t: 'mythic', price: 30000 } };
-var HERO_CASE = { price: 2000, odds: { rare: 60, epic: 28, legendary: 9, mythic: 3 }, dupPts: 3 };
+var HERO_GET = { cat: { t: 'basic' }, hamster: { t: 'rare', price: 1200 }, frog: { t: 'rare', price: 2000 }, dog: { t: 'epic', price: 3500 }, owl: { t: 'epic', acc: 12 },
+  fox: { t: 'legendary', price: 7000 }, beast: { t: 'mythic', acc: 20 },
+  rabbit: { t: 'rare', price: 1600 }, phoenix: { t: 'legendary', price: 9000 }, dragon: { t: 'mythic', price: 20000 } };
+var HERO_CASE = { price: 800, odds: { rare: 60, epic: 28, legendary: 9, mythic: 3 }, dupPts: 3 };
 var ACC_LV = { t: 0, v: 1 };
 var accLevel = () => { if (Date.now() - ACC_LV.t > 2000) ACC_LV = { t: Date.now(), v: typeof levelOf === 'function' ? levelOf(xpTotal()) : 1 }; return ACC_LV.v; };
 var heroTierMul = (l = hero().line) => HERO_TIER[HERO_GET[l]?.t || 'basic'][2];
@@ -11953,8 +11953,8 @@ function bossEnd(won, why) {
   const styleXP = (B.badges || []).reduce((a, x) => a + x[3], 0);
   B.xp = Math.round((B.ok * 2 + B.verOk * 2 + (won ? 40 + 20 * b.diff + kindXP : 5) + styleXP) * modeR * xpMul() * (rep ? .5 : 1)); giveXP(B.xp, 'za walkę');
   if (won) {
-    const base = { ch: 10 + 5 * b.diff, fin: 30 + 15 * b.diff, cat: 25 + 10 * b.diff, world: 30 + 10 * b.stars, hydra: 30 + 10 * b.diff, duo: Math.min(40, 6 + 2 * (b.i || 1)) }[b.kind] || (b.gk ? 3 : 10);   // wieża wiedzy (quiz): mniej 💎
-    B.gems = Math.round(base * (B.midas ? 1.5 : 1) * gemMul() * hs.gems * modeR * (rep ? .25 : 1) * (1 + .25 * (b.bp || 0)) * (S.settings.hardcore ? 1.5 : 1)); S.wallet.push({ id: 'boss-' + uid(), n: B.gems, why: 'boss', t: Date.now() });
+    const base = { ch: 25 + 10 * b.diff, fin: 70 + 30 * b.diff, cat: 55 + 20 * b.diff, world: 70 + 20 * b.stars, hydra: 70 + 20 * b.diff, duo: Math.min(80, 14 + 4 * (b.i || 1)) }[b.kind] || (b.gk ? 3 : 10);   // wieża wiedzy (quiz): mniej 💎
+    B.gems = Math.round(base * (B.midas ? 1.5 : 1) * gemMul() * hs.gems * modeR * (rep ? .5 : 1) * (1 + .25 * (b.bp || 0)) * (S.settings.hardcore ? 1.5 : 1)); S.wallet.push({ id: 'boss-' + uid(), n: B.gems, why: 'boss', t: Date.now() });
     let n = 1 + (b.diff >= 2 ? 1 : 0) + (b.kind !== 'ch' ? 1 : 0) + hs.loot + (flawless ? 1 : 0) + (boostOn('loot2') ? 1 : 0) - (B.caught >= 2 ? 1 : 0);
     if (rep) n = acc >= .8 ? 1 : 0;
     if (b.duo && !b.final) n = 0;   // wieża duetu: skrzynia tylko u strażnika (co 5. piętro)
@@ -12859,7 +12859,7 @@ function towerEnd(B, won) {
   TW_GK = !!B.b.gk;
   const h = hero(), T = h[twKey()]; if (!T) return;
   if (won) {
-    const f = T.floor, xp = Math.round((B.ok * 3 + 30 + 15 * f) * (TW_GK ? 1 : 2) * xpMul()), gems = Math.round(Math.min(TW_GK ? 20 : 40, TW_GK ? 2 + .75 * f : 4 + 1.5 * f) * gemMul());   // ⚖️ wolniej rosnące, z limitem na piętro   // wieża wiedzy (quiz): mniej 🪙
+    const f = T.floor, xp = Math.round((B.ok * 3 + 30 + 15 * f) * (TW_GK ? 1 : 2) * xpMul()), gems = Math.round(Math.min(TW_GK ? 40 : 90, TW_GK ? 5 + 1.5 * f : 10 + 3.5 * f) * gemMul());   // ⚖️ wolniej rosnące, z limitem na piętro   // wieża wiedzy (quiz): mniej 🪙
     const m = 1 + (T.buff.gold || 0), gx = Math.round(xp * m), gg = Math.round(gems * m);
     giveXP(gx, 'wieża'); S.wallet.push({ id: 'tower-' + uid(), n: gg, why: 'tower', t: Date.now() });
     T.bank.xp += gx; T.bank.gems += gg; B.towerGain = { xp: gx, gems: gg };
@@ -16284,7 +16284,7 @@ document.addEventListener('change', e => { if (e.target.dataset?.cosanim) { S.se
    – darmowa skrzynka za każdą nową ewolucję postaci (i za start – 1 na powitanie).
    Założony skin widać na bohaterze wszędzie (Bohater, walki, pojedynek – także u przeciwnika). */
 var SKIN_R = ['common', 'rare', 'epic', 'legendary', 'mythic'];
-var SKIN_ODDS = { common: 40, rare: 30, epic: 18, legendary: 9, mythic: 3 }, SKIN_DUP = { common: 40, rare: 80, epic: 200, legendary: 600, mythic: 2000 }, SKIN_PRICE = 4000;
+var SKIN_ODDS = { common: 40, rare: 30, epic: 18, legendary: 9, mythic: 3 }, SKIN_DUP = { common: 40, rare: 80, epic: 200, legendary: 600, mythic: 2000 }, SKIN_PRICE = 1500;
 var SKIN_NAME = { common: 'Zwykły', rare: 'Rzadki', epic: 'Epicki', legendary: 'Legendarny', mythic: 'Mityczny' };
 var SKIN_COL = { common: '#94a3b8', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', mythic: '#ef4444' };
 var SKIN_LINES = ['cat', 'dog', 'fox', 'rabbit', 'phoenix', 'dragon', 'frog'];   // postacie, które mają narysowane skiny (jeden obrazek na rzadkość)
@@ -16641,7 +16641,7 @@ async function flagsLoad() {
     else { ADMIN_ERR = 'not-logged'; testsSet([]); } } catch (e) { ADMIN_ERR = e.message || 'błąd'; }
 }
 // 🧪 tryby w testach: admin widzi wszystkie, a tester tylko te, które admin mu przydzielił (tabela app_testers)
-var TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek', straz: '🏰 Strażnica' };
+var TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek', skok: '🐾 Wspinaczka (gra)' };
 var MY_TESTS = (() => { try { return JSON.parse(localStorage.getItem('myTests') || '[]'); } catch { return []; } })();
 function testsSet(a) { MY_TESTS = a.filter(f => TEST_FEATS[f]); try { localStorage.setItem('myTests', JSON.stringify(MY_TESTS)); } catch { /* */ } }
 var testOn = f => IS_ADMIN === true || MY_TESTS.includes(f);
@@ -18017,283 +18017,167 @@ Object.assign(ACTIONS, {
 });
 ;
 
-/* ===== straz.js ===== */
+/* ===== skok.js ===== */
 'use strict';
-/* 🏰 Strażnica – gra obronna na fiszkach (admin + testerzy z panelu admina).
-   Drogą na pergaminowej mapie schodzą Kleksy (plamy atramentu = zapominanie); każdy niesie jedną fiszkę.
-   Dobra odpowiedź = strzał piórem (wpisana trafia mocniej). Zła = Kleks wścieka się i przyspiesza, gra na chwilę staje
-   i pokazuje poprawną odpowiedź, a ta fiszka wraca później w tej samej grze. Kleks przy bramie zabiera serce z murów.
-   8 fal, w 4. i 8. Wielki Kleks (3 trafienia, każde inną fiszką). Między falami wybierasz 1 z 3 ulepszeń.
-   Zaległe fiszki liczą się jak powtórki. Gra chodzi we własnej pętli – ekran nie jest rysowany od nowa co klatkę. */
-var szOn = () => typeof testOn === 'function' ? testOn('straz') : typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
-var SZ_WAVES = 8, SZ_HEARTS = 5, SZ_HEARTS_MAX = 7;
-var SZ_T = {
-  n: { n: 'Kleks', hp: 1, sp: 1, pts: 10 },
-  f: { n: 'Szybki kleks', hp: 1, sp: 1.45, pts: 14 },
-  a: { n: 'Kleks pancerny', hp: 2, sp: .82, pts: 22 },
-  b: { n: 'Wielki Kleks', hp: 3, sp: .5, pts: 60 },
-};
-// ulepszenia strażnicy (między falami wybierasz 1 z 3; max = ile razy można wziąć)
-var SZ_PERKS = {
-  wall:   { ic: '🧱', n: 'Wyższy mur', d: '+1 serce murów (teraz i na stałe)', max: 2 },
-  tar:    { ic: '🛢️', n: 'Smoła na drodze', d: 'Kleksy idą o 12% wolniej', max: 3 },
-  eye:    { ic: '🦅', n: 'Sokole oko', d: 'W ABCD znika jedna zła odpowiedź', max: 2 },
-  ball:   { ic: '🏹', n: 'Balista', d: 'Co 5. dobra odpowiedź trafia też kolejnego Kleksa', max: 1 },
-  bell:   { ic: '🔔', n: 'Mroźny dzwon', d: 'Po błędzie wszystkie Kleksy zamierają na 3 s', max: 1 },
-  horn:   { ic: '📯', n: 'Róg zwycięstwa', d: 'Seria daje o połowę więcej punktów', max: 2 },
-  scribe: { ic: '🪶', n: 'Skryba', d: 'Wpisana odpowiedź trafia za 3 i zamraża cel na 2 s', max: 1 },
-  medic:  { ic: '🩹', n: 'Medyk', d: 'Fala bez straty serca oddaje 1 serce', max: 1 },
-};
-var SZ = null, SZ_RAF = 0, SZ_ELS = new Map(), SZ_OPT = { deck: 'all', typing: false };
-var szStats = () => (S.stats.straz = S.stats.straz || { runs: 0, wins: 0, bestWave: 0, bestScore: 0 });
-var szCard = id => typeof cardById === 'function' ? cardById(id) : S.cards.find(c => c.id === id);
-var szPerk = k => SZ?.perks[k] || 0;
-// droga: sinusoida od górnej krawędzi do bramy na dole (p = 0…1) – ta sama funkcja rysuje drogę i prowadzi Kleksy
-var szPos = p => ({ x: 50 + 30 * Math.sin(p * Math.PI * 3), y: 11 + p * 75 });
-var szTraverse = w => (34 - 1.6 * w) * (SZ.typing ? 1.5 : 1);            // sekundy na przejście całej drogi
-var szGap = w => Math.max(3.4, 6 - .3 * w) * (SZ.typing ? 1.4 : 1);      // sekundy między Kleksami
+/* 🐾 Wspinaczka – zręcznościowa gra beta (admin + testerzy z panelu admina), dla zabawy – bez fiszek.
+   Bohater (z aktualnym skinem) sam odbija się od książek; sterujesz tylko w lewo / w prawo (dotyk po bokach ekranu albo strzałki).
+   Książki: zwykłe, ruchome, kruche kartki (pękają po jednym skoku) i ze sprężyną (wysoki skok). Kryształy dają punkty.
+   Im wyżej, tym trudniej i tym ciemniejsze niebo – od dnia, przez zachód słońca, po kosmos. Upadek poniżej ekranu kończy bieg.
+   Nagroda: trochę złota za wynik, z dziennym limitem. Gra rysuje się na <canvas> we własnej pętli. */
+var skOn = () => typeof testOn === 'function' ? testOn('skok') : typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
+var SK_P = { g: 1900, jump: 780, spring: 1260, vx: 340, acc: 2600, heroW: 34 };
+var SK_DAILY_GOLD = 120, SK_RUN_GOLD = 40;
+var SK_COLORS = ['#e5484d', '#f59e0b', '#22a06b', '#2f6fed', '#8b5cf6', '#ec4899', '#0ea5a4'];
+var SKG = null, SK_RAF = 0, SK_KEYS = { l: false, r: false };
+var skStats = () => (S.stats.skok = S.stats.skok || { runs: 0, best: 0, gems: 0 });
+var skToday = () => { const d = dayKey(Date.now()), st = skStats(); if (st.day !== d) { st.day = d; st.dayGold = 0; } return st; };
+var skRnd = (a, b) => a + Math.random() * (b - a);
 
-function szPool(deckId) {
-  const ok = c => !c.sus && (deckId === 'all' || c.deckId === deckId) && (() => { const a = cardView(c).ans; return a && a.trim() && a.length <= 160; })();
-  const cs = S.cards.filter(ok), now = Date.now(), due = c => c.srs.state !== 'new' && c.srs.due <= now;
-  return [...shuffle(cs.filter(due)), ...shuffle(cs.filter(c => !due(c)))].map(c => c.id);
+function skNew(w, h) {
+  const G = { phase: 'play', w, h, x: w / 2, y: 60, vx: 0, vy: SK_P.jump, cam: 0, top: 40, plats: [], maxY: 0, gems: 0, dir: 0, face: 1, t0: performance.now(), last: 0, score: 0, puffs: [], n: 0,
+    clouds: Array.from({ length: 7 }, (_, i) => ({ x: Math.random() * w, y: i * 190 + Math.random() * 120, s: skRnd(.7, 1.5) })), stars: Array.from({ length: 60 }, () => ({ x: Math.random(), y: Math.random(), r: skRnd(.6, 1.8) })) };
+  G.plats.push({ x: w / 2 - 50, y: 40, w: 100, type: 'n', c: 3 });
+  skGen(G); return G;
 }
-function szStart(deckId, typing) {
-  const pool = szPool(deckId);
-  if (pool.length < 8) return toast('Za mało fiszek – potrzeba min. 8 (z krótką odpowiedzią)', 4000);
-  SZ = { deckId, typing: !!typing, pool, queue: pool.slice(), retry: [], wave: 0, phase: 'play', enemies: [], target: null, hearts: SZ_HEARTS, maxHearts: SZ_HEARTS, score: 0, combo: 0, best: 0,
-    ok: 0, bad: 0, okRun: 0, missed: [], perks: {}, plan: [], spawnT: 0, kills: 0, waveN: 0, lostInWave: 0, freeze: 0, uid: 0, spawned: 0, banner: null, paused: false, typeNow: !!typing, flash: null };
-  szStats().runs++; save();
-  szWaveStart(); render();
+// dokładanie książek nad kamerą: odstępy rosną z wysokością, ale zawsze da się doskoczyć
+function skGen(G) {
+  while (G.top < G.cam + G.h * 1.6) {
+    const H = G.top, hard = Math.min(1, H / 9000), gap = skRnd(52, 78 + 52 * hard), pw = Math.max(54, 92 - 34 * hard), r = Math.random();
+    const y = H + gap, type = H > 1400 && r < .1 + .14 * hard ? 'f' : H > 600 && r < .3 + .25 * hard ? 'm' : 'n';
+    const p = { x: skRnd(6, G.w - pw - 6), y, w: pw, type, c: G.n++ % SK_COLORS.length };
+    if (type === 'm') { p.vx = skRnd(50, 90 + 80 * hard) * (Math.random() < .5 ? -1 : 1); }
+    if (type !== 'f' && Math.random() < .08) p.spring = true;
+    if (Math.random() < .16) p.gem = true;
+    G.plats.push(p); G.top = y;
+    // kruchą kartkę zawsze ubezpiecza zwykła książka w zasięgu skoku
+    if (type === 'f' && Math.random() < .7) { G.plats.push({ x: skRnd(6, G.w - pw - 6), y: y + skRnd(8, 26), w: pw, type: 'n', c: G.n++ % SK_COLORS.length }); }
+  }
+  G.plats = G.plats.filter(p => p.y > G.cam - 80 && !(p.dead && p.fall < G.cam - 80));
 }
-// następna fiszka: najpierw te, na których się pomyliłeś (po przerwie min. 3 innych), potem talia w kółko
-function szNextCard() {
-  const G = SZ, r = G.retry.findIndex(x => G.spawned - x.at >= 3), onField = new Set(G.enemies.map(e => e.card));
-  if (r >= 0 && !onField.has(G.retry[r].id)) return { id: G.retry.splice(r, 1)[0].id, back: true };
-  for (let k = 0; k < G.pool.length + 2; k++) { if (!G.queue.length) G.queue = shuffle(G.pool.slice()); const id = G.queue.shift(); if (!onField.has(id)) return { id }; }
-  return { id: G.pool[0] };
-}
-function szGive(e) {   // przypisz Kleksowi fiszkę i (jeśli się da) 4 odpowiedzi
-  const G = SZ, nx = szNextCard(), c = szCard(nx.id); e.card = nx.id; e.back = !!nx.back; G.spawned++;
-  e.opts = G.typing || typeof kumOpts !== 'function' ? null : kumOpts(c); e.hidden = []; e.pick = null; e.since = performance.now();
-  if (e.opts && szPerk('eye')) { const ans = cardView(c).ans; e.hidden = shuffle(e.opts.map((o, i) => i).filter(i => norm(e.opts[i]) !== norm(ans))).slice(0, szPerk('eye')); }
-}
-function szWaveStart() {
-  const G = SZ; G.wave++; const w = G.wave, boss = w === 4 || w === SZ_WAVES, n = 4 + w - (boss ? 3 : 0), plan = [];
-  for (let i = 0; i < n; i++) { const r = Math.random(); plan.push(w >= 3 && r < .2 ? 'a' : w >= 2 && r < .45 ? 'f' : 'n'); }
-  if (boss) plan.push('b');
-  G.plan = plan; G.waveN = plan.length; G.kills = 0; G.lostInWave = 0; G.spawnT = 1.4; G.phase = 'play';
-  G.banner = { t: performance.now(), txt: `Fala ${w}/${SZ_WAVES}`, sub: boss ? 'Nadchodzi Wielki Kleks!' : `${plan.length} ${plural(plan.length, 'Kleks', 'Kleksy', 'Kleksów')} na drodze` };
-}
-function szSpawn() {
-  const G = SZ, type = G.plan.shift(), T = SZ_T[type];
-  const e = { id: ++G.uid, type, hp: T.hp, max: T.hp, p: 0, sp: T.sp, mad: false, frozen: 0, used: [] };
-  szGive(e); G.enemies.push(e); szAddEl(e);
-  if (!szTargetE()) szSetTarget(e.id);
-}
-var szTargetE = () => SZ.enemies.find(e => e.id === SZ.target) || null;
-function szSetTarget(id) { const G = SZ; G.target = id; const e = szTargetE(); if (e) e.since = performance.now(); G.typeNow = G.typing || !(e && e.opts); szMarkTarget(); szPanel(); }
-function szAutoTarget() { const G = SZ, e = G.enemies.slice().sort((a, b) => b.p - a.p)[0]; szSetTarget(e ? e.id : null); }
-
-// ---------- pętla gry: tylko przesuwa Kleksy i pilnuje fal; nic nie przerysowuje
-function szTick(ts) {
-  const G = SZ; SZ_RAF = 0;
-  if (!G || G.phase === 'end' || parseRoute().parts[0] !== 'straz' || !document.getElementById('sz-root')) return;
-  const dt = Math.min(.05, (ts - (G.last || ts)) / 1000); G.last = ts;
-  if (G.phase === 'play' && !G.paused && !document.hidden) {
-    const frozenAll = ts < G.freeze, speed = Math.pow(.88, szPerk('tar')) / szTraverse(G.wave);
-    if (G.plan.length) { G.spawnT -= dt; if (G.spawnT <= 0 && G.enemies.length < 6) { szSpawn(); G.spawnT = szGap(G.wave); } }
-    for (const e of G.enemies.slice()) {
-      if (!frozenAll && ts >= e.frozen) e.p += dt * speed * e.sp * (e.mad ? 1.3 : 1);
-      if (e.p >= 1) { szLeak(e); continue; }
-      const el = SZ_ELS.get(e.id); if (el) { const q = szPos(e.p); el.style.left = q.x + '%'; el.style.top = q.y + '%'; el.classList.toggle('ice', frozenAll || ts < e.frozen); }
+function skTick(ts) {
+  const G = SKG; SK_RAF = 0;
+  const cv = document.getElementById('wsp-cv'); if (!G || !cv || parseRoute().parts[0] !== 'skok') return;
+  const dt = Math.min(.033, (ts - (G.last || ts)) / 1000); G.last = ts;
+  if (G.phase === 'play' && !document.hidden && !G.paused) {
+    const P = SK_P, dir = (SK_KEYS.r ? 1 : 0) - (SK_KEYS.l ? 1 : 0) || G.dir;
+    const want = dir * P.vx; G.vx += Math.max(-P.acc * dt, Math.min(P.acc * dt, want - G.vx)); if (dir) G.face = dir;
+    const y0 = G.y; G.vy -= P.g * dt; G.x += G.vx * dt; G.y += G.vy * dt;
+    if (G.x < -10) G.x += G.w + 20; else if (G.x > G.w + 10) G.x -= G.w + 20;
+    for (const p of G.plats) {
+      if (p.type === 'm') { p.x += p.vx * dt; if (p.x < 4 || p.x + p.w > G.w - 4) { p.vx = -p.vx; p.x = Math.max(4, Math.min(G.w - p.w - 4, p.x)); } }
+      if (p.dead) { p.fall -= 520 * dt; continue; }
+      if (G.vy < 0 && y0 >= p.y && G.y <= p.y && G.x > p.x - P.heroW * .35 && G.x < p.x + p.w + P.heroW * .35) {
+        G.y = p.y; G.vy = p.spring ? P.spring : P.jump; G.puffs.push({ x: G.x, y: p.y, t: ts, big: !!p.spring }); p.hit = ts;
+        if (p.type === 'f') { p.dead = true; p.fall = p.y; }
+      }
+      if (p.gem && Math.abs(G.x - (p.x + p.w / 2)) < 26 && Math.abs(G.y + 22 - (p.y + 34)) < 30) { p.gem = false; G.gems++; G.puffs.push({ x: p.x + p.w / 2, y: p.y + 34, t: ts, gem: true }); }
     }
-    if (!G.plan.length && !G.enemies.length && G.phase === 'play') szWaveEnd();
+    G.maxY = Math.max(G.maxY, G.y); if (G.y - G.cam > G.h * .56) G.cam = G.y - G.h * .56;
+    G.score = Math.floor(G.maxY / 10) + G.gems * 25;
+    skGen(G);
+    if (G.y < G.cam - 70) skOver();
   }
-  const b = document.getElementById('sz-banner'); if (b && G.banner && ts - G.banner.t > 1700) { b.remove(); G.banner = null; }
-  SZ_RAF = requestAnimationFrame(szTick);
+  skDraw(G, cv, ts); skHero(G); skHud(G);
+  if (G.phase === 'play') SK_RAF = requestAnimationFrame(skTick);
 }
-function szLoop() { if (!SZ_RAF && SZ && SZ.phase !== 'end') { SZ.last = 0; SZ_RAF = requestAnimationFrame(szTick); } }
-
-// ---------- odpowiedź
-function szAnswer(ok, how, verdict) {
-  const G = SZ, e = szTargetE(); if (!G || !e || G.phase !== 'play') return;
-  const c = szCard(e.card), now = Date.now(), ms = Math.min(60000, performance.now() - e.since);
-  if (c && c.srs.due <= now && c.srs.state !== 'new') {   // zaległa fiszka = prawdziwa powtórka
-    const g = ok ? (how === 'type' && verdict === 'close' ? 2 : 3) : 1;
-    S.log.push({ id: uid(), c: c.id, d: c.deckId, t: now, g, n: 0, ms, m: how === 'type' ? 'type' : 'flip', sz: 1, ...(how === 'type' ? { v: verdict } : {}) });
-    c.srs = schedule(c.srs, g); touch(c); emit('review', c, g, false);
-  } else (S.tlog = S.tlog || []).push({ id: uid(), t: now, d: c?.deckId, ms });
-  save();
-  if (ok) {
-    G.ok++; G.okRun++; G.combo++; G.best = Math.max(G.best, G.combo);
-    const dmg = how === 'type' ? (szPerk('scribe') ? 3 : 2) : 1;
-    if (how === 'type' && szPerk('scribe')) e.frozen = performance.now() + 2000;
-    szShoot(e); szHit(e, dmg, how, ms);
-    if (szPerk('ball') && G.okRun % 5 === 0) { const o = G.enemies.filter(x => x !== e && x.hp > 0).sort((a, b) => b.p - a.p)[0]; if (o) { szShoot(o, true); szHit(o, 1, 'ball', 9999); } }
-    G.flash = 'ok';
-    if (G.enemies.includes(e)) { e.used.push(e.card); szGive(e); szSetTarget(e.id); } else szAutoTarget();
-    szHud();
-  } else {
-    G.bad++; G.combo = 0; G.missed.push(e.card); G.retry.push({ id: e.card, at: G.spawned });
-    e.mad = true; e.p = Math.min(.97, e.p + .1); const el = SZ_ELS.get(e.id); if (el) el.classList.add('mad');
-    if (szPerk('bell')) G.freeze = performance.now() + 3000 + 1700;
-    // ⏸ gra staje na chwilę, żeby zdążyć przeczytać poprawną odpowiedź
-    G.phase = 'reveal'; G.reveal = { ans: cardView(c).ans, typed: how === 'type' }; szHud(); szPanel();
-    const me = G; setTimeout(() => { if (SZ !== me || me.phase !== 'reveal') return; me.phase = 'play'; me.reveal = null; if (me.enemies.includes(e)) { szGive(e); szSetTarget(e.id); } else szAutoTarget(); }, 1700);
+function skLoop() { if (!SK_RAF && SKG && SKG.phase === 'play') { SKG.last = 0; SK_RAF = requestAnimationFrame(skTick); } }
+var skLerp = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+var SK_SKY = [[0, [126, 205, 244], [222, 244, 250]], [2500, [70, 150, 230], [255, 214, 170]], [5500, [56, 44, 120], [240, 130, 140]], [9000, [12, 12, 40], [44, 30, 90]], [1e9, [6, 6, 22], [20, 14, 50]]];
+function skSky(hh) { for (let i = 0; i < SK_SKY.length - 1; i++) { const a = SK_SKY[i], b = SK_SKY[i + 1]; if (hh < b[0]) { const t = (hh - a[0]) / (b[0] - a[0]); return [skLerp(a[1], b[1], t), skLerp(a[2], b[2], t)]; } } return [SK_SKY[4][1], SK_SKY[4][2]]; }
+function skRR(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function skDraw(G, cv, ts) {
+  const c = cv.getContext('2d'), d = G.dpr, W = G.w, H = G.h, sy = wy => H - (wy - G.cam);
+  c.setTransform(d, 0, 0, d, 0, 0);
+  const [top, bot] = skSky(G.cam), g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, `rgb(${top})`); g.addColorStop(1, `rgb(${bot})`); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  const night = Math.max(0, Math.min(1, (G.cam - 4200) / 3500));
+  if (night > 0) { c.fillStyle = '#fff'; for (const s of G.stars) { c.globalAlpha = night * (.5 + .5 * Math.sin(ts / 600 + s.x * 40)); c.beginPath(); c.arc(s.x * W, (s.y * H + G.cam * .05) % H, s.r, 0, 7); c.fill(); } c.globalAlpha = 1; }
+  c.fillStyle = `rgba(255,255,255,${.85 * (1 - night)})`;
+  for (const cl of G.clouds) { const y = ((cl.y - G.cam * .35) % (H + 260) + H + 260) % (H + 260) - 130, x = cl.x, s = cl.s; for (const [ox, oy, rx, ry] of [[0, 0, 46, 18], [-30, 6, 28, 14], [32, 5, 30, 15]]) { c.beginPath(); c.ellipse(x + ox * s, y + oy * s, rx * s, ry * s, 0, 0, 7); c.fill(); } }
+  for (const p of G.plats) {
+    const y = sy(p.dead ? p.fall : p.y), bounce = p.hit && ts - p.hit < 140 ? 3 : 0; if (y < -30 || y > H + 30) continue;
+    c.globalAlpha = p.dead ? Math.max(0, 1 - (p.y - p.fall) / 260) : 1;
+    if (p.type === 'f') {   // krucha kartka
+      c.fillStyle = '#fffaf0'; skRR(c, p.x, y + bounce, p.w, 11, 3); c.fill(); c.strokeStyle = 'rgba(43,42,74,.55)'; c.lineWidth = 1.2; c.setLineDash([4, 3]); c.stroke(); c.setLineDash([]);
+      c.strokeStyle = 'rgba(43,42,74,.3)'; c.beginPath(); c.moveTo(p.x + 8, y + 5.5 + bounce); c.lineTo(p.x + p.w - 8, y + 5.5 + bounce); c.stroke();
+    } else {                // książka: grzbiet, kartki, pasek
+      const col = SK_COLORS[p.c];
+      c.fillStyle = 'rgba(0,0,0,.18)'; skRR(c, p.x + 2, y + 4 + bounce, p.w, 15, 4); c.fill();
+      c.fillStyle = col; skRR(c, p.x, y + bounce, p.w, 15, 4); c.fill();
+      c.fillStyle = '#fffaf0'; c.fillRect(p.x + 5, y + 11 + bounce, p.w - 8, 3);
+      c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(p.x + 9, y + bounce, 4, 11); c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(p.x + 18, y + 3 + bounce, p.w - 30, 2);
+      if (p.type === 'm') { c.fillStyle = 'rgba(255,255,255,.9)'; const cx = p.x + p.w / 2, cy = y + 6 + bounce; c.beginPath(); c.moveTo(cx - 12, cy); c.lineTo(cx - 6, cy - 3.5); c.lineTo(cx - 6, cy + 3.5); c.moveTo(cx + 12, cy); c.lineTo(cx + 6, cy - 3.5); c.lineTo(cx + 6, cy + 3.5); c.fill(); }
+      if (p.spring) { const sx = p.x + p.w * .5, k = p.hit && ts - p.hit < 160 ? 5 : 11; c.strokeStyle = '#444b6e'; c.lineWidth = 2.4; c.beginPath(); for (let i = 0; i <= 4; i++) c.lineTo(sx + (i % 2 ? 6 : -6), y - i * k / 4 + bounce); c.stroke(); c.fillStyle = '#e5484d'; skRR(c, sx - 9, y - k - 4 + bounce, 18, 5, 2); c.fill(); }
+    }
+    c.globalAlpha = 1;
+    if (p.gem) { const gx = p.x + p.w / 2, gy = sy(p.y + 34) + Math.sin(ts / 260 + p.y) * 3; c.fillStyle = '#38bdf8'; c.beginPath(); c.moveTo(gx, gy - 11); c.lineTo(gx + 9, gy - 2); c.lineTo(gx, gy + 11); c.lineTo(gx - 9, gy - 2); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.moveTo(gx, gy - 11); c.lineTo(gx + 4, gy - 2); c.lineTo(gx, gy + 2); c.lineTo(gx - 9, gy - 2); c.closePath(); c.fill(); }
   }
+  G.puffs = G.puffs.filter(p => ts - p.t < 380);
+  for (const p of G.puffs) { const k = (ts - p.t) / 380, y = sy(p.y); c.globalAlpha = 1 - k;
+    if (p.gem) { c.fillStyle = '#e0f2fe'; c.font = '800 15px Rubik, sans-serif'; c.textAlign = 'center'; c.fillText('+25', p.x, y - 16 * k); }
+    else { c.fillStyle = '#fff'; for (const s of [-1, 1]) { c.beginPath(); c.arc(p.x + s * (8 + 18 * k) * (p.big ? 1.4 : 1), y - 2 - 4 * k, 5 * (1 - k) + 1, 0, 7); c.fill(); } } }
+  c.globalAlpha = 1;
 }
-function szHit(e, dmg, how, ms) {
-  const G = SZ, T = SZ_T[e.type]; e.hp -= dmg;
-  const el = SZ_ELS.get(e.id);
-  if (e.hp > 0) { if (el) { el.classList.remove('hurt'); void el.offsetWidth; el.classList.add('hurt'); el.querySelector('.sz-hp').textContent = '♦'.repeat(e.hp); } return; }
-  const gain = Math.round((T.pts + (ms < 3000 ? 5 : 0)) * (1 + G.combo * (.1 + .05 * szPerk('horn'))) * (how === 'type' ? 1.5 : 1));
-  G.score += gain; G.kills++; G.enemies = G.enemies.filter(x => x !== e); SZ_ELS.delete(e.id);
-  if (el) { el.classList.add('dead'); el.removeAttribute('data-act'); el.insertAdjacentHTML('beforeend', `<b class="sz-gain">+${gain}</b>`); setTimeout(() => el.remove(), 520); }
+function skHero(G) {
+  const el = document.getElementById('wsp-hero'); if (!el) return;
+  const sq = G.vy > 520 ? 'scale(.92,1.1)' : G.vy < -700 ? 'scale(1.06,.94)' : '';
+  el.style.transform = `translate(${G.x}px, ${G.h - (G.y - G.cam)}px) translate(-50%, -100%) scaleX(${G.face}) ${sq}`;
 }
-function szLeak(e) {   // Kleks doszedł do bramy
-  const G = SZ; G.enemies = G.enemies.filter(x => x !== e); const el = SZ_ELS.get(e.id); SZ_ELS.delete(e.id); if (el) el.remove();
-  G.hearts--; G.lostInWave++; G.combo = 0; G.kills++; G.retry.push({ id: e.card, at: G.spawned }); G.missed.push(e.card);
-  const root = document.getElementById('sz-root'); if (root) { root.classList.remove('leak'); void root.offsetWidth; root.classList.add('leak'); }
-  if (G.hearts <= 0) return szEnd(false);
-  if (G.target === e.id) szAutoTarget(); szHud();
+function skHud(G) { const s = document.getElementById('wsp-score'); if (s && s._v !== G.score) { s._v = G.score; s.textContent = G.score.toLocaleString('pl'); } const g = document.getElementById('wsp-gems'); if (g && g._v !== G.gems) { g._v = G.gems; g.textContent = G.gems; } }
+function skOver() {
+  const G = SKG; if (!G || G.phase !== 'play') return; G.phase = 'over';
+  const st = skToday(), record = G.score > (st.best || 0), want = Math.min(SK_RUN_GOLD, Math.floor(G.score / 60)), gold = Math.max(0, Math.min(want, SK_DAILY_GOLD - (st.dayGold || 0)));
+  st.runs = (st.runs || 0) + 1; st.best = Math.max(st.best || 0, G.score); st.gems = (st.gems || 0) + G.gems; st.dayGold = (st.dayGold || 0) + gold;
+  if (gold) S.wallet.push({ id: 'wsp-' + uid(), n: gold, why: 'boss-sk', t: Date.now() });
+  G.result = { gold, record, capped: want > gold, left: Math.max(0, SK_DAILY_GOLD - st.dayGold) }; save();
+  const root = document.getElementById('wsp-root'); if (root) root.insertAdjacentHTML('beforeend', skOverHTML());
 }
-function szWaveEnd() {
-  const G = SZ;
-  if (szPerk('medic') && !G.lostInWave && G.hearts < G.maxHearts) G.hearts++;
-  if (G.wave >= SZ_WAVES) return szEnd(true);
-  const opts = shuffle(Object.keys(SZ_PERKS).filter(k => szPerk(k) < SZ_PERKS[k].max && !(k === 'eye' && G.typing) && !(k === 'scribe' && false))).slice(0, 3);
-  G.phase = 'pick'; G.pick = opts; szHud(); szOverlay();
+var skOverHTML = () => { const G = SKG, R = G.result, st = skStats();
+  return `<div class="wsp-ov"><div class="wsp-card"><small>${R.record ? 'Nowy rekord!' : 'Koniec wspinaczki'}</small><b class="wsp-big">${G.score.toLocaleString('pl')}</b>
+    <div class="wsp-row"><span><b>${Math.floor(G.maxY / 10)} m</b>wysokość</span><span><b>${G.gems}</b>kryształy</span><span><b>${(st.best || 0).toLocaleString('pl')}</b>rekord</span></div>
+    <p>${R.gold ? `Nagroda: <b>+${R.gold} 🪙 złota</b>` : R.capped ? 'Dzienny limit złota z tej gry wyczerpany – grasz już tylko o rekord.' : 'Wejdź wyżej, żeby zarobić złoto (1 🪙 za każde 60 pkt).'}${R.gold && R.left ? ` <span>· dziś jeszcze do ${R.left} 🪙</span>` : ''}</p>
+    <div class="wsp-btns"><button class="wsp-go" data-act="wsp-again">Jeszcze raz</button><button data-act="wsp-quit">Wyjdź</button></div></div></div>`; };
+function skMount() {
+  const root = document.getElementById('wsp-root'), cv = document.getElementById('wsp-cv'); if (!root || !cv) return;
+  const w = Math.min(root.clientWidth, 520), h = root.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+  cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  if (!SKG || SKG.w !== w || SKG.h !== h) SKG = skNew(w, h);
+  SKG.dpr = dpr;
+  const setDir = e => { if (e.target.closest('button')) return; const r = cv.getBoundingClientRect(); SKG.dir = e.clientX < r.left + r.width / 2 ? -1 : 1; };
+  root.onpointerdown = e => { if (SKG?.phase === 'play') { setDir(e); if (!e.target.closest('button')) e.preventDefault(); } };
+  root.onpointermove = e => { if (SKG?.phase === 'play' && e.buttons) setDir(e); };
+  root.onpointerup = root.onpointercancel = root.onpointerleave = () => { if (SKG) SKG.dir = 0; };
+  if (SKG.phase === 'over' && !root.querySelector('.wsp-ov')) root.insertAdjacentHTML('beforeend', skOverHTML());
+  skDraw(SKG, cv, performance.now()); skHero(SKG); skLoop();
 }
-function szEnd(win) {
-  const G = SZ; cancelAnimationFrame(SZ_RAF); SZ_RAF = 0;
-  const cleared = win ? SZ_WAVES : G.wave - 1, gold = Math.min(500, cleared * 20 + (win ? 120 : 0)), xp = Math.min(260, cleared * 12 + (win ? 60 : 0));
-  if (gold) S.wallet.push({ id: 'sz-' + uid(), n: gold, why: 'boss-sz', t: Date.now() });
-  if (xp && typeof giveXP === 'function') giveXP(xp, 'sz');
-  const st = szStats(); if (win) st.wins = (st.wins || 0) + 1; st.bestWave = Math.max(st.bestWave || 0, cleared); st.bestScore = Math.max(st.bestScore || 0, G.score);
-  G.phase = 'end'; G.result = { win, cleared, gold, xp, record: G.score >= st.bestScore && G.score > 0 }; save(); render();
+document.addEventListener('keydown', e => { if (!SKG || parseRoute().parts[0] !== 'skok') return; if (e.key === 'ArrowLeft' || e.key === 'a') SK_KEYS.l = true; if (e.key === 'ArrowRight' || e.key === 'd') SK_KEYS.r = true; });
+document.addEventListener('keyup', e => { if (e.key === 'ArrowLeft' || e.key === 'a') SK_KEYS.l = false; if (e.key === 'ArrowRight' || e.key === 'd') SK_KEYS.r = false; });
+document.addEventListener('visibilitychange', () => { if (SKG) SKG.last = 0; });
+var SK_PLAY = false;
+function skIntroHTML() {
+  const st = skToday();
+  return `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">Wspinaczka</h1><span class="tag">${IS_ADMIN ? 'admin · beta' : 'beta'}</span></div>
+  <div class="wsp-intro"><div class="wsp-intro-art"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><span class="wsp-hero demo">${heroSVG('xs')}</span><i class="gem"></i></div>
+    <h2>Jak wysoko doskoczysz?</h2>
+    <p>Gra dla odpoczynku – bez fiszek. Twój bohater sam odbija się od książek, a Ty kierujesz nim <b>w lewo i w prawo</b>.</p>
+    <ul><li><b>Dotknij lewej albo prawej strony ekranu</b> (na komputerze: strzałki).</li><li>Przez krawędź ekranu przechodzisz na drugą stronę.</li><li><b>Kruche kartki</b> pękają po jednym skoku, <b>sprężyny</b> wyrzucają wysoko, książki ze strzałkami się ruszają.</li><li><b>Kryształy</b> dają po 25 punktów. Im wyżej, tym ciaśniej.</li></ul>
+    <button class="wsp-go" data-act="wsp-start">Skacz!</button>
+    <p class="wsp-rec">${st.runs ? `Rekord: <b>${(st.best || 0).toLocaleString('pl')}</b> · biegi: ${st.runs} · ` : ''}złoto z gry dziś: ${st.dayGold || 0}/${SK_DAILY_GOLD} 🪙</p></div>`;
 }
-
-// ---------- rysowanie (tylko to, co się zmieniło)
-function szAddEl(e) {
-  const f = document.getElementById('sz-field'); if (!f) return;
-  const q = szPos(e.p), el = document.createElement('button');
-  el.className = `sz-e t-${e.type}${e.mad ? ' mad' : ''}${e.back ? ' back' : ''}`; el.dataset.act = 'sz-pick'; el.dataset.e = e.id; el.style.left = q.x + '%'; el.style.top = q.y + '%';
-  el.setAttribute('aria-label', SZ_T[e.type].n);
-  el.innerHTML = `<i class="sz-blob"><i></i><i></i></i>${e.type === 'b' ? '<em class="sz-crown">👑</em>' : ''}<span class="sz-hp">${e.max > 1 ? '♦'.repeat(e.hp) : ''}</span>`;
-  f.appendChild(el); SZ_ELS.set(e.id, el); szMarkTarget();
-}
-function szMarkTarget() { for (const [id, el] of SZ_ELS) el.classList.toggle('on', id === SZ.target); }
-function szShoot(e, second) {   // pióro leci od bramy do Kleksa
-  const f = document.getElementById('sz-field'); if (!f) return; const a = szPos(1.06), b = szPos(e.p), q = document.createElement('i');
-  q.className = 'sz-quill' + (second ? ' two' : ''); q.style.left = a.x + '%'; q.style.top = a.y + '%'; q.style.setProperty('--dx', (b.x - a.x) * f.clientWidth / 100 + 'px'); q.style.setProperty('--dy', (b.y - a.y) * f.clientHeight / 100 + 'px');
-  f.appendChild(q); setTimeout(() => q.remove(), 420);
-}
-function szHud() {
-  const G = SZ, h = document.getElementById('sz-hud'); if (!h || !G) return;
-  h.innerHTML = `<button class="sz-x" data-act="sz-quit" aria-label="Zakończ">✕</button>
-    <div class="sz-wave"><b>Fala ${G.wave}/${SZ_WAVES}</b><span class="sz-wbar"><i style="width:${G.waveN ? Math.min(100, G.kills / G.waveN * 100) : 0}%"></i></span></div>
-    <div class="sz-hearts" aria-label="Mury: ${G.hearts} z ${G.maxHearts}">${Array.from({ length: G.maxHearts }, (_, i) => `<i class="${i < G.hearts ? 'on' : ''}"></i>`).join('')}</div>
-    <div class="sz-score"><b>${G.score.toLocaleString('pl')}</b>${G.combo >= 2 ? `<small>seria ×${G.combo}</small>` : '<small>pkt</small>'}</div>`;
-  const pk = document.getElementById('sz-perks'); if (pk) pk.innerHTML = Object.keys(G.perks).map(k => `<span title="${esc(SZ_PERKS[k].n)}: ${esc(SZ_PERKS[k].d)}">${SZ_PERKS[k].ic}${G.perks[k] > 1 ? `<i>${G.perks[k]}</i>` : ''}</span>`).join('');
-}
-function szPanel() {
-  const G = SZ, P = document.getElementById('sz-panel'); if (!P || !G) return;
-  const e = szTargetE();
-  if (!e) { P.innerHTML = `<div class="sz-q idle"><small>Strażnica</small><b>${G.plan.length ? 'Cisza przed burzą…' : 'Droga pusta.'}</b></div>`; return; }
-  const c = szCard(e.card), v = cardView(c), ans = v.ans, d = deckById(c.deckId), R = G.phase === 'reveal' ? G.reveal : null, typing = G.typeNow || !e.opts;
-  const head = `<div class="sz-q${R ? ' miss' : ''}${G.flash === 'ok' ? ' hit' : ''}"><small>${e.back ? '↩ wraca · ' : ''}${SZ_T[e.type].n}${e.max > 1 ? ` · jeszcze ${e.hp} ${plural(e.hp, 'trafienie', 'trafienia', 'trafień')}` : ''} · ${esc((d?.name || '').replace(/^🏫\s*/, '').slice(0, 24))}</small><div class="sz-qt">${v.q}</div></div>`;
-  G.flash = null;
-  if (R) { P.innerHTML = head + `<div class="sz-reveal"><small>Poprawna odpowiedź</small><b>${esc(ans)}</b><span>Ta fiszka jeszcze do Ciebie wróci.</span></div>`; return; }
-  P.innerHTML = head + (typing
-    ? `<div class="sz-type"><input id="sz-in" placeholder="Wpisz odpowiedź…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send"><button data-act="sz-send" aria-label="Strzał">🪶</button></div>${e.opts && !G.typing ? '<button class="sz-sw" data-act="sz-mode">↩ Wróć do ABCD</button>' : '<span class="sz-note">Wpisana odpowiedź trafia za 2 i daje ×1,5 punktów</span>'}`
-    : `<div class="sz-opts">${e.opts.map((o, i) => e.hidden.includes(i) ? '<span class="sz-o gone"></span>' : `<button class="sz-o" data-act="sz-opt" data-i="${i}"><i>${'ABCD'[i]}</i><span>${esc(o)}</span></button>`).join('')}</div><button class="sz-sw" data-act="sz-mode">⌨️ Wpiszę odpowiedź – trafia za 2</button>`);
-  const inp = document.getElementById('sz-in'); if (inp) { inp.onkeydown = ev => { if (ev.key === 'Enter') ACTIONS['sz-send'](); }; if (G.typing || G.typeNow) inp.focus({ preventScroll: true }); }
-}
-function szOverlay() {
-  const G = SZ, root = document.getElementById('sz-root'); if (!root) return; root.querySelector('.sz-ov')?.remove();
-  if (G.phase !== 'pick') return;
-  const d = document.createElement('div'); d.className = 'sz-ov';
-  d.innerHTML = `<div class="sz-ov-in"><small>Fala ${G.wave} odparta${G.lostInWave ? '' : ' bez strat'}</small><h2>Ulepsz strażnicę</h2><div class="sz-picks">${G.pick.map(k => `<button class="sz-pk" data-act="sz-perk" data-k="${k}"><span class="sz-seal">${SZ_PERKS[k].ic}</span><b>${SZ_PERKS[k].n}</b><small>${SZ_PERKS[k].d}</small></button>`).join('')}</div></div>`;
-  root.appendChild(d);
-}
-// osadzenie ekranu gry: odtwarza Kleksy z pamięci (także po przypadkowym przerysowaniu) i startuje pętlę
-function szMount() {
-  const G = SZ, f = document.getElementById('sz-field'); if (!G || !f) return;
-  SZ_ELS = new Map(); f.querySelectorAll('.sz-e, .sz-quill').forEach(x => x.remove());
-  for (const e of G.enemies) szAddEl(e);
-  szHud(); szPanel(); szOverlay(); szLoop();
-}
-var szRoadSVG = () => { const pts = []; for (let i = 0; i <= 60; i++) { const q = szPos(i / 60 * 1.06); pts.push(q.x.toFixed(1) + ',' + q.y.toFixed(1)); }
-  return `<svg class="sz-road" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline class="r1" points="${pts.join(' ')}"/><polyline class="r2" points="${pts.join(' ')}"/></svg>`; };
-function szShellHTML() {
-  const G = SZ, g = szPos(1.06), B = G.banner;
-  return `<div class="sz" id="sz-root"><div class="sz-hud" id="sz-hud"></div>
-    <div class="sz-field" id="sz-field">${szRoadSVG()}
-      <span class="sz-deco d1">⛰️</span><span class="sz-deco d2">🌲</span><span class="sz-deco d3">🌲</span><span class="sz-deco d4">🧭</span>
-      <div class="sz-gate" style="left:${g.x}%;top:${g.y}%"><span>🏰</span></div>
-      <div class="sz-perks" id="sz-perks"></div>
-      ${B ? `<div class="sz-banner" id="sz-banner"><b>${esc(B.txt)}</b><small>${esc(B.sub)}</small></div>` : ''}
-    </div>
-    <div class="sz-panel" id="sz-panel"></div></div>`;
-}
-function szIntroHTML() {
-  const st = szStats(), decks = S.decks.filter(d => S.cards.some(c => c.deckId === d.id && !c.sus));
-  return `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">🏰 Strażnica</h1><span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></div>
-  <div class="sz-intro"><div class="sz-intro-map">${szRoadSVG()}<i class="sz-blob demo b1"><i></i><i></i></i><i class="sz-blob demo b2"><i></i><i></i></i><span class="sz-gate demo"><span>🏰</span></span></div>
-    <h2>Obroń strażnicę przed Kleksami</h2>
-    <p>Plamy atramentu chcą zalać Twoje notatki. Każdy Kleks niesie <b>jedną fiszkę</b> – odpowiedz, zanim dojdzie do bramy.</p>
-    <ul class="sz-how">
-      <li><span>🪶</span><div><b>Dobra odpowiedź = strzał.</b> Wpisana trafia za 2 i daje więcej punktów.</div></li>
-      <li><span>😡</span><div><b>Błąd rozwściecza Kleksa.</b> Gra na moment staje i pokazuje poprawną odpowiedź, a fiszka wróci do Ciebie później.</div></li>
-      <li><span>❤️</span><div><b>Kleks przy bramie zabiera serce.</b> Masz ${SZ_HEARTS}. Stuknij dowolnego Kleksa, żeby wziąć go na cel.</div></li>
-      <li><span>🧱</span><div><b>${SZ_WAVES} fal</b>, w 4. i 8. Wielki Kleks. Po każdej fali wybierasz ulepszenie.</div></li>
-    </ul>
-    <label class="small muted">Z jakich fiszek?</label>
-    <select id="sz-deck"><option value="all">Wszystkie talie</option>${decks.map(d => `<option value="${d.id}" ${SZ_OPT.deck === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
-    <label class="sz-check"><input type="checkbox" id="sz-typing" ${SZ_OPT.typing ? 'checked' : ''}><span><b>⌨️ Tylko wpisywanie</b><small>do języków – Kleksy idą wtedy wolniej</small></span></label>
-    <button class="sz-start" data-act="sz-start">Na mury!</button>
-    ${st.runs ? `<p class="small sz-rec">Obrony: ${st.runs} · wygrane: ${st.wins || 0} · najdalej: fala ${st.bestWave || 0} · rekord: ${(st.bestScore || 0).toLocaleString('pl')} pkt</p>` : ''}
-    <p class="small sz-rec">Zaległe fiszki liczą się tu jak zwykłe powtórki.</p></div>`;
-}
-function szEndHTML() {
-  const G = SZ, R = G.result, total = G.ok + G.bad, acc = total ? Math.round(G.ok / total * 100) : null, ids = [...new Set(G.missed)];
-  const rows = ids.map(id => { const c = szCard(id); if (!c) return ''; const v = cardView(c); return `<li><span class="rq">${esc(stripHtml(v.label || v.q || '').slice(0, 110))}</span><span class="ra">${esc(stripHtml(v.ans || '').slice(0, 140))}</span></li>`; }).filter(Boolean);
-  return `<div class="sz-intro sz-end"><div class="sz-endic">${R.win ? '🏰' : '🌊'}</div>
-    <h2>${R.win ? 'Strażnica obroniona!' : `Mury padły w fali ${G.wave}`}</h2>
-    <div class="sz-endscore"><b>${G.score.toLocaleString('pl')}</b><small>punktów${R.record ? ' · nowy rekord!' : ''}</small></div>
-    <div class="sz-endstats"><span><b>${R.cleared}/${SZ_WAVES}</b>fal</span><span><b>${acc == null ? '–' : acc + '%'}</b>celność</span><span><b>×${G.best}</b>najdłuższa seria</span></div>
-    <p class="small">Nagroda: <b>+${R.gold} 🪙 złota</b> · <b>+${R.xp} XP</b></p>
-    ${rows.length ? `<details class="fr-miss" open><summary>📖 Do zapamiętania: ${rows.length} ${plural(rows.length, 'fiszka', 'fiszki', 'fiszek')}</summary><ul>${rows.slice(0, 12).join('')}</ul></details>` : total >= 5 ? '<div class="fr-clean">💯 Ani jednej pomyłki.</div>' : ''}
-    <div class="row" style="margin-top:12px"><button class="sz-start grow" data-act="sz-again">Jeszcze raz</button><button class="grow" data-act="sz-leave">Wyjdź</button></div></div>`;
-}
-ROUTES.straz = () => {
-  if (!szOn()) return { tab: 'arena', html: '<p class="muted center" style="padding:40px 0">Ten tryb jest jeszcze w testach.</p>' };
-  if (!SZ) return { tab: 'arena', html: szIntroHTML() };
-  if (SZ.phase === 'end') return { tab: 'arena', focus: true, html: szEndHTML() };
-  onMount(szMount);
-  return { tab: 'arena', focus: true, html: szShellHTML() };
+ROUTES.skok = () => {
+  if (!skOn()) return { tab: 'arena', html: '<p class="muted center" style="padding:40px 0">Ten tryb jest jeszcze w testach.</p>' };
+  if (!SK_PLAY) return { tab: 'arena', html: skIntroHTML() };
+  onMount(skMount);
+  return { tab: 'arena', focus: true, html: `<div class="wsp" id="wsp-root"><canvas id="wsp-cv"></canvas><div class="wsp-hero" id="wsp-hero"><span>${heroSVG('xs')}</span></div>
+    <div class="wsp-hud"><button class="wsp-x" data-act="wsp-quit" aria-label="Wyjdź">✕</button><b id="wsp-score">0</b><span><i class="wsp-gemic"></i><em id="wsp-gems">0</em></span></div>
+    <div class="wsp-hint">◀ dotknij lewej lub prawej strony ▶</div></div>` };
 };
-// wejście w zakładce Przygoda – admin i testerzy
-var szBoss0 = ROUTES.boss;
-ROUTES.boss = (...a) => { const v = szBoss0(...a); if (!v?.html || !szOn() || (a[0] && a[0][1])) return v; const st = S.stats.straz || {};
-  return { ...v, html: v.html.replace('<div class="card row nowrap coop-cta"', `<div class="card row nowrap sz-cta" data-go="#/straz"><span class="sz-cta-ic">🏰</span><div class="grow"><b>Strażnica <span class="tag">${IS_ADMIN ? 'admin' : 'test'}</span></b><div class="small muted">Obroń mury przed Kleksami – 8 fal, ulepszenia, Wielki Kleks${st.bestScore ? ` · rekord ${st.bestScore.toLocaleString('pl')} pkt` : ''}</div></div><span>›</span></div><div class="card row nowrap coop-cta"`) }; };
-document.addEventListener('visibilitychange', () => { if (SZ) SZ.last = 0; });
-
+var skBoss0 = ROUTES.boss;
+ROUTES.boss = (...a) => { const v = skBoss0(...a); if (!v?.html || !skOn() || (a[0] && a[0][1])) return v; const st = S.stats.skok || {};
+  return { ...v, html: v.html.replace('<div class="card row nowrap coop-cta"', `<div class="card row nowrap wsp-cta" data-go="#/skok"><span class="wsp-cta-ic">🐾</span><div class="grow"><b>Wspinaczka <span class="tag">${IS_ADMIN ? 'admin · beta' : 'beta'}</span></b><div class="small muted">Gra dla odpoczynku: skacz po książkach coraz wyżej${st.best ? ` · rekord ${st.best.toLocaleString('pl')}` : ''}</div></div><span>›</span></div><div class="card row nowrap coop-cta"`) }; };
 Object.assign(ACTIONS, {
-  'sz-start': () => { SZ_OPT = { deck: $('#sz-deck')?.value || 'all', typing: !!$('#sz-typing')?.checked }; szStart(SZ_OPT.deck, SZ_OPT.typing); },
-  'sz-pick': el => { const G = SZ; if (!G || G.phase !== 'play') return; const id = +el.dataset.e; if (G.enemies.some(e => e.id === id) && id !== G.target) szSetTarget(id); },
-  'sz-opt': el => { const G = SZ, e = G && szTargetE(); if (!e || !e.opts || G.phase !== 'play') return; const i = +el.dataset.i; szAnswer(norm(e.opts[i]) === norm(cardView(szCard(e.card)).ans), 'abcd'); },
-  'sz-send': () => { const G = SZ, e = G && szTargetE(); if (!e || G.phase !== 'play') return; const t = $('#sz-in')?.value || ''; if (!t.trim()) return; const v = checkAnswer(t, cardView(szCard(e.card)).ans); szAnswer(v !== 'wrong', 'type', v); },
-  'sz-mode': () => { const G = SZ; if (!G || G.typing || G.phase !== 'play') return; G.typeNow = !G.typeNow; szPanel(); },
-  'sz-perk': el => { const G = SZ, k = el.dataset.k; if (!G || G.phase !== 'pick' || !SZ_PERKS[k]) return; G.perks[k] = (G.perks[k] || 0) + 1;
-    if (k === 'wall') { G.maxHearts = Math.min(SZ_HEARTS_MAX, G.maxHearts + 1); G.hearts = Math.min(G.maxHearts, G.hearts + 1); }
-    document.querySelector('#sz-root .sz-ov')?.remove(); szWaveStart();
-    const f = document.getElementById('sz-field'); if (f && G.banner) f.insertAdjacentHTML('beforeend', `<div class="sz-banner" id="sz-banner"><b>${esc(G.banner.txt)}</b><small>${esc(G.banner.sub)}</small></div>`);
-    szHud(); szPanel(); },
-  'sz-quit': () => { const G = SZ; if (!G) return go('#/boss'); G.paused = true;
-    askBox({ icon: '🏰', title: 'Opuścić mury?', intro: 'Dostaniesz nagrodę za odparte fale.', ok: 'Zakończ', cancel: 'Bronię dalej', danger: true }).then(ok => { if (SZ !== G) return; G.paused = false; G.last = 0; if (ok && G.phase !== 'end') szEnd(false); }); },
-  'sz-again': () => { const o = SZ_OPT; SZ = null; szStart(o.deck, o.typing); },
-  'sz-leave': () => { SZ = null; go('#/boss'); },
+  'wsp-start': () => { SK_PLAY = true; SKG = null; render(); },
+  'wsp-again': () => { const G = SKG; if (!G) return; document.querySelector('#wsp-root .wsp-ov')?.remove(); SKG = skNew(G.w, G.h); SKG.dpr = G.dpr; skLoop(); },
+  'wsp-quit': () => { cancelAnimationFrame(SK_RAF); SK_RAF = 0; if (SKG?.phase === 'play' && SKG.score > 30) { skOver(); return; } SKG = null; SK_PLAY = false; go('#/boss'); },
 });
 ;

@@ -5,7 +5,7 @@
    – darmowa skrzynka za każdą nową ewolucję postaci (i za start – 1 na powitanie).
    Założony skin widać na bohaterze wszędzie (Bohater, walki, pojedynek – także u przeciwnika). */
 const SKIN_R = ['common', 'rare', 'epic', 'legendary', 'mythic'];
-const SKIN_ODDS = { common: 40, rare: 30, epic: 18, legendary: 9, mythic: 3 }, SKIN_DUP = { common: 40, rare: 80, epic: 200, legendary: 600, mythic: 2000 }, SKIN_PRICE = 4000;
+const SKIN_ODDS = { common: 40, rare: 30, epic: 18, legendary: 9, mythic: 3 }, SKIN_DUP = { common: 40, rare: 80, epic: 200, legendary: 600, mythic: 2000 }, SKIN_PRICE = 1500;
 const SKIN_NAME = { common: 'Zwykły', rare: 'Rzadki', epic: 'Epicki', legendary: 'Legendarny', mythic: 'Mityczny' };
 const SKIN_COL = { common: '#94a3b8', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', mythic: '#ef4444' };
 const SKIN_LINES = ['cat', 'dog', 'fox', 'rabbit', 'phoenix', 'dragon', 'frog'];   // postacie, które mają narysowane skiny (jeden obrazek na rzadkość)
