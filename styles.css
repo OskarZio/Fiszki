@@ -4662,3 +4662,7 @@ button.kr-end.big { min-height: 54px; border-radius: 16px; border: 0; font-weigh
 @media (prefers-reduced-motion: reduce) { .kr-slot, .kc, .kr-pop { animation: none !important; } }
 .kr-sh { top: 4px; } .kr-hand { padding-left: 12px; } .kr-hand > .kc:first-child { margin-left: 0; }
 .kr-act .kr-q { white-space: nowrap; font-size: 14px; } .kr-act .kr-q small { opacity: .8; font-weight: 700; }
+
+/* 🎰 pasek losowania skrzynki: od krawędzi do krawędzi ekranu, znacznik dokładnie na środku */
+.roulette { max-width: none !important; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); border-radius: 0; }
+@media (min-width: 640px) { .roulette { margin-left: -20px; margin-right: -20px; } }

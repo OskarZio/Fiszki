@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '385';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '386';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -5521,6 +5521,10 @@ ROUTES.case = (parts, q) => {
   if (!SPIN || SPIN.k !== k) SPIN = { k, phase: 'ready' };
   const tiles = (SPIN.strip || (SPIN.idle = SPIN.idle || Array.from({ length: 9 }, () => rollPrize(k, c.odds)))).map(prizeTile).join('');
   const won = SPIN.won;
+  // przed losowaniem: środkowa karta paska dokładnie pod znacznikiem
+  if (SPIN.phase === 'ready') onMount(() => { const el = $('#strip'), t = el?.firstElementChild; if (!t) return;
+    const w = t.getBoundingClientRect().width + 8, box = el.parentElement.getBoundingClientRect().width, n = el.children.length;
+    el.style.transition = 'none'; el.style.transform = `translateX(${-(8 + Math.floor(n / 2) * w + (w - 8) / 2 - box / 2)}px)`; });
   return { focus: true, html: `
   <div class="studybar"><button class="iconbtn" data-act="case-close">✕</button><div class="title">${c.icon} ${c.name}</div>${coinsHTML()}</div>
   <div class="roulette"><div class="marker"></div><div class="strip" id="strip">${tiles}</div></div>
