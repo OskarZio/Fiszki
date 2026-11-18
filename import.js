@@ -15,15 +15,18 @@ const PACK_IMG_RE = /\[\s*obraz\s*:\s*([^\]]+)\]/gi, PACK_IMG_OK = /^assets\/[\w
 async function packImage(src) { try { const r = await fetch(src); if (!r.ok) return null; const b = await r.blob();
   const url = await new Promise((ok, no) => { const f = new FileReader(); f.onload = () => ok(f.result); f.onerror = no; f.readAsDataURL(b); }); return await putImage(url); } catch { return null; } }
 function parsePack(text) {
-  const out = { deck: '', subject: '', reverse: false, items: [], bad: 0, loose: [] };
+  const out = { deck: '', subject: '', reverse: false, items: [], bad: 0, loose: [], tagCol: -1 };
   for (let line of String(text || '').split(/\r?\n/)) {
     line = line.trim(); if (!line || line.startsWith('//')) continue;
     const h = line.match(/^#\s*(talia|deck|przedmiot|subject|odwrotne|reverse)\s*:\s*(.+)$/i);
     if (h) { const k = h[1].toLowerCase(), v = h[2].trim(); if (/talia|deck/.test(k)) out.deck = v.slice(0, 80); else if (/przedmiot|subject/.test(k)) out.subject = v.slice(0, 40); else out.reverse = /^(tak|yes|1|true)/i.test(v); continue; }
+    // nagłówki eksportu Anki: „#tags column:3” = kolumna z tagiem (np. wykład) → pole „Dodatkowe” (dział); reszta „#…” jest pomijana
+    const tc = line.match(/^#\s*tags\s+column\s*:\s*(\d+)/i); if (tc) { out.tagCol = +tc[1] - 1; continue; }
     if (line.startsWith('#')) continue;
     line = line.replace(/^(\d+[.)]|[-•*])\s+/, '');
     if (/\{\{c\d+::/.test(line)) { out.items.push({ cloze: line.slice(0, 4000) }); continue; }
-    let parts = line.split(/\s+\|\s+|\t/);
+    let parts = line.split(/\s+\|\s+|\t/), tag = '';
+    if (out.tagCol >= 2 && parts.length > out.tagCol) { tag = parts[out.tagCol].trim().replace(/_/g, ' ').slice(0, 120); parts.splice(out.tagCol, 1); }
     if (parts.length < 2) { const m = line.match(/^(.+?)\s+[-–—]\s+(.+)$/); if (m) parts = [m[1], m[2]]; }   // eksport Quizletu z „ - ” jako separatorem
     if (parts.length < 2 || !parts[0].trim() || !parts[1].trim()) { out.bad++; out.loose.push(line); continue; }
     // kolumna z błędnymi odpowiedziami ABCD: „✗ źle1; źle2; źle3” (albo „źle: …”) – w dowolnym miejscu po odpowiedzi
@@ -33,7 +36,7 @@ function parsePack(text) {
     const takeImg = t => { let src = ''; t = t.replace(PACK_IMG_RE, (m, u) => { if (!src && PACK_IMG_OK.test(u.trim())) src = u.trim(); return ''; }).trim(); return [t, src]; };
     const [front, img] = takeImg(parts[0].trim()), [back, bimg] = takeImg(parts[1].trim());
     if (!front && !img) { out.bad++; continue; }
-    out.items.push({ front: front.slice(0, 2000), back: back.replace(/\\n/g, '\n').slice(0, 2000), hint, ...(wrong ? { wrong } : {}), ...(img ? { img } : {}), ...(bimg ? { bimg } : {}) });
+    out.items.push({ front: front.slice(0, 2000), back: back.replace(/\\n/g, '\n').slice(0, 2000), hint, ...(tag ? { tag } : {}), ...(wrong ? { wrong } : {}), ...(img ? { img } : {}), ...(bimg ? { bimg } : {}) });
   }
   // skopiowana lista ze strony Quizletu: pojęcie i definicja w kolejnych liniach, bez separatora
   const QL_NOISE = /^(pojęcia w tym zestawie|terms in this set|\d+\s*\/\s*\d+|ucz się|fiszki|test|dopasowania|zagraj|udostępnij|zapisz|flashcards|learn|match|share|save)\b/i;
@@ -53,7 +56,7 @@ function importPack(P) {
     const key = ((x.cloze || x.front).trim() + (x.img ? ' ' + x.img : '')).toLowerCase(); if (have.has(key)) { skip++; continue; } have.add(key);
     const created = Date.now() + n;
     if (x.cloze) addNote({ deckId: d.id, created, type: 'cloze', text: x.cloze, extra: '', hint: '' });
-    else { const note = addNote({ deckId: d.id, created, type: 'basic', front: x.front, back: x.back, hint: x.hint, extra: '', ...(x.wrong ? { wrong: x.wrong } : {}), reverse: P.reverse, ...(x.img ? { imgSrc: x.img } : {}) });
+    else { const note = addNote({ deckId: d.id, created, type: 'basic', front: x.front, back: x.back, hint: x.hint, extra: x.tag || '', ...(x.wrong ? { wrong: x.wrong } : {}), reverse: P.reverse, ...(x.img ? { imgSrc: x.img } : {}) });
       if (x.img || x.bimg) imgJobs.push([note, x.img, x.bimg]); }
     n++;
   }
