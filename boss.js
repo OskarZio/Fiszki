@@ -256,15 +256,25 @@ function bossStart(kind, id, i) {
   bossBegin(b);
 }
 // start walki z gotowym bossem (b.cards = pula fiszek); używa też lobby (hydra)
+// ▶ walki o medal (rozdział / finał talii): każda kolejna walka w tej samej metodzie zaczyna od fiszki po tej, na której skończyła się poprzednia
+const bossCurKey = (b, mode) => { const mk = masterKey(b); return mk ? `${b.id}:${mk}:${mode}` : null; };
+const bossOrder = b => b.cards.slice().sort((x, y) => (x.pos || 0) - (y.pos || 0));
+function bossStartIdx(b, mode) {
+  const key = bossCurKey(b, mode); if (!key) return -1;
+  const ord = bossOrder(b), last = (S.stats.bcur || {})[key], i = last ? ord.findIndex(c => c.id === last) : -1;
+  return i < 0 ? 0 : (i + 1) % ord.length;
+}
 function bossBegin(b, extra = {}, p0 = null) {
-  const kind = b.kind, mode = BOSS_PICK.mode, p = p0 || bossParams(b, mode), hs = heroStats(), now = Date.now();
-  const due = shuffle(b.cards.filter(c => c.srs.state !== 'new' && c.srs.due <= now)), rest = shuffle(b.cards.filter(c => !due.includes(c)));
-  const ids = [...due, ...rest].slice(0, p.len).map(c => c.id);
+  const kind = b.kind, mode = BOSS_PICK.mode, p = p0 || bossParams(b, mode), hs = heroStats(), now = Date.now(), curKey = bossCurKey(b, mode);
+  let ids;
+  if (curKey) { const ord = bossOrder(b), st = bossStartIdx(b, mode); ids = ord.slice(st).concat(ord.slice(0, st)).slice(0, p.len).map(c => c.id); }
+  else { const due = shuffle(b.cards.filter(c => c.srs.state !== 'new' && c.srs.due <= now)), rest = shuffle(b.cards.filter(c => !due.includes(c)));
+    ids = [...due, ...rest].slice(0, p.len).map(c => c.id); }
   // ABCD: złe odpowiedzi najpierw z tych samych talii, a gdy brakuje – ze wszystkich
   const decks = new Set(b.cards.map(c => c.deckId)), ent = c => distractorEntry(c), okA = x => x.a && x.a.trim() && x.a.length <= ABCD_MAX;
   const pool = S.cards.filter(c => (kind === 'world' ? mixFightable(c) : decks.has(c.deckId) && fightable(c))).map(ent).filter(okA);
   const poolAll = pool.length >= 12 ? pool : S.cards.filter(mixFightable).map(ent).filter(okA);
-  BOSS = { b: { ...b, ...p }, mode, ids, i: 0, hp: p.hp, max: p.hp, me: hs.hp, meMax: hs.hp, hs, cap: Math.max(12, Math.round(p.hp * .15)), combo: hs.combo0, best: 0, ok: 0, bad: 0, verOk: 0, caught: 0, fast: 0,
+  BOSS = { b: { ...b, ...p }, mode, ids, curKey, i: 0, hp: p.hp, max: p.hp, me: hs.hp, meMax: hs.hp, hs, cap: Math.max(12, Math.round(p.hp * .15)), combo: hs.combo0, best: 0, ok: 0, bad: 0, verOk: 0, caught: 0, fast: 0,
     phase: 'fight', lostHp: 0, timer: p.every, move: null, shield: false, power: 0, guard: 0, potUsed: 0, second: hs.second, ult: 0, poison: 0, silence: 0, timeFree: 0,
     verQ: [], pendIce: false, pendBugs: 0, log: [], pool, poolAll, missed: [], dealt: {}, startedAt: now,
     weakIds: weakCards(b), lastParry: null, phaseN: 0, spd: 0, speedHits: 0, parryN: 0, parryOk: 0, ev: null, triple: false, gaunt: null, petUsed: false, dmgTotal: 0, ...extra };
@@ -575,7 +585,7 @@ function afterTurn(g, isVer) {
     else if (DISRUPT.includes(mv.k)) { comboFx(B, mv.k); if (B.b.turbo) { if (Math.random() < .5) B.pendBugs = 2 + Math.min(3, B.b.diff); else B.pendIce = true; B.log.unshift('⚡ TURBO: podwójna przeszkadzajka!'); } B.pendDis = mv.k; B.log.unshift(`${BOSS_ABIL[mv.k][0]} ${BOSS_ABIL[mv.k][1]}: ${BOSS_ABIL[mv.k][2]}`); bossSay('attack'); }
     B.timer = B.b.every; B.move = pickMove(B.b);
   }
-  if (!isVer) { B.i++; rollEvent(B); }
+  if (!isVer) { if (B.curKey && !B.loop && B.ids[B.i]) (S.stats.bcur = S.stats.bcur || {})[B.curKey] = B.ids[B.i]; B.i++; rollEvent(B); }
   checkPhase(B);
   B.log = B.log.slice(0, 4);
   if (B.coop && typeof coopSync === 'function') coopSync();
@@ -868,7 +878,12 @@ function bossSfx(k) {
 const ansLen = B => { const c = bossCard(); if (!c) return 0; const v = cardView(c); return String(v.ans || '').length + (B.cur?.cm === 'abcd' ? (B.cur.opts || []).join('').length / 3 : 0); };
 // ⏱️ „szybka odpowiedź”: dłuższa odpowiedź / dłuższe opcje ABCD = więcej czasu na przeczytanie (do +8 s)
 const quickExtra = B => Math.min(8000, Math.max(0, ansLen(B) - 20) * (B.cur?.cm === 'abcd' ? 25 : 70)) + (imgTime() > 1 ? 4000 : 0);
-const thinkMs = B => { const n = ansLen(B), cm = B.cur?.cm;
+// ⏱️ ABCD zawsze z krótkim limitem (także u łatwych bossów): ~7 s + czas na przeczytanie pytania i opcji, max 20 s; trudniejszy boss = trochę mniej
+const ABCD_DIFF = [1.3, 1.15, 1, .9, .8];
+function abcdMs(B) { const c = bossCard(), q = c ? String(cardView(c).q || '').replace(/<[^>]*>/g, '').length : 0, o = (B.cur?.opts || []).join('').length;
+  return Math.min(20000, 7000 + 40 * (q + o)) * ABCD_DIFF[Math.min(4, B.b.diff || 0)] * B.hs.time * (B.haste > 0 ? .5 : 1) * imgTime(); }
+const thinkOn = B => !!B.b.think || B.cur?.cm === 'abcd';
+const thinkMs = B => { const n = ansLen(B), cm = B.cur?.cm; if (cm === 'abcd') return abcdMs(B);
   const m = cm === 'type' ? 1.4 + Math.min(4, n / 22) : cm === 'abcd' ? .8 + Math.min(1.5, n / 120) : 1 + Math.min(2, n / 80);
   return B.b.think * 1000 * B.hs.time * (B.haste > 0 ? .5 : 1) * m * imgTime(); };
 let THINK_HIDDEN = 0;
@@ -895,7 +910,7 @@ setInterval(() => {
   }
   { const B = BOSS; if (B && B.phase === 'fight' && B.qAt) {   // ❄️🐛 lód i robaczki zatrzymują zegar pytania – nie tracisz czasu na klikanie
     if (B.ice || B.bugs?.length) { if (B.frzE == null) B.frzE = Date.now() - B.qAt; B.qAt = Date.now() - B.frzE; } else B.frzE = null; } }
-  const B = BOSS; if (!B || B.phase !== 'fight' || !B.b.think || B.cur?.parry || B.cur?.qte || B.shown || B.timeFree > 0 || B.down || document.hidden || parseRoute().parts[1] !== 'fight') return;
+  const B = BOSS; if (!B || B.phase !== 'fight' || !thinkOn(B) || B.cur?.parry || B.cur?.qte || B.shown || B.timeFree > 0 || B.down || document.hidden || parseRoute().parts[1] !== 'fight') return;
   const T = thinkMs(B), f = (Date.now() - B.qAt) / T, el = document.querySelector('.think-bar i');
   if (el) { el.style.width = Math.max(0, 100 - f * 100).toFixed(1) + '%'; el.parentElement.classList.toggle('late', f > .7); }
   if (f >= 1) { B.qAt = Date.now(); hurtMe(Math.round(B.b.atk * .5), 'Za długo myślisz'); bossSay('slow'); B.fx = null; save(); if (B.me <= 0 && !B.coop) return bossEnd(false, 'dead'); render(); }
@@ -932,7 +947,7 @@ function setupSheetHTML() {
     ${s.say ? `<div class="boss-say sel${S.settings.hardcore ? ' hc' : ''}">${esc(s.say)}</div>` : ''}
     ${['ch', 'fin', 'cat'].includes(b.kind) && b.stars >= 4 ? `<button class="block bprest" data-act="boss-prestige" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">⭐ Prestiż bossa → P${(b.bp || 0) + 1}: medale i puchary od nowa, boss +35% silniejszy i z turbo-przeszkadzajkami, nagrody +25%</button>` : ''}
     ${b.weak ? `<div class="weak-tag">🎯 Słabość: <b>${WEAK_NAME[b.weak]}</b> – cios ×${String(WEAK_M).replace('.', ',')} · przy 50% i 25% ❤️ boss wpada w szał (fazy)</div>` : ''}
-    <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : '<span>⏱️ bez limitu</span>'}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
+    <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : BOSS_PICK.mode === 'abcd' ? '<span>⏱️ ABCD: krótki czas</span>' : '<span>⏱️ bez limitu</span>'}${(() => { const st = bossStartIdx(b, BOSS_PICK.mode), N = b.cards.length; return st > 0 ? `<span title="Kolejna walka w tej metodzie zaczyna tam, gdzie skończyła się poprzednia">▶ od fiszki ${st + 1}/${N}</span>` : ''; })()}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
     ${b.ok && lessonFor(b) ? `<div class="lock-box"><b>📚 Lekcja z porażki</b><small>${esc(b.name)} pokonał Cię na tych fiszkach. Powtórz je (${lessonFor(b).ids.length}) – rewanż odblokuje się od razu.</small></div>
       <button class="primary block" data-act="boss-lesson">📚 Powtórz i wróć do walki</button>`
     : b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => { const t = masterKey(b) ? mastery(b, k) : 0; return `<button class="${BOSS_PICK.mode === k ? 'on' : ''} mt${t}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>${masterKey(b) ? (MASTER_T[t] || 'brak medalu') : 'cios ' + m.mul}</small>${masterKey(b) ? `<em>boss ×${String(MEDAL_POW[Math.min(4, t + 1)]).replace('.', ',')}</em>` : ''}</button>`; }).join('')}</div>
@@ -1027,7 +1042,7 @@ function fightView() {
         <div class="boss-intent${B.timer === 1 ? ' soon' : ''}">${mv.k === 'hit' ? '⚔️' : '🎰'} <b>${mv.k === 'hit' ? esc(mv.name) : 'Losowanie przeszkadzajki'}</b>${mv.dmg ? ` −${hurtCalc(B, mv.dmg, B.bomb)}` : ''}<small>${B.timer === 1 ? (mv.k === 'hit' ? 'zaraz! – sparuj odpowiedzią' : 'w następnej turze!') : `za ${B.timer} tury`}</small></div></div>
       ${B.coop ? '' : hpBar('boss', B.hp, B.max, 'boss' + (B.phaseN ? ' ph' + B.phaseN : ''), ['weekly', 'tower'].includes(b.kind) || B.coop ? [] : [50, 25])}${B.b.curses ? curseIconsHTML(B.b.abil, 'fight') : ''}
       ${B.phaseN ? `<div class="weak-tag">🔥 faza ${B.phaseN + 1}</div>` : ''}
-      ${b.think && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry && !cur?.qte ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
+      ${thinkOn(B) && !B.shown && B.timeFree <= 0 && !B.down && !cur?.parry && !cur?.qte ? `<div class="think-bar"><i style="width:${Math.max(0, 100 - (now - B.qAt) / thinkMs(B) * 100).toFixed(1)}%"></i></div>` : ''}
     </div>
     <div class="row nowrap boss-me${fm?.k === 'hit' ? ' hurt' : ''}"><div class="me-col">${hpBar('me', B.me, B.meMax, 'me')}${B.coop ? '' : heroHotbar(hero(), 'xs')}</div>
       ${B.combo >= 2 ? `<span class="chip combo">🔥 ${B.combo}</span>` : ''}${B.power ? `<span class="chip">💪 ${B.power}</span>` : ''}${B.guard ? `<span class="chip">🛡️${B.guard > 1 ? B.guard : ''}</span>` : ''}${B.poison ? `<span class="chip bad">☠️ ${B.poison}</span>` : ''}${B.silence ? `<span class="chip bad">🔇 ${B.silence}</span>` : ''}${B.weak > 0 ? `<span class="chip bad">🥀 ${B.weak}</span>` : ''}${B.drain > 0 ? `<span class="chip bad">🩸 ${B.drain}</span>` : ''}${B.haste > 0 ? `<span class="chip bad">⏳ ${B.haste}</span>` : ''}${B.timeFree > 0 ? `<span class="chip">⏱️ ${B.timeFree}</span>` : ''}</div>
