@@ -4666,3 +4666,9 @@ button.kr-end.big { min-height: 54px; border-radius: 16px; border: 0; font-weigh
 /* 🎰 pasek losowania skrzynki: od krawędzi do krawędzi ekranu, znacznik dokładnie na środku */
 .roulette { max-width: none !important; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); border-radius: 0; }
 @media (min-width: 640px) { .roulette { margin-left: -20px; margin-right: -20px; } }
+
+/* 🖼️ własne tło: górny pasek, pasek statusu i dolne zakładki półprzezroczyste ze zdjęciem pod spodem (zamiast pełnej czerni) */
+body.photo-bg #sbar, body.photo-bg .hubnav::before { background: rgba(10,10,14,.28) !important; -webkit-backdrop-filter: blur(16px) saturate(1.4) !important; backdrop-filter: blur(16px) saturate(1.4) !important; }
+body.photo-bg #tabs { background: rgba(14,14,18,.5) !important; border-top-color: rgba(255,255,255,.1) !important; -webkit-backdrop-filter: blur(18px) saturate(1.4) !important; backdrop-filter: blur(18px) saturate(1.4) !important; }
+body.photo-bg .hubnav { border-bottom: 0 !important; }
+body.photo-bg .hubnav a, body.photo-bg .hubnav button { background: rgba(255,255,255,.1); }
