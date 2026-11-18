@@ -1,0 +1,231 @@
+// Dydaktyka sportu – wykłady 01.10–29.10. Zoptymalizowane: jedna rzecz na fiszkę, w pytaniu liczba elementów listy.
+// Kolumna 3 = wykład (pole „Dodatkowe” → dział w „Słabych punktach”).
+#fiszki
+#talia: Dydaktyka sportu
+#tags column:3
+// ---------- 01.10 – rekreacja i sport
+Rekreacja w sporcie – definicja | aktywność fizyczna podejmowana dobrowolnie, w czasie wolnym, dla przyjemności z ruchu | Wykład 01.10
+Czy rekreacja wymaga przygotowania motorycznego, diety albo treningów? | Nie – liczy się przyjemność z ruchu | Wykład 01.10
+Rekreacja – 2 przykłady | np. wieczorny jogging, rodzinna wycieczka rowerowa (też spacer, rekreacyjne pływanie) | Wykład 01.10
+Sport nieklasyfikowany – inna nazwa | sport powszechny (amatorski) | Wykład 01.10
+Sport nieklasyfikowany – gdzie leży? | na pograniczu rekreacji i sportu wyczynowego | Wykład 01.10
+Sport nieklasyfikowany – czym różni się od rekreacji? | jest współzawodnictwo i chęć wygrania, ale treningi nie determinują całego życia | Wykład 01.10
+Sport nieklasyfikowany – 2 przykłady | amatorska liga halowej piłki nożnej, masowy maraton uliczny | Wykład 01.10
+Sport klasyfikowany – inna nazwa | sport wyczynowy (profesjonalny) | Wykład 01.10
+Jaki akt prawny reguluje sport klasyfikowany? | Ustawa o sporcie | Wykład 01.10
+Zawodnik sportu klasyfikowanego – 3 cechy | licencja sportowa, regularne badania, notowane wyniki | Wykład 01.10
+Do czego prowadzą notowane wyniki w sporcie klasyfikowanym? | do klas sportowych (np. klasa mistrzowska) | Wykład 01.10
+Sport klasyfikowany – 2 przykłady | np. gra w Ekstraklasie, kadra narodowa (też igrzyska, Mistrzostwa Polski) | Wykład 01.10
+// ---------- 01.10 – model prakseologiczny
+Model prakseologiczny treningu – 4 etapy po kolei | diagnoza → planowanie → realizacja planu → ewaluacja efektów | Wykład 01.10
+Model prakseologiczny – 1. etap | diagnoza | Wykład 01.10
+Model prakseologiczny – 4. etap | ewaluacja efektów | Wykład 01.10
+Na jakie pytanie odpowiada diagnoza? | „Z kim chcę pracować?” | Wykład 01.10
+Diagnoza – 3 rodzaje | indywidualna (osobnicza), grupowa, środowiskowa | Wykład 01.10
+Dziecko przeszkadza na treningu – co z nim zrobić? | zrobić z niego asystenta | Wykład 01.10
+Planowanie – jaki musi być plan treningowy? (2) | mieć cel i być systematyczny | Wykład 01.10
+Realizacja planu – na czym polega? | cykl nauczania: budujemy na tym, co było wcześniej, i progresujemy | Wykład 01.10
+Ewaluacja – co oceniamy? (3) | efekty wychowawcze, efekty sportowe (wyniki), feedback od zawodników | Wykład 01.10
+Prosty feedback na koniec treningu | piątka: nisko = nie podobało się, wysoko = podobało się | Wykład 01.10
+Dlaczego ewaluacja jest konieczna? | bez informacji zwrotnej nie ma postępu | Wykład 01.10
+// ---------- 01.10 – zasady budowy zajęć
+Zajęcia rekreacyjne – 6 zasad budowy | wszechstronność, stopniowanie trudności, dobrana intensywność, zmienność pracy mięśniowej, krzywa natężenia, utylitarność | Wykład 01.10
+Trening sportowy – 3 zasady budowy | zwiększanie obciążeń, progresje, indywidualizacja | Wykład 01.10
+// ---------- 01.10 – uczenie się i nauczanie
+Uczenie się – definicja | proces prowadzący do usamodzielnienia przez bezpośrednie poznawanie świata i doświadczanie zmysłami | Wykład 01.10
+Uczenie się zmysłami – nazwa | uczenie sensomotoryczne | Wykład 01.10
+Nauczanie – definicja | planowe i systematyczne kierowanie procesem uczenia się | Wykład 01.10
+Uczenie się vs nauczanie – kto „kieruje”? | nauczanie = kierowanie (trener) procesem uczenia się (zawodnik) | Wykład 01.10
+Rola trenera w uczeniu się – 7 zadań | przyciągać, pobudzać, informować, dostarczać bodźców, oceniać wyniki, podawać wskazówki, informować o celach | Wykład 01.10
+Proces nauczania – jaki musi być? (2 cechy) | planowy i motywacyjny | Wykład 01.10
+Gdzie jeszcze ma się odbywać nauczanie poza sportem? | w rzeczywistości niesportowej – w szerszym kontekście niż sportowy | Wykład 01.10
+// ---------- 01.10 – czynniki hamujące
+Czynniki hamujące nauczanie – 4 grupy | rozwojowe, edukacyjne, żywieniowe, inne (stres, ekrany) | Wykład 01.10
+Rozwojowe czynniki hamujące (3) | brak stymulacji dotyku i równowagi, brak ruchu, brak zabaw twórczych | Wykład 01.10
+Edukacyjne czynniki hamujące (4) | niedostosowany program, styl pracy trenera, zbyt częsta kontrola, zbyt wczesna rywalizacja | Wykład 01.10
+Żywieniowe czynniki hamujące (3) | brak równowagi składników, toksyny (alkohol, nikotyna), złe nawodnienie | Wykład 01.10
+Inne czynniki hamujące nauczanie (4) | stres, telewizja, social media, telefon | Wykład 01.10
+// ---------- 01.10 – zasady dydaktyczne
+Klasyczne zasady dydaktyczne w sporcie – 5 | świadomości, stopniowania trudności, systematyczności, trwałości, poglądowości | Wykład 01.10
+Zasada świadomości | zawodnik wie, DLACZEGO robi ćwiczenie → większe zaangażowanie i motywacja wewnętrzna | Wykład 01.10
+Zasada systematyczności | regularność i logiczny ciąg treningów; przerwy nie za długie (żeby nie stracić adaptacji) | Wykład 01.10
+Zasada trwałości | wielokrotne powtarzanie, aż nawyk stanie się automatyczny | Wykład 01.10
+Zasada poglądowości – 3 środki | pokaz trenera, wideoanaliza, schematy graficzne | Wykład 01.10
+Która zasada: „powtarzaj, aż wejdzie w automat”? | zasada trwałości | Wykład 01.10
+Która zasada: „zawodnik wie, po co ćwiczy”? | zasada świadomości | Wykład 01.10
+Która zasada: pokaz, wideoanaliza, schemat? | zasada poglądowości | Wykład 01.10
+Cel lekcji vs cel treningu | lekcja – zrozumienie teorii; trening – praktyczne opanowanie umiejętności | Wykład 01.10
+Rola nauczyciela vs rola trenera | nauczyciel wyjaśnia i przekazuje wiedzę; trener motywuje, koryguje w praktyce i planuje proces | Wykład 01.10
+// ---------- 08.10 – droga na szczyt i młodzież
+Droga na sportowy szczyt – 8 czynników | talent, systematyczny trening, dobra kadra, wysoki poziom rozgrywek, inteligencja (też emocjonalna), baza i sprzęt, dieta i odnowa, szczęście | Wykład 08.10
+„Wysoki poziom rozgrywek” – co oznacza? | jakość kontaktów – z kim zawodnik rywalizuje | Wykład 08.10
+Ilu trenerów może mieć dziecko na różnych etapach? | do 5 | Wykład 08.10
+Co trener musi umieć ocenić u dziecka? | czy przekierować je na inny sport | Wykład 08.10
+Rozwój dziecka w zawodnika – kierunek | od zajęć ogólnorozwojowych do treningu specjalistycznego | Wykład 08.10
+Promowanie młodzieży – 5 zasad | udział wszystkich chętnych, równe prawo do zawodów, sprawiedliwy trener, zabawa najważniejsza, forma zabawowa | Wykład 08.10
+Po co angażować słabsze dzieci? | nawet słabsi w dzieciństwie są aktywni jako dorośli | Wykład 08.10
+Dzieci nie są… | małymi dorosłymi | Wykład 08.10
+Model norweski (narciarze biegowi) – szkolenie | od najmłodszych lat ogólnorozwojowo; od 18. r.ż. przeważa trening specjalistyczny | Wykład 08.10
+Od jakiego wieku w modelu norweskim przeważa trening specjalistyczny? | od 18 lat | Wykład 08.10
+// ---------- 08.10 – LTAD
+LTAD – rozwinięcie skrótu | Long Term Athlete Development | Wykład 08.10
+LTAD – z jakiego kraju? | z Kanady | Wykład 08.10
+Twórca LTAD | Istvan Balyi | Wykład 08.10
+Etapy LTAD – 5 po kolei | zabawa i udział → wszechstronny rozwój → zdolności specjalne → przygotowanie do konkretnych elementów → trening specjalistyczny | Wykład 08.10
+LTAD – pierwszy etap | zabawa i udział | Wykład 08.10
+Etap FUNdamental – główne założenie | brak wczesnej specjalizacji | Wykład 08.10
+Wyjątek od braku wczesnej specjalizacji – przykład | gimnastyka | Wykład 08.10
+Organizacja promująca sport młodzieży w Anglii | Youth Sport Trust | Wykład 08.10
+Trening sportowy wg wykładu to… | wieloletni proces wychowawczy | Wykład 08.10
+Jak preselekcja wpływa na dziecko? | jest dla niego krzywdząca | Wykład 08.10
+Propozycje dla polskiego sportu młodzieżowego (2) | likwidacja Kadr Wojewódzkich Juniorów, ujednolicenie kategorii wiekowych we wszystkich dyscyplinach | Wykład 08.10
+Czy tylko 1. miejsce jest zwycięstwem? | Nie | Wykład 08.10
+Wrocławski model rozwoju sportu – nacisk na… | powszechny rozwój i monitorowanie zdrowia | Wykład 08.10
+Narzędzie wrocławskiego modelu | Wrocławski Test Sprawności Fizycznej | Wykład 08.10
+Wielkopolski model rozwoju sportu – na czym się opiera? | na piramidzie kadrowej – preselekcja do Kadr Wojewódzkich | Wykład 08.10
+Cechy wolicjonalne – definicja | elementy psychiki związane z wolą – zdolność do świadomego wyznaczania celów | Wykład 08.10
+// ---------- 08.10 – lekcja gimnastyki i nawyk
+Tok lekcji gimnastyki – 4 części | organizacja → rozgrzewka → ćwiczenia główne i zabawy → uspokojenie i organizacja | Wykład 08.10
+Lekcja gimnastyki – czas części organizacyjnej | 3–5 min | Wykład 08.10
+Lekcja gimnastyki – czas rozgrzewki | 10–20 min | Wykład 08.10
+Lekcja gimnastyki – czas ćwiczeń głównych i zabaw | 30–35 min | Wykład 08.10
+Lekcja gimnastyki – czas części uspokajającej | 5–15 min | Wykład 08.10
+Nawyk ruchowy wg Czajkowskiego | element wykonany poprawnie, bez wkładania dużo energii | Wykład 08.10
+Na czym opiera się tworzenie nawyku? | na fizjologii i układzie krążeniowo-oddechowym | Wykład 08.10
+// ---------- 08.10 – fazy nauczania ruchu
+Nauczanie i doskonalenie ruchu – 4 fazy po kolei | generalizacji → koncentracji → automatyzacji → uplastycznienia | Wykład 08.10
+Faza generalizacji | pokaz i objaśnienie; omawiamy cechy istotne i błędy | Wykład 08.10
+Faza koncentracji | uczący się sam eliminuje błędy i wykonuje element | Wykład 08.10
+Faza automatyzacji | wyuczony element w nowych warunkach | Wykład 08.10
+Faza uplastycznienia | warunki się zmieniają, a element i tak jest wykonany | Wykład 08.10
+Która faza: „sam eliminuje błędy”? | koncentracji | Wykład 08.10
+Która faza: „pokaz i objaśnienie”? | generalizacji | Wykład 08.10
+Opanowywanie umiejętności przez uczącego się – 3 fazy | kognitywna → kojarzeniowa → automatyczna | Wykład 08.10
+Faza kognitywna | informacje wszystkimi kanałami sensorycznymi | Wykład 08.10
+Faza kojarzeniowa | próby i błędy | Wykład 08.10
+Ile powtórzeń w fazie kojarzeniowej? | 5–8 tys. | Wykład 08.10
+Faza automatyczna | utylitarność nawyku i jego uplastycznienie | Wykład 08.10
+// ---------- 08.10 – rodzaje nawyków
+Nawyk zamknięty – przykład i od czego zależy | gimnastyka – zależy od środowiska wewnętrznego | Wykład 08.10
+Nawyk otwarty – przykład | gry zespołowe (zmieniające się sytuacje) | Wykład 08.10
+Nawyk pojedynczy – przykład | chwyt piłki, strzał z łuku | Wykład 08.10
+Nawyk ciągły – przykład | gra w tenisa, pływanie | Wykład 08.10
+Gry zespołowe – jaki to nawyk? | otwarty | Wykład 08.10
+Pływanie – jaki to nawyk? | ciągły | Wykład 08.10
+// ---------- 08.10 – etapy nauczania i struktura treningu
+Etapy nauczania – 8 po kolei | nazywanie → wzorowy pokaz → objaśnienie → próby → analiza ruchu → eliminowanie błędów → utrwalanie i doskonalenie → sprawdzian | Wykład 08.10
+Etapy nauczania – co jest po wzorowym pokazie? | objaśnienie | Wykład 08.10
+Wzorowy pokaz u dzieci – o czym pamiętać? | za 1. razem dziecko nie zrobi – to normalne | Wykład 08.10
+Trwałość nauczania – od czego zależy? (4) | wzmacnianie (nowe okoliczności), powtarzanie (co jakiś czas), świadomość i rozumienie, organizacja zapamiętanych treści | Wykład 08.10
+Trening – 3 części | wstępna, główna, końcowa | Wykład 08.10
+Część wstępna treningu – czas | 13–25 min | Wykład 08.10
+Część wstępna – cel | przygotować ciało i psychikę do części głównej | Wykład 08.10
+Część wstępna – co obejmuje? (2) | czynności organizacyjne (zbiórka, sprawdzenie gotowości) + rozgrzewka ogólna i specjalistyczna | Wykład 08.10
+Część główna treningu – czas | 30–35 min | Wykład 08.10
+Część główna – co w niej? | praca nad głównym celem: ćw. użytkowe, zabawy i gry, zabawy nauczające | Wykład 08.10
+Część końcowa treningu – czas | 5–15 min | Wykład 08.10
+Część końcowa – cel | wyciszenie i podsumowanie | Wykład 08.10
+Część końcowa – co obejmuje? (4) | uspokojenie organizmu, ćw. rozluźniające, spokojne rozciąganie, podsumowanie zajęć | Wykład 08.10
+// ---------- 15.10 – w-f a trening
+Problemy lekcji w-f, przez które jest kłopot z naborem (2) | skupienie na samej fizyczności, niska intensywność | Wykład 15.10
+Czy rywalizacja na początku nauczania jest dobra? | Nie – szkodzi (wyjątek: kto zrobi poprawniej) | Wykład 15.10
+Największa słabość w-f | sposób nauczania: brak myślenia strategicznego – dzieci nie rozumieją gry, jest tylko bodźcowanie | Wykład 15.10
+Czynniki determinujące uczenie się – 4 | świadomość zawodnika, metody i style trenera, sposób i ilość przekazywanej wiedzy, warunki przebiegu procesu | Wykład 15.10
+Świadomość zawodnika – czego ma być świadomy? | kiedy i co zastosować | Wykład 15.10
+Kiedy metody trenera hamują uczenie? (2) | gdy nie zna innych metod albo źle zrobił diagnozę | Wykład 15.10
+// ---------- 15.10 – trening behawioralny i decyzyjny
+Trening poznawczy (kreowanie) – behawioralny czy decyzyjny? | decyzyjny | Wykład 15.10
+Trening behawioralny – poznawczy czy niepoznawczy? | niepoznawczy (odtwarzany) | Wykład 15.10
+Trening behawioralny – 3 cechy | odtwarzanie schematów, od prostego do trudnego, ćw. zblokowane o niskiej wariacyjności (np. 20× to samo) | Wykład 15.10
+Informacja zwrotna w treningu behawioralnym | słabo wykorzystana – trener nie pyta | Wykład 15.10
+Trening decyzyjny – 2 cechy | akcent z techniki na taktykę, duża zmienność ćwiczeń (np. 10× ćwiczenie + 10 wariacji) | Wykład 15.10
+Trening decyzyjny – 3 etapy | identyfikacja decyzji → postępowanie z poznawczym wyzwalaczem → użycie narzędzi | Wykład 15.10
+Trening decyzyjny – etap 1 | identyfikacja decyzji: umiejętności poznawcze, przewidywanie, uważanie | Wykład 15.10
+Trening decyzyjny – etap 2 | postępowanie z poznawczym wyzwalaczem: obiekty, lokalizacja, czas reakcji, wskazówki pamięciowe i kinestetyczne | Wykład 15.10
+Trening decyzyjny – etap 3 (narzędzia) | wariacyjność ćwiczeń, trudne na początku, odpytywanie, randomizacja | Wykład 15.10
+Autor koncepcji „Masters of Chaos” | prof. Wolfgang Schöllhorn | Wykład 15.10
+// ---------- 15.10 – hierarchia ruchu
+Hierarchia ruchu – 5 poziomów (nowicjusz → ekspert) | ruchy elementarne → akty ruchowe → czynności ruchowe → czynności sportowe → umiejętności ruchowe | Wykład 15.10
+Hierarchia ruchu – najniższy poziom | ruchy elementarne | Wykład 15.10
+Hierarchia ruchu – najwyższy poziom | umiejętności ruchowe | Wykład 15.10
+Ruchy elementarne | ruch w 1 stawie (np. zgięcie w łokciu) | Wykład 22.10
+Akty ruchowe | połączone ruchy elementarne (w kilku stawach) | Wykład 22.10
+Czynności ruchowe | zbiór aktów ruchowych – bardziej lub mniej złożone | Wykład 22.10
+Czynności sportowe | bardziej specjalistyczne czynności ruchowe | Wykład 22.10
+Umiejętności ruchowe | bardziej ekonomiczne, potrzebne też w życiu | Wykład 22.10
+// ---------- 15.10 – lekcja w-f vs trening
+Lekcja w-f – definicja | obowiązkowa forma nauczania; cel i treść wyznacza podstawa programowa | Wykład 15.10
+Lekcja w-f ma rozwijać – 4 obszary | postawy, wiadomości, umiejętności, sprawność | Wykład 15.10
+Na które obszary w-f kładzie się za mały nacisk? | umiejętności i sprawność | Wykład 15.10
+Lekcja w-f dąży do…, a trening do… | lekcja – optymalizacji; trening – maksymalizacji | Wykład 15.10
+Trening sportowy – 5 cech | maksymalizacja wyników, szybki postęp, adaptacja do trudniejszych warunków, dobrowolność, doskonalenie w 1 dyscyplinie | Wykład 15.10
+Co łączy lekcję w-f i trening? (4) | rywalizacja, wychowywanie, wysiłek fizyczny, struktura | Wykład 15.10
+// ---------- 15.10 – przewrót bokiem (ćwiczenia)
+Przewrót bokiem z przedmiotem między rękoma – cel | głowa i wzrok w prawidłowej pozycji | Wykład 15.10
+Przewrót bokiem z przedmiotem – element zabawy | szybko zabieramy przedmiot i pytamy o szczegóły – dzieci chętnie powtarzają | Wykład 15.10
+Przewrót bokiem przy pionowych materacach – cel | nogi prowadzone prosto w pionie; zawodnik sam się koryguje | Wykład 15.10
+Pionowe materace – jak progresować? | przybliżać materace do siebie | Wykład 15.10
+Przewrót bokiem z klęku na jednej nodze (14 lat) – po co? | wymaga więcej siły; buduje siłę nóg pod salto machowe bokiem | Wykład 15.10
+// ---------- 22.10 – gry i komunikacja
+Hasło przy LTAD Pathway z wykładu | „Ciężar gry!” | Wykład 22.10
+„Teaching games for understanding” – idea | gra/zabawa powinna nauczać | Wykład 22.10
+Teaching games for understanding – 4 etapy | próbowanie → modyfikowanie przez dostosowanie → modyfikowanie przez wyolbrzymianie → złożoność taktyczna | Wykład 22.10
+Co chroni sport przed ingerowaniem w organizm człowieka? | organizacje antydopingowe | Wykład 22.10
+Strategia obronna – 2 cechy | przewidywanie podań, komunikacja | Wykład 22.10
+Strategia ofensywna – cecha | wyczucie dobrego momentu | Wykład 22.10
+Identyfikacja talentu ruchowego – co oceniamy? (5) | czas wykonania, szybkość, wytrwałość, kompetencje poznawcze, poziom automatyzacji | Wykład 22.10
+Jak sprawdza się talent ruchowy? | poprzez gry | Wykład 22.10
+Paradygmaty komunikacji – 3 | transmisji, interakcji, transakcji | Wykład 22.10
+Paradygmat transmisji | przekazywanie wiedzy | Wykład 22.10
+Paradygmat interakcji | przesyłanie komunikatów | Wykład 22.10
+Paradygmat transakcji | negocjowanie | Wykład 22.10
+Stany „ja” w transakcji komunikacyjnej – 3 | Rodzic, Dorosły, Dziecko | Wykład 22.10
+Komunikaty odważne – jaki udział? | 90% | Wykład 22.10
+Komunikaty uległe – jaki udział? | 10% | Wykład 22.10
+Komunikaty agresywne i manipulacyjne – jaki udział? | 0% | Wykład 22.10
+Organizacja zajęć – szersze rozumienie (3) | impreza, warsztaty, trening | Wykład 22.10
+Organizacja zajęć – węższe rozumienie (2) | w grupach albo indywidualnie | Wykład 22.10
+Zabawa budująca wytrzymałość z wykładu | „Lokomotywa” | Wykład 22.10
+// ---------- 29.10 – rozwój moralny
+Stadia rozwoju moralnego – 5 po kolei | anomia → heteronomia → socjonomia → autonomia → idealizm moralny | Wykład 29.10
+Stadium I – nazwa i wiek | anomia moralna (amoralizm dziecięcy), 0–4 lata | Wykład 29.10
+Stadium II – nazwa i wiek | heteronomia moralna (egocentryzm, konformizm), 5–9 lat | Wykład 29.10
+Stadium III – nazwa i wiek | socjonomia moralna (konwencjonalizm), 9–13 lat | Wykład 29.10
+Stadium IV – nazwa i wiek | autonomia moralna (pryncypializm, racjonalizm), 13–21 lat | Wykład 29.10
+Stadium V – nazwa i wiek | idealizm moralny (irracjonalizm sumienia), wiek nieokreślony | Wykład 29.10
+Autonomia moralna – które stadium? | IV (13–21 lat) | Wykład 29.10
+Heteronomia moralna – które stadium? | II (5–9 lat) | Wykład 29.10
+// ---------- 29.10 – dyscyplina
+Dyscyplina – definicja ogólna | przestrzeganie ogółu zaleceń; zachowanie, które nie przeszkadza innym | Wykład 29.10
+„Dyscyplina” – 2 inne znaczenia | rodzaj działalności sportowej; bat z kilkoma rzemieniami | Wykład 29.10
+Co buduje dyscyplinę: autokratyzm czy autorytet? | autorytet | Wykład 29.10
+Problemy z dyscypliną – przyczyny po stronie trenera (6) | nadużywanie kar, braki wiedzy, „to samo dla wszystkich”, monotonia, ignorowanie potrzeb grupy, nadmierna surowość | Wykład 29.10
+Problemy z dyscypliną – przyczyny poza trenerem (3) | pochodzenie, biedny dom, patologia | Wykład 29.10
+Skutek nadużywania kar, gróźb i reprymend | zespół stawia opór | Wykład 29.10
+Jak złe relacje trener–zawodnik szkodzą dyscyplinie? | zawodnik nie może wyrazić emocji | Wykład 29.10
+Kiedy pojawiają się problemy z dyscypliną? (3) | zbyt długie tłumaczenie, nieprzygotowany trener, zawodnicy czekają na ćwiczenie | Wykład 29.10
+Kto nie ma problemów z dyscypliną? (4) | kto systematycznie planuje wychowanie, dobrze się komunikuje, ewaluuje swoją pracę, potwierdza słowa postawą | Wykład 29.10
+Zapobieganie problemom z dyscypliną (2) | ustalić reguły współdziałania, ograniczyć liczbę zakazów | Wykład 29.10
+// ---------- 29.10 – formy organizacji zajęć
+Typy organizacji zajęć – 5 | obwodowo-stacyjny, tor przeszkód, mały obwód ćwiczebny, praca indywidualna, sposób mieszany | Wykład 29.10
+Obwód stacyjny – cel | doskonalenie umiejętności ruchowych (intensywna praca) | Wykład 29.10
+Obwód stacyjny – czas na stacji | 30 s – 1 min | Wykład 29.10
+Obwód stacyjny – ile osób na stacji? | 2 (max 4) | Wykład 29.10
+Obwód stacyjny – ile stacji? | 6–12 | Wykład 29.10
+Obwód stacyjny – o czym pamiętamy? | o zmienności pracy mięśniowej | Wykład 29.10
+Obwód stacyjny – jak stopniujemy trudność? | zmianą intensywności | Wykład 29.10
+Czy w obwodzie stacyjnym nauczamy? | Nie | Wykład 29.10
+Tor przeszkód – jak się ćwiczy? | jeden za drugim – strumieniowo | Wykład 29.10
+Tor przeszkód – ile przeszkód? | 8–12 | Wykład 29.10
+Tor przeszkód – czas pokonania | 30–60 s | Wykład 29.10
+Tor przeszkód – jakie zadania? | kształtujące, łatwe; forma intensyfikująca | Wykład 29.10
+Czy na torze przeszkód nauczamy? | Nie | Wykład 29.10
+Tor przeszkód – co na początku? | ćwiczenia spowalniające | Wykład 29.10
+Tor przeszkód – rodzaje | naturalny, sztuczny, kombinowany; otwarty albo zamknięty | Wykład 29.10
+Tor przeszkód – forma pracy (2) | interwałowa (z odpoczynkiem) albo ciągła | Wykład 29.10
+Mały obwód ćwiczebny – ile zadań? | 3–5 zadań ruchowych | Wykład 29.10
+Mały obwód ćwiczebny – co łączy? | nowe zadanie + kształtowanie (np. ćw. 1–4, potem zadanie główne) | Wykład 29.10
+Praca indywidualna – kiedy? (2) | po kontuzjach, przed ważnymi zawodami | Wykład 29.10
+Sposób mieszany | połączenie różnych form organizacji | Wykład 29.10
+Ćwiczenia stacjami, 30 s–1 min, 6–12 stacji – jaka forma? | obwód stacyjny | Wykład 29.10
+Jeden za drugim, 8–12 przeszkód, 30–60 s – jaka forma? | tor przeszkód | Wykład 29.10
