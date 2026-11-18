@@ -91,7 +91,7 @@ Object.assign(ACTIONS, {
 // 🧭 Przygoda: dodatkowe tryby jako kafelki „Więcej trybów” (nic nie znika – mniej przewijania)
 const stBoss0 = ROUTES.boss;
 ROUTES.boss = (...a) => { const v = stBoss0(...a); if (v?.html && !v.focus && !(a[0] && a[0][1])) onMount(advGrid); return v; };
-const ADV_TILES = '.kum-cta, .idle-cta, .coop-cta, .bestiary-cta, .hc-cta, .tower-cta';
+const ADV_TILES = '.kum-cta, .coop-cta, .bestiary-cta, .hc-cta, .tower-cta';
 function advGrid() {
   const v = document.getElementById('view'), cards = [...v.querySelectorAll(`:scope > :is(${ADV_TILES})`)];
   if (cards.length < 3 || v.querySelector('.adv-grid')) return;

@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '382';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '383';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -15452,7 +15452,7 @@ Object.assign(ACTIONS, {
 // 🧭 Przygoda: dodatkowe tryby jako kafelki „Więcej trybów” (nic nie znika – mniej przewijania)
 var stBoss0 = ROUTES.boss;
 ROUTES.boss = (...a) => { const v = stBoss0(...a); if (v?.html && !v.focus && !(a[0] && a[0][1])) onMount(advGrid); return v; };
-var ADV_TILES = '.kum-cta, .idle-cta, .coop-cta, .bestiary-cta, .hc-cta, .tower-cta';
+var ADV_TILES = '.kum-cta, .coop-cta, .bestiary-cta, .hc-cta, .tower-cta';
 function advGrid() {
   const v = document.getElementById('view'), cards = [...v.querySelectorAll(`:scope > :is(${ADV_TILES})`)];
   if (cards.length < 3 || v.querySelector('.adv-grid')) return;
@@ -16882,7 +16882,7 @@ async function flagsLoad() {
     else { ADMIN_ERR = 'not-logged'; testsSet([]); } } catch (e) { ADMIN_ERR = e.message || 'błąd'; }
 }
 // 🧪 tryby w testach: admin widzi wszystkie, a tester tylko te, które admin mu przydzielił (tabela app_testers)
-var TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek', idle: '🏛️ Akademia (gra)' };
+var TEST_FEATS = { kumul: '🃏 Kumulacja', skoj: '💡 Powtórka skojarzeń', rys: '✏️ Rysowanie fiszek' };
 var MY_TESTS = (() => { try { return JSON.parse(localStorage.getItem('myTests') || '[]'); } catch { return []; } })();
 function testsSet(a) { MY_TESTS = a.filter(f => TEST_FEATS[f]); try { localStorage.setItem('myTests', JSON.stringify(MY_TESTS)); } catch { /* */ } }
 var testOn = f => IS_ADMIN === true || MY_TESTS.includes(f);

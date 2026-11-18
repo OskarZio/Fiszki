@@ -69,4 +69,3 @@ premium.js
 kumul.js
 skoj.js
 rys.js
-idle.js
