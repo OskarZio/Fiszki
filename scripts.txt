@@ -69,3 +69,4 @@ premium.js
 kumul.js
 skoj.js
 rys.js
+karty.js
