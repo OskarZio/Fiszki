@@ -4672,3 +4672,9 @@ body.photo-bg #sbar, body.photo-bg .hubnav::before { background: rgba(10,10,14,.
 body.photo-bg #tabs { background: rgba(14,14,18,.5) !important; border-top-color: rgba(255,255,255,.1) !important; -webkit-backdrop-filter: blur(18px) saturate(1.4) !important; backdrop-filter: blur(18px) saturate(1.4) !important; }
 body.photo-bg .hubnav { border-bottom: 0 !important; }
 body.photo-bg .hubnav a, body.photo-bg .hubnav button { background: rgba(255,255,255,.1); }
+
+/* 🩹 walka: ramka pytania bez obrazka rośnie do treści – baner (parowanie, sprawdzian, przeszkadzajka) nie wypycha pytania poza kadr */
+.bf .boss-q:not(:has(.bq-in img:not(.emo8))) { container-type: normal !important; flex: 1 0 auto !important; overflow: visible !important; max-height: none !important; }
+.bf .boss-q .ver-tag { flex: none; }
+/* 🖼️ własne tło: pasek statusu przy przewinięciu prawie nieprzezroczysty (treść nie prześwituje pod zegarem) */
+body.photo-bg #sbar { background: rgba(10,10,14,.86) !important; }
