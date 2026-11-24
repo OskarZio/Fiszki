@@ -1,0 +1,26 @@
+// Angielski – słownictwo o wyborach i polityce (23 fiszki, kolejność jak w zestawie z Quizleta).
+#fiszki
+#talia: Angielski – wybory i polityka
+make inroads into | czynić w czymś postępy
+repudiation | odmowa, odrzucenie
+volatile | zmienny, niestabilny
+a sweep | zdobyć szeroką popularność (zgarnąć wszystko)
+in the aftermath of | w następstwie czegoś
+landslide win | zwycięstwo przytłaczającą większością głosów
+shellacking | lanie (sromotna porażka)
+lame duck | polityk bez wpływów politycznych
+drift away from | oddalać się od
+fade into the background | wtopić się w tło, stać się mniej istotnym niż wcześniej
+leeway | swoboda działania, pole manewru
+override a veto | uchylić weto
+oversight | nadzór
+a stinging rebuke | zjadliwa krytyka
+voter rolls | spis wyborców
+constituency | okręg wyborczy, elektorat
+marginal constituency | okręg z niewielką przewagą (marginalny mandat wyborczy)
+incumbent | osoba piastująca urząd
+pundit | ekspert, komentator
+reckoning | rozliczenie
+pollster | ankieter, sondażownia
+wipeout | zniszczenie, upadek
+eligible to | uprawniony do
