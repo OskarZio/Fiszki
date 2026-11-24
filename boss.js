@@ -497,7 +497,7 @@ function bossAnswer(g, how) {
   if (cur.parry) return parryResult(cur.curse || cur.mask ? g >= 2 : g >= 3);
   if (cur.ver) return verifyResult(c, g >= 3);
   // harmonogram: zaległe karty liczą się jako powtórka (sprawdziany już nie)
-  if (c.srs.due <= now && c.srs.state !== 'new' && !B.down) {
+  if (c.srs.due <= now && c.srs.state !== 'new' && !B.down && !B.b.noSrs) {   // 🔔 przypominajki-treningi (poza Upiorem) nie ruszają harmonogramu
     const sg = Math.min(3, g), entry = { id: uid(), c: c.id, d: c.deckId, t: now, g: sg, n: 0, ms, m: how === 'flip' ? 'flip' : 'type', boss: 1, ...(how === 'type' ? { v: B.verdict } : {}) };
     c.srs = schedule(c.srs, sg); touch(c); S.log.push(entry); emit('review', c, sg, false);
   } else if (!c.gk) (S.tlog = S.tlog || []).push({ id: uid(), t: now, d: c.deckId, ms });

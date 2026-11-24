@@ -41,6 +41,7 @@ coop.js
 tower.js
 gkdata.js
 gk.js
+remind.js
 group.js
 fsrs.js
 import.js

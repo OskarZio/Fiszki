@@ -14,8 +14,16 @@ function local(tz: string) {
   return { day: `${p.year}-${p.month}-${p.day}`, hour: +p.hour };
 }
 // teksty jak w aplikacjach do nauki języków – krótko, z serią dni i bossem
-function message(streak: number, nick: string) {
+type Rem = { due?: number; days?: number; ghosts?: number; daily?: number };
+function message(streak: number, nick: string, rem: Rem = {}) {
   const n = nick ? `, ${nick}` : '';
+  // 👻 bossy-przypominajki: Upiór Zaległości rośnie z każdym dniem odkładania
+  if ((rem.ghosts ?? 0) > 0 && (rem.due ?? 0) > 0) {
+    const d = rem.days ?? 0, due = rem.due ?? 0;
+    return d >= 1
+      ? { title: `👻 Upiór Zaległości rośnie od ${d} ${d === 1 ? 'dnia' : 'dni'}!`, body: `${due} zaległych fiszek go karmi${n}. Pokonaj go teraz, zanim urośnie jeszcze bardziej.` }
+      : { title: '👻 Pojawił się Upiór Zaległości', body: `${due} fiszek czeka na powtórkę. Jutro będzie silniejszy – wejdź do Przygody.` };
+  }
   const withStreak = [
     { title: `🔥 ${streak} ${streak === 1 ? 'dzień' : 'dni'} z rzędu!`, body: `Nie przerywaj serii${n} – 5 minut fiszek wystarczy.` },
     { title: '⏳ Twoja seria czeka', body: `${streak} dni nauki pod rząd. Jedna sesja dziś i seria trwa dalej.` },
@@ -43,9 +51,9 @@ Deno.serve(async req => {
     const st = p?.stats ?? {}, studied = (st.day === L.day && st.today > 0) || (st.perDay?.[L.day] ?? 0) > 0;
     await db.from('push_subs').update({ last_sent: L.day }).eq('endpoint', s.endpoint);
     if (studied) continue;
-    const m = message(st.streak ?? 0, p?.nick ?? '');
+    const m = message(st.streak ?? 0, p?.nick ?? '', st.rem ?? {});
     try {
-      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ ...m, url: '#/', tag: 'remind' }), { TTL: 3600 });
+      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ ...m, url: (st.rem?.ghosts ?? 0) > 0 ? '#/boss' : '#/', tag: 'remind' }), { TTL: 3600 });
       sent++;
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode;
