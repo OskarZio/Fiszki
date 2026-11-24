@@ -90,28 +90,23 @@ bossEnd = function (won, why) {
   render();
 };
 // ---------- Przygoda: sekcja „🔔 Przypominajki” nad taliami
-function remList() {
-  const out = [], dd = remDailyDeck();
-  if (dd) { const b = remBoss('daily', 4); if (b) out.push(b); }
-  for (const d of S.decks) { if (d.paused) continue; for (const t of [0, 2, 1, 3]) { const b = remBoss(d.id, t); if (b && b.ok) out.push(b); } }
-  return out;
+// ---------- Przygoda: przypominajki stoją w ścieżce talii, obok zwykłych bossów – inna ramka i znaczek 🔔
+const REM_SHORT = ['Zaległości', 'Błędy', 'Egzamin', 'Echo', 'Dziś'];
+function remNodes(d) {
+  const out = [], dd = (() => { try { return remDailyDeck(); } catch { return null; } })();
+  for (const t of [0, 2, 1, 3, 4]) {
+    if (t === 4 && dd?.id !== d.id) continue;
+    let b = null; try { b = remBoss(t === 4 ? 'daily' : d.id, t); } catch (e) { console.warn(e); }
+    if (b && (b.ok || (t === 4 && remSt().day?.d === dayKey(Date.now())))) out.push(b);
+  }
+  if (!out.length) return { html: '', n: 0, hot: false };
+  const hot = out.some(b => b.rt === 0);
+  const html = '<i class="mline rem-line"></i>' + out.map(b => { const g = b.rt === 0 && b.grow > 1;
+    return `<button class="bnode rem-node rt-${b.rt}${b.ok ? '' : ' locked'}${g && b.grow >= 3 ? ' danger' : ''}" data-act="${b.ok ? 'boss-sel' : 'rem-info'}" data-kind="rem" data-id="${b.id}" data-i="${b.rt}" title="${esc(b.name)} – ${esc(b.remInfo)}">
+      <i class="rem-bell">${REM[b.rt].ic}</i><span class="bn-art">${bossArt(b)}</span><small>${REM_SHORT[b.rt]}</small>
+      <span class="rem-sub">${g ? `siła ×${String(b.grow.toFixed(1)).replace('.', ',')}` : b.rt === 2 ? `próba ${REM_EXAM.indexOf(b.stage) + 1}/3` : b.ok ? `${b.len} fiszek` : '✓ dziś'}</span></button>`; }).join('<i class="mline rem-line"></i>');
+  return { html, n: out.filter(b => b.ok).length, hot };
 }
-const remRowHTML = b => `<div class="rem-row${b.ok ? '' : ' off'}${b.rt === 0 && b.grow >= 3 ? ' danger' : ''}" data-act="${b.ok ? 'boss-sel' : 'rem-info'}" data-kind="rem" data-id="${b.id}" data-i="${b.rt}">
-  <span class="rem-art">${bossArt(b)}</span><div class="grow"><b>${REM[b.rt].ic} ${esc(b.name)}</b><small>„${esc(deckById(b.deckId)?.name || '')}” · ${b.remInfo}</small>
-  ${b.rt === 0 && b.grow > 1 ? `<span class="rem-grow"><i style="width:${Math.min(100, (b.grow - 1) / 7 * 100).toFixed(0)}%"></i></span>` : ''}</div><span class="rem-go">${b.ok ? 'Walcz' : '✓'}</span></div>`;
-const remBoss0 = ROUTES.boss;
-ROUTES.boss = (...a) => {
-  const v = remBoss0(...a); if (!v?.html || v.focus || (a[0] && a[0][1])) return v;
-  let list = []; try { list = remList(); } catch (e) { console.warn(e); }
-  if (!list.length) return v;
-  const seals = S.decks.filter(d => remSt().seal?.[d.id]).length;
-  const pri = b => b.rt === 0 ? 100 + b.grow : b.rt === 4 ? (b.ok ? 50 : -10) : b.rt === 2 ? 40 : b.rt === 1 ? 30 : 20;
-  list.sort((x, y) => pri(y) - pri(x));
-  const top = list.slice(0, 6), more = list.slice(6);
-  const sec = `<h2 class="bm-h">🔔 Przypominajki <small class="muted">bossy, którzy pilnują powtórek${seals ? ` · 🔏 pieczęcie: ${seals}` : ''}</small></h2><div class="card rem-card">${top.map(remRowHTML).join('')}${more.length ? `<details class="rem-more"><summary class="small">Pokaż jeszcze ${more.length}</summary><div class="rem-card">${more.map(remRowHTML).join('')}</div></details>` : ''}</div>`;
-  const i = v.html.indexOf('<h2 class="bm-h">📚 Twoje talie');
-  return { ...v, html: i < 0 ? v.html + sec : v.html.slice(0, i) + sec + v.html.slice(i) };
-};
 ACTIONS['rem-info'] = el => { const b = bossFor('rem', el.dataset.id, +el.dataset.i); if (b) toast(`${REM[b.rt].ic} ${b.name}: ${b.remInfo}`, 3000); };
 // 🔔 powiadomienie: profil niesie liczbę zaległości i wiek Upiora – funkcja serwera „reminders” wysyła wtedy tekst o Upiorze
 if (typeof myProfile === 'function') { const remProf0 = myProfile; myProfile = function () { const p = remProf0();

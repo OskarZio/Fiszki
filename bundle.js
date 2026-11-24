@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '391';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '392';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -12219,13 +12219,15 @@ ROUTES.boss = parts => {
     : `<button class="card row nowrap hc-cta" data-act="boss-hardcore"><img src="assets/ui8b/skull.webp" alt=""><div class="grow"><b>Tryb hardcore</b><small>Osobna postać od zera, osobne kryształy i ekwipunek, bossowie +50%. Jedna śmierć kasuje cały postęp w tym trybie. Nagrody ×1,5.</small></div><span>›</span></button>`}
   <h2 class="bm-h">📚 Twoje talie <small class="muted">rozdziały po ${CH_SIZE} fiszek · finał = cała talia</small></h2>
   ${decks.filter(x => !x.d.done).map(({ d, chs }, k) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars || Object.values(mastery(b) || {}).some(v => v > 0)).length;
-    return `<details class="card bregion"${k < 2 ? ' open' : ''}><summary class="row nowrap"><b class="grow">${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} ${plural(chs.length, 'rozdział', 'rozdziały', 'rozdziałów')}${fin?.stars ? ' · 👑' : ''}</span></summary>
-      <div class="bpath">${nodes.map(b => nodeHTML(b, true)).join('<i class="mline"></i>')}${fin ? '<i class="mline"></i>' + nodeHTML(fin, true) : ''}</div></details>`; }).join('') || '<p class="muted">Dodaj fiszki do talii – każdy rozdział (20 fiszek) ma swojego bossa.</p>'}
+    const rem = typeof remNodes === 'function' ? remNodes(d) : { html: '', n: 0, hot: false };
+    return `<details class="card bregion"${k < 2 || rem.hot ? ' open' : ''}><summary class="row nowrap"><b class="grow">${esc(d.name)}</b>${rem.n ? `<span class="rem-badge${rem.hot ? ' hot' : ''}">🔔 ${rem.n}</span>` : ''}<span class="small muted">${beaten}/${chs.length} ${plural(chs.length, 'rozdział', 'rozdziały', 'rozdziałów')}${fin?.stars ? ' · 👑' : ''}</span></summary>
+      <div class="bpath">${nodes.map(b => nodeHTML(b, true)).join('<i class="mline"></i>')}${fin ? '<i class="mline"></i>' + nodeHTML(fin, true) : ''}${rem.html}</div></details>`; }).join('') || '<p class="muted">Dodaj fiszki do talii – każdy rozdział (20 fiszek) ma swojego bossa.</p>'}
   ${(() => { const dn = decks.filter(x => x.d.done); if (!dn.length) return '';
     return `<h2 class="bm-h">🎓 Zdane talie <small class="muted">bossowie dalej czekają – masteruj metody</small></h2>` + dn.map(({ d, chs }) => { const nodes = chs.map((_, i) => bossFor('ch', d.id, i)), fin = bossFor('fin', d.id), beaten = nodes.filter(b => b.stars || Object.values(mastery(b) || {}).some(v => v > 0)).length;
-      return `<details class="card bregion done-region"><summary class="row nowrap"><b class="grow">🎓 ${esc(d.name)}</b><span class="small muted">${beaten}/${chs.length} pokonanych</span></summary>
+      const rem = typeof remNodes === 'function' ? remNodes(d) : { html: '', n: 0, hot: false };
+      return `<details class="card bregion done-region"${rem.hot ? ' open' : ''}><summary class="row nowrap"><b class="grow">🎓 ${esc(d.name)}</b>${rem.n ? `<span class="rem-badge${rem.hot ? ' hot' : ''}">🔔 ${rem.n}</span>` : ''}<span class="small muted">${beaten}/${chs.length} pokonanych</span></summary>
         <button class="sm ghost" data-act="done-beaten" data-id="${d.id}" style="margin:8px 0">${deckRec(d).noAuto ? '🏆 Oznacz bossów jako pokonanych' : '↩️ Odznacz pokonanych (walcz od zera)'}</button>
-        <div class="bpath">${nodes.map(b => nodeHTML(b, true)).join('<i class="mline"></i>')}${fin ? '<i class="mline"></i>' + nodeHTML(fin, true) : ''}</div></details>`; }).join(''); })()}
+        <div class="bpath">${nodes.map(b => nodeHTML(b, true)).join('<i class="mline"></i>')}${fin ? '<i class="mline"></i>' + nodeHTML(fin, true) : ''}${rem.html}</div></details>`; }).join(''); })()}
   ${cats.length ? `<h2 class="bm-h">📁 Kategorie <small class="muted">kilka talii naraz</small></h2><div class="card"><div class="bpath">${cats.map(t => nodeHTML(bossFor('cat', t.id), true)).join('')}</div></div>` : ''}
   <h2 class="bm-h">🌍 Boss świata <small class="muted">wszystkie talie</small></h2><div class="card"><div class="bpath">${nodeHTML(w, true)}</div></div>
   <p class="small muted center">Boss skaluje się do siły bohatera. Przegrana zabiera serce ❤️ – wraca co 2 h albo za ${LIFE_REV} powtórek nauki.</p>
@@ -14191,28 +14193,23 @@ bossEnd = function (won, why) {
   render();
 };
 // ---------- Przygoda: sekcja „🔔 Przypominajki” nad taliami
-function remList() {
-  const out = [], dd = remDailyDeck();
-  if (dd) { const b = remBoss('daily', 4); if (b) out.push(b); }
-  for (const d of S.decks) { if (d.paused) continue; for (const t of [0, 2, 1, 3]) { const b = remBoss(d.id, t); if (b && b.ok) out.push(b); } }
-  return out;
+// ---------- Przygoda: przypominajki stoją w ścieżce talii, obok zwykłych bossów – inna ramka i znaczek 🔔
+var REM_SHORT = ['Zaległości', 'Błędy', 'Egzamin', 'Echo', 'Dziś'];
+function remNodes(d) {
+  const out = [], dd = (() => { try { return remDailyDeck(); } catch { return null; } })();
+  for (const t of [0, 2, 1, 3, 4]) {
+    if (t === 4 && dd?.id !== d.id) continue;
+    let b = null; try { b = remBoss(t === 4 ? 'daily' : d.id, t); } catch (e) { console.warn(e); }
+    if (b && (b.ok || (t === 4 && remSt().day?.d === dayKey(Date.now())))) out.push(b);
+  }
+  if (!out.length) return { html: '', n: 0, hot: false };
+  const hot = out.some(b => b.rt === 0);
+  const html = '<i class="mline rem-line"></i>' + out.map(b => { const g = b.rt === 0 && b.grow > 1;
+    return `<button class="bnode rem-node rt-${b.rt}${b.ok ? '' : ' locked'}${g && b.grow >= 3 ? ' danger' : ''}" data-act="${b.ok ? 'boss-sel' : 'rem-info'}" data-kind="rem" data-id="${b.id}" data-i="${b.rt}" title="${esc(b.name)} – ${esc(b.remInfo)}">
+      <i class="rem-bell">${REM[b.rt].ic}</i><span class="bn-art">${bossArt(b)}</span><small>${REM_SHORT[b.rt]}</small>
+      <span class="rem-sub">${g ? `siła ×${String(b.grow.toFixed(1)).replace('.', ',')}` : b.rt === 2 ? `próba ${REM_EXAM.indexOf(b.stage) + 1}/3` : b.ok ? `${b.len} fiszek` : '✓ dziś'}</span></button>`; }).join('<i class="mline rem-line"></i>');
+  return { html, n: out.filter(b => b.ok).length, hot };
 }
-var remRowHTML = b => `<div class="rem-row${b.ok ? '' : ' off'}${b.rt === 0 && b.grow >= 3 ? ' danger' : ''}" data-act="${b.ok ? 'boss-sel' : 'rem-info'}" data-kind="rem" data-id="${b.id}" data-i="${b.rt}">
-  <span class="rem-art">${bossArt(b)}</span><div class="grow"><b>${REM[b.rt].ic} ${esc(b.name)}</b><small>„${esc(deckById(b.deckId)?.name || '')}” · ${b.remInfo}</small>
-  ${b.rt === 0 && b.grow > 1 ? `<span class="rem-grow"><i style="width:${Math.min(100, (b.grow - 1) / 7 * 100).toFixed(0)}%"></i></span>` : ''}</div><span class="rem-go">${b.ok ? 'Walcz' : '✓'}</span></div>`;
-var remBoss0 = ROUTES.boss;
-ROUTES.boss = (...a) => {
-  const v = remBoss0(...a); if (!v?.html || v.focus || (a[0] && a[0][1])) return v;
-  let list = []; try { list = remList(); } catch (e) { console.warn(e); }
-  if (!list.length) return v;
-  const seals = S.decks.filter(d => remSt().seal?.[d.id]).length;
-  const pri = b => b.rt === 0 ? 100 + b.grow : b.rt === 4 ? (b.ok ? 50 : -10) : b.rt === 2 ? 40 : b.rt === 1 ? 30 : 20;
-  list.sort((x, y) => pri(y) - pri(x));
-  const top = list.slice(0, 6), more = list.slice(6);
-  const sec = `<h2 class="bm-h">🔔 Przypominajki <small class="muted">bossy, którzy pilnują powtórek${seals ? ` · 🔏 pieczęcie: ${seals}` : ''}</small></h2><div class="card rem-card">${top.map(remRowHTML).join('')}${more.length ? `<details class="rem-more"><summary class="small">Pokaż jeszcze ${more.length}</summary><div class="rem-card">${more.map(remRowHTML).join('')}</div></details>` : ''}</div>`;
-  const i = v.html.indexOf('<h2 class="bm-h">📚 Twoje talie');
-  return { ...v, html: i < 0 ? v.html + sec : v.html.slice(0, i) + sec + v.html.slice(i) };
-};
 ACTIONS['rem-info'] = el => { const b = bossFor('rem', el.dataset.id, +el.dataset.i); if (b) toast(`${REM[b.rt].ic} ${b.name}: ${b.remInfo}`, 3000); };
 // 🔔 powiadomienie: profil niesie liczbę zaległości i wiek Upiora – funkcja serwera „reminders” wysyła wtedy tekst o Upiorze
 if (typeof myProfile === 'function') { const remProf0 = myProfile; myProfile = function () { const p = remProf0();
