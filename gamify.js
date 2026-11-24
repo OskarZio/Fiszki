@@ -246,7 +246,7 @@ function grantDailyCase() {
   if (S.items.some(i => i.id === id)) return;
   addItem('case', 'daily', 1, id);
   S.stats.dailyCases = (S.stats.dailyCases || 0) + 1;
-  setTimeout(() => celebrate('🎁 Codzienna skrzynka!', 'Za dzisiejszą naukę – otwórz ją w sklepie'), 1500);
+  setTimeout(() => celebrate('🎁 Codzienna skrzynka!', 'Za dzisiejszą naukę'), 1500);
 }
 on('quiz', (pct, total) => { if (pct === 100 && total >= 10) { S.stats.quizPerfect = 1; save(); } if (pct >= 90) confetti(60); });
 on('ankiImport', () => { S.stats.ankiImport = 1; save(); });
@@ -264,8 +264,10 @@ function celebrate(title, sub) {
   if (S.settings.minimal) return;
   confetti(140);
   const el = document.createElement('div'); el.className = 'celebrate';
-  el.innerHTML = `<b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}`;
-  el.onclick = () => el.remove();
+  const l0 = typeof notifLink === 'function' ? notifLink(title + ' ' + (sub || '')) : null, link = l0 && !location.hash.startsWith(l0.split('?')[0]) ? l0 : null;
+  el.innerHTML = `<b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}${link ? '<em class="cel-go">Stuknij – przejdź ›</em>' : ''}`;
+  if (link) el.classList.add('link');
+  el.onclick = () => { el.remove(); if (link) notifGo(link); };
   document.body.append(el); setTimeout(() => el.classList.add('show'), 10);
   setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 4200);
 }

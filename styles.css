@@ -4692,3 +4692,8 @@ body.photo-bg #sbar { background: rgba(10,10,14,.86) !important; }
 .rem-go { flex: none; font-weight: 800; font-size: 13px; padding: 8px 12px; border-radius: 12px; background: var(--accent); color: #fff; } .rem-row.off .rem-go { background: transparent; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .rem-row.danger .rem-art img { animation: none; } }
 .rem-more summary { cursor: pointer; padding: 4px 2px; color: var(--accent); font-weight: 700; } .rem-more .rem-card { padding: 8px 0 0; }
+
+/* 🔗 klikalne powiadomienia (skrzynka, boss…) */
+#toast.link { pointer-events: auto; cursor: pointer; padding-right: 30px; }
+#toast.link::after { content: '›'; position: absolute; right: 12px; top: 50%; translate: 0 -52%; font-size: 20px; font-weight: 800; opacity: .8; }
+.celebrate.link { cursor: pointer; } .cel-go { display: block; font-style: normal; font-size: 12px; font-weight: 800; opacity: .75; margin-top: 4px; }

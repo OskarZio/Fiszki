@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '390';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '391';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -63,9 +63,21 @@ function plural(n, one, few, many) {
   const d = n % 10, dd = n % 100;
   return d >= 2 && d <= 4 && (dd < 12 || dd > 14) ? few : many;
 }
-function toast(msg, ms = 2200) {
-  const el = $('#toast'); el.textContent = msg; el.classList.add('show');
-  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), ms);
+// 🔗 powiadomienie z czymś do odebrania / zrobienia → stuknięcie przenosi prosto tam (skrzynka, boss, osiągnięcia, sezon)
+function notifLink(msg) {
+  const t = String(msg || '').toLowerCase();
+  if (/skrzyn/.test(t) && /skin/.test(t) && typeof itemCount === 'function' && itemCount('skincase', 'free') > 0) return '#/hero?tab=char';
+  if (/skrzyn/.test(t)) { const k = typeof nextFreeCase === 'function' ? nextFreeCase('daily') : null; return k ? `#/case/${k}?free=1` : '#/inv'; }
+  if (/upiór|pożeracz|zegarmistrz|echo pamięci|przypominajk|boss|rozdział .* nauczon|talia .* nauczona|finałowy/.test(t)) return '#/boss';
+  if (/osiągnię/.test(t)) return '#/ach';
+  if (/sezon/.test(t)) return '#/season';
+  return null;
+}
+function notifGo(href) { if (!href || location.hash.startsWith(href.split('?')[0])) return; if (href.startsWith('#/hero')) { if (typeof HERO_TAB !== 'undefined') HERO_TAB = 'char'; go('#/hero'); } else go(href); }
+function toast(msg, ms = 2200, href) {
+  const el = $('#toast'), l0 = href === false ? null : href || notifLink(msg), link = l0 && !location.hash.startsWith(l0.split('?')[0]) ? l0 : null; el.textContent = msg; el.classList.add('show'); el.classList.toggle('link', !!link);
+  el.onclick = link ? () => { el.classList.remove('show'); notifGo(link); } : null;
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), link ? Math.max(ms, 4000) : ms);
 }
 function download(name, text, type) {
   const a = document.createElement('a');

@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '390';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '391';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -67,9 +67,21 @@ function plural(n, one, few, many) {
   const d = n % 10, dd = n % 100;
   return d >= 2 && d <= 4 && (dd < 12 || dd > 14) ? few : many;
 }
-function toast(msg, ms = 2200) {
-  const el = $('#toast'); el.textContent = msg; el.classList.add('show');
-  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), ms);
+// 🔗 powiadomienie z czymś do odebrania / zrobienia → stuknięcie przenosi prosto tam (skrzynka, boss, osiągnięcia, sezon)
+function notifLink(msg) {
+  const t = String(msg || '').toLowerCase();
+  if (/skrzyn/.test(t) && /skin/.test(t) && typeof itemCount === 'function' && itemCount('skincase', 'free') > 0) return '#/hero?tab=char';
+  if (/skrzyn/.test(t)) { const k = typeof nextFreeCase === 'function' ? nextFreeCase('daily') : null; return k ? `#/case/${k}?free=1` : '#/inv'; }
+  if (/upiór|pożeracz|zegarmistrz|echo pamięci|przypominajk|boss|rozdział .* nauczon|talia .* nauczona|finałowy/.test(t)) return '#/boss';
+  if (/osiągnię/.test(t)) return '#/ach';
+  if (/sezon/.test(t)) return '#/season';
+  return null;
+}
+function notifGo(href) { if (!href || location.hash.startsWith(href.split('?')[0])) return; if (href.startsWith('#/hero')) { if (typeof HERO_TAB !== 'undefined') HERO_TAB = 'char'; go('#/hero'); } else go(href); }
+function toast(msg, ms = 2200, href) {
+  const el = $('#toast'), l0 = href === false ? null : href || notifLink(msg), link = l0 && !location.hash.startsWith(l0.split('?')[0]) ? l0 : null; el.textContent = msg; el.classList.add('show'); el.classList.toggle('link', !!link);
+  el.onclick = link ? () => { el.classList.remove('show'); notifGo(link); } : null;
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), link ? Math.max(ms, 4000) : ms);
 }
 function download(name, text, type) {
   const a = document.createElement('a');
@@ -4084,7 +4096,7 @@ function grantDailyCase() {
   if (S.items.some(i => i.id === id)) return;
   addItem('case', 'daily', 1, id);
   S.stats.dailyCases = (S.stats.dailyCases || 0) + 1;
-  setTimeout(() => celebrate('🎁 Codzienna skrzynka!', 'Za dzisiejszą naukę – otwórz ją w sklepie'), 1500);
+  setTimeout(() => celebrate('🎁 Codzienna skrzynka!', 'Za dzisiejszą naukę'), 1500);
 }
 on('quiz', (pct, total) => { if (pct === 100 && total >= 10) { S.stats.quizPerfect = 1; save(); } if (pct >= 90) confetti(60); });
 on('ankiImport', () => { S.stats.ankiImport = 1; save(); });
@@ -4102,8 +4114,10 @@ function celebrate(title, sub) {
   if (S.settings.minimal) return;
   confetti(140);
   const el = document.createElement('div'); el.className = 'celebrate';
-  el.innerHTML = `<b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}`;
-  el.onclick = () => el.remove();
+  const l0 = typeof notifLink === 'function' ? notifLink(title + ' ' + (sub || '')) : null, link = l0 && !location.hash.startsWith(l0.split('?')[0]) ? l0 : null;
+  el.innerHTML = `<b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}${link ? '<em class="cel-go">Stuknij – przejdź ›</em>' : ''}`;
+  if (link) el.classList.add('link');
+  el.onclick = () => { el.remove(); if (link) notifGo(link); };
   document.body.append(el); setTimeout(() => el.classList.add('show'), 10);
   setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 4200);
 }
@@ -16740,7 +16754,7 @@ function skinGrants() {
   const st = S.stats.skinForms = S.stats.skinForms || {}; let n = 0;
   if (!S.stats.skinWelcome) { S.stats.skinWelcome = 1; n++; }
   const line = heroLine(), f = heroForm(); if ((st[line] ?? f) < f) n += f - st[line]; st[line] = Math.max(st[line] ?? 0, f);
-  if (n) { addItem('skincase', 'free', n, 'skinfree-' + uid()); save(); setTimeout(() => toast(`🎨 +${n} darmowa skrzynka skinów (Bohater → Postać)`, 4000), 1200); }
+  if (n) { addItem('skincase', 'free', n, 'skinfree-' + uid()); save(); setTimeout(() => toast(`🎨 +${n} darmowa skrzynka skinów – stuknij, żeby otworzyć`, 4500), 1200); }
 }
 on('start', () => setTimeout(skinGrants, 1500));
 on('review', () => { if (Math.random() < .2) skinGrants(); });

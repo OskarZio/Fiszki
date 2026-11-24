@@ -75,7 +75,7 @@ function skinGrants() {
   const st = S.stats.skinForms = S.stats.skinForms || {}; let n = 0;
   if (!S.stats.skinWelcome) { S.stats.skinWelcome = 1; n++; }
   const line = heroLine(), f = heroForm(); if ((st[line] ?? f) < f) n += f - st[line]; st[line] = Math.max(st[line] ?? 0, f);
-  if (n) { addItem('skincase', 'free', n, 'skinfree-' + uid()); save(); setTimeout(() => toast(`🎨 +${n} darmowa skrzynka skinów (Bohater → Postać)`, 4000), 1200); }
+  if (n) { addItem('skincase', 'free', n, 'skinfree-' + uid()); save(); setTimeout(() => toast(`🎨 +${n} darmowa skrzynka skinów – stuknij, żeby otworzyć`, 4500), 1200); }
 }
 on('start', () => setTimeout(skinGrants, 1500));
 on('review', () => { if (Math.random() < .2) skinGrants(); });
