@@ -1,0 +1,109 @@
+// Anatomia – ćwiczenia 2: kończyny
+#fiszki
+#przedmiot: med
+#talia: Anatomia – Ćw. 2 (kończyny)
+Kości obręczy kończyny górnej | łopatka i obojczyk
+Obręcz kończyny górnej – rola | przyczep kończyny górnej do ściany klatki piersiowej
+Z czym łączy się koniec mostkowy obojczyka? | z mostkiem
+Z czym łączy się koniec barkowy obojczyka? | z wyrostkiem barkowym łopatki
+Kość ramienna łączy się z wydrążeniem stawowym | łopatki
+Staw tworzony przez kość ramienną i łopatkę | staw ramienny
+Koniec dalszy kości ramiennej tworzy staw | łokciowy
+Do ilu mięśni przyczepia się łopatka? | 16
+Staw ramienny – liczba osi | wieloosiowy (trójosiowy)
+Staw ramienny – rodzaj | kulisty
+Dlaczego staw ramienny często ulega zwichnięciom? | płytka panewka i luźna torebka stawowa
+Staw barkowo-obojczykowy – rodzaj | staw płaski
+Staw barkowo-obojczykowy – ruchy | niewielkie ruchy ślizgowe
+Kaletki maziowe – funkcja | zmniejszają tarcie (oddzielają ścięgna od torebki)
+Obrąbek stawowy łopatki – z czego? | z chrząstki włóknistej
+Obrąbek stawowy łopatki – funkcja | pogłębia płytką panewkę
+Kości przedramienia | kość promieniowa i kość łokciowa
+Koniec bliższy przedramienia to | łokieć
+Koniec dalszy przedramienia to | nadgarstek
+Co łączy błona międzykostna przedramienia? | trzony kości promieniowej i łokciowej
+Błona międzykostna to rodzaj połączenia | włóknistego (więzozrost)
+Odwracanie (supinacja) – ustawienie kości | kość promieniowa równolegle do łokciowej
+Odwracanie – położenie dłoni | dłoń zwrócona do przodu (ku górze)
+Nawracanie (pronacja) – ustawienie kości | kość promieniowa krzyżuje się z łokciową
+Nawracanie – położenie dłoni | dłoń zwrócona do tyłu (ku dołowi)
+Która kość się obraca przy nawracaniu i odwracaniu? | kość promieniowa
+W jakich stawach zachodzi nawracanie i odwracanie? | promieniowo-łokciowym bliższym i dalszym
+Ile stawów tworzy staw łokciowy? | 3 (w jednej torebce)
+Stawy składowe stawu łokciowego | ramienno-łokciowy, ramienno-promieniowy, promieniowo-łokciowy bliższy
+Staw ramienno-łokciowy – co się łączy? | bloczek k. ramiennej z wcięciem bloczkowym k. łokciowej
+Staw ramienno-łokciowy – rodzaj i ruchy | zawiasowy, zgięcie i prostowanie
+Staw ramienno-promieniowy – co się łączy? | główka k. ramiennej z dołkiem głowy k. promieniowej
+Staw ramienno-promieniowy – ruchy | zgięcie, prostowanie i obrót
+Staw promieniowo-łokciowy bliższy – co się łączy? | głowa k. promieniowej z wcięciem promieniowym k. łokciowej
+Staw promieniowo-łokciowy bliższy – rodzaj i ruchy | obrotowy, nawracanie i odwracanie
+Więzadło utrzymujące głowę kości promieniowej | więzadło obrączkowe
+Ile kości mają nadgarstek i ręka? | 29
+Ile kości ma nadgarstek? | 8
+W ile szeregów ułożone są kości nadgarstka? | 2 (bliższy i dalszy, po 4)
+Kości bliższego szeregu nadgarstka | łódeczkowata, księżycowata, trójgraniasta, grochowata
+Kości dalszego szeregu nadgarstka | czworoboczna większa, czworoboczna mniejsza, główkowata, haczykowata
+Ile kości ma śródręcze? | 5
+Ile paliczków ma ręka? | 14
+Ile paliczków ma kciuk? | 2
+Ile paliczków mają palce II–V ręki? | po 3
+Ile trzeszczek ma ręka i gdzie leżą? | 2, przy dalszym końcu 1. kości śródręcza
+Kości nadgarstka tworzą wklęsły do przodu | rowek nadgarstka (z troczkiem: kanał nadgarstka)
+Staw promieniowo-nadgarstkowy – rodzaj | elipsoidalny (kłykciowy)
+Staw promieniowo-nadgarstkowy – liczba osi | 2
+Staw promieniowo-nadgarstkowy – kość przedramienia | kość promieniowa
+Staw promieniowo-nadgarstkowy – kości nadgarstka | łódeczkowata, księżycowata, trójgraniasta
+Staw promieniowo-nadgarstkowy – co jeszcze? | krążek stawowy przy dalszym końcu kości łokciowej
+Obręcz kończyny dolnej – rola | przyczep kończyny dolnej do szkieletu osiowego
+Z jakich kości zrasta się kość miedniczna? | biodrowej, kulszowej i łonowej
+Co tworzy miednicę kostną? | 2 kości miedniczne i kość krzyżowa (z guziczną)
+W jakim stawie miednica łączy się z kością krzyżową? | krzyżowo-biodrowym
+Miednica żeńska vs męska – wysokość i szerokość | żeńska niższa i szersza
+Wchód miednicy żeńskiej – kształt | owalny (poprzecznie)
+Wchód miednicy męskiej – kształt | sercowaty
+Kąt podłonowy u kobiety | rozwarty, ok. 90° i więcej
+Kąt podłonowy u mężczyzny | ostry, ok. 50–70°
+Kość krzyżowa u kobiety | krótsza, szersza, słabiej wygięta
+Otwór zasłoniony u kobiety / mężczyzny | trójkątny / owalny
+Talerze biodrowe u kobiety | bardziej rozchylone na boki
+Kości miednicy męskiej w porównaniu z żeńską | grubsze i masywniejsze
+Staw biodrowy – rodzaj | kulisty (panewkowy)
+Staw biodrowy – liczba osi | wieloosiowy (trójosiowy)
+Staw biodrowy – co go tworzy? | głowa kości udowej i panewka kości miednicznej
+Staw biodrowy vs ramienny – co jest priorytetem? | stabilność kosztem ruchomości
+Obrąbek panewkowy – z jakiej chrząstki? | z chrząstki włóknistej
+Obrąbek panewkowy – funkcja | pogłębia panewkę
+3 więzadła zewnętrzne stawu biodrowego | biodrowo-udowe, łonowo-udowe, kulszowo-udowe
+Więzadło wewnętrzne stawu biodrowego | więzadło głowy kości udowej
+Najdłuższa kość ciała | kość udowa
+Kość udowa przenosi ciężar | z kolana na miednicę
+Piszczel i strzałka to kości | podudzia (długie)
+Która kość podudzia jest większa? | piszczelowa
+Położenie kości piszczelowej | przyśrodkowo
+Gdzie wyczujesz trzon piszczeli? | tuż pod skórą, od kolana do stawu skokowego
+Co tworzy połączenie dalszego końca udowej i bliższego piszczeli? | staw kolanowy
+Co leży do przodu od stawu kolanowego? | rzepka
+Rola strzałki | przyczep mięśni (nie przenosi ciężaru)
+Położenie strzałki | bocznie
+Staw kolanowy – liczba osi | 2
+Staw kolanowy – rodzaj | zawiasowo-obrotowy (kłykciowy)
+Najbardziej skomplikowany staw człowieka | staw kolanowy
+Ruchy w stawie kolanowym | zgięcie i prostowanie, a w zgięciu rotacja
+Kiedy możliwa jest rotacja w kolanie? | przy zgiętym kolanie
+Ile kości ma stopa (z trzeszczkami)? | 28
+Ile kości ma stęp? | 7
+Kości grupy bliższej stępu | skokowa i piętowa
+Kości grupy dalszej stępu | 3 klinowate i sześcienna
+Która kość stępu leży między grupą bliższą a dalszą? | łódkowata
+Ile kości ma śródstopie? | 5
+Ile paliczków ma stopa? | 14
+Ile trzeszczek liczy się w stopie? | 2
+Dwa łuki stopy | podłużny i poprzeczny
+Co podtrzymuje łuki stopy? | mięśnie i więzadła
+Na jakiej kości leży podpórka skokowa? | piętowej
+Na jakiej kości stopy leży bloczek? | skokowej
+Stawy składowe stawu skokowo-goleniowego | skokowo-piszczelowy i skokowo-strzałkowy
+Staw skokowo-piszczelowy – kości | skokowa i piszczelowa
+Staw skokowo-strzałkowy – kości | skokowa i strzałkowa
+Po której stronie leży staw skokowo-strzałkowy? | bocznej
+Staw skokowy górny – ruchy | zgięcie grzbietowe i podeszwowe

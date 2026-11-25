@@ -1,0 +1,97 @@
+// Anatomia – ćwiczenia 1: podstawy, czaszka, kręgosłup, klatka piersiowa
+#fiszki
+#przedmiot: med
+#talia: Anatomia – Ćw. 1 (podstawy, czaszka, kręgosłup, klatka)
+Pozycja anatomiczna – postawa ciała | stojąca, wyprostowana
+Pozycja anatomiczna – głowa i wzrok | skierowane do przodu
+Pozycja anatomiczna – kończyny górne | wzdłuż tułowia, dłonie zwrócone do przodu
+Pozycja anatomiczna – stopy | złączone, palce skierowane do przodu
+Części szkieletu osiowego | czaszka, kręgosłup, klatka piersiowa
+Części szkieletu obręczy | obręcz barkowa i obręcz miedniczna
+Części szkieletu kończyn | wolne kończyny górne i dolne
+Kości obręczy barkowej | łopatka i obojczyk
+Kości obręczy miednicznej | kości miedniczne
+Ile kości ma szkielet osiowy? | 80
+Ile kości ma szkielet kończyn (z obręczami)? | 134
+Ile kości liczy czaszka z kosteczkami słuchowymi i kością gnykową? | 29
+Z czego składa się klatka piersiowa (25 kości)? | z mostka i żeber
+Ile kości liczy się w kręgosłupie dorosłego? | 26 (24 kręgi + kość krzyżowa + kość guziczna)
+Ile kości mają obręcze barkowe? | 4 (2 łopatki, 2 obojczyki)
+Ile kości mają obręcze miedniczne? | 2 (kości miedniczne)
+Ile kości ma jedna kończyna (wolna) górna lub dolna? | 32 (razem obie: 64)
+Trzy płaszczyzny ciała | strzałkowa, czołowa, poprzeczna
+Płaszczyzna strzałkowa dzieli ciało na | część prawą i lewą
+Płaszczyzna czołowa dzieli ciało na | część przednią i tylną
+Płaszczyzna poprzeczna dzieli ciało na | część górną i dolną
+Płaszczyzna pośrodkowa to | płaszczyzna strzałkowa przez środek ciała
+Kierunek brzuszny to inaczej | przedni
+Kierunek grzbietowy to inaczej | tylny
+Funkcja podporowa szkieletu | utrzymuje kształt ciała i podpiera tkanki miękkie
+Funkcja ochronna szkieletu – przykład | czaszka chroni mózg, klatka piersiowa serce i płuca
+Funkcja ruchowa szkieletu | kości to bierny narząd ruchu (dźwignie dla mięśni)
+Funkcja krwiotwórcza kości | szpik kostny czerwony wytwarza krwinki
+Funkcja magazynująca kości | magazyn wapnia i fosforu (oraz tłuszczu w szpiku żółtym)
+Przykład kości płaskiej | mostek (też łopatka, kości sklepienia czaszki)
+Przykład kości nieregularnej (różnokształtnej) | kręg
+Przykład kości krótkiej | kości nadgarstka
+Przykład kości długiej | kość udowa
+Przykład trzeszczki | rzepka
+Która chrząstka pokrywa większość powierzchni stawowych? | szklista
+Która chrząstka występuje w miejscach wymagających wzmocnienia? | włóknista
+Która chrząstka występuje w miejscach wymagających elastyczności? | sprężysta
+Przykład chrząstki włóknistej | krążki międzykręgowe (też spojenie łonowe, łąkotki)
+Przykład chrząstki sprężystej | małżowina uszna (też nagłośnia)
+Ile rodzajów połączeń kości wyróżniamy? | 3
+Trzy rodzaje połączeń kości | włókniste, chrzęstne, maziowe (stawy)
+Na jakiej podstawie klasyfikuje się stawy? | kształtu powierzchni i rodzaju ruchów
+Ile rodzajów stawów maziowych wyróżniamy? | 6
+Staw zawiasowy – liczba osi | 1
+Staw zawiasowy – ruchy | zgięcie i prostowanie
+Staw zawiasowy – przykład | staw ramienno-łokciowy (też międzypaliczkowe)
+Staw obrotowy – liczba osi | 1
+Staw obrotowy – ruchy | obrót (np. nawracanie i odwracanie)
+Staw obrotowy – przykład | staw szczytowo-obrotowy (C1–C2), promieniowo-łokciowy bliższy
+Staw siodełkowy – liczba osi | 2
+Staw siodełkowy – ruchy | zgięcie, prostowanie, odwodzenie, przywodzenie (+ przeciwstawianie)
+Staw siodełkowy – przykład | staw nadgarstkowo-śródręczny kciuka
+Staw elipsoidalny (kłykciowy) – liczba osi | 2
+Staw elipsoidalny – ruchy | zgięcie, prostowanie, odwodzenie, przywodzenie (obwodzenie)
+Staw elipsoidalny – przykład | staw promieniowo-nadgarstkowy
+Staw płaski – liczba osi | brak stałej osi (wieloosiowe ślizganie)
+Staw płaski – ruchy | niewielkie przesuwanie (ślizganie)
+Staw płaski – przykład | staw barkowo-obojczykowy (też międzynadgarstkowe)
+Staw kulisty – liczba osi | 3 (wieloosiowy)
+Staw kulisty – ruchy | zgięcie, prostowanie, odwodzenie, przywodzenie, rotacja, obwodzenie
+Staw kulisty – przykład | staw ramienny, staw biodrowy
+Na jakie dwie części dzieli się czaszka? | mózgoczaszkę i twarzoczaszkę
+Ile kości ma czaszka (bez kosteczek słuchowych)? | 22
+Ile kości buduje mózgoczaszkę? | 8
+Ile kości buduje twarzoczaszkę? | 14
+Ile kości tworzy oczodół? | 7
+Parzyste kości mózgoczaszki | ciemieniowa, skroniowa
+Nieparzyste kości mózgoczaszki | czołowa, potyliczna, klinowa, sitowa
+Parzyste kości twarzoczaszki | szczękowa, jarzmowa, nosowa, łzowa, podniebienna, małżowina nosowa dolna
+Nieparzyste kości twarzoczaszki | żuchwa, lemiesz
+Kości tworzące oczodół | czołowa, klinowa, sitowa, łzowa, szczękowa, jarzmowa, podniebienna
+Ile kręgów ma kręgosłup? | 33
+Ile jest kręgów szyjnych? | 7
+Nazwa kręgu C1 | kręg szczytowy (atlas)
+Nazwa kręgu C2 | kręg obrotowy (axis)
+Ile jest kręgów piersiowych? | 12
+Które kręgi łączą się stawowo z żebrami? | piersiowe
+Ile jest kręgów lędźwiowych? | 5
+Które kręgi utrzymują największy ciężar ciała? | lędźwiowe
+Z ilu zrośniętych kręgów powstaje kość krzyżowa? | 5
+Z ilu kręgów powstaje kość guziczna? | 3–5 (najczęściej 4)
+Odcinki kręgosłupa od góry | szyjny, piersiowy, lędźwiowy, krzyżowy, guziczny
+Klatka piersiowa jest częścią szkieletu | osiowego
+Elementy budowy żebra | głowa, szyjka, guzek, kąt (i trzon)
+Ile par żeber ma człowiek? | 12
+Żebra prawdziwe – które pary? | 1–7
+Żebra prawdziwe – połączenie z mostkiem | bezpośrednio, własną chrząstką żebrową
+Żebra rzekome – które pary? | 8–10
+Żebra rzekome – połączenie z mostkiem | pośrednio, przez chrząstkę żebra wyżej (łuk żebrowy)
+Żebra wolne – które pary? | 11–12
+Żebra wolne – połączenie z mostkiem | brak, kończą się wolno w mięśniach ściany brzucha
+Najniższa część mostka | wyrostek mieczykowaty
+Czym żebro łączy się z mostkiem? | chrząstką żebrową
