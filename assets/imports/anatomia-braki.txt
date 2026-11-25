@@ -1,0 +1,82 @@
+// Anatomia – uzupełnienie do ćw. 1 i 2: rzeczy, o które często pytają na kolokwium, a których nie było w podstawowych zestawach.
+#fiszki
+#talia: Anatomia – uzupełnienie (kręgi, czaszka, kolano, punkty kostne)
+#przedmiot: med
+// ---------- budowa kręgu
+Części typowego kręgu | trzon, łuk kręgu, wyrostek kolczysty, 2 wyrostki poprzeczne, 4 wyrostki stawowe (2 górne, 2 dolne)
+Co ogranicza otwór kręgowy? | trzon (z przodu) i łuk kręgu (z tyłu)
+Co tworzą otwory kręgowe wszystkich kręgów? | kanał kręgowy – biegnie w nim rdzeń kręgowy
+Którędy wychodzą nerwy rdzeniowe? | przez otwory międzykręgowe (między sąsiednimi kręgami)
+Kręgi szyjne – cechy | otwory w wyrostkach poprzecznych (tętnica kręgowa), rozdwojony wyrostek kolczysty (C2–C6), małe trzony
+Kręgi piersiowe – cechy | dołki żebrowe na trzonie i wyrostkach poprzecznych, długi wyrostek kolczysty skierowany w dół
+Kręgi lędźwiowe – cechy | największe, masywne trzony; krótki, spłaszczony, poziomy wyrostek kolczysty
+Atlas (C1) – czym się wyróżnia? | nie ma trzonu ani wyrostka kolczystego – ma łuk przedni i tylny
+Axis (C2) – czym się wyróżnia? | ma ząb, wokół którego obraca się atlas
+C7 – nazwa i cecha | kręg wystający – najdłuższy wyrostek kolczysty szyi, łatwo wyczuwalny
+// ---------- krzywizny i krążek
+Krzywizny kręgosłupa (4) | lordoza szyjna, kifoza piersiowa, lordoza lędźwiowa, kifoza krzyżowa
+Lordoza vs kifoza | lordoza – wygięcie do przodu; kifoza – wygięcie do tyłu
+Po co są krzywizny kręgosłupa? | amortyzują wstrząsy, dają sprężystość i równowagę w postawie wyprostowanej
+Skolioza | boczne skrzywienie kręgosłupa (wada postawy)
+Budowa krążka międzykręgowego | jądro miażdżyste (w środku) i pierścień włóknisty (na obwodzie)
+Funkcja krążka międzykręgowego | amortyzacja i ruchomość między kręgami
+Przepuklina krążka (dyskopatia) | jądro miażdżyste wydostaje się przez pęknięty pierścień włóknisty
+Między którymi kręgami nie ma krążka? | między C1 a C2 (atlas i axis)
+// ---------- mostek i kość długa
+Części mostka (3) | rękojeść, trzon, wyrostek mieczykowaty
+Kąt mostka | połączenie rękojeści z trzonem – na jego wysokości przyczepia się 2. żebro
+Z czym łączy się rękojeść mostka? | z obojczykami i 1. parą żeber
+Części kości długiej | trzon, nasada bliższa i dalsza, przynasady
+Chrząstka nasadowa (wzrostowa) – gdzie i po co? | między nasadą a przynasadą – odpowiada za wzrost kości na długość
+Okostna – funkcja | odżywia i unerwia kość, odpowiada za wzrost na grubość i gojenie złamań
+Jama szpikowa | w trzonie kości długiej; u dorosłych wypełnia ją szpik żółty
+Kość zbita vs gąbczasta | zbita – głównie trzon (warstwa zewnętrzna); gąbczasta – nasady (beleczki)
+// ---------- czaszka
+Szew wieńcowy | między kością czołową a kośćmi ciemieniowymi
+Szew strzałkowy | między dwiema kośćmi ciemieniowymi
+Szew węgłowy (lambdowaty) | między kośćmi ciemieniowymi a kością potyliczną
+Szew łuskowy | między kością skroniową a ciemieniową
+Ciemiączko przednie | największe, między kością czołową a ciemieniowymi; zarasta ok. 1,5 roku życia
+Ciemiączko tylne | między kośćmi ciemieniowymi a potyliczną; zarasta ok. 2–3 miesiąca życia
+Otwór wielki | w kości potylicznej – łączy jamę czaszki z kanałem kręgowym
+Jedyna ruchoma kość czaszki i jej staw | żuchwa – staw skroniowo-żuchwowy
+Czym czaszka łączy się z kręgosłupem? | kłykciami potylicznymi z atlasem (staw szczytowo-potyliczny)
+// ---------- punkty kostne kończyny górnej
+Łopatka – najważniejsze elementy | grzebień łopatki, wyrostek barkowy, wyrostek kruczy, wydrążenie stawowe
+Wyrostek barkowy | przedłużenie grzebienia łopatki; łączy się z obojczykiem
+Wyrostek kruczy | wystaje do przodu; przyczep m.in. mięśnia piersiowego mniejszego, kruczo-ramiennego i głowy krótkiej dwugłowego ramienia
+Kość ramienna – koniec bliższy | głowa, szyjka anatomiczna i chirurgiczna, guzek większy i mniejszy
+Szyjka chirurgiczna kości ramiennej | częste miejsce złamań
+Kość ramienna – koniec dalszy | nadkłykieć przyśrodkowy i boczny, bloczek, główka
+Jaki nerw biegnie za nadkłykciem przyśrodkowym? | nerw łokciowy („prąd” przy uderzeniu w łokieć)
+Wyrostek łokciowy | na końcu bliższym kości łokciowej – wyczuwalny „łokieć”
+Wyrostki rylcowate | na końcach dalszych kości promieniowej i łokciowej
+Stawy śródręczno-paliczkowe – rodzaj i ruchy | kłykciowe: zgięcie, prostowanie, odwodzenie, przywodzenie
+Stawy międzypaliczkowe – rodzaj i ruchy | zawiasowe: zgięcie i prostowanie
+// ---------- punkty kostne kończyny dolnej
+Kość udowa – koniec bliższy | głowa, szyjka, krętarz większy i mniejszy
+Złamanie szyjki kości udowej | częste u osób starszych (osteoporoza)
+Kość udowa – koniec dalszy | kłykieć przyśrodkowy i boczny, nadkłykcie, powierzchnia rzepkowa
+Kostka przyśrodkowa – na jakiej kości? | piszczelowej
+Kostka boczna – na jakiej kości? | strzałkowej
+Guzowatość piszczeli | przyczep więzadła rzepki
+// ---------- staw kolanowy w środku
+Więzadła krzyżowe kolana | przednie i tylne – leżą wewnątrz stawu
+Więzadło krzyżowe przednie (ACL) – funkcja | hamuje przesuwanie piszczeli do przodu względem kości udowej
+Więzadło krzyżowe tylne (PCL) – funkcja | hamuje przesuwanie piszczeli do tyłu
+Więzadła poboczne kolana | piszczelowe (przyśrodkowe) i strzałkowe (boczne) – stabilizują boki, napięte przy wyproście
+Łąkotki – kształt | przyśrodkowa w kształcie litery C, boczna prawie okrągła (O)
+Łąkotki – funkcja | dopasowują powierzchnie stawowe, amortyzują i rozkładają obciążenie
+Która łąkotka częściej ulega urazom i dlaczego? | przyśrodkowa – jest zrośnięta z więzadłem pobocznym piszczelowym, mniej ruchoma
+„Nieszczęśliwa triada” kolana | uszkodzenie ACL + więzadła pobocznego piszczelowego + łąkotki przyśrodkowej
+Więzadło rzepki | od rzepki do guzowatości piszczeli (przedłużenie ścięgna mięśnia czworogłowego)
+// ---------- stopa
+Staw skokowy dolny – kości | skokowa, piętowa i łódkowata
+Staw skokowy dolny – ruchy | odwracanie i nawracanie stopy
+Odwracanie stopy (supinacja) | podeszwa zwrócona do środka
+Nawracanie stopy (pronacja) | podeszwa zwrócona na zewnątrz
+Najczęstszy uraz stawu skokowego | skręcenie przy odwróceniu stopy – uszkodzenie więzadeł bocznych (np. skokowo-strzałkowego przedniego)
+// ---------- pytania na zrozumienie
+Dlaczego staw biodrowy jest stabilniejszy od ramiennego? | głęboka panewka obejmuje głowę kości udowej, mocne więzadła i masywne mięśnie; w ramiennym płytka panewka i luźna torebka
+Dlaczego kręgi lędźwiowe są największe? | dźwigają największy ciężar ciała
+Dlaczego z kością udową łączy się piszczel, a nie strzałka? | piszczel przenosi ciężar ciała, strzałka służy głównie do przyczepu mięśni
