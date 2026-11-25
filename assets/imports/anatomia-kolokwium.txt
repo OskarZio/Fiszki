@@ -1,0 +1,75 @@
+// Anatomia – pytania z poprzednich wersji kolokwium (wersje 1–3 i „po poprawkach”), bez powtórek, z rycinami.
+// Gdzie klucz miał błąd albo wersje się różniły – w odpowiedzi jest dopisek.
+#fiszki
+#talia: Anatomia – kolokwium (pytania z poprzednich lat)
+#przedmiot: med
+// ---------- płaszczyzny i szkielet
+Płaszczyzna wyznaczona przez oś poprzeczną i strzałkową – dzieli ciało na część górną i dolną | płaszczyzna poprzeczna
+Płaszczyzna wyznaczona przez oś poprzeczną i pionową, w przybliżeniu równoległa do czoła | płaszczyzna czołowa
+Płaszczyzna wyznaczona przez oś strzałkową i pionową – dzieli ciało na część prawą i lewą | płaszczyzna pośrodkowa
+Kości obręczy barkowej | łopatka, obojczyk
+Z jakich kości zrasta się kość miedniczna (obręcz miedniczna)? | biodrowa, kulszowa, łonowa
+4 funkcje układu szkieletowego i kości | podporowa i amortyzująca, ochronna (narządy wewnętrzne), ruchowa (z mięśniami), magazynowa (minerały), krwiotwórcza (szpik)
+Żebra prawdziwe | żebra 1–7 – łączą się bezpośrednio z mostkiem
+Żebra rzekome | żebra 8–10 – łączą się z mostkiem chrząstkami żeber powyżej
+Żebra wolne | żebra 11–12 – połączone wyłącznie z kręgami
+Kość ramienna tworzy staw ramienny z… | wydrążeniem stawowym łopatki
+Koniec barkowy obojczyka tworzy staw z… | wyrostkiem barkowym łopatki
+// ---------- mięśnie – budowa
+Środkowa, kurczliwa część mięśnia | brzusiec
+Namięsna otacza… | cały mięsień – brzusiec mięśnia szkieletowego
+Omięsna otacza… | pęczki włókien mięśniowych (klucz wersji 2 podaje „brzusiec” – to błąd, brzusiec otacza namięsna)
+Śródmięsna otacza… | pojedyncze włókno mięśniowe
+Miofilamenty cienkie zbudowane są z… | aktyny, tropomiozyny i troponiny
+Miofilamenty grube zbudowane są z… | tylko miozyny
+Funkcja prążka (linii) Z | wyznacza granice i utrzymuje strukturę sarkomeru, przyczepia filamenty cienkie
+Mitochondrium komórki mięśniowej to… | sarkosom
+Cytoplazma komórki mięśniowej to… | sarkoplazma
+Błona komórkowa komórki mięśniowej to… | sarkolema
+Siateczka śródplazmatyczna komórki mięśniowej to… | siateczka sarkoplazmatyczna
+Jaka tkanka mięśniowa kurczy się niezależnie od woli? | poprzecznie prążkowana serca (tak w kluczu) – niezależnie od woli kurczy się też tkanka gładka
+Jak mięsień trójgłowy ramienia działa na staw łokciowy? | prostuje staw łokciowy
+Z czego zbudowany jest mięsień trójgłowy łydki? | z mięśnia brzuchatego łydki (głowa boczna i przyśrodkowa) i mięśnia płaszczkowatego
+// ---------- ryciny – szkielet i czaszka
+[obraz: assets/imports/anatomia-kolos/szkielet.webp] Ryc. 1 (szkielet z przodu) – co oznaczono nr 3? | obojczyk
+[obraz: assets/imports/anatomia-kolos/szkielet.webp] Ryc. 1 (szkielet z przodu) – co oznaczono nr 5? | mostek
+[obraz: assets/imports/anatomia-kolos/czaszka.webp] Ryc. 5 (czaszka z boku) – kość nr 1 | czołowa
+[obraz: assets/imports/anatomia-kolos/czaszka.webp] Ryc. 5 (czaszka z boku) – kość nr 2 | ciemieniowa
+[obraz: assets/imports/anatomia-kolos/czaszka.webp] Ryc. 5 (czaszka z boku) – kość nr 3 | nosowa
+[obraz: assets/imports/anatomia-kolos/czaszka.webp] Ryc. 5 (czaszka z boku) – kość nr 5 | łzowa
+[obraz: assets/imports/anatomia-kolos/czaszka.webp] Ryc. 5 (czaszka z boku) – kość nr 6 | klinowa
+[obraz: assets/imports/anatomia-kolos/czaszka.webp] Ryc. 5 (czaszka z boku) – kość nr 7 | potyliczna
+// ---------- ryciny – kręgosłup, kręg, klatka
+[obraz: assets/imports/anatomia-kolos/kregoslup.webp] Ryc. 3 (kręgosłup) – odcinek nr 1 | szyjny
+[obraz: assets/imports/anatomia-kolos/kregoslup.webp] Ryc. 3 (kręgosłup) – odcinek nr 2 | piersiowy
+[obraz: assets/imports/anatomia-kolos/kregoslup.webp] Ryc. 3 (kręgosłup) – odcinek nr 3 | lędźwiowy (jeden klucz podaje krzyżowy – na rycinie nr 3 to L, lędźwiowy)
+[obraz: assets/imports/anatomia-kolos/kregoslup.webp] Ryc. 3 (kręgosłup) – odcinek nr 4 | krzyżowy
+[obraz: assets/imports/anatomia-kolos/kreg.webp] Ryc. 4 (budowa kręgu) – element nr 1 | wyrostek kolczysty
+[obraz: assets/imports/anatomia-kolos/kreg.webp] Ryc. 4 (budowa kręgu) – element nr 2 | wyrostek poprzeczny
+[obraz: assets/imports/anatomia-kolos/kreg.webp] Ryc. 4 (budowa kręgu) – element nr 3 | wyrostek stawowy górny
+[obraz: assets/imports/anatomia-kolos/kreg.webp] Ryc. 4 (budowa kręgu) – element nr 4 | trzon kręgu
+[obraz: assets/imports/anatomia-kolos/klatka.webp] Ryc. 6 (klatka piersiowa) – element nr 1 | mostek
+// ---------- ryciny – miednica, stopa, ręka
+[obraz: assets/imports/anatomia-kolos/miednica.webp] Ryc. 7 (miednica) – kość nr 1 | kość krzyżowa
+[obraz: assets/imports/anatomia-kolos/miednica.webp] Ryc. 7 (miednica) – kość nr 2 | kość biodrowa
+[obraz: assets/imports/anatomia-kolos/miednica.webp] Ryc. 7 (miednica) – kość nr 3 | kość kulszowa
+[obraz: assets/imports/anatomia-kolos/miednica.webp] Ryc. 7 (miednica) – kość nr 4 | kość łonowa (uwaga: jedna wersja klucza podaje tu kulszową – sprawdź z prowadzącym)
+[obraz: assets/imports/anatomia-kolos/stopa.webp] Ryc. 8 (stopa od strony grzbietowej) – kość nr 1 | piętowa
+[obraz: assets/imports/anatomia-kolos/stopa.webp] Ryc. 8 (stopa od strony grzbietowej) – kość nr 2 | skokowa
+[obraz: assets/imports/anatomia-kolos/stopa.webp] Ryc. 8 (stopa od strony grzbietowej) – kość nr 3 | sześcienna
+[obraz: assets/imports/anatomia-kolos/reka.webp] Ryc. 9 (ręka od strony dłoniowej) – kość nr 3 | główkowata
+[obraz: assets/imports/anatomia-kolos/reka.webp] Ryc. 9 (ręka od strony dłoniowej) – kość nr 4 | czworoboczna większa
+[obraz: assets/imports/anatomia-kolos/reka.webp] Ryc. 9 (ręka od strony dłoniowej) – kość nr 9 | trójgraniasta (wg klucza)
+// ---------- ryciny – mięśnie (zad. 17)
+[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 1 – nr 11 | mięsień nadgrzbietowy
+[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 1 – nr 4 | mięsień dwugłowy ramienia – głowa krótka
+[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 1 – nr 14 | mięsień łokciowy
+[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 1 – nr 16 | mięsień zginacz łokciowy nadgarstka
+[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 2 – nr 10 | mięsień obszerny przyśrodkowy
+[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 2 – nr 11 | mięsień pośladkowy wielki
+[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 2 – nr 13 | mięsień półścięgnisty
+[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 2 – nr 20 | mięsień biodrowy (wg klucza)
+Mięśnie, strona 3 – nr 1 | mięsień dźwigacz łopatki
+Mięśnie, strona 3 – nr 4 | mięsień równoległoboczny większy
+Mięśnie, strona 3 – nr 6 | mięsień piersiowy mniejszy
+Mięśnie, strona 3 – nr 11 | smugi ścięgniste (mięśnia prostego brzucha)
