@@ -4701,3 +4701,6 @@ body.photo-bg #sbar { background: rgba(10,10,14,.86) !important; }
 #toast.link { pointer-events: auto; cursor: pointer; padding-right: 30px; }
 #toast.link::after { content: '›'; position: absolute; right: 12px; top: 50%; translate: 0 -52%; font-size: 20px; font-weight: 800; opacity: .8; }
 .celebrate.link { cursor: pointer; } .cel-go { display: block; font-style: normal; font-size: 12px; font-weight: 800; opacity: .75; margin-top: 4px; }
+
+/* 📱 długie odpowiedzi-listy (kilka linii) – do lewej, czytelnie na telefonie */
+.card.flash .ctext.ans-multi, .ctext.ans-multi { text-align: left; font-size: clamp(16px, 4.4vw, 19px); line-height: 1.45; max-width: 34em; margin-inline: auto; }
