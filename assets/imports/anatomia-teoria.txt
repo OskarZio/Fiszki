@@ -1,0 +1,116 @@
+// Anatomia – teoria + image occlusion + arkusz „kończyny”. Obrazy z lukami: zasłonięty podpis, zgadujesz co pod nim.
+#fiszki
+#talia: Anatomia – teoria i ryciny (kolokwium)
+#przedmiot: med
+// ---------- osie i płaszczyzny
+Osie ciała (3) | pionowa (długa), strzałkowa, poprzeczna
+Oś pionowa – przebieg | z góry na dół, prostopadle do podłoża
+Oś strzałkowa – przebieg | z przodu do tyłu
+Oś poprzeczna – przebieg | z boku na bok (z lewej do prawej)
+Oś poprzeczna + oś strzałkowa wyznaczają płaszczyznę… | poprzeczną (dzieli na część górną i dolną)
+Oś poprzeczna + oś pionowa wyznaczają płaszczyznę… | czołową (dzieli na część przednią i tylną)
+Oś strzałkowa + oś pionowa wyznaczają płaszczyznę… | strzałkową (dzieli na prawą i lewą; przez środek = pośrodkowa)
+Płaszczyzna poprzeczna – które osie? | poprzeczna i strzałkowa
+Płaszczyzna czołowa – które osie? | poprzeczna i pionowa
+Płaszczyzna strzałkowa – które osie? | strzałkowa i pionowa
+Ruchy wokół osi poprzecznej | zgięcie i prostowanie (w płaszczyźnie strzałkowej)
+Ruchy wokół osi strzałkowej | odwodzenie i przywodzenie (w płaszczyźnie czołowej)
+Ruchy wokół osi pionowej | obroty (rotacja), np. nawracanie i odwracanie
+// ---------- pozycja anatomiczna i podział szkieletu
+Pozycja anatomiczna | postawa stojąca, wyprostowana; głowa i wzrok do przodu; kończyny górne wzdłuż tułowia, dłonie zwrócone do przodu; stopy złączone, palce do przodu
+Podział szkieletu (3 części) | szkielet osiowy, szkielet obręczy, szkielet kończyn wolnych
+Szkielet osiowy – z czego? | czaszka, kręgosłup, klatka piersiowa
+Szkielet obręczy – z czego? | obręcz barkowa (kończyny górnej) i obręcz miedniczna (kończyny dolnej)
+Obręcz barkowa – kości | łopatka i obojczyk
+Obręcz miedniczna – kości | kość miedniczna (zrośnięta z kości biodrowej, kulszowej i łonowej)
+Wolna kończyna górna – kości | kość ramienna, kość promieniowa i łokciowa, kości nadgarstka, śródręcza i paliczki
+Wolna kończyna dolna – kości | kość udowa, rzepka, kość piszczelowa i strzałkowa, kości stępu, śródstopia i paliczki
+Mostek – z czego się składa? | rękojeść, trzon, wyrostek mieczykowaty
+Funkcje szkieletu | podporowa, ochronna, ruchowa (bierny narząd ruchu), krwiotwórcza (szpik czerwony), magazynowa (wapń, fosfor)
+// ---------- rodzaje kości i chrząstki
+Rodzaje kości (5) | długie, krótkie, płaskie, różnokształtne (nieregularne), trzeszczki
+Kość długa – przykład | kość udowa (też ramienna, piszczelowa)
+Kość krótka – przykład | kości nadgarstka (też stępu)
+Kość płaska – przykład | mostek (też łopatka, kości sklepienia czaszki)
+Kość różnokształtna – przykład | kręg
+Trzeszczka – przykład | rzepka
+Chrząstka szklista – gdzie w szkielecie? | pokrywa powierzchnie stawowe; chrząstki żebrowe
+Chrząstka włóknista – gdzie w szkielecie? | krążki międzykręgowe, spojenie łonowe, łąkotki (miejsca wymagające wzmocnienia)
+Chrząstka sprężysta – gdzie? | małżowina uszna, nagłośnia (miejsca wymagające elastyczności)
+// ---------- połączenia i stawy
+U ludzi można wyróżnić … rodzaje połączeń kości – wymień | 3: włókniste, chrzęstne, maziowe (stawy)
+Rodzaje stawów maziowych (6) | zawiasowy, obrotowy, siodełkowy, elipsoidalny, płaski, kulisty
+Staw zawiasowy – osie, ruchy, przykład | 1 oś; zgięcie i prostowanie; staw ramienno-łokciowy, międzypaliczkowe
+Staw obrotowy – osie, ruchy, przykład | 1 oś; obrót; staw szczytowo-obrotowy (C1–C2), promieniowo-łokciowy bliższy
+Staw siodełkowy – osie, ruchy, przykład | 2 osie; zgięcie, prostowanie, odwodzenie, przywodzenie; staw nadgarstkowo-śródręczny kciuka
+Staw elipsoidalny – osie, ruchy, przykład | 2 osie; zgięcie, prostowanie, odwodzenie, przywodzenie; staw promieniowo-nadgarstkowy
+Staw płaski – osie, ruchy, przykład | brak stałej osi; ślizganie; staw barkowo-obojczykowy
+Staw kulisty – osie, ruchy, przykład | 3 osie (wieloosiowy); wszystkie ruchy + rotacja i obwodzenie; staw ramienny, biodrowy
+// ---------- czaszka, kręgosłup, żebra
+Podział czaszki | mózgoczaszka i trzewioczaszka (twarzoczaszka)
+Mózgoczaszka – kości parzyste | ciemieniowa, skroniowa
+Mózgoczaszka – kości nieparzyste | czołowa, potyliczna, klinowa, sitowa
+Trzewioczaszka – kości parzyste | szczękowa, jarzmowa, nosowa, łzowa, podniebienna, małżowina nosowa dolna
+Trzewioczaszka – kości nieparzyste | żuchwa, lemiesz (i kość gnykowa)
+Kręgosłup – liczba kręgów i odcinki | 33–34: szyjny 7, piersiowy 12, lędźwiowy 5, krzyżowy 5 (zrośnięte), guziczny 4–5
+Budowa żebra | głowa, szyjka, guzek, kąt, trzon
+Żebra prawdziwe, rzekome, wolne | prawdziwe 1–7 (bezpośrednio do mostka); rzekome 8–10 (przez chrząstkę żebra wyżej); wolne 11–12 (tylko z kręgami)
+// ---------- arkusz „kończyny” – uzupełnij
+Obręcz kończyny górnej – rola | przyczep kończyny górnej do ściany klatki piersiowej
+Koniec barkowy obojczyka łączy się z… | wyrostkiem barkowym łopatki
+Kość ramienna łączy się z wydrążeniem stawowym … tworząc staw … | łopatki; staw ramienny
+Koniec dalszy kości ramiennej tworzy staw… | łokciowy
+Staw ramienny to …osiowy staw … | wieloosiowy (trójosiowy) staw kulisty
+Dlaczego staw ramienny często ulega zwichnięciom? | płytka panewka i luźna torebka stawowa
+Staw barkowo-obojczykowy to … staw umożliwiający niewielkie ruchy … | staw płaski; ruchy ślizgowe
+Obrąbek stawowy łopatki – z czego i po co? | z chrząstki włóknistej; pogłębia panewkę
+Kości przedramienia; co łączy błona międzykostna i jaki to rodzaj połączenia? | kość promieniowa i łokciowa; łączy ich trzony; połączenie włókniste (więzozrost)
+Odwracanie (supinacja) | kość promieniowa równolegle do łokciowej, dłoń zwrócona do przodu
+Nawracanie (pronacja) | kość promieniowa krzyżuje się z łokciową, dłoń zwrócona do tyłu
+Staw łokciowy – stawy składowe, ruchy, połączenia | ramienno-łokciowy (bloczek + wcięcie bloczkowe; zawiasowy: zgięcie/prostowanie), ramienno-promieniowy (główka + dołek głowy k. promieniowej; zgięcie, prostowanie, obrót), promieniowo-łokciowy bliższy (głowa k. promieniowej + wcięcie promieniowe; obrotowy: nawracanie/odwracanie) – wszystkie w jednej torebce
+Nadgarstek i ręka – 29 kości | 8 nadgarstka (2 szeregi po 4), 5 śródręcza, 14 paliczków (kciuk 2, reszta po 3), 2 trzeszczki
+Kości nadgarstka tworzą wklęsły do przodu… | rowek nadgarstka
+Staw promieniowo-nadgarstkowy – rodzaj i budowa | elipsoidalny, dwuosiowy; kość promieniowa + łódeczkowata, księżycowata oraz trójgraniasta (z krążkiem stawowym przy dalszym końcu kości łokciowej)
+Obręcz kończyny dolnej – rola | przyczep kończyny dolnej do szkieletu osiowego
+Miednica kostna – z czego? | 2 kości miedniczne (zrost biodrowej, kulszowej, łonowej) + kość krzyżowa (zrost 5 kręgów krzyżowych) + kość guziczna
+Miednica łączy się z kością krzyżową w… | stawie krzyżowo-biodrowym
+Różnice miednicy męskiej i żeńskiej | żeńska: niższa, szersza, wchód owalny, kąt podłonowy rozwarty (≥90°), otwór zasłoniony trójkątny; męska: wyższa, węższa, masywniejsza, wchód sercowaty, kąt ostry (50–70°), otwór owalny
+Staw biodrowy to staw …, …osiowy, utworzony przez… | kulisty (panewkowy), wieloosiowy; głowę kości udowej i panewkę kości miednicznej
+Obrąbek panewkowy stawu biodrowego | z chrząstki włóknistej; pogłębia panewkę
+Więzadła stawu biodrowego | zewnętrzne: biodrowo-udowe, łonowo-udowe, kulszowo-udowe; wewnętrzne: więzadło głowy kości udowej
+Piszczel i strzałka to kości…; położenie piszczeli | podudzia (długie); piszczel leży przyśrodkowo
+Połączenie końca dalszego k. udowej i bliższego piszczeli tworzy…, do przodu leży… | staw kolanowy; rzepka
+Staw kolanowy to …osiowy staw …; ruchy | dwuosiowy staw zawiasowo-obrotowy (kłykciowy); zgięcie i prostowanie, a przy zgiętym kolanie rotacja
+Stopa – 28 kości | 7 stępu (bliższa: skokowa i piętowa; dalsza: 3 klinowate i sześcienna; łódkowata pomiędzy), 5 śródstopia, 14 paliczków, 2 trzeszczki
+Łuki stopy | podłużny i poprzeczny (podtrzymywane przez mięśnie i więzadła)
+Staw skokowo-goleniowy (skokowy górny) – z czego? | skokowo-piszczelowy (skokowa i piszczelowa) oraz po stronie bocznej skokowo-strzałkowy (skokowa i strzałkowa)
+// ---------- ryciny z arkusza (numery w ramkach)
+[obraz: assets/imports/anatomia-teoria/ark-ramie.webp] Okolica barkowa – nr 1 | obojczyk
+[obraz: assets/imports/anatomia-teoria/ark-ramie.webp] Okolica barkowa – nr 2 | łopatka
+[obraz: assets/imports/anatomia-teoria/ark-ramie.webp] Okolica barkowa – nr 3 | kość ramienna
+[obraz: assets/imports/anatomia-teoria/ark-ramie.webp] Okolica barkowa – nr 4 | wyrostek kruczy
+[obraz: assets/imports/anatomia-teoria/ark-ramie.webp] Okolica barkowa (B, z tyłu) – nr 5 | grzebień łopatki
+[obraz: assets/imports/anatomia-teoria/ark-ramie.webp] Kość ramienna z tyłu – nr 6 | wyrostek łokciowy (dół wyrostka łokciowego)
+[obraz: assets/imports/anatomia-teoria/ark-ramie.webp] Obojczyk – nr 7 i nr 8 | 7 – koniec mostkowy, 8 – koniec barkowy
+[obraz: assets/imports/anatomia-teoria/ark-przedramie.webp] Przedramię – nr 1 | kość promieniowa
+[obraz: assets/imports/anatomia-teoria/ark-przedramie.webp] Przedramię – nr 2 | kość łokciowa
+[obraz: assets/imports/anatomia-teoria/ark-reka.webp] Nadgarstek (A, dłoniowo) – nr 1, 2, 3 | 1 – łódeczkowata, 2 – czworoboczna większa, 3 – czworoboczna mniejsza
+[obraz: assets/imports/anatomia-teoria/ark-reka.webp] Nadgarstek (A, dłoniowo) – nr 4, 5, 6 | 4 – księżycowata, 5 – trójgraniasta, 6 – grochowata
+[obraz: assets/imports/anatomia-teoria/ark-reka.webp] Nadgarstek (A, dłoniowo) – nr 7, 8 | 7 – haczykowata, 8 – główkowata
+[obraz: assets/imports/anatomia-teoria/ark-reka.webp] Ręka (C) – nr 9, 10, 11 | 9 – kości śródręcza, 10 – paliczki, 11 – trzeszczki
+[obraz: assets/imports/anatomia-teoria/ark-miedniczna.webp] Kość miedniczna – nr 1, 2, 3 | 1 – kość kulszowa, 2 – kość biodrowa, 3 – kość łonowa
+[obraz: assets/imports/anatomia-teoria/ark-noga.webp] Udo i podudzie – nr 1, 2 | 1 – kość udowa, 2 – rzepka
+[obraz: assets/imports/anatomia-teoria/ark-noga.webp] Udo i podudzie – nr 3, 4 | 3 – kość piszczelowa, 4 – kość strzałkowa
+[obraz: assets/imports/anatomia-teoria/ark-stopa.webp] Stopa – nr 1, 2, 3 | 1 – kość piętowa, 2 – kość skokowa, 3 – kość łódkowata
+[obraz: assets/imports/anatomia-teoria/ark-stopa.webp] Stopa – nr 4, 5 | 4 – kości klinowate, 5 – kość sześcienna
+[obraz: assets/imports/anatomia-teoria/ark-stopa.webp] Stopa – nr 6, 7, 8 | 6 – kości śródstopia, 7 – paliczki, 8 – trzeszczki
+// ---------- obrazy z lukami (image occlusion)
+[luki: assets/imports/anatomia-teoria/czaszka.webp | Czaszka – widok z boku] 70.5,6.6,23.5,6.1=kość czołowa; 70.5,12.7,28.2,6.6=kość ciemieniowa; 70.5,19.7,22.0,6.6=kość nosowa; 70.5,27.3,19.4,5.9=kość sitowa; 70.5,33.8,18.5,5.9=kość łzowa; 70.5,41.5,21.4,5.9=kość klinowa; 70.5,60.0,25.3,5.9=kość potyliczna; 70.5,67.0,25.6,5.9=kość skroniowa; 70.5,72.5,24.1,5.7=kość jarzmowa; 70.5,80.3,14.0,6.1=szczęka; 70.5,87.3,13.5,6.1=żuchwa
+[luki: assets/imports/anatomia-teoria/kreg.webp | Budowa kręgu (z góry i z boku)] 14.2,1.0,17.5,10.2=wyrostek kolczysty; 9.2,15.3,12.2,9.6=blaszka łuku; 29.2,15.3,12.5,10.2=wyrostek stawowy; 39.2,51.9,10.0,10.2=nasada łuku; 0.8,83.4,16.2,10.5=wyrostek poprzeczny; 20.0,65.3,15.8,9.6=trzon; 74.2,1.0,14.2,11.1=wyrostek stawowy (górny); 84.7,16.6,10.3,9.6=nasada łuku; 56.3,48.4,12.0,7.6=trzon; 85.8,55.7,13.8,9.6=wyrostek kolczysty; 55.8,74.5,19.2,8.9=otwór międzykręgowy; 76.3,86.6,13.7,9.6=wyrostek stawowy (dolny)
+[luki: assets/imports/anatomia-teoria/klatka.webp | Klatka piersiowa] 22.2,2.0,16.9,7.3=rękojeść mostka; 68.8,7.1,19.3,4.8=kręgosłup; 1.2,18.5,16.9,7.7=żebra prawdziwe; 74.4,27.8,20.3,5.2=trzon mostka; 77.8,51.6,14.5,7.9=chrząstki żebrowe; 1.2,79.8,14.3,7.5=żebra rzekome; 23.2,84.7,20.8,8.5=wyrostek mieczykowaty; 78.5,90.3,13.8,7.9=żebra wolne
+[luki: assets/imports/anatomia-teoria/kosc-dluga.webp | Budowa kości długiej] 4.9,8.2,9.9,5.9=nasada (bliższa); 45.3,8.2,7.8,5.9=trzon; 83.9,8.2,9.4,5.9=nasada (dalsza); 37.2,78.7,9.1,5.9=okostna; 55.7,78.7,14.6,10.8=tkanka kostna zbita; 78.9,78.7,14.6,10.8=tkanka kostna gąbczasta
+[luki: assets/imports/anatomia-teoria/lopatka.webp | Łopatka – widok od przodu] 7.3,15.0,10.6,7.5=powierzchnia stawowa barkowa; 18.8,21.9,7.3,5.1=wyrostek kruczy; 26.6,23.6,6.2,5.1=wcięcie łopatki; 33.5,22.9,5.5,5.1=brzeg górny; 40.6,22.6,5.2,5.1=kąt górny; 4.4,28.5,7.3,4.9=wyrostek barkowy; 45.8,32.2,8.3,5.0=dół podłopatkowy; 3.3,37.8,9.0,5.3=wydrążenie panewkowe; 4.7,47.2,8.0,3.9=kąt boczny; 46.9,46.1,9.4,5.0=powierzchnia żebrowa; 6.2,54.2,8.9,5.6=guzek podpanewkowy; 48.1,55.8,9.7,5.0=brzeg przyśrodkowy; 8.9,62.2,8.6,3.6=szyjka łopatki; 14.6,70.0,9.4,3.6=brzeg boczny; 46.9,70.1,9.9,2.8=kresy żebrowe; 33.9,89.2,6.8,2.8=kąt dolny; 71.0,20.6,7.3,3.1=obojczyk; 57.1,36.8,6.5,2.8=łopatka; 90.6,52.1,5.7,2.8=mostek; 72.9,89.7,4.4,2.8=żebra
+[luki: assets/imports/anatomia-teoria/reka.webp | Kości ręki (nadgarstek, śródręcze, paliczki)] 18.5,15.0,9.6,4.6=paliczki; 9.6,44.6,18.5,5.4=kości śródręcza; 80.6,1.7,7.4,4.2=paliczek dalszy; 80.6,9.6,11.1,4.6=paliczek środkowy; 80.6,20.4,8.1,4.2=paliczek bliższy; 19.6,60.8,12.2,2.5=kość haczykowata; 19.6,66.0,12.2,2.5=kość trójgraniasta; 19.6,71.0,12.2,2.5=kość księżycowata; 73.2,62.9,19.6,2.2=kość czworoboczna mniejsza; 73.2,65.8,18.9,2.3=kość czworoboczna większa; 73.2,69.6,11.5,2.6=kość główkowata; 67.7,72.5,12.2,2.5=kość łódeczkowata; 7.0,94.2,14.4,3.5=kość łokciowa; 64.3,94.2,18.9,3.5=kość promieniowa
+[luki: assets/imports/anatomia-teoria/staw-biodrowy.webp | Staw biodrowy] 6.7,24.2,17.2,9.2=kość biodrowa; 45.0,13.3,27.2,5.0=panewka stawu biodrowego; 67.2,18.3,18.3,5.0=kość krzyżowa; 6.7,45.3,19.1,9.7=głowa kości udowej; 3.9,73.3,11.7,9.2=kość udowa; 42.8,83.8,18.3,9.5=torebka stawowa
+[luki: assets/imports/anatomia-teoria/stopa.webp | Kości stopy – widok z boku] 9.4,7.0,12.2,5.0=kość skokowa; 1.1,28.7,11.7,5.0=kość piętowa; 36.4,3.7,13.3,5.0=kość łódkowata; 50.2,10.3,13.7,5.0=kości klinowate; 61.3,20.5,13.7,5.0=kość sześcienna; 16.7,80.3,20.0,8.0=kości stępu (stęp); 50.2,80.3,17.0,5.5=kości śródstopia; 75.6,80.3,18.9,5.5=kości palców stopy (paliczki)
+[luki: assets/imports/anatomia-teoria/szkielet-osiowy.webp | Szkielet osiowy – podział] 2.9,14.4,10.7,3.2=czaszka; 4.9,26.6,13.0,3.2=mózgoczaszka; 4.9,48.7,13.0,3.4=trzewioczaszka; 34.6,14.4,10.7,3.2=kręgosłup; 37.5,26.6,10.7,3.2=kręgi; 39.6,35.0,7.8,3.2=kręgi szyjne; 39.6,52.1,9.4,3.2=kręgi piersiowe; 39.6,71.5,10.4,3.2=kręgi lędźwiowe; 39.6,84.4,12.5,3.1=kość krzyżowa; 39.6,93.0,12.5,3.2=kość ogonowa (guziczna); 65.7,14.4,15.8,3.2=klatka piersiowa; 68.0,26.6,8.1,3.2=żebra; 68.0,36.1,8.1,3.2=mostek; 68.0,45.5,13.3,3.2=kręgi piersiowe (w klatce)

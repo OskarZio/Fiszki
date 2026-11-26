@@ -25,6 +25,12 @@ function parsePack(text) {
     if (line.startsWith('#')) continue;
     line = line.replace(/^(\d+[.)]|[-•*])\s+/, '');
     if (/\{\{c\d+::/.test(line)) { out.items.push({ cloze: line.slice(0, 4000) }); continue; }
+    // 🖼️ obraz z lukami (image occlusion): [luki: assets/…/plik.webp | tytuł] x,y,w,h=etykieta; … (x,y,w,h w % obrazka)
+    const oc = line.match(/^\[\s*luki\s*:\s*([^|\]]+?)\s*(?:\|\s*([^\]]*))?\]\s*(.+)$/i);
+    if (oc) { const src = oc[1].trim(); if (!PACK_IMG_OK.test(src)) { out.bad++; continue; }
+      const boxes = oc[3].split(';').map(x => x.trim().match(/^([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*=\s*(.+)$/)).filter(Boolean)
+        .map((m, i) => ({ id: 'b' + (i + 1), x: +m[1] / 100, y: +m[2] / 100, w: +m[3] / 100, h: +m[4] / 100, label: m[5].trim().slice(0, 200), hint: '' }));
+      if (boxes.length) out.items.push({ occl: { src, title: (oc[2] || '').trim().slice(0, 200), boxes } }); else out.bad++; continue; }
     let parts = line.split(/\s+\|\s+|\t/), tag = '';
     if (out.tagCol >= 2 && parts.length > out.tagCol) { tag = parts[out.tagCol].trim().replace(/_/g, ' ').slice(0, 120); parts.splice(out.tagCol, 1); }
     if (parts.length < 2) { const m = line.match(/^(.+?)\s+[-–—]\s+(.+)$/); if (m) parts = [m[1], m[2]]; }   // eksport Quizletu z „ - ” jako separatorem
@@ -53,6 +59,10 @@ function importPack(P) {
   const imgJobs = [];
   let n = 0, skip = 0;
   for (const x of P.items) {
+    if (x.occl) { const k = ('occl ' + x.occl.src + ' ' + x.occl.title).toLowerCase();
+      if (S.notes.some(n => n.deckId === d.id && n.type === 'occl' && ('occl ' + (n.imgSrc || '') + ' ' + (n.title || '')).toLowerCase() === k)) { skip++; continue; }
+      const note = addNote({ deckId: d.id, created: Date.now() + n, type: 'occl', imageId: null, imgSrc: x.occl.src, boxes: x.occl.boxes, title: x.occl.title, hideAll: true, hint: '', extra: '', style: 'box' });
+      imgJobs.push([note, x.occl.src, null]); n++; continue; }
     const key = ((x.cloze || x.front).trim() + (x.img ? ' ' + x.img : '')).toLowerCase(); if (have.has(key)) { skip++; continue; } have.add(key);
     const created = Date.now() + n;
     if (x.cloze) addNote({ deckId: d.id, created, type: 'cloze', text: x.cloze, extra: '', hint: '' });
@@ -130,7 +140,7 @@ ROUTES.import = (parts, q) => {
     <div class="row"><button class="grow" data-act="pack-paste">📋 Wklej ze schowka</button><button class="grow" data-act="pack-preview">👀 Podgląd</button></div>
   </div>
   ${P.items.length ? `<div class="card"><div class="row nowrap"><b class="grow">${esc(P.deck || 'Nowa talia')}</b><span class="small muted">${P.items.length} ${plural(P.items.length, 'fiszka', 'fiszki', 'fiszek')}${P.subject ? ' · ' + esc(P.subject) : ''}</span></div>
-    <div class="pack-list">${P.items.slice(0, 40).map(x => x.cloze ? `<div class="pack-it"><span class="tag">luka</span>${fmt(x.cloze.replace(/\{\{c\d+::(.*?)(::.*?)?\}\}/g, '[$1]'))}</div>`
+    <div class="pack-list">${P.items.slice(0, 40).map(x => x.occl ? `<div class="pack-it"><span class="tag">obraz z lukami</span><b>${esc(x.occl.title || 'Obraz')}</b><span>${x.occl.boxes.length} ${plural(x.occl.boxes.length, 'luka', 'luki', 'luk')}</span></div>` : x.cloze ? `<div class="pack-it"><span class="tag">luka</span>${fmt(x.cloze.replace(/\{\{c\d+::(.*?)(::.*?)?\}\}/g, '[$1]'))}</div>`
       : `<div class="pack-it"><b>${fmt(x.front)}</b><span>${fmt(x.back)}</span>${x.hint ? `<small>💡 ${fmt(x.hint)}</small>` : ''}</div>`).join('')}${P.items.length > 40 ? `<p class="small muted center">…i ${P.items.length - 40} więcej</p>` : ''}</div>
     ${P.paired ? '<p class="small" style="color:#ca8a04">Brak separatora – połączyłem kolejne linie w pary (pojęcie, definicja). Sprawdź podgląd!</p>' : ''}
     ${P.bad && !P.paired ? `<p class="small" style="color:#dc2626">Pominięto ${P.bad} ${plural(P.bad, 'linię', 'linie', 'linii')} bez separatora „ | ”.</p>` : ''}
