@@ -16,7 +16,7 @@ var fmt = s => esc(s).replace(/\n/g, '<br>');
 var MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-var APP_VERSION = '394';   // podbijaj razem z CACHE w sw.js
+var APP_VERSION = '395';   // podbijaj razem z CACHE w sw.js
 var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -11500,18 +11500,23 @@ function bossStart(kind, id, i) {
   bossBegin(b);
 }
 // start walki z gotowym bossem (b.cards = pula fiszek); używa też lobby (hydra)
-// ▶ walki o medal (rozdział / finał talii): każda kolejna walka w tej samej metodzie zaczyna od fiszki po tej, na której skończyła się poprzednia
+// ▶ walki o medal (rozdział / finał talii): fiszki w losowej kolejności, ale bez powtórek między walkami –
+// każda metoda ma własną potasowaną kolejkę; fiszka znika z niej po zadaniu pytania, nowa runda (nowe tasowanie) dopiero gdy przejdzie cała pula
 var bossCurKey = (b, mode) => { const mk = masterKey(b); return mk ? `${b.id}:${mk}:${mode}` : null; };
-var bossOrder = b => b.cards.slice().sort((x, y) => (x.pos || 0) - (y.pos || 0));
-function bossStartIdx(b, mode) {
-  const key = bossCurKey(b, mode); if (!key) return -1;
-  const ord = bossOrder(b), last = (S.stats.bcur || {})[key], i = last ? ord.findIndex(c => c.id === last) : -1;
-  return i < 0 ? 0 : (i + 1) % ord.length;
+function bossQueue(b, mode) {
+  const key = bossCurKey(b, mode); if (!key) return null;
+  const all = new Set(b.cards.map(c => c.id)), Q = S.stats.bq = S.stats.bq || {};
+  return { key, all, q: (Q[key] || []).filter(id => all.has(id)) };
 }
+// ile fiszek zostało do końca rundy (do wyświetlenia w okienku bossa)
+function bossQueueLeft(b, mode) { const x = bossQueue(b, mode); return x ? { left: x.q.length || x.all.size, total: x.all.size } : null; }
 function bossBegin(b, extra = {}, p0 = null) {
   const kind = b.kind, mode = BOSS_PICK.mode, p = p0 || bossParams(b, mode), hs = heroStats(), now = Date.now(), curKey = bossCurKey(b, mode);
   let ids;
-  if (curKey) { const ord = bossOrder(b), st = bossStartIdx(b, mode); ids = ord.slice(st).concat(ord.slice(0, st)).slice(0, p.len).map(c => c.id); }
+  if (curKey) { const x = bossQueue(b, mode); let q = x.q;
+    if (q.length < p.len) { const fresh = shuffle([...x.all].filter(id => !q.includes(id))); q = q.concat(fresh); }   // koniec rundy → dokładamy nowo potasowaną talię (bez fiszek, które jeszcze czekają)
+    if (!x.q.length) q = shuffle([...x.all]);
+    S.stats.bq[x.key] = q; ids = q.slice(0, p.len); }
   else { const due = shuffle(b.cards.filter(c => c.srs.state !== 'new' && c.srs.due <= now)), rest = shuffle(b.cards.filter(c => !due.includes(c)));
     ids = [...due, ...rest].slice(0, p.len).map(c => c.id); }
   // ABCD: złe odpowiedzi najpierw z tych samych talii, a gdy brakuje – ze wszystkich
@@ -11829,7 +11834,7 @@ function afterTurn(g, isVer) {
     else if (DISRUPT.includes(mv.k)) { comboFx(B, mv.k); if (B.b.turbo) { if (Math.random() < .5) B.pendBugs = 2 + Math.min(3, B.b.diff); else B.pendIce = true; B.log.unshift('⚡ TURBO: podwójna przeszkadzajka!'); } B.pendDis = mv.k; B.log.unshift(`${BOSS_ABIL[mv.k][0]} ${BOSS_ABIL[mv.k][1]}: ${BOSS_ABIL[mv.k][2]}`); bossSay('attack'); }
     B.timer = B.b.every; B.move = pickMove(B.b);
   }
-  if (!isVer) { if (B.curKey && !B.loop && B.ids[B.i]) (S.stats.bcur = S.stats.bcur || {})[B.curKey] = B.ids[B.i]; B.i++; rollEvent(B); }
+  if (!isVer) { if (B.curKey && !B.loop && B.ids[B.i] && S.stats.bq?.[B.curKey]) S.stats.bq[B.curKey] = S.stats.bq[B.curKey].filter(id => id !== B.ids[B.i]); B.i++; rollEvent(B); }
   checkPhase(B);
   B.log = B.log.slice(0, 4);
   if (B.coop && typeof coopSync === 'function') coopSync();
@@ -12191,7 +12196,7 @@ function setupSheetHTML() {
     ${s.say ? `<div class="boss-say sel${S.settings.hardcore ? ' hc' : ''}">${esc(s.say)}</div>` : ''}
     ${['ch', 'fin', 'cat'].includes(b.kind) && b.stars >= 4 ? `<button class="block bprest" data-act="boss-prestige" data-kind="${b.kind}" data-id="${b.id}" data-i="${b.i ?? ''}">⭐ Prestiż bossa → P${(b.bp || 0) + 1}: medale i puchary od nowa, boss +35% silniejszy i z turbo-przeszkadzajkami, nagrody +25%</button>` : ''}
     ${b.weak ? `<div class="weak-tag">🎯 Słabość: <b>${WEAK_NAME[b.weak]}</b> – cios ×${String(WEAK_M).replace('.', ',')} · przy 50% i 25% ❤️ boss wpada w szał (fazy)</div>` : ''}
-    <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : BOSS_PICK.mode === 'abcd' ? '<span>⏱️ ABCD: krótki czas</span>' : '<span>⏱️ bez limitu</span>'}${(() => { const st = bossStartIdx(b, BOSS_PICK.mode), N = b.cards.length; return st > 0 ? `<span title="Kolejna walka w tej metodzie zaczyna tam, gdzie skończyła się poprzednia">▶ od fiszki ${st + 1}/${N}</span>` : ''; })()}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
+    <div class="boss-tags">${`<span>🃏 ${p.len} fiszek</span><span>❤️ ~${p.hp}</span><span>⚔️ ${p.atk}</span>${p.think ? `<span>⏱️ ${p.think} s na pytanie</span>` : BOSS_PICK.mode === 'abcd' ? '<span>⏱️ ABCD: krótki czas</span>' : '<span>⏱️ bez limitu</span>'}${(() => { const x = bossQueueLeft(b, BOSS_PICK.mode); return x && x.left < x.total ? `<span title="Pytania są losowe i nie powtarzają się, dopóki nie przejdzie cała talia">🔀 nowych: ${x.left}/${x.total}</span>` : ''; })()}`}${p.abil.map(a => `<span title="${BOSS_ABIL[a][2]}">${BOSS_ABIL[a][0]} ${BOSS_ABIL[a][1]}</span>`).join('')}</div>
     ${b.ok && lessonFor(b) ? `<div class="lock-box"><b>📚 Lekcja z porażki</b><small>${esc(b.name)} pokonał Cię na tych fiszkach. Powtórz je (${lessonFor(b).ids.length}) – rewanż odblokuje się od razu.</small></div>
       <button class="primary block" data-act="boss-lesson">📚 Powtórz i wróć do walki</button>`
     : b.ok ? `<div class="mode-pick">${Object.entries(MODES).map(([k, m]) => { const t = masterKey(b) ? mastery(b, k) : 0; return `<button class="${BOSS_PICK.mode === k ? 'on' : ''} mt${t}" data-act="boss-mode" data-m="${k}"><span>${m.icon}</span><b>${m.name}</b><small>${masterKey(b) ? (MASTER_T[t] || 'brak medalu') : 'cios ' + m.mul}</small>${masterKey(b) ? `<em>boss ×${String(MEDAL_POW[Math.min(4, t + 1)]).replace('.', ',')}</em>` : ''}</button>`; }).join('')}</div>
