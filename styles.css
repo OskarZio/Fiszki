@@ -4704,3 +4704,25 @@ body.photo-bg #sbar { background: rgba(10,10,14,.86) !important; }
 
 /* 📱 długie odpowiedzi-listy (kilka linii) – do lewej, czytelnie na telefonie */
 .card.flash .ctext.ans-multi, .ctext.ans-multi { text-align: left; font-size: clamp(16px, 4.4vw, 19px); line-height: 1.45; max-width: 34em; margin-inline: auto; }
+
+/* 404 */
+.nf { text-align: center; padding: 48px 16px; display: grid; gap: 8px; justify-items: center; } .nf-n { font: 800 64px/1 Rubik, sans-serif; color: var(--muted); } .nf h2 { margin: 0; }
+
+/* duo mode */
+.duo-setup { display: grid; gap: 10px; } .duo-pl { display: grid; gap: 6px; padding: 10px; border-radius: 14px; background: var(--card2); }
+.duo-mins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .duo-mins label { display: grid; gap: 2px; } .duo-mins input { width: 100%; text-align: center; }
+.duo-rules { margin: 4px 0; padding-left: 18px; display: grid; gap: 3px; }
+.duo { display: grid; gap: 12px; } .duo-head { display: flex; align-items: center; gap: 10px; } .duo-head .grow { display: grid; }
+.duo-timer { font: 800 22px Rubik, sans-serif; font-variant-numeric: tabular-nums; } .duo-tu { margin: 0; color: #dc2626; font-weight: 700; }
+.duo-q { display: grid; gap: 12px; text-align: center; } .duo-q > small { color: var(--muted); font-weight: 700; }
+.duo-qt { font-size: clamp(18px, 5vw, 24px); font-weight: 600; } .duo-at { font-size: 18px; color: var(--good, #16a34a); }
+.duo-qt img, .duo-at img { max-width: 100%; max-height: 36dvh; border-radius: 10px; }
+.duo-ok { background: #16a34a !important; color: #fff !important; min-height: 52px; } .duo-bad { background: #dc2626 !important; color: #fff !important; min-height: 52px; }
+.duo-topic { font-size: 22px; font-weight: 700; margin: 4px 0; } .duo-lt { font: 800 40px Rubik, sans-serif; font-variant-numeric: tabular-nums; }
+.duo-rate { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; } .duo-rate button { min-height: 52px; font-size: 20px; font-weight: 800; }
+.duo-draw { display: grid; gap: 12px; padding: 18px 16px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); border: 2px solid; text-align: center; }
+.duo-draw.ok { border-color: #16a34a; } .duo-draw.bad { border-color: #dc2626; } .duo-draw small { color: var(--muted); font-weight: 700; }
+.duo-ct { font-size: 20px; font-weight: 700; margin: 4px 0; } .duo-paused { display: grid; gap: 10px; } .duo-final { font-size: 22px; }
+.duo-form { display: grid; gap: 8px; } .duo-form textarea { width: 100%; }
+.duo-row { display: flex; align-items: center; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); } .duo-row.off { opacity: .5; } .duo-rc { min-width: 0; font-size: 14px; }
+.duo-row { display: grid; grid-template-columns: auto auto 1fr auto auto auto; align-items: center; } .duo-row .duo-rc { grid-column: 1 / -1; grid-row: 2; padding-top: 4px; }

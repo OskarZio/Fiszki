@@ -12,7 +12,7 @@ const fmt = s => esc(s).replace(/\n/g, '<br>');
 const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
 // 🤫 konsola przeglądarki bez komunikatów aplikacji (włączysz je: localStorage.debug = 1)
 try { if (!localStorage.getItem('debug')) for (const k of ['log', 'info', 'debug', 'warn', 'table', 'trace']) console[k] = () => {}; } catch { /* */ }
-const APP_VERSION = '395';   // podbijaj razem z CACHE w sw.js
+const APP_VERSION = '396';   // podbijaj razem z CACHE w sw.js
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -729,7 +729,7 @@ function render() {
       case 'more': html = viewMore(); onMount(mountMore); tab = 'more'; break;
       default:
         if (ROUTES[r]) { const v = ROUTES[r](parts, q); html = v.html; tab = v.tab || ''; focus = !!v.focus; }
-        else { html = viewHome(); tab = 'home'; }
+        else { html = notFoundHTML(); tab = ''; }
     }
   } catch (e) {
     console.error(e); html = `<div class="card"><h2>Ups, błąd</h2><p>${esc(e.message)}</p><a href="#/">Wróć na start</a></div>`;
@@ -764,6 +764,8 @@ const progress = (frac, thin) => `<div class="progress${thin ? ' thin' : ''}"><d
 // Tryby: 'full' – wszystko, 'minimal' – skupienie (bez grywalizacji, z pałacami), 'zen' – pełne skupienie
 const appMode = () => S.settings.mode || (S.settings.minimal ? 'minimal' : 'full');
 const palTab = () => appMode() === 'full' ? 'arena' : 'palaces';
+// 404: wspólna strona dla każdej nieistniejącej (albo niedostępnej) trasy
+const notFoundHTML = () => `<div class="nf"><div class="nf-n">404</div><h2>Nie ma takiej strony</h2><p class="muted">Ten adres nie istnieje albo został usunięty.</p><button class="primary" data-go="#/">Wróć na start</button></div>`;
 function viewHomeZen() {
   const all = deckCounts('all');
   const decks = S.decks.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl')).map(d => { const k = deckCounts(d.id);
