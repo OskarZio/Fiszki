@@ -8,9 +8,12 @@
 const duoOn = () => typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
 const duoAdmin = () => typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
 const DUO_ROUNDS = [['Rozgrzewka', 'pytanie → odpowiedź → pytający ocenia'], ['Na ślepo', 'jak rozgrzewka, inna pula kart'], ['Va banque', 'przed pytaniem wybierasz stawkę: bezpiecznie (+1) albo va banque (+2 / −1, najwyższa pula kart)'], ['Egzamin', '5 najczęściej mylonych fiszek, zaliczenie od 4/5']];
-const DUO_EXAM_N = 5, DUO_EXAM_PASS = 4;
+const DUO_EXAM_N = 5, DUO_EXAM_PASS = 4, DUO_STREAK = 3, DUO_FAST_S = 20;
+// 🎯 wyzwania dla pary: losowe zasady rundy (1–3), wspólny cel rundy i seria
+const DUO_MODS = { fast: ['⏱️ Szybka runda', `${DUO_FAST_S} s na odpowiedź – po czasie liczy się jako źle`], reverse: ['🔄 Odwrotnie', 'widzisz odpowiedź, a podajesz pytanie'], double: ['✖️2 Podwójne punkty', 'każda dobra odpowiedź liczy się podwójnie'] };
+const DUO_GOAL = [8, 10, 6];   // wspólny cel rundy 1–3: tyle dobrych odpowiedzi razem → nagroda dla obojga
 let DUO = null, DUO_CARDS = null, DUO_TICK = 0, DUO_ADM = { edit: null };
-const duoPrefs = () => (S.stats.duoPrefs = S.stats.duoPrefs || { names: ['', ''], decks: ['', ''], mins: [10, 15, 15] });
+const duoPrefs = () => { const P = S.stats.duoPrefs = S.stats.duoPrefs || { names: ['', ''], decks: ['', ''], mins: [10, 15, 15] }; if (P.srs == null) P.srs = true; if (P.mods == null) P.mods = true; return P; };
 
 // ---------- dane: karty tylko na tym urządzeniu
 const DUO_KEY = 'duoCards';
@@ -45,14 +48,17 @@ function duoDraw(type, round) {
 const duoDeckCards = id => S.cards.filter(c => c.deckId === id && !c.sus && cardView(c).ans.trim());
 function duoStart(names, decks, mins) {
   // gracz A odpowiada z talii gracza B i odwrotnie
-  const q = [shuffle(duoDeckCards(decks[1]).map(c => c.id)), shuffle(duoDeckCards(decks[0]).map(c => c.id))];
+  const now = Date.now(), order = id => { const cs = duoDeckCards(id), due = cs.filter(c => c.srs.state !== 'new' && c.srs.due <= now).sort((a, b) => a.srs.due - b.srs.due);
+    return [...due, ...shuffle(cs.filter(c => !due.includes(c)))].map(c => c.id); };   // najpierw zaległe powtórki, potem reszta talii
+  const q = [order(decks[1]), order(decks[0])];
   if (q[0].length < DUO_EXAM_N || q[1].length < DUO_EXAM_N) return toast(`Każda talia potrzebuje min. ${DUO_EXAM_N} fiszek`);
-  DUO = { names, decks, mins, q, round: 1, turn: 0, score: [0, 0], miss: {}, used: {}, phase: 'intro', step: null, paused: false, endAt: 0, left: 0, timeUp: false, exam: null, risky: [0, 0] };
+  DUO = { names, decks, mins, q, round: 1, turn: 0, score: [0, 0], miss: {}, used: {}, phase: 'intro', step: null, paused: false, endAt: 0, left: 0, timeUp: false, exam: null, risky: [0, 0],
+    seen: [new Set(), new Set()], total: [q[0].length, q[1].length], streak: [0, 0], best: [0, 0], reviews: 0, mod: null, goal: 0, goalHit: false, teams: 0, srs: !!duoPrefs().srs, mods: !!duoPrefs().mods };
   render();
 }
 function duoBeginRound() {
   const D = DUO; D.phase = 'play'; D.timeUp = false; D.turn = 0; D.paused = false;
-  const m = D.mins[D.round - 1]; D.endAt = D.round <= 3 && m ? Date.now() + m * 60e3 : 0;
+  const m = D.mins[D.round - 1]; D.endAt = D.round <= 3 && m ? Date.now() + m * 60e3 : 0; D.goal = 0; D.goalHit = false;
   if (D.round === 4) D.exam = { p: 0, i: 0, ok: 0, cards: [duoExamCards(0), duoExamCards(1)], done: [] };
   duoNext(); duoTimer();
 }
@@ -63,26 +69,41 @@ function duoExamCards(p) {
 function duoNext() {
   const D = DUO;
   if (D.timeUp && D.round <= 3) { D.phase = 'roundEnd'; return render(); }
-  if (D.round <= 2) D.step = { k: 'q', id: D.q[D.turn][0], shown: false };
+  if (D.round <= 2) D.step = { k: 'q', id: D.q[D.turn][0], shown: false, t0: Date.now() };
   else if (D.round === 3) D.step = { k: 'stake', id: D.q[D.turn][0] };
   else { const E = D.exam; if (E.i >= DUO_EXAM_N) return duoExamEnd(); D.step = { k: 'q', id: E.cards[E.p][E.i], shown: false }; }
   render();
 }
-function duoAnswer(ok) {
-  const D = DUO, id = D.step.id, p = D.turn;
+function duoAnswer(ok, late) {
+  const D = DUO, id = D.step.id, p = D.turn; duoLearn(id, ok, D.step.t0);
   if (D.round === 4) { const E = D.exam; if (ok) { E.ok++; D.score[E.p]++; } else D.miss[id] = (D.miss[id] || 0) + 1; E.i++; return duoNext(); }
-  const qq = D.q[p], hi = D.round === 3 && D.step.hi; qq.shift(); qq.push(id);   // źle → na koniec kolejki (dobra też wraca na koniec, żeby pula się nie kończyła)
-  if (ok) D.score[p] += hi ? 2 : 1; else { D.miss[id] = (D.miss[id] || 0) + 1; if (hi) D.score[p] = Math.max(0, D.score[p] - 1); }
-  const pool = D.round === 3 ? (hi ? 3 : 2) : D.round;
-  D.step = { k: 'card', ok, hi, card: duoDraw(ok ? 'reward' : 'forfeit', pool) }; render();
+  const qq = D.q[p], hi = D.round === 3 && D.step.hi, mul = D.mod === 'double' ? 2 : 1; qq.shift(); qq.push(id);   // fiszka wraca na koniec kolejki – najpierw przechodzi cała talia
+  let streak = false;
+  if (ok) { D.score[p] += (hi ? 2 : 1) * mul; D.streak[p]++; D.best[p] = Math.max(D.best[p], D.streak[p]); D.goal++;
+    if (D.mods && D.streak[p] % DUO_STREAK === 0) { streak = true; D.score[p]++; } }
+  else { D.miss[id] = (D.miss[id] || 0) + 1; D.streak[p] = 0; if (hi) D.score[p] = Math.max(0, D.score[p] - 1); }
+  const pool = streak ? Math.min(3, D.round + 1) : D.round === 3 ? (hi ? 3 : 2) : D.round;   // 🔥 seria: nagroda z wyższej puli
+  const team = ok && D.mods && !D.goalHit && D.round <= 3 && D.goal >= DUO_GOAL[D.round - 1];
+  if (team) D.goalHit = true;
+  D.step = { k: 'card', ok, hi, late, streak, team, card: duoDraw(ok ? 'reward' : 'forfeit', pool) }; render();
 }
-function duoStake(hi) { const D = DUO; if (hi) D.risky[D.turn]++; D.step = { k: 'q', id: D.step.id, shown: false, hi }; render(); }
+function duoStake(hi) { const D = DUO; if (hi) D.risky[D.turn]++; D.step = { k: 'q', id: D.step.id, shown: false, hi, t0: Date.now() }; render(); }
+// 📚 nauka: odpowiedź na zaległą fiszkę zapisuje się jako zwykła powtórka (harmonogram), reszta tylko jako czas nauki
+function duoLearn(id, ok, t0) {
+  const D = DUO, c = cardById(id), now = Date.now(); if (!c) return; D.seen[D.round === 4 ? D.exam.p : D.turn].add(id);
+  const ms = Math.min(60000, now - (t0 || now));
+  if (D.srs && c.srs.state !== 'new' && c.srs.due <= now) { const g = ok ? 3 : 1; c.srs = schedule(c.srs, g); touch(c); S.log.push({ id: uid(), c: c.id, d: c.deckId, t: now, g, n: 0, ms, m: 'flip', duo: 1 }); D.reviews++; emit('review', c, g, false); }
+  else (S.tlog = S.tlog || []).push({ id: uid(), t: now, d: c.deckId, ms });
+  save();
+}
+function duoModPick() { const D = DUO; D.mod = D.mods && D.round <= 3 ? Object.keys(DUO_MODS)[Math.random() * 3 | 0] : null; }
 function duoExamEnd() {
   const D = DUO, E = D.exam, pass = E.ok >= DUO_EXAM_PASS; E.done.push({ p: E.p, ok: E.ok, pass });
   D.step = { k: 'card', ok: pass, exam: E.ok, card: duoDraw(pass ? 'reward' : 'forfeit', 4) }; render();
 }
 function duoAfterCard() {
   const D = DUO;
+  if (D.step?.team) { D.teams++; D.step = { k: 'team', cards: [duoDraw('reward', D.round), duoDraw('reward', D.round)] }; return render(); }   // 🤝 wspólny cel: nagroda dla obojga
   if (D.round === 4) { const E = D.exam; if (E.p === 0) { E.p = 1; E.i = 0; E.ok = 0; D.turn = 1; return duoNext(); } D.phase = 'end'; return render(); }
   D.turn = 1 - D.turn; duoNext();
 }
@@ -94,13 +115,14 @@ function duoTimer() {
     const D = DUO; if (!D || parseRoute().parts[0] !== 'duo') { clearInterval(DUO_TICK); return; }
     if (D.paused || D.phase !== 'play') return;
     const now = Date.now();
+    if (D.mod === 'fast' && D.step?.k === 'q' && !D.step.shown && D.step.t0) { const left = D.step.t0 + DUO_FAST_S * 1000 - now, el = document.getElementById('duo-ft'); if (el) el.textContent = Math.max(0, Math.ceil(left / 1000)) + ' s'; if (left <= 0) { duoAnswer(false, true); return; } }
     if (D.endAt) { const el = document.getElementById('duo-t'); if (el) el.textContent = duoFmt(D.endAt - now); if (now >= D.endAt && !D.timeUp) { D.timeUp = true; const b = document.getElementById('duo-tu'); if (b) b.hidden = false; } }
   }, 250);
 }
 function duoPause() {
   const D = DUO, now = Date.now();
   if (!D.paused) { D.paused = true; D.pausedAt = now; }
-  else { const dt = now - D.pausedAt; if (D.endAt) D.endAt += dt; D.paused = false; }
+  else { const dt = now - D.pausedAt; if (D.endAt) D.endAt += dt; if (D.step?.t0) D.step.t0 += dt; D.paused = false; }
   render();
 }
 
@@ -114,6 +136,8 @@ function duoSetupHTML() {
       <label class="field"><span>Talia gracza ${'AB'[i]} <small class="muted">(odpowiada z niej gracz ${'BA'[i]})</small></span><select id="duo-d${i}">${opt(P.decks[i])}</select></label></div>`).join('')}
     <p class="small muted" style="margin:4px 0">Minutnik rund (min):</p>
     <div class="duo-mins">${[0, 1, 2].map(i => `<label><small>${DUO_ROUNDS[i][0]}</small><input id="duo-m${i}" type="number" min="1" max="60" value="${P.mins[i]}"></label>`).join('')}<label><small>Egzamin</small><input value="–" disabled></label></div>
+    <label class="check"><input type="checkbox" id="duo-srs" ${P.srs ? 'checked' : ''}><span>📚 Zapisuj odpowiedzi jako powtórki (zaległe fiszki przesuwają się w harmonogramie)</span></label>
+    <label class="check"><input type="checkbox" id="duo-mods" ${P.mods ? 'checked' : ''}><span>🎯 Wyzwania dla pary: losowa zasada rundy, wspólny cel i serie</span></label>
     <ol class="small duo-rules">${DUO_ROUNDS.map(r => `<li><b>${r[0]}</b> – ${r[1]}</li>`).join('')}</ol>
     ${duoList().length ? `<p class="small muted">Aktywne karty: ${cnt('reward')} rewards · ${cnt('forfeit')} forfeits</p>` : '<p class="small">Brak kart na tym urządzeniu – otwórz link z kartami albo dodaj je w „Karty”. Bez kart gra liczy tylko punkty.</p>'}
     <button class="primary block" data-act="duo-start" ${ds.length ? '' : 'disabled'}>▶ Start</button>
@@ -122,6 +146,7 @@ function duoSetupHTML() {
 function duoCardHTML(st) {
   const c = st.card, D = DUO;
   return `<div class="duo-draw ${st.ok ? 'ok' : 'bad'}"><small>${st.exam != null ? `Egzamin: ${st.exam}/${DUO_EXAM_N} – ${st.ok ? 'zaliczony' : 'niezaliczony'}` : `${st.hi ? '🔥 va banque · ' : ''}${st.ok ? (st.hi ? 'Dobrze, +2' : 'Dobrze') : st.hi ? 'Źle, −1' : 'Źle'}`} · ${st.ok ? 'reward' : 'forfeit'}</small>
+    ${st.late ? '<b class="duo-badge">⏱️ Za późno</b>' : ''}${st.streak ? `<b class="duo-badge">🔥 Seria ${DUO_STREAK}! +1 i nagroda z wyższej puli</b>` : ''}${st.team ? '<b class="duo-badge team">🤝 Wspólny cel rundy osiągnięty – po tej karcie nagroda dla obojga</b>' : ''}
     <p class="duo-ct">${c ? esc(c.content) : 'Brak aktywnych kart w tej puli.'}</p>
     <div class="row nowrap"><button class="grow" data-act="duo-pass">Pas</button><button class="primary grow" data-act="duo-done">Dalej ›</button></div></div>`;
 }
@@ -131,13 +156,17 @@ function duoPlayHTML() {
     ${D.endAt ? `<b class="duo-timer" id="duo-t">${duoFmt((D.paused ? D.pausedAt : Date.now()) > D.endAt ? 0 : D.endAt - (D.paused ? D.pausedAt : Date.now()))}</b>` : ''}<button class="sm" data-act="duo-pause">${D.paused ? '▶' : '⏸'}</button></div>
     <p class="small duo-tu" id="duo-tu" ${D.timeUp ? '' : 'hidden'}>Czas rundy minął – dokończ to pytanie.</p>`;
   if (D.paused) return head + '<div class="card center duo-paused"><h2>Pauza</h2><button class="primary" data-act="duo-pause">▶ Wznów</button></div>';
-  if (st.k === 'card') return head + duoCardHTML(st);
+  const info = D.round <= 3 ? `<div class="duo-info">${D.mod ? `<span class="duo-mod" title="${esc(DUO_MODS[D.mod][1])}">${DUO_MODS[D.mod][0]}</span>` : ''}${D.mods ? `<span>🤝 cel: ${Math.min(D.goal, DUO_GOAL[D.round - 1])}/${DUO_GOAL[D.round - 1]}${D.goalHit ? ' ✓' : ''}</span><span>🔥 ${D.streak[D.turn] % DUO_STREAK || (D.streak[D.turn] ? DUO_STREAK : 0)}/${DUO_STREAK}</span>` : ''}<span>📚 ${D.seen[0].size}/${D.total[0]} · ${D.seen[1].size}/${D.total[1]}</span></div>` : '';
+  if (st.k === 'team') return head + `<div class="duo-draw ok team"><small>🤝 Wspólny cel rundy – nagroda dla obojga</small>${[0, 1].map(i => `<p class="duo-ct"><span class="small muted">${esc(D.names[i])}:</span><br>${st.cards[i] ? esc(st.cards[i].content) : 'Brak aktywnych kart w tej puli.'}</p>`).join('')}<button class="primary block" data-act="duo-done">Dalej ›</button></div>`;
+  if (st.k === 'card') return head + info + duoCardHTML(st);
   const c = cardById(st.id), v = c ? cardView(c) : null;
-  if (st.k === 'stake') return head + `<div class="card duo-q duo-stake"><small>Odpowiada ${esc(ans)} · wybierz stawkę, zanim zobaczysz pytanie</small>
+  if (st.k === 'stake') return head + info + `<div class="card duo-q duo-stake"><small>Odpowiada ${esc(ans)} · wybierz stawkę, zanim zobaczysz pytanie</small>
       <button class="duo-safe" data-act="duo-stake" data-v="0"><b>Bezpiecznie</b><small>+1 · łagodniejsza pula kart</small></button>
       <button class="duo-hi" data-act="duo-stake" data-v="1"><b>🔥 Va banque</b><small>+2 za dobrze, −1 za źle · najostrzejsza pula kart</small></button></div>`;
-  return head + `<div class="card duo-q"><small>${D.round === 4 ? `Egzamin ${esc(ans)} · ${D.exam.i + 1}/${DUO_EXAM_N}` : `Pyta ${esc(asker)} · odpowiada ${esc(ans)}${st.hi ? ' · 🔥 va banque' : ''}`}</small>
-    <div class="duo-qt">${v ? v.q : ''}</div>${st.shown && v ? `<hr><div class="duo-at">${v.b}</div>` : ''}
+  const rev = D.mod === 'reverse' && D.round <= 3, front = v ? (rev ? v.b : v.q) : '', back = v ? (rev ? v.q : v.b) : '';
+  return head + info + `<div class="card duo-q"><small>${rev ? '🔄 Podaj pytanie do tej odpowiedzi · ' : ''}${D.round === 4 ? `Egzamin ${esc(ans)} · ${D.exam.i + 1}/${DUO_EXAM_N}` : `Pyta ${esc(asker)} · odpowiada ${esc(ans)}${st.hi ? ' · 🔥 va banque' : ''}`}</small>
+    ${D.mod === 'fast' && D.round <= 3 && !st.shown ? `<b class="duo-fast" id="duo-ft">${DUO_FAST_S} s</b>` : ''}
+    <div class="duo-qt">${front}</div>${st.shown && v ? `<hr><div class="duo-at">${back}</div>` : ''}
     ${st.shown ? `<div class="row nowrap"><button class="grow duo-bad" data-act="duo-ans" data-v="0">✗ Źle</button><button class="grow duo-ok" data-act="duo-ans" data-v="1">✓ Dobrze</button></div>`
       : `<button class="primary block" data-act="duo-show">Pokaż odpowiedź (dla pytającego)</button>`}</div>`;
 }
@@ -152,6 +181,9 @@ function duoEndHTML() {
     <p>${w == null ? 'Remis!' : `Wygrywa ${esc(D.names[w])}`}</p>
     ${D.exam?.done.map(x => `<p class="small">Egzamin ${esc(D.names[x.p])}: ${x.ok}/${DUO_EXAM_N} ${x.pass ? '✓' : '✗'}</p>`).join('') || ''}
     ${D.risky[0] + D.risky[1] ? `<p class="small muted">Va banque: ${esc(D.names[0])} ${D.risky[0]}× · ${esc(D.names[1])} ${D.risky[1]}×</p>` : ''}
+    <div class="duo-sum">${[0, 1].map(i => `<span><b>${esc(D.names[i])}</b>przerobione ${D.seen[i].size}/${D.total[i]} fiszek<br>najlepsza seria: ${D.best[i]}</span>`).join('')}</div>
+    <p class="small">${D.reviews ? `📚 Zapisane powtórki: <b>${D.reviews}</b>` : ''}${D.teams ? ` · 🤝 wspólne cele: <b>${D.teams}</b>` : ''}</p>
+    ${(() => { const ids = Object.keys(D.miss).filter(id => cardById(id)); return ids.length ? `<button class="block" data-act="duo-review" data-ids="${ids.join(',')}">🔁 Powtórz pomylone fiszki (${ids.length}) w zwykłej nauce</button>` : '<p class="small">Bez pomyłek – brawo! 🎉</p>'; })()}
     <button class="primary block" data-act="duo-reset">Nowa sesja</button></div>`;
 }
 let DUO_LINK_SEEN = '';
@@ -163,7 +195,8 @@ ROUTES.duo = (parts = [], q) => {
   if (parts[1]) return { tab: '', html: notFoundHTML() };
   if (!DUO) return { tab: 'arena', html: duoSetupHTML() };
   if (DUO.phase === 'play' && !DUO_TICK) duoTimer();
-  const body = DUO.phase === 'intro' ? `<div class="card center duo-paused"><h2>Runda ${DUO.round}: ${DUO_ROUNDS[DUO.round - 1][0]}</h2><p class="small muted">${DUO_ROUNDS[DUO.round - 1][1]}</p><button class="primary block" data-act="duo-round">▶ Zaczynamy</button></div>`
+  if (DUO.phase === 'intro' && DUO.modRound !== DUO.round) { DUO.modRound = DUO.round; duoModPick(); }
+  const body = DUO.phase === 'intro' ? `<div class="card center duo-paused"><h2>Runda ${DUO.round}: ${DUO_ROUNDS[DUO.round - 1][0]}</h2><p class="small muted">${DUO_ROUNDS[DUO.round - 1][1]}</p>${DUO.mod ? `<div class="duo-modbox"><b>Wyzwanie rundy: ${DUO_MODS[DUO.mod][0]}</b><small>${DUO_MODS[DUO.mod][1]}</small></div>` : ''}${DUO.mods && DUO.round <= 3 ? `<p class="small">🤝 Wspólny cel: ${DUO_GOAL[DUO.round - 1]} dobrych odpowiedzi razem → nagroda dla obojga · 🔥 ${DUO_STREAK} dobre z rzędu → bonus</p>` : ''}<button class="primary block" data-act="duo-round">▶ Zaczynamy</button></div>`
     : DUO.phase === 'roundEnd' ? duoRoundEndHTML() : DUO.phase === 'end' ? duoEndHTML() : duoPlayHTML();
   return { tab: 'arena', focus: true, html: `<div class="duo">${body}</div>` };
 };
@@ -188,7 +221,7 @@ function duoSet(list, ok) { duoPersist(list); if (ok) toast(ok); render(); }
 Object.assign(ACTIONS, {
   'duo-start': () => {
     const P = duoPrefs();
-    P.names = [0, 1].map(i => ($(`#duo-n${i}`).value || '').trim().slice(0, 20)); P.decks = [0, 1].map(i => $(`#duo-d${i}`).value); P.mins = [0, 1, 2].map(i => Math.max(1, Math.min(60, +$(`#duo-m${i}`).value || [10, 15, 15][i]))); save();
+    P.names = [0, 1].map(i => ($(`#duo-n${i}`).value || '').trim().slice(0, 20)); P.decks = [0, 1].map(i => $(`#duo-d${i}`).value); P.mins = [0, 1, 2].map(i => Math.max(1, Math.min(60, +$(`#duo-m${i}`).value || [10, 15, 15][i]))); P.srs = !!$('#duo-srs')?.checked; P.mods = !!$('#duo-mods')?.checked; save();
     duoStart(P.names.map((n, i) => n || 'Gracz ' + 'AB'[i]), P.decks, P.mins);
   },
   'duo-round': () => { const D = DUO; if (!D) return; if (D.phase === 'roundEnd') { D.round++; D.phase = 'intro'; return render(); } duoBeginRound(); },
@@ -199,6 +232,7 @@ Object.assign(ACTIONS, {
   'duo-done': () => duoAfterCard(),
   'duo-pause': () => DUO && duoPause(),
   'duo-quit': async () => { if (!DUO) return go('#/duo'); if (DUO.phase !== 'end' && !await askBox({ title: 'Zakończyć sesję?', ok: 'Zakończ', cancel: 'Graj dalej' })) return; DUO.phase = 'end'; clearInterval(DUO_TICK); DUO_TICK = 0; render(); },
+  'duo-review': el => { const ids = el.dataset.ids; DUO = null; clearInterval(DUO_TICK); DUO_TICK = 0; SESSION = null; go(`#/study/all/flip?cram=list&ids=${ids}`); },
   'duo-reset': () => { DUO = null; clearInterval(DUO_TICK); DUO_TICK = 0; render(); },
   'duo-save': async () => {
     const x = duoClean({ type: $('#duo-ft').value, round: $('#duo-fr').value, content: $('#duo-fc').value, active: DUO_ADM.edit ? DUO_ADM.edit.active : true });

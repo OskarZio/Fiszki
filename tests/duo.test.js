@@ -39,7 +39,7 @@ let fails = 0; const check = (ok, msg) => { console.log((ok ? 'OK   ' : 'FAIL ')
   await go('#/duo/admin'); check((await view()).includes('Przykładowa nagroda'), 'panel kart pokazuje wczytane karty');
   check(await p.evaluate(async () => (await duoLink()).includes('#/duo?d=')), 'panel generuje link do kart');
   await go('#/duo'); check((await view()).includes('Start'), 'ekran startowy');
-  await p.evaluate(() => { const ds = S.decks.slice(-2).map(d => d.id); duoStart(['A', 'B'], ds, [1, 1, 1]); ACTIONS['duo-round'](); });
+  await p.evaluate(() => { const ds = S.decks.slice(-2).map(d => d.id); S.stats.duoPrefs = { ...duoPrefs(), mods: false }; duoStart(['A', 'B'], ds, [1, 1, 1]); ACTIONS['duo-round'](); });
   const st = () => p.evaluate(() => ({ r: DUO.round, ph: DUO.phase, k: DUO.step?.k, card: DUO.step?.card?.content || null, sc: DUO.score.join(':') }));
   await p.evaluate(() => { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: '1' } }); }); let s = await st(); check(s.k === 'card' && s.card === 'Przykładowa nagroda', 'dobrze → reward z rundy 1');
   await p.evaluate(() => ACTIONS['duo-done']()); await p.evaluate(() => { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: '0' } }); }); s = await st(); check(s.card === 'Przykładowy fant', 'źle → forfeit');
@@ -58,6 +58,27 @@ let fails = 0; const check = (ok, msg) => { console.log((ok ? 'OK   ' : 'FAIL ')
   await p.evaluate(() => { for (let i = 0; i < 5; i++) { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: i < 4 ? '1' : '0' } }); } }); s = await st(); check(s.card === 'Przykładowa nagroda 4', 'egzamin 4/5 → zaliczony');
   await p.evaluate(() => { ACTIONS['duo-done'](); for (let i = 0; i < 5; i++) { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: i < 3 ? '1' : '0' } }); } }); s = await st(); check(s.card === 'Przykładowy fant', 'egzamin 3/5 → niezaliczony');
   await p.evaluate(() => ACTIONS['duo-done']()); s = await st(); check(s.ph === 'end', 'koniec sesji');
+  check(await p.evaluate(() => !!document.querySelector('[data-act="duo-review"]')) || (await view()).includes('Bez pomyłek'), 'podsumowanie: powtórka pomylonych fiszek');
+  // 4) wyzwania dla pary i nauka
+  const r4 = await p.evaluate(() => {
+    const ds = S.decks.slice(-2).map(d => d.id);
+    S.cards.filter(c => ds.includes(c.deckId)).forEach(c => { c.srs = { ...c.srs, state: 'review', ivl: 3, due: Date.now() - 864e5 }; });
+    S.stats.duoPrefs = { ...duoPrefs(), mods: true, srs: true }; duoStart(['A', 'B'], ds, [5, 5, 5]); DUO.modRound = 1; DUO.mod = null; ACTIONS['duo-round']();
+    const out = {}; const ans = ok => { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: ok ? '1' : '0' } }); };
+    const id0 = DUO.step.id, due0 = cardById(id0).srs.due; ans(true); out.srs = cardById(id0).srs.due > Date.now() && cardById(id0).srs.due !== due0;
+    // seria: gracz A 3 dobre z rzędu (tury się przeplatają)
+    ACTIONS['duo-done'](); ans(true); ACTIONS['duo-done'](); ans(true); ACTIONS['duo-done'](); ans(true); ACTIONS['duo-done'](); ans(true);
+    out.streak = DUO.step.streak === true; out.goal = DUO.goal;
+    for (let i = 0; i < 6 && !DUO.goalHit; i++) { ACTIONS['duo-done'](); if (DUO.step.k === 'team') ACTIONS['duo-done'](); ans(true); }
+    out.goalHit = DUO.goalHit; ACTIONS['duo-done'](); out.team = DUO.step.k === 'team' && DUO.step.cards.length === 2;
+    ACTIONS['duo-done'](); DUO.mod = 'fast'; DUO.step.t0 = Date.now() - 999999; return out; });
+  await p.waitForTimeout(600);
+  const late = await p.evaluate(() => DUO.step.k === 'card' && DUO.step.late === true);
+  check(r4.srs, 'odpowiedź na zaległą fiszkę zapisuje się jako powtórka');
+  check(r4.streak, `seria ${3} dobrych → bonus`); check(r4.goalHit && r4.team, 'wspólny cel rundy → nagroda dla obojga');
+  check(late, 'szybka runda: po czasie liczy się jako źle');
+  await p.evaluate(() => { DUO.modRound = 1; DUO.mod = 'reverse'; DUO.phase = 'play'; DUO.step = { k: 'q', id: DUO.q[0][0], shown: false, t0: Date.now() }; render(); });
+  check((await view()).includes('Podaj pytanie'), 'wyzwanie „odwrotnie” pokazuje odpowiedź jako pytanie');
   await go('#/duo/admin'); check((await view()).includes('Przykładowa nagroda'), 'lista kart');
   check(!errs.length, 'brak wyjątków JS' + (errs.length ? ': ' + errs.join(' | ') : ''));
   await b.close(); console.log(fails ? `${fails} błędów` : 'Wszystko OK'); process.exit(fails ? 1 : 0);

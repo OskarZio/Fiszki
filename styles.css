@@ -4727,3 +4727,9 @@ body.photo-bg #sbar { background: rgba(10,10,14,.86) !important; }
 .duo-form { display: grid; gap: 8px; } .duo-form textarea { width: 100%; }
 .duo-row { display: flex; align-items: center; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); } .duo-row.off { opacity: .5; } .duo-rc { min-width: 0; font-size: 14px; }
 .duo-row { display: grid; grid-template-columns: auto auto 1fr auto auto auto; align-items: center; } .duo-row .duo-rc { grid-column: 1 / -1; grid-row: 2; padding-top: 4px; }
+.duo-info { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; font-weight: 700; } .duo-info span { padding: 4px 9px; border-radius: 99px; background: var(--card2); }
+.duo-info .duo-mod { background: color-mix(in srgb, #7c3aed 18%, var(--card2)); }
+.duo-modbox { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, #7c3aed 14%, var(--card2)); } .duo-modbox small { color: var(--muted); }
+.duo-badge { display: block; font-size: 13px; padding: 6px 10px; border-radius: 10px; background: color-mix(in srgb, #f59e0b 18%, var(--card2)); } .duo-badge.team { background: color-mix(in srgb, #16a34a 18%, var(--card2)); }
+.duo-fast { font: 800 26px Rubik, sans-serif; color: #dc2626; font-variant-numeric: tabular-nums; }
+.duo-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .duo-sum span { display: grid; gap: 2px; padding: 10px; border-radius: 14px; background: var(--card2); font-size: 13px; }
