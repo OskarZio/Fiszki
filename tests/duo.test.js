@@ -39,9 +39,13 @@ let fails = 0; const check = (ok, msg) => { console.log((ok ? 'OK   ' : 'FAIL ')
   await p.evaluate(() => ACTIONS['duo-pass']()); s = await st(); check(s.k === 'q' && s.sc === '1:0', 'pas pomija kartę bez kary');
   await p.evaluate(() => { DUO.timeUp = true; ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: '1' } }); ACTIONS['duo-done'](); }); s = await st(); check(s.ph === 'roundEnd', 'koniec czasu → koniec rundy');
   await p.evaluate(() => { ACTIONS['duo-round'](); ACTIONS['duo-round'](); DUO.timeUp = true; ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: '1' } }); ACTIONS['duo-done'](); ACTIONS['duo-round'](); ACTIONS['duo-round'](); });
-  s = await st(); check(s.r === 3 && s.k === 'lecture', 'runda 3: wykład');
-  await p.evaluate(() => { ACTIONS['duo-lec'](); ACTIONS['duo-rate']({ dataset: { n: '5' } }); }); s = await st(); check(s.card === 'Przykładowa nagroda 3', 'ocena 5 → reward');
-  await p.evaluate(() => { ACTIONS['duo-done'](); ACTIONS['duo-lec'](); ACTIONS['duo-rate']({ dataset: { n: '2' } }); }); s = await st(); check(s.card === 'Przykładowy fant', 'ocena 2 → forfeit');
+  s = await st(); check(s.r === 3 && s.k === 'stake', 'runda 3: wybór stawki');
+  await p.evaluate(() => { ACTIONS['duo-stake']({ dataset: { v: '1' } }); ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: '1' } }); });
+  s = await st(); check(s.card === 'Przykładowa nagroda 3' && s.sc === '5:0', 'va banque dobrze → +2 i karta z najwyższej puli');
+  await p.evaluate(() => { ACTIONS['duo-done'](); ACTIONS['duo-stake']({ dataset: { v: '1' } }); ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: '0' } }); });
+  s = await st(); check(s.card === 'Przykładowy fant' && s.sc === '5:0', 'va banque źle → forfeit, punkty nie spadają poniżej 0');
+  await p.evaluate(() => { ACTIONS['duo-done'](); ACTIONS['duo-stake']({ dataset: { v: '0' } }); ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: '1' } }); });
+  s = await st(); check(s.card === 'Przykładowa nagroda 2' && s.sc === '6:0', 'bezpiecznie → +1 i łagodniejsza pula');
   await p.evaluate(() => { DUO.timeUp = true; ACTIONS['duo-done'](); ACTIONS['duo-round'](); ACTIONS['duo-round'](); });
   s = await st(); check(s.r === 4 && s.k === 'q', 'runda 4: egzamin');
   await p.evaluate(() => { for (let i = 0; i < 5; i++) { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: i < 4 ? '1' : '0' } }); } }); s = await st(); check(s.card === 'Przykładowa nagroda 4', 'egzamin 4/5 → zaliczony');

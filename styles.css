@@ -4718,8 +4718,9 @@ body.photo-bg #sbar { background: rgba(10,10,14,.86) !important; }
 .duo-qt { font-size: clamp(18px, 5vw, 24px); font-weight: 600; } .duo-at { font-size: 18px; color: var(--good, #16a34a); }
 .duo-qt img, .duo-at img { max-width: 100%; max-height: 36dvh; border-radius: 10px; }
 .duo-ok { background: #16a34a !important; color: #fff !important; min-height: 52px; } .duo-bad { background: #dc2626 !important; color: #fff !important; min-height: 52px; }
-.duo-topic { font-size: 22px; font-weight: 700; margin: 4px 0; } .duo-lt { font: 800 40px Rubik, sans-serif; font-variant-numeric: tabular-nums; }
-.duo-rate { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; } .duo-rate button { min-height: 52px; font-size: 20px; font-weight: 800; }
+.duo-stake { gap: 10px; } .duo-stake button { display: grid; gap: 2px; min-height: 72px; border-radius: 16px; border: 0; font-size: 18px; }
+.duo-stake button small { font-size: 12px; font-weight: 600; opacity: .85; } .duo-safe { background: var(--card2); color: var(--text); }
+.duo-hi { background: linear-gradient(135deg, #e11d48, #9f1239); color: #fff; box-shadow: 0 4px 0 #881337; }
 .duo-draw { display: grid; gap: 12px; padding: 18px 16px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); border: 2px solid; text-align: center; }
 .duo-draw.ok { border-color: #16a34a; } .duo-draw.bad { border-color: #dc2626; } .duo-draw small { color: var(--muted); font-weight: 700; }
 .duo-ct { font-size: 20px; font-weight: 700; margin: 4px 0; } .duo-paused { display: grid; gap: 10px; } .duo-final { font-size: 22px; }

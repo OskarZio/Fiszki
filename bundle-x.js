@@ -1143,11 +1143,12 @@ Object.assign(ACTIONS, {
    Dla wszystkich innych trasy #/duo i #/duo/admin wyglądają jak każda nieistniejąca strona (404), a w UI nie ma do nich linków.
    Dane (duo cards: rewards / forfeits) leżą tylko w bazie – tabela duo_cards z RLS dostępną wyłącznie dla app_admins,
    więc nawet bezpośrednie zapytanie do API zwraca innym pustą listę. W kodzie nie ma żadnej treści kart.
-   Rundy: 1 rozgrzewka · 2 „na ślepo” · 3 „wykładowca” (temat + 2 min, ocena 1–5) · 4 egzamin (5 najczęściej mylonych, zaliczenie od 4/5).
+   Rundy: 1 rozgrzewka · 2 „na ślepo” · 3 „va banque” (przed pytaniem wybór stawki) · 4 egzamin (5 najczęściej mylonych, zaliczenie od 4/5).
+   Va banque: „bezpiecznie” = +1 i karty z puli rundy 2; „va banque” = +2 / −1 i karty z puli rundy 3 (najwyższa stawka).
    Dobrze → losowa aktywna karta reward z bieżącej rundy; źle → forfeit (runda bieżąca albo każda), fiszka wraca na koniec kolejki. */
 var duoOn = () => typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
-var DUO_ROUNDS = [['Rozgrzewka', 'pytanie → odpowiedź → pytający ocenia'], ['Na ślepo', 'jak rozgrzewka, inna pula kart'], ['Wykładowca', 'losowy temat, 2 minuty, słuchacz ocenia 1–5'], ['Egzamin', '5 najczęściej mylonych fiszek, zaliczenie od 4/5']];
-var DUO_LECTURE_S = 120, DUO_EXAM_N = 5, DUO_EXAM_PASS = 4;
+var DUO_ROUNDS = [['Rozgrzewka', 'pytanie → odpowiedź → pytający ocenia'], ['Na ślepo', 'jak rozgrzewka, inna pula kart'], ['Va banque', 'przed pytaniem wybierasz stawkę: bezpiecznie (+1) albo va banque (+2 / −1, najwyższa pula kart)'], ['Egzamin', '5 najczęściej mylonych fiszek, zaliczenie od 4/5']];
+var DUO_EXAM_N = 5, DUO_EXAM_PASS = 4;
 var DUO = null, DUO_CARDS = null, DUO_TICK = 0, DUO_ADM = { edit: null };
 var duoPrefs = () => (S.stats.duoPrefs = S.stats.duoPrefs || { names: ['', ''], decks: ['', ''], mins: [10, 15, 15] });
 
@@ -1175,13 +1176,12 @@ function duoStart(names, decks, mins) {
   // gracz A odpowiada z talii gracza B i odwrotnie
   const q = [shuffle(duoDeckCards(decks[1]).map(c => c.id)), shuffle(duoDeckCards(decks[0]).map(c => c.id))];
   if (q[0].length < DUO_EXAM_N || q[1].length < DUO_EXAM_N) return toast(`Każda talia potrzebuje min. ${DUO_EXAM_N} fiszek`);
-  DUO = { names, decks, mins, q, round: 1, turn: 0, score: [0, 0], miss: {}, used: {}, phase: 'intro', step: null, paused: false, endAt: 0, left: 0, timeUp: false, lecture: null, exam: null };
+  DUO = { names, decks, mins, q, round: 1, turn: 0, score: [0, 0], miss: {}, used: {}, phase: 'intro', step: null, paused: false, endAt: 0, left: 0, timeUp: false, exam: null, risky: [0, 0] };
   render();
 }
 function duoBeginRound() {
   const D = DUO; D.phase = 'play'; D.timeUp = false; D.turn = 0; D.paused = false;
   const m = D.mins[D.round - 1]; D.endAt = D.round <= 3 && m ? Date.now() + m * 60e3 : 0;
-  if (D.round === 3) D.lecture = null;
   if (D.round === 4) D.exam = { p: 0, i: 0, ok: 0, cards: [duoExamCards(0), duoExamCards(1)], done: [] };
   duoNext(); duoTimer();
 }
@@ -1193,21 +1193,19 @@ function duoNext() {
   const D = DUO;
   if (D.timeUp && D.round <= 3) { D.phase = 'roundEnd'; return render(); }
   if (D.round <= 2) D.step = { k: 'q', id: D.q[D.turn][0], shown: false };
-  else if (D.round === 3) { const ids = D.q[D.turn], c = cardById(ids[Math.random() * ids.length | 0]); D.step = { k: 'lecture', id: c?.id, endAt: 0, rated: null }; }
+  else if (D.round === 3) D.step = { k: 'stake', id: D.q[D.turn][0] };
   else { const E = D.exam; if (E.i >= DUO_EXAM_N) return duoExamEnd(); D.step = { k: 'q', id: E.cards[E.p][E.i], shown: false }; }
   render();
 }
 function duoAnswer(ok) {
   const D = DUO, id = D.step.id, p = D.turn;
   if (D.round === 4) { const E = D.exam; if (ok) { E.ok++; D.score[E.p]++; } else D.miss[id] = (D.miss[id] || 0) + 1; E.i++; return duoNext(); }
-  const qq = D.q[p]; qq.shift();
-  if (ok) { qq.push(id); D.score[p]++; } else { D.miss[id] = (D.miss[id] || 0) + 1; qq.push(id); }   // źle → na koniec kolejki (dobra też wraca na koniec, żeby pula się nie kończyła)
-  D.step = { k: 'card', ok, card: duoDraw(ok ? 'reward' : 'forfeit', D.round) }; render();
+  const qq = D.q[p], hi = D.round === 3 && D.step.hi; qq.shift(); qq.push(id);   // źle → na koniec kolejki (dobra też wraca na koniec, żeby pula się nie kończyła)
+  if (ok) D.score[p] += hi ? 2 : 1; else { D.miss[id] = (D.miss[id] || 0) + 1; if (hi) D.score[p] = Math.max(0, D.score[p] - 1); }
+  const pool = D.round === 3 ? (hi ? 3 : 2) : D.round;
+  D.step = { k: 'card', ok, hi, card: duoDraw(ok ? 'reward' : 'forfeit', pool) }; render();
 }
-function duoRate(n) {
-  const D = DUO, ok = n >= 4; if (ok) D.score[D.turn]++;
-  D.step = { k: 'card', ok, rate: n, card: duoDraw(ok ? 'reward' : 'forfeit', 3) }; render();
-}
+function duoStake(hi) { const D = DUO; if (hi) D.risky[D.turn]++; D.step = { k: 'q', id: D.step.id, shown: false, hi }; render(); }
 function duoExamEnd() {
   const D = DUO, E = D.exam, pass = E.ok >= DUO_EXAM_PASS; E.done.push({ p: E.p, ok: E.ok, pass });
   D.step = { k: 'card', ok: pass, exam: E.ok, card: duoDraw(pass ? 'reward' : 'forfeit', 4) }; render();
@@ -1226,13 +1224,12 @@ function duoTimer() {
     if (D.paused || D.phase !== 'play') return;
     const now = Date.now();
     if (D.endAt) { const el = document.getElementById('duo-t'); if (el) el.textContent = duoFmt(D.endAt - now); if (now >= D.endAt && !D.timeUp) { D.timeUp = true; const b = document.getElementById('duo-tu'); if (b) b.hidden = false; } }
-    const L = D.step?.k === 'lecture' && D.step.endAt; if (L) { const el = document.getElementById('duo-lt'); if (el) el.textContent = duoFmt(D.step.endAt - now); if (now >= D.step.endAt && !D.step.over) { D.step.over = true; render(); } }
   }, 250);
 }
 function duoPause() {
   const D = DUO, now = Date.now();
   if (!D.paused) { D.paused = true; D.pausedAt = now; }
-  else { const dt = now - D.pausedAt; if (D.endAt) D.endAt += dt; if (D.step?.endAt) D.step.endAt += dt; D.paused = false; }
+  else { const dt = now - D.pausedAt; if (D.endAt) D.endAt += dt; D.paused = false; }
   render();
 }
 
@@ -1253,7 +1250,7 @@ function duoSetupHTML() {
 }
 function duoCardHTML(st) {
   const c = st.card, D = DUO;
-  return `<div class="duo-draw ${st.ok ? 'ok' : 'bad'}"><small>${st.exam != null ? `Egzamin: ${st.exam}/${DUO_EXAM_N} – ${st.ok ? 'zaliczony' : 'niezaliczony'}` : st.rate ? `Ocena: ${st.rate}/5` : st.ok ? 'Dobrze' : 'Źle'} · ${st.ok ? 'reward' : 'forfeit'}</small>
+  return `<div class="duo-draw ${st.ok ? 'ok' : 'bad'}"><small>${st.exam != null ? `Egzamin: ${st.exam}/${DUO_EXAM_N} – ${st.ok ? 'zaliczony' : 'niezaliczony'}` : `${st.hi ? '🔥 va banque · ' : ''}${st.ok ? (st.hi ? 'Dobrze, +2' : 'Dobrze') : st.hi ? 'Źle, −1' : 'Źle'}`} · ${st.ok ? 'reward' : 'forfeit'}</small>
     <p class="duo-ct">${c ? esc(c.content) : 'Brak aktywnych kart w tej puli.'}</p>
     <div class="row nowrap"><button class="grow" data-act="duo-pass">Pas</button><button class="primary grow" data-act="duo-done">Dalej ›</button></div></div>`;
 }
@@ -1265,13 +1262,10 @@ function duoPlayHTML() {
   if (D.paused) return head + '<div class="card center duo-paused"><h2>Pauza</h2><button class="primary" data-act="duo-pause">▶ Wznów</button></div>';
   if (st.k === 'card') return head + duoCardHTML(st);
   const c = cardById(st.id), v = c ? cardView(c) : null;
-  if (st.k === 'lecture') {
-    const topic = c ? (noteById(c.noteId)?.extra || '').trim() || stripHtml(v.q) : '—';
-    return head + `<div class="card duo-q"><small>${esc(ans)} wykłada · ${esc(asker)} słucha</small><p class="duo-topic">${esc(topic)}</p>
-      ${st.endAt ? `<b class="duo-lt" id="duo-lt">${duoFmt(st.endAt - Date.now())}</b>` : `<button class="primary block" data-act="duo-lec">▶ Start wykładu (2 min)</button>`}
-      ${st.endAt ? `<p class="small muted">${esc(asker)}: oceń wykład</p><div class="duo-rate">${[1, 2, 3, 4, 5].map(n => `<button data-act="duo-rate" data-n="${n}">${n}</button>`).join('')}</div>` : ''}</div>`;
-  }
-  return head + `<div class="card duo-q"><small>${D.round === 4 ? `Egzamin ${esc(ans)} · ${D.exam.i + 1}/${DUO_EXAM_N}` : `Pyta ${esc(asker)} · odpowiada ${esc(ans)}`}</small>
+  if (st.k === 'stake') return head + `<div class="card duo-q duo-stake"><small>Odpowiada ${esc(ans)} · wybierz stawkę, zanim zobaczysz pytanie</small>
+      <button class="duo-safe" data-act="duo-stake" data-v="0"><b>Bezpiecznie</b><small>+1 · łagodniejsza pula kart</small></button>
+      <button class="duo-hi" data-act="duo-stake" data-v="1"><b>🔥 Va banque</b><small>+2 za dobrze, −1 za źle · najostrzejsza pula kart</small></button></div>`;
+  return head + `<div class="card duo-q"><small>${D.round === 4 ? `Egzamin ${esc(ans)} · ${D.exam.i + 1}/${DUO_EXAM_N}` : `Pyta ${esc(asker)} · odpowiada ${esc(ans)}${st.hi ? ' · 🔥 va banque' : ''}`}</small>
     <div class="duo-qt">${v ? v.q : ''}</div>${st.shown && v ? `<hr><div class="duo-at">${v.b}</div>` : ''}
     ${st.shown ? `<div class="row nowrap"><button class="grow duo-bad" data-act="duo-ans" data-v="0">✗ Źle</button><button class="grow duo-ok" data-act="duo-ans" data-v="1">✓ Dobrze</button></div>`
       : `<button class="primary block" data-act="duo-show">Pokaż odpowiedź (dla pytającego)</button>`}</div>`;
@@ -1286,6 +1280,7 @@ function duoEndHTML() {
   return `<div class="card center duo-paused"><h2>Koniec sesji</h2><p class="duo-final">${esc(D.names[0])} <b>${D.score[0]}</b> : <b>${D.score[1]}</b> ${esc(D.names[1])}</p>
     <p>${w == null ? 'Remis!' : `Wygrywa ${esc(D.names[w])}`}</p>
     ${D.exam?.done.map(x => `<p class="small">Egzamin ${esc(D.names[x.p])}: ${x.ok}/${DUO_EXAM_N} ${x.pass ? '✓' : '✗'}</p>`).join('') || ''}
+    ${D.risky[0] + D.risky[1] ? `<p class="small muted">Va banque: ${esc(D.names[0])} ${D.risky[0]}× · ${esc(D.names[1])} ${D.risky[1]}×</p>` : ''}
     <button class="primary block" data-act="duo-reset">Nowa sesja</button></div>`;
 }
 ROUTES.duo = (parts = []) => {
@@ -1326,8 +1321,7 @@ Object.assign(ACTIONS, {
   'duo-round': () => { const D = DUO; if (!D) return; if (D.phase === 'roundEnd') { D.round++; D.phase = 'intro'; return render(); } duoBeginRound(); },
   'duo-show': () => { if (DUO?.step) { DUO.step.shown = true; render(); } },
   'duo-ans': el => duoAnswer(el.dataset.v === '1'),
-  'duo-lec': () => { if (DUO?.step) { DUO.step.endAt = Date.now() + DUO_LECTURE_S * 1000; render(); } },
-  'duo-rate': el => duoRate(+el.dataset.n),
+  'duo-stake': el => { if (DUO?.step?.k === 'stake') duoStake(el.dataset.v === '1'); },
   'duo-pass': () => { if (DUO?.step?.k === 'card') { DUO.step.card = null; duoAfterCard(); } },   // pas: pomija kartę bez kary
   'duo-done': () => duoAfterCard(),
   'duo-pause': () => DUO && duoPause(),
