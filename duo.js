@@ -1,11 +1,11 @@
 'use strict';
-/* duo mode – tryb nauki we dwoje (publiczny). Karty (rewards / forfeits) NIE leżą w kodzie ani w repozytorium:
+/* duo mode – tryb nauki we dwoje – WYŁĄCZNIE dla właściciela (IS_ADMIN); dla innych trasy #/duo* dają 404, brak linków w UI. Karty (rewards / forfeits) NIE leżą w kodzie ani w repozytorium:
    trzymane są tylko na urządzeniu (localStorage, bez synchronizacji) i trafiają tam wyłącznie z linku #/duo?d=… (treść
    skompresowana w części adresu po „#”, której przeglądarka nie wysyła do serwera), z pliku JSON albo z ręcznego dodania.
    Właściciel może dodatkowo pobrać karty z tabeli duo_cards (RLS tylko dla app_admins) i wygenerować z nich link.
    Rundy: 1 rozgrzewka · 2 „na ślepo” · 3 „va banque” (przed pytaniem wybór stawki) · 4 egzamin (5 najczęściej mylonych, zaliczenie od 4/5).
    Va banque: „bezpiecznie” = +1 i karty z puli rundy 2; „va banque” = +2 / −1 i karty z puli rundy 3 (najwyższa stawka). */
-const duoOn = () => true;
+const duoOn = () => typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
 const duoAdmin = () => typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
 const DUO_ROUNDS = [['Rozgrzewka', 'pytanie → odpowiedź → pytający ocenia'], ['Na ślepo', 'jak rozgrzewka, inna pula kart'], ['Va banque', 'przed pytaniem wybierasz stawkę: bezpiecznie (+1) albo va banque (+2 / −1, najwyższa pula kart)'], ['Egzamin', '5 najczęściej mylonych fiszek, zaliczenie od 4/5']];
 const DUO_EXAM_N = 5, DUO_EXAM_PASS = 4;
@@ -156,6 +156,7 @@ function duoEndHTML() {
 }
 let DUO_LINK_SEEN = '';
 ROUTES.duo = (parts = [], q) => {
+  if (!duoOn()) return { tab: '', html: notFoundHTML() };     // nie-admin: identycznie jak nieistniejąca trasa
   duoLoad();
   const z = q?.get?.('d'); if (z && z !== DUO_LINK_SEEN) { DUO_LINK_SEEN = z; setTimeout(() => duoFromLink(z), 50); }
   if (parts[1] === 'admin') return { tab: 'arena', html: duoAdminHTML() };
@@ -228,6 +229,8 @@ Object.assign(ACTIONS, {
 });
 // wejście: kafelek w Przygodzie („Więcej trybów”)
 const duoBoss0 = ROUTES.boss;
-ROUTES.boss = (...a) => { const v = duoBoss0(...a); if (!v?.html || v.focus || (a[0] && a[0][1])) return v;
+ROUTES.boss = (...a) => { const v = duoBoss0(...a); if (!v?.html || v.focus || !duoOn() || (a[0] && a[0][1])) return v;
   return { ...v, html: v.html.replace('<div class="card row nowrap coop-cta"', '<div class="card row nowrap duo-cta" data-go="#/duo"><span style="font-size:28px">💞</span><div class="grow"><b>Duo</b><div class="small muted">Nauka we dwoje · pytacie się nawzajem z talii</div></div><span>›</span></div><div class="card row nowrap coop-cta"') }; };
 if (typeof ADV_TILES !== 'undefined') ADV_TILES = ADV_TILES + ', .duo-cta';
+// wszystkie akcje trybu działają tylko dla właściciela
+for (const k of Object.keys(ACTIONS)) if (k.startsWith('duo-')) { const f = ACTIONS[k]; ACTIONS[k] = (...a) => duoOn() ? f(...a) : undefined; }

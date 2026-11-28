@@ -15,10 +15,21 @@ let fails = 0; const check = (ok, msg) => { console.log((ok ? 'OK   ' : 'FAIL ')
   const view = () => p.evaluate(() => document.getElementById('view').innerText);
   const go = async h => { await p.evaluate(h => { location.hash = h; render(); }, h); await p.waitForTimeout(250); await clean(); };
 
-  // 1) zwykły użytkownik: tryb widoczny w Przygodzie, bez kart dopóki nie otworzy linku
-  await p.evaluate(() => { IS_ADMIN = false; MY_TESTS = []; localStorage.removeItem('duoCards'); DUO_CARDS = null; });
-  await go('#/boss'); check(await p.evaluate(() => !!document.querySelector('[data-go="#/duo"]')), 'użytkownik: kafelek trybu w Przygodzie');
-  await go('#/duo'); check((await view()).includes('Brak kart'), 'użytkownik: bez linku brak kart');
+  // 1) nie-admin (zwykły użytkownik i tester z wczytanym bundle-x): 404, brak linków
+  for (const tester of [false, true]) {
+    await p.evaluate(t => { IS_ADMIN = false; MY_TESTS = t ? ['kumul'] : []; }, tester);
+    if (tester) { await p.evaluate(() => lazyLoad()); await p.waitForFunction(() => LAZY === 2, { timeout: 8000 }).catch(() => {}); }
+    for (const h of ['#/duo', '#/duo/admin', '#/duo?d=abc']) { await go(h); check((await view()).includes('404'), `${tester ? 'tester' : 'użytkownik'}: ${h} → 404`); }
+    const unknown = (await (go('#/nieistnieje'), view())); await go('#/duo'); check(unknown === await view(), `${tester ? 'tester' : 'użytkownik'}: #/duo wygląda jak nieistniejąca trasa`);
+    for (const h of ['#/', '#/boss', '#/host', '#/more', '#/me', '#/shop']) { await go(h);
+      const leak = await p.evaluate(() => [...document.querySelectorAll('[href],[data-go],[data-act]')].some(e => /duo/i.test((e.getAttribute('href') || '') + (e.dataset.go || '') + (e.dataset.act || ''))) || /\bDuo\b/.test(document.body.innerText));
+      check(!leak, `${tester ? 'tester' : 'użytkownik'}: brak linku do trybu na ${h}`); }
+  }
+  // 2) admin
+  await p.evaluate(() => { IS_ADMIN = true; lazyLoad(); localStorage.removeItem('duoCards'); });
+  await p.waitForFunction(() => LAZY === 2 && typeof duoStart === 'function', { timeout: 8000 }); await p.evaluate(() => { DUO_CARDS = null; });
+  await go('#/boss'); check(await p.evaluate(() => !!document.querySelector('[data-go="#/duo"]')), 'admin: kafelek trybu w Przygodzie');
+  await go('#/duo'); check((await view()).includes('Brak kart'), 'admin: bez linku brak kart');
   await go('#/duo/xyz'); check((await view()).includes('404'), 'nieznana podstrona → 404');
   // link z kartami (neutralne dane) → zapis tylko lokalnie
   const link = await p.evaluate(async () => '#/duo?d=' + await packZip(JSON.stringify([[0, 1, 'Przykładowa nagroda', 1], [0, 2, 'Przykładowa nagroda 2', 1], [0, 3, 'Przykładowa nagroda 3', 1], [0, 4, 'Przykładowa nagroda 4', 1], [1, 0, 'Przykładowy fant', 1]])));
