@@ -1,0 +1,68 @@
+// Biologia – tkanka nerwowa i mięśniowa (z notatek z zajęć 16.11 i 23.11). Literówki i błędy z notatek poprawione.
+#fiszki
+#talia: Biologia – tkanka nerwowa i mięśniowa (kolokwium)
+#przedmiot: bio
+// ---------- tkanka nerwowa – ogólnie
+Tkanka nerwowa – pochodzenie | ektodermalne (z ektodermy)
+Tkanka nerwowa – z jakich komórek się składa? | z neuronów (komórek nerwowych) i komórek glejowych (neurogleju)
+Budowa neuronu | perykarion (ciało komórki) z jądrem komórkowym\ndendryty – odbierają i przewodzą impuls DO ciała komórki\nakson (neuryt) – przewodzi impuls OD ciała komórki
+Perykarion | ciało komórki nerwowej – zawiera jądro komórkowe i większość organelli
+Dendryt vs akson | dendryty: zwykle liczne, krótkie, rozgałęzione, przewodzą impuls do perykarionu\nakson: zwykle jeden, długi, przewodzi impuls od perykarionu (do innej komórki)
+// ---------- podział neuronów
+Podział neuronów ze względu na kształt perykarionu (3 przykłady z zajęć) | gwiaździsty\npiramidalny\nkomórka Purkinjego (gruszkowata)
+Gdzie występują komórki Purkinjego? | w korze móżdżku
+Gdzie występują neurony piramidalne? | w korze mózgu
+Podział neuronów ze względu na liczbę wypustek | jednobiegunowe (1 wypustka)\npseudojednobiegunowe (1 wypustka, która się rozdziela – np. czuciowe w zwojach rdzeniowych)\ndwubiegunowe (2 wypustki – np. w siatkówce)\nwielobiegunowe (wiele wypustek – większość, np. ruchowe)
+Podział neuronów ze względu na funkcję | czuciowe (aferentne) – od receptorów do OUN\nruchowe (eferentne) – z OUN do efektorów (mięśni, gruczołów)\npośredniczące (kojarzeniowe, interneurony) – łączą neurony w OUN
+// ---------- neuroglej
+Komórki neurogleju – funkcje | podporowa (rusztowanie dla neuronów)\nodżywcza i ochronna\ntworzą osłonki mielinowe\nwspółtworzą barierę krew–mózg\nusuwają uszkodzone komórki (fagocytoza)
+Rodzaje komórek glejowych w OUN | astrocyty (podpora, odżywianie, bariera krew–mózg)\noligodendrocyty (mielina w OUN)\nmikroglej (obrona – fagocytoza)\nkomórki wyściółki/ependymy (wyściełają komory mózgu i kanał rdzenia)
+Glej w obwodowym układzie nerwowym | komórki Schwanna – tworzą osłonkę mielinową wokół aksonów nerwów obwodowych
+// ---------- przewodzenie impulsu
+Potencjał spoczynkowy – rozkład ładunków na błonie neuronu | na zewnątrz błony ładunek dodatni (+), wewnątrz ujemny (−)\nna zewnątrz więcej jonów Na⁺, wewnątrz więcej K⁺
+Co utrzymuje różnicę stężeń Na⁺ i K⁺ w spoczynku? | pompa sodowo-potasowa (wypompowuje 3 Na⁺ na zewnątrz, wprowadza 2 K⁺ do środka, zużywa ATP)
+Depolaryzacja | otwierają się kanały sodowe → Na⁺ napływa DO komórki → wnętrze staje się dodatnie (+), zewnątrz ujemne (−)
+Repolaryzacja | otwierają się kanały potasowe → K⁺ wypływa NA ZEWNĄTRZ → przywrócenie ładunku: zewnątrz +, wewnątrz −
+Kolejność zdarzeń przy przewodzeniu impulsu | stan spoczynku → depolaryzacja (napływ Na⁺) → repolaryzacja (wypływ K⁺) → powrót do spoczynku (pompa Na⁺/K⁺)
+Przewodzenie ciągłe vs skokowe | ciągłe – we włóknach bez mieliny, impuls przesuwa się po całej błonie (wolniej)\nskokowe – we włóknach z osłonką mielinową, impuls „przeskakuje” między przewężeniami Ranviera (szybciej)
+// ---------- synapsa i neuroprzekaźniki
+Synapsa – definicja | miejsce kontaktu i przekazywania impulsu między neuronem a inną komórką (neuronem, mięśniem, gruczołem)
+Budowa synapsy chemicznej | błona presynaptyczna (z pęcherzykami zawierającymi neuroprzekaźnik)\nszczelina synaptyczna\nbłona postsynaptyczna (z receptorami)
+Jak działa synapsa chemiczna? | impuls dociera do zakończenia aksonu → pęcherzyki uwalniają neuroprzekaźnik do szczeliny → łączy się on z receptorami błony postsynaptycznej → zmiana potencjału w komórce odbierającej
+Neuroprzekaźniki – co trzeba o nich wiedzieć (charakter chemiczny, nazwa, działanie) | substancje chemiczne przekazujące sygnał w synapsie, np.:\nacetylocholina – pobudzająca (m.in. złącze nerwowo-mięśniowe)\nGABA – hamujący\nglutaminian – pobudzający\ndopamina, serotonina, noradrenalina – aminy biogenne
+Synapsa pobudzająca vs hamująca | pobudzająca – depolaryzuje błonę postsynaptyczną (ułatwia powstanie impulsu)\nhamująca – hiperpolaryzuje ją (utrudnia powstanie impulsu)
+// ---------- odruch i łuk odruchowy
+Odruch – definicja | automatyczna, utrwalona i powtarzalna reakcja organizmu na bodziec, zachodząca z udziałem układu nerwowego
+Rodzaje odruchów | bezwarunkowe: wrodzone i niezmienne (np. kolanowy, ssania, mrugania)\nwarunkowe: nabyte przez uczenie się, mogą wygasać (np. ślinienie na dźwięk dzwonka – Pawłow)
+Łuk odruchowy – elementy (po kolei) | receptor → neuron czuciowy (droga dośrodkowa) → ośrodek w OUN (neuron pośredniczący) → neuron ruchowy (droga odśrodkowa) → efektor
+Receptor vs efektor | receptor – odbiera bodziec\nefektor – wykonuje reakcję (mięsień albo gruczoł)
+Łuk odruchowy trójneuronowy – jakie neurony? | czuciowy → pośredniczący → ruchowy
+Łuk dwuneuronowy (monosynaptyczny) – przykład | odruch kolanowy (neuron czuciowy łączy się bezpośrednio z ruchowym)
+// ---------- tkanka mięśniowa – rodzaje
+Rodzaje tkanki mięśniowej | gładka\npoprzecznie prążkowana szkieletowa\npoprzecznie prążkowana serca (sercowa)
+Komórka mięśniowa – nazewnictwo | sarkolema – błona komórkowa\nsarkoplazma – cytoplazma\nsiateczka sarkoplazmatyczna – siateczka śródplazmatyczna\nsarkosomy – mitochondria\nmiofibryle – pęczki białek kurczliwych
+Prążek izotropowy vs anizotropowy | izotropowy (I) – jasny, tylko filamenty cienkie (aktyna)\nanizotropowy (A) – ciemny, filamenty grube (miozyna) zachodzące na cienkie
+// ---------- tkanka mięśniowa gładka
+Tkanka mięśniowa gładka – budowa | komórki wrzecionowate, jednojądrzaste, jądro położone centralnie\nbrak prążkowania\ndługość do ok. 500 µm (w macicy w ciąży)
+Tkanka mięśniowa gładka – skurcz i unerwienie | skurcz niezależny od woli, powolny i długotrwały\nunerwienie autonomiczne (wegetatywne)\nnie wszystkie włókna są unerwione – pobudzenie przechodzi z komórki na komórkę
+Gdzie występuje tkanka mięśniowa gładka? | w ścianach narządów wewnętrznych: naczynia krwionośne (żyły, tętnice), drogi oddechowe, przewód pokarmowy, drogi moczowe, macica
+Tkanka mięśniowa gładka – regeneracja | dobra – miocyty zachowują zdolność do podziału, podziały zachodzą pod wpływem czynników wzrostu
+// ---------- tkanka mięśniowa serca
+Tkanka mięśniowa serca – budowa | kardiomiocyty – jedno- lub dwujądrzaste, jądro centralnie\nrozgałęzione, prążkowane poprzecznie, zawierają miofibryle\ndługość do ok. 100 µm, średnica ok. 15 µm\npołączone wstawkami
+Wstawki (tkanka mięśniowa serca) | wyspecjalizowane połączenia międzykomórkowe między kardiomiocytami – umożliwiają szybkie przekazanie pobudzenia i skoordynowany skurcz
+Skurcz mięśnia sercowego | niezależny od woli, rytmiczny, automatyczny
+Automatyzm serca – co go zapewnia? | układ bodźcotwórczo-przewodzący serca (własny automatyzm inicjowania skurczów)
+Rola układu nerwowego w pracy serca | tylko reguluje (przyspiesza lub zwalnia) skurcze, ale ich nie wywołuje
+Tkanka mięśniowa serca – regeneracja | słaba – kardiomiocyty praktycznie nie dzielą się; uszkodzenie (np. zawał) zastępuje blizna łącznotkankowa
+// ---------- tkanka szkieletowa (dopełnienie)
+Tkanka mięśniowa poprzecznie prążkowana szkieletowa – budowa | długie, cylindryczne włókna (syncytia) – wielojądrzaste, jądra na obwodzie pod sarkolemą\nwyraźne poprzeczne prążkowanie
+Tkanka szkieletowa – skurcz i regeneracja | skurcz zależny od woli, szybki i silny, ale męczliwy\nregeneracja ograniczona – dzięki komórkom satelitarnym
+Porównanie 3 tkanek mięśniowych – jądra | gładka – 1 jądro centralnie\nsercowa – 1–2 jądra centralnie\nszkieletowa – wiele jąder na obwodzie
+// ---------- krew (kolokwium poprawka)
+Leukocyty – czym się wyróżniają? | zabijają drobnoustroje (obrona organizmu)
+Krzepnięcie krwi – po co? | zapobiega utracie krwi (wykrwawieniu) po uszkodzeniu naczynia
+// ---------- rysunki z zajęć – obrazy z lukami
+[luki: assets/imports/tkanki-nm/purkinje.webp | Neuron (rysunek: komórka Purkinjego)] 28.1,13.4,33.1,14.8=perykarion (ciało komórki); 0.0,62.0,45.0,38.0=jądro komórkowe; 70.0,70.0,30.0,30.0=dendryt
+[luki: assets/imports/tkanki-nm/gladkie.webp | Włókno mięśniowe gładkie] 33.7,17.5,39.3,13.2=sarkoplazma; 41.4,32.9,46.0,14.2=jądro komórkowe; 10.3,75.2,34.9,16.3=sarkolema
+[luki: assets/imports/tkanki-nm/sercowe.webp | Włókno tkanki mięśniowej poprzecznie prążkowanej serca] 61.4,18.2,22.7,12.1=wstawka; 61.4,33.0,36.0,11.8=jądro komórkowe; 0.0,24.0,30.4,22.2=miofibryla; 0.0,60.9,38.2,13.2=sarkoplazma; 37.0,60.9,24.9,13.7=sarkolema; 68.1,51.0,30.4,19.5=prążek izotropowy (I, jasny); 50.3,79.8,26.0,19.5=prążek anizotropowy (A, ciemny)
+[luki: assets/imports/tkanki-nm/szkieletowe.webp | Włókno tkanki mięśniowej poprzecznie prążkowanej szkieletowej] 29.2,0.0,24.9,11.4=miofibryla; 52.6,6.0,31.6,13.2=jądro komórkowe; 2.6,17.6,31.6,12.3=sarkoplazma; 23.7,25.6,24.9,12.3=sarkolema; 37.0,33.7,21.6,23.0=prążek izotropowy (I, jasny); 49.2,50.7,29.3,27.5=prążek anizotropowy (A, ciemny)
