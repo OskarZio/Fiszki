@@ -38,6 +38,18 @@ Rodzaje odruchów | bezwarunkowe: wrodzone i niezmienne (np. kolanowy, ssania, m
 Receptor vs efektor | receptor – odbiera bodziec\nefektor – wykonuje reakcję (mięsień albo gruczoł)
 Łuk odruchowy trójneuronowy – jakie neurony? | czuciowy → pośredniczący → ruchowy
 Łuk dwuneuronowy (monosynaptyczny) – przykład | odruch kolanowy (neuron czuciowy łączy się bezpośrednio z ruchowym)
+// ---------- tkanka mięśniowa – ogólnie (strona „Tkanka mięśniowa”)
+Tkanka mięśniowa – pochodzenie | z mezodermy
+Tkanka mięśniowa – kształt komórek | komórki są wydłużone – nazywa się je włóknami mięśniowymi
+Tkanka mięśniowa – substancja międzykomórkowa | brak substancji międzykomórkowej\njej funkcje pełni tkanka łączna: łącznotkankowa śródmięsna
+Czym otoczone są włókna mięśniowe? | błoną (blaszką) podstawną
+Mięsień szkieletowy – osłonki łącznotkankowe od najmniejszej | śródmięsna – otacza pojedyncze włókno mięśniowe\nomięsna – otacza pęczek włókien\nnamięsna – otacza cały mięsień
+Śródmięsna | osłonka z tkanki łącznej otaczająca pojedyncze włókno mięśniowe
+Omięsna | osłonka z tkanki łącznej otaczająca pęczek włókien mięśniowych
+Namięsna | osłonka z tkanki łącznej otaczająca cały mięsień (brzusiec)
+Budowa mięśnia szkieletowego (od całości do najmniejszej części) | mięsień → pęczek włókien → włókno mięśniowe (komórka) → miofibryle → sarkomery (filamenty aktyny i miozyny)
+Sarkomer | podstawowa jednostka kurczliwa włókna mięśniowego – odcinek miofibryli między dwiema liniami Z
+Rodzaje tkanki mięśniowej gładkiej (wg rozmieszczenia komórek) | jednostkowa (trzewna) – komórki połączone ze sobą, kurczą się razem (ściany narządów wewnętrznych)\nwielojednostkowa – każda komórka unerwiona osobno, kurczy się niezależnie (np. tęczówka, duże naczynia)
 // ---------- tkanka mięśniowa – rodzaje
 Rodzaje tkanki mięśniowej | gładka\npoprzecznie prążkowana szkieletowa\npoprzecznie prążkowana serca (sercowa)
 Komórka mięśniowa – nazewnictwo | sarkolema – błona komórkowa\nsarkoplazma – cytoplazma\nsiateczka sarkoplazmatyczna – siateczka śródplazmatyczna\nsarkosomy – mitochondria\nmiofibryle – pęczki białek kurczliwych
