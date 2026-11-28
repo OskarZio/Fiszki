@@ -66,9 +66,9 @@ welcome.js
 safety.js
 ads.js
 premium.js
+duo.js
 # lazy – poniżej: tryby w testach (bundle-x.js, tylko admin i testerzy)
 kumul.js
 skoj.js
 rys.js
 karty.js
-duo.js

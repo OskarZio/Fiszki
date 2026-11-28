@@ -1,24 +1,35 @@
 'use strict';
-/* duo mode – tryb nauki we dwoje, WYŁĄCZNIE dla właściciela aplikacji (IS_ADMIN).
-   Dla wszystkich innych trasy #/duo i #/duo/admin wyglądają jak każda nieistniejąca strona (404), a w UI nie ma do nich linków.
-   Dane (duo cards: rewards / forfeits) leżą tylko w bazie – tabela duo_cards z RLS dostępną wyłącznie dla app_admins,
-   więc nawet bezpośrednie zapytanie do API zwraca innym pustą listę. W kodzie nie ma żadnej treści kart.
+/* duo mode – tryb nauki we dwoje (publiczny). Karty (rewards / forfeits) NIE leżą w kodzie ani w repozytorium:
+   trzymane są tylko na urządzeniu (localStorage, bez synchronizacji) i trafiają tam wyłącznie z linku #/duo?d=… (treść
+   skompresowana w części adresu po „#”, której przeglądarka nie wysyła do serwera), z pliku JSON albo z ręcznego dodania.
+   Właściciel może dodatkowo pobrać karty z tabeli duo_cards (RLS tylko dla app_admins) i wygenerować z nich link.
    Rundy: 1 rozgrzewka · 2 „na ślepo” · 3 „va banque” (przed pytaniem wybór stawki) · 4 egzamin (5 najczęściej mylonych, zaliczenie od 4/5).
-   Va banque: „bezpiecznie” = +1 i karty z puli rundy 2; „va banque” = +2 / −1 i karty z puli rundy 3 (najwyższa stawka).
-   Dobrze → losowa aktywna karta reward z bieżącej rundy; źle → forfeit (runda bieżąca albo każda), fiszka wraca na koniec kolejki. */
-const duoOn = () => typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
+   Va banque: „bezpiecznie” = +1 i karty z puli rundy 2; „va banque” = +2 / −1 i karty z puli rundy 3 (najwyższa stawka). */
+const duoOn = () => true;
+const duoAdmin = () => typeof IS_ADMIN !== 'undefined' && IS_ADMIN === true;
 const DUO_ROUNDS = [['Rozgrzewka', 'pytanie → odpowiedź → pytający ocenia'], ['Na ślepo', 'jak rozgrzewka, inna pula kart'], ['Va banque', 'przed pytaniem wybierasz stawkę: bezpiecznie (+1) albo va banque (+2 / −1, najwyższa pula kart)'], ['Egzamin', '5 najczęściej mylonych fiszek, zaliczenie od 4/5']];
 const DUO_EXAM_N = 5, DUO_EXAM_PASS = 4;
 let DUO = null, DUO_CARDS = null, DUO_TICK = 0, DUO_ADM = { edit: null };
 const duoPrefs = () => (S.stats.duoPrefs = S.stats.duoPrefs || { names: ['', ''], decks: ['', ''], mins: [10, 15, 15] });
 
-// ---------- dane: duo_cards (Supabase, RLS tylko dla właściciela)
-async function duoLoad(force) {
-  if (DUO_CARDS && !force) return DUO_CARDS;
-  if (!(typeof cloudOn === 'function' && cloudOn())) { DUO_CARDS = { err: 'Zaloguj się, żeby wczytać karty.' }; return DUO_CARDS; }
-  const r = await SB.from('duo_cards').select('id,type,round,content,active').order('type').order('round', { nullsFirst: true }).order('id');
-  DUO_CARDS = r.error ? { err: /relation|does not exist|schema cache/i.test(r.error.message || '') ? 'Wgraj nowy supabase.sql (Panel hosta → Aktualizacja bazy).' : 'Błąd: ' + r.error.message } : { list: r.data || [] };
-  return DUO_CARDS;
+// ---------- dane: karty tylko na tym urządzeniu
+const DUO_KEY = 'duoCards';
+function duoLoad() {
+  if (DUO_CARDS) return DUO_CARDS;
+  let list = []; try { list = JSON.parse(localStorage.getItem(DUO_KEY) || '[]'); } catch { /* */ }
+  DUO_CARDS = { list: Array.isArray(list) ? list : [] }; return DUO_CARDS;
+}
+function duoPersist(list) { list = list.map(duoClean2).filter(x => x.content); DUO_CARDS = { list }; try { localStorage.setItem(DUO_KEY, JSON.stringify(list)); } catch { toast('Nie udało się zapisać kart na urządzeniu'); } }
+const duoClean2 = (x, i) => ({ id: Number.isInteger(x.id) ? x.id : Date.now() % 1e9 + (i || 0), type: x.type === 'forfeit' ? 'forfeit' : 'reward', round: [1, 2, 3, 4].includes(+x.round) ? +x.round : null, content: String(x.content || '').trim().slice(0, 500), active: x.active !== false });
+// link: #/duo?d=<deflate-raw + base64url z JSON kart> (format jak link do talii)
+async function duoLink() { const min = duoList().map(c => [c.type === 'forfeit' ? 1 : 0, c.round || 0, c.content, c.active ? 1 : 0]); return location.origin + location.pathname + '#/duo?d=' + await packZip(JSON.stringify(min)); }
+async function duoFromLink(z) {
+  let arr; try { arr = JSON.parse(await packUnzip(z)); } catch { return toast('Ten link do kart jest uszkodzony albo niepełny', 4500); }
+  if (!Array.isArray(arr) || !arr.length) return toast('Link nie zawiera kart');
+  const list = arr.map((r, i) => Array.isArray(r) ? { id: i + 1, type: r[0] ? 'forfeit' : 'reward', round: r[1] || null, content: r[2], active: r[3] !== 0 } : { ...r, id: i + 1 });
+  const has = duoList().length;
+  if (!await askBox({ title: `Wczytać ${list.length} kart?`, intro: has ? `Zastąpią ${has} kart zapisanych na tym urządzeniu.` : 'Karty zapiszą się tylko na tym urządzeniu.', ok: 'Wczytaj' })) return go('#/duo');
+  duoPersist(list); toast(`Wczytano ${list.length} kart`); go('#/duo');
 }
 const duoList = () => DUO_CARDS?.list || [];
 // losowanie bez powtórek w sesji (pula się odnawia, gdy się wyczerpie)
@@ -97,14 +108,14 @@ function duoPause() {
 function duoSetupHTML() {
   const P = duoPrefs(), ds = S.decks.filter(d => duoDeckCards(d.id).length >= DUO_EXAM_N), opt = sel => ds.map(d => `<option value="${d.id}"${d.id === sel ? ' selected' : ''}>${esc(d.name)}</option>`).join('');
   const n = duoList().filter(c => c.active), cnt = t => n.filter(c => c.type === t).length;
-  return `<div class="row nowrap"><button class="iconbtn" data-go="#/host">‹</button><h1 class="grow" style="margin:0">Duo</h1><button class="sm" data-go="#/duo/admin">Karty</button></div>
+  return `<div class="row nowrap"><button class="iconbtn" data-go="#/boss">‹</button><h1 class="grow" style="margin:0">Duo</h1><button class="sm" data-go="#/duo/admin">Karty</button></div>
   <div class="card duo-setup">
     ${[0, 1].map(i => `<div class="duo-pl"><b>Gracz ${'AB'[i]}</b><label class="field"><span>Imię</span><input id="duo-n${i}" maxlength="20" value="${esc(P.names[i] || '')}" placeholder="Gracz ${'AB'[i]}"></label>
       <label class="field"><span>Talia gracza ${'AB'[i]} <small class="muted">(odpowiada z niej gracz ${'BA'[i]})</small></span><select id="duo-d${i}">${opt(P.decks[i])}</select></label></div>`).join('')}
     <p class="small muted" style="margin:4px 0">Minutnik rund (min):</p>
     <div class="duo-mins">${[0, 1, 2].map(i => `<label><small>${DUO_ROUNDS[i][0]}</small><input id="duo-m${i}" type="number" min="1" max="60" value="${P.mins[i]}"></label>`).join('')}<label><small>Egzamin</small><input value="–" disabled></label></div>
     <ol class="small duo-rules">${DUO_ROUNDS.map(r => `<li><b>${r[0]}</b> – ${r[1]}</li>`).join('')}</ol>
-    ${DUO_CARDS?.err ? `<p class="small" style="color:#dc2626">${esc(DUO_CARDS.err)}</p>` : `<p class="small muted">Aktywne karty: ${cnt('reward')} rewards · ${cnt('forfeit')} forfeits</p>`}
+    ${duoList().length ? `<p class="small muted">Aktywne karty: ${cnt('reward')} rewards · ${cnt('forfeit')} forfeits</p>` : '<p class="small">Brak kart na tym urządzeniu – otwórz link z kartami albo dodaj je w „Karty”. Bez kart gra liczy tylko punkty.</p>'}
     <button class="primary block" data-act="duo-start" ${ds.length ? '' : 'disabled'}>▶ Start</button>
     ${ds.length ? '' : `<p class="small muted">Potrzebne talie z min. ${DUO_EXAM_N} fiszkami.</p>`}</div>`;
 }
@@ -143,16 +154,17 @@ function duoEndHTML() {
     ${D.risky[0] + D.risky[1] ? `<p class="small muted">Va banque: ${esc(D.names[0])} ${D.risky[0]}× · ${esc(D.names[1])} ${D.risky[1]}×</p>` : ''}
     <button class="primary block" data-act="duo-reset">Nowa sesja</button></div>`;
 }
-ROUTES.duo = (parts = []) => {
-  if (!duoOn()) return { tab: '', html: notFoundHTML() };     // nie-admin: identycznie jak nieistniejąca trasa
-  if (parts[1] === 'admin') { if (!DUO_CARDS) duoLoad().then(render); return { tab: 'profile', html: duoAdminHTML() }; }
+let DUO_LINK_SEEN = '';
+ROUTES.duo = (parts = [], q) => {
+  duoLoad();
+  const z = q?.get?.('d'); if (z && z !== DUO_LINK_SEEN) { DUO_LINK_SEEN = z; setTimeout(() => duoFromLink(z), 50); }
+  if (parts[1] === 'admin') return { tab: 'arena', html: duoAdminHTML() };
   if (parts[1]) return { tab: '', html: notFoundHTML() };
-  if (!DUO_CARDS) duoLoad().then(render);
-  if (!DUO) return { tab: 'profile', html: duoSetupHTML() };
+  if (!DUO) return { tab: 'arena', html: duoSetupHTML() };
   if (DUO.phase === 'play' && !DUO_TICK) duoTimer();
   const body = DUO.phase === 'intro' ? `<div class="card center duo-paused"><h2>Runda ${DUO.round}: ${DUO_ROUNDS[DUO.round - 1][0]}</h2><p class="small muted">${DUO_ROUNDS[DUO.round - 1][1]}</p><button class="primary block" data-act="duo-round">▶ Zaczynamy</button></div>`
     : DUO.phase === 'roundEnd' ? duoRoundEndHTML() : DUO.phase === 'end' ? duoEndHTML() : duoPlayHTML();
-  return { tab: 'profile', focus: true, html: `<div class="duo">${body}</div>` };
+  return { tab: 'arena', focus: true, html: `<div class="duo">${body}</div>` };
 };
 
 // ---------- panel kart (CRUD + import/eksport JSON)
@@ -166,15 +178,15 @@ function duoAdminHTML() {
       <select id="duo-fr"><option value="">każda runda</option>${[1, 2, 3, 4].map(r => `<option value="${r}"${e?.round === r ? ' selected' : ''}>runda ${r}</option>`).join('')}</select></div>
     <textarea id="duo-fc" rows="3" maxlength="500" placeholder="Treść karty">${esc(e?.content || '')}</textarea>
     <div class="row nowrap"><button class="primary grow" data-act="duo-save">${e ? 'Zapisz' : 'Dodaj'}</button>${e ? '<button class="grow" data-act="duo-cancel">Anuluj</button>' : ''}</div></div>
-  <div class="row"><button class="sm" data-act="duo-export">⬇️ Eksport JSON</button><button class="sm" data-act="duo-import">⬆️ Import JSON</button></div>
-  <p class="small muted">Eksport zapisuje plik tylko na tym urządzeniu – trzymaj go w katalogu <code>private/</code> (poza repozytorium).</p>
-  ${L?.err ? `<p class="small" style="color:#dc2626">${esc(L.err)}</p>` : !L ? '<p class="muted">Wczytuję…</p>' : `<div class="card">${rows || '<p class="muted">Brak kart.</p>'}</div>`}`;
+  <div class="row"><button class="sm" data-act="duo-link">🔗 Link do kart</button><button class="sm" data-act="duo-export">⬇️ Eksport JSON</button><button class="sm" data-act="duo-import">⬆️ Import JSON</button>${duoAdmin() ? '<button class="sm" data-act="duo-dbload">☁️ Pobierz z bazy</button>' : ''}${(L?.list || []).length ? '<button class="sm" data-act="duo-clear">🗑️ Usuń wszystkie</button>' : ''}</div>
+  <p class="small muted">Karty są zapisane tylko na tym urządzeniu (nie synchronizują się). Link zawiera karty w adresie – udostępniaj go tylko komu chcesz.</p>
+  <div class="card">${rows || '<p class="muted">Brak kart.</p>'}</div>`;
 }
 const duoClean = x => ({ type: x.type === 'forfeit' ? 'forfeit' : 'reward', round: [1, 2, 3, 4].includes(+x.round) ? +x.round : null, content: String(x.content || '').trim().slice(0, 500), active: x.active !== false });
-async function duoDb(q, ok) { const r = await q; if (r.error) { toast('Błąd: ' + r.error.message, 4000); return false; } if (ok) toast(ok); await duoLoad(true); render(); return true; }
+function duoSet(list, ok) { duoPersist(list); if (ok) toast(ok); render(); }
 Object.assign(ACTIONS, {
   'duo-start': () => {
-    if (!duoOn()) return; const P = duoPrefs();
+    const P = duoPrefs();
     P.names = [0, 1].map(i => ($(`#duo-n${i}`).value || '').trim().slice(0, 20)); P.decks = [0, 1].map(i => $(`#duo-d${i}`).value); P.mins = [0, 1, 2].map(i => Math.max(1, Math.min(60, +$(`#duo-m${i}`).value || [10, 15, 15][i]))); save();
     duoStart(P.names.map((n, i) => n || 'Gracz ' + 'AB'[i]), P.decks, P.mins);
   },
@@ -188,30 +200,34 @@ Object.assign(ACTIONS, {
   'duo-quit': async () => { if (!DUO) return go('#/duo'); if (DUO.phase !== 'end' && !await askBox({ title: 'Zakończyć sesję?', ok: 'Zakończ', cancel: 'Graj dalej' })) return; DUO.phase = 'end'; clearInterval(DUO_TICK); DUO_TICK = 0; render(); },
   'duo-reset': () => { DUO = null; clearInterval(DUO_TICK); DUO_TICK = 0; render(); },
   'duo-save': async () => {
-    if (!duoOn()) return; const x = duoClean({ type: $('#duo-ft').value, round: $('#duo-fr').value, content: $('#duo-fc').value, active: DUO_ADM.edit ? DUO_ADM.edit.active : true });
+    const x = duoClean({ type: $('#duo-ft').value, round: $('#duo-fr').value, content: $('#duo-fc').value, active: DUO_ADM.edit ? DUO_ADM.edit.active : true });
     if (!x.content) return toast('Wpisz treść');
-    const e = DUO_ADM.edit; DUO_ADM.edit = null;
-    await duoDb(e ? SB.from('duo_cards').update(x).eq('id', e.id) : SB.from('duo_cards').insert(x), e ? 'Zapisano' : 'Dodano');
+    const e = DUO_ADM.edit, list = duoList(); DUO_ADM.edit = null;
+    duoSet(e ? list.map(c => c.id === e.id ? { ...c, ...x } : c) : [...list, { id: Math.max(0, ...list.map(c => c.id)) + 1, ...x }], e ? 'Zapisano' : 'Dodano');
   },
   'duo-edit': el => { DUO_ADM.edit = duoList().find(c => c.id === +el.dataset.id) || null; render(); window.scrollTo(0, 0); },
   'duo-cancel': () => { DUO_ADM.edit = null; render(); },
-  'duo-tog': el => { const c = duoList().find(x => x.id === +el.dataset.id); if (c) duoDb(SB.from('duo_cards').update({ active: !c.active }).eq('id', c.id)); },
-  'duo-del': async el => { if (!await askBox({ title: 'Usunąć kartę?', ok: 'Usuń', danger: true })) return; duoDb(SB.from('duo_cards').delete().eq('id', +el.dataset.id), 'Usunięto'); },
+  'duo-tog': el => { const id = +el.dataset.id; duoSet(duoList().map(c => c.id === id ? { ...c, active: !c.active } : c)); },
+  'duo-del': async el => { if (!await askBox({ title: 'Usunąć kartę?', ok: 'Usuń', danger: true })) return; const id = +el.dataset.id; duoSet(duoList().filter(c => c.id !== id), 'Usunięto'); },
+  'duo-clear': async () => { if (!await askBox({ title: 'Usunąć wszystkie karty z tego urządzenia?', ok: 'Usuń', danger: true })) return; duoSet([], 'Usunięto'); },
+  'duo-link': async () => { if (!duoList().length) return toast('Brak kart'); const url = await duoLink();
+    try { await navigator.clipboard.writeText(url); toast('🔗 Link do kart skopiowany', 3000); } catch { prompt('Skopiuj link do kart:', url); } },
+  'duo-dbload': async () => { if (!duoAdmin() || !(typeof cloudOn === 'function' && cloudOn())) return toast('Zaloguj się jako właściciel');
+    const r = await SB.from('duo_cards').select('id,type,round,content,active').order('id'); if (r.error) return toast('Błąd: ' + r.error.message, 4000);
+    if (!r.data?.length) return toast('Baza nie ma kart'); duoSet(r.data, `Pobrano ${r.data.length} kart z bazy`); },
   'duo-export': () => { if (!duoList().length) return toast('Brak kart'); download('duo_cards.json', JSON.stringify(duoList().map(({ id, type, round, content, active }) => ({ id, type, round, content, active })), null, 2), 'application/json'); },
   'duo-import': async () => {
-    if (!duoOn()) return; const f = await pickFile('.json,application/json'); if (!f) return;
+    const f = await pickFile('.json,application/json'); if (!f) return;
     let arr; try { arr = JSON.parse(await f.text()); } catch { return toast('To nie jest poprawny plik JSON'); }
     if (!Array.isArray(arr)) return toast('Plik musi zawierać listę kart');
-    const rows = arr.map(x => ({ ...(Number.isInteger(x.id) ? { id: x.id } : {}), ...duoClean(x) })).filter(x => x.content);
+    const rows = arr.map(duoClean2).filter(x => x.content);
     if (!rows.length) return toast('Brak kart w pliku');
-    if (!await askBox({ title: `Zaimportować ${rows.length} kart?`, intro: 'Karty z tym samym id zostaną nadpisane.', ok: 'Importuj' })) return;
-    const withId = rows.filter(r => r.id), noId = rows.filter(r => !r.id);
-    if (withId.length && !await duoDb(SB.from('duo_cards').upsert(withId, { onConflict: 'id' }))) return;
-    if (noId.length) await duoDb(SB.from('duo_cards').insert(noId));
-    toast(`Zaimportowano ${rows.length}`);
+    if (!await askBox({ title: `Zaimportować ${rows.length} kart?`, intro: 'Zastąpią karty zapisane na tym urządzeniu.', ok: 'Importuj' })) return;
+    duoSet(rows, `Zaimportowano ${rows.length}`);
   },
 });
-// jedyny link do trybu: w Panelu hosta, tylko dla właściciela
-const duoHost0 = ROUTES.host;
-ROUTES.host = (...a) => { const v = duoHost0(...a); if (!v?.html || !duoOn()) return v;
-  return { ...v, html: v.html + '<div class="card row nowrap" data-go="#/duo" style="cursor:pointer;gap:12px"><b class="grow">Duo</b><span class="small muted">tryb we dwoje · karty</span><span>›</span></div>' }; };
+// wejście: kafelek w Przygodzie („Więcej trybów”)
+const duoBoss0 = ROUTES.boss;
+ROUTES.boss = (...a) => { const v = duoBoss0(...a); if (!v?.html || v.focus || (a[0] && a[0][1])) return v;
+  return { ...v, html: v.html.replace('<div class="card row nowrap coop-cta"', '<div class="card row nowrap duo-cta" data-go="#/duo"><span style="font-size:28px">💞</span><div class="grow"><b>Duo</b><div class="small muted">Nauka we dwoje · pytacie się nawzajem z talii</div></div><span>›</span></div><div class="card row nowrap coop-cta"') }; };
+if (typeof ADV_TILES !== 'undefined') ADV_TILES = ADV_TILES + ', .duo-cta';

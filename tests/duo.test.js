@@ -1,4 +1,4 @@
-// Test duo mode: nie-admin dostaje 404 i nie widzi trybu w nawigacji; admin może rozegrać sesję.
+// Test duo mode: tryb publiczny, karty tylko z linku / lokalnie (repo nie zawiera kart); pełna sesja na neutralnych danych.
 // Uruchom: python3 -m http.server 8765 (w katalogu repo), potem: node tests/duo.test.js
 const { chromium } = require('playwright');
 const URL = process.env.APP_URL || 'http://localhost:8765/';
@@ -15,23 +15,19 @@ let fails = 0; const check = (ok, msg) => { console.log((ok ? 'OK   ' : 'FAIL ')
   const view = () => p.evaluate(() => document.getElementById('view').innerText);
   const go = async h => { await p.evaluate(h => { location.hash = h; render(); }, h); await p.waitForTimeout(250); await clean(); };
 
-  // 1) nie-admin (także tester z wczytanym bundle-x)
-  for (const tester of [false, true]) {
-    await p.evaluate(t => { IS_ADMIN = false; MY_TESTS = t ? ['kumul'] : []; }, tester);
-    if (tester) { await p.evaluate(() => lazyLoad()); await p.waitForFunction(() => LAZY === 2, { timeout: 8000 }).catch(() => {}); }
-    for (const h of ['#/duo', '#/duo/admin']) { await go(h); const t = await view(); check(t.includes('404') && !/Duo|karty/i.test(t.replace('404', '')), `${tester ? 'tester' : 'użytkownik'}: ${h} → 404`); }
-    const unknown = (await (go('#/nieistnieje'), view())); await go('#/duo'); check(unknown === await view(), `${tester ? 'tester' : 'użytkownik'}: #/duo wygląda jak nieistniejąca trasa`);
-    for (const h of ['#/', '#/boss', '#/host', '#/more', '#/me', '#/shop']) { await go(h);
-      const leak = await p.evaluate(() => [...document.querySelectorAll('[href],[data-go],[data-act]')].some(e => /duo/i.test((e.getAttribute('href') || '') + (e.dataset.go || '') + (e.dataset.act || ''))) || /\bDuo\b/.test(document.body.innerText));
-      check(!leak, `${tester ? 'tester' : 'użytkownik'}: brak linku do trybu na ${h}`); }
-  }
-  // 2) admin: atrapa bazy z neutralnymi kartami, cała sesja
-  await p.evaluate(() => { IS_ADMIN = true; lazyLoad(); });
-  await p.waitForFunction(() => LAZY === 2 && typeof duoStart === 'function', { timeout: 8000 });
-  await p.evaluate(() => { DUO_CARDS = { list: [{ id: 1, type: 'reward', round: 1, content: 'Przykładowa nagroda', active: true }, { id: 2, type: 'reward', round: 2, content: 'Przykładowa nagroda 2', active: true },
-    { id: 3, type: 'reward', round: 3, content: 'Przykładowa nagroda 3', active: true }, { id: 4, type: 'reward', round: 4, content: 'Przykładowa nagroda 4', active: true }, { id: 5, type: 'forfeit', round: null, content: 'Przykładowy fant', active: true }] }; });
-  await go('#/host'); check(await p.evaluate(() => !!document.querySelector('[data-go="#/duo"]')), 'admin: link w Panelu hosta');
-  await go('#/duo'); check((await view()).includes('Start'), 'admin: ekran startowy');
+  // 1) zwykły użytkownik: tryb widoczny w Przygodzie, bez kart dopóki nie otworzy linku
+  await p.evaluate(() => { IS_ADMIN = false; MY_TESTS = []; localStorage.removeItem('duoCards'); DUO_CARDS = null; });
+  await go('#/boss'); check(await p.evaluate(() => !!document.querySelector('[data-go="#/duo"]')), 'użytkownik: kafelek trybu w Przygodzie');
+  await go('#/duo'); check((await view()).includes('Brak kart'), 'użytkownik: bez linku brak kart');
+  await go('#/duo/xyz'); check((await view()).includes('404'), 'nieznana podstrona → 404');
+  // link z kartami (neutralne dane) → zapis tylko lokalnie
+  const link = await p.evaluate(async () => '#/duo?d=' + await packZip(JSON.stringify([[0, 1, 'Przykładowa nagroda', 1], [0, 2, 'Przykładowa nagroda 2', 1], [0, 3, 'Przykładowa nagroda 3', 1], [0, 4, 'Przykładowa nagroda 4', 1], [1, 0, 'Przykładowy fant', 1]])));
+  await p.evaluate(h => { location.hash = h; }, link); await p.waitForSelector('.ask-ov [data-a="1"]', { timeout: 4000 }); await p.click('.ask-ov [data-a="1"]'); await p.waitForTimeout(300);
+  check(await p.evaluate(() => JSON.parse(localStorage.getItem('duoCards') || '[]').length) === 5, 'link wczytuje karty na urządzenie');
+  check(await p.evaluate(() => !JSON.stringify(S).includes('Przykładowy fant')), 'karty nie trafiają do synchronizowanych danych');
+  await go('#/duo/admin'); check((await view()).includes('Przykładowa nagroda'), 'panel kart pokazuje wczytane karty');
+  check(await p.evaluate(async () => (await duoLink()).includes('#/duo?d=')), 'panel generuje link do kart');
+  await go('#/duo'); check((await view()).includes('Start'), 'ekran startowy');
   await p.evaluate(() => { const ds = S.decks.slice(-2).map(d => d.id); duoStart(['A', 'B'], ds, [1, 1, 1]); ACTIONS['duo-round'](); });
   const st = () => p.evaluate(() => ({ r: DUO.round, ph: DUO.phase, k: DUO.step?.k, card: DUO.step?.card?.content || null, sc: DUO.score.join(':') }));
   await p.evaluate(() => { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: '1' } }); }); let s = await st(); check(s.k === 'card' && s.card === 'Przykładowa nagroda', 'dobrze → reward z rundy 1');
@@ -51,7 +47,7 @@ let fails = 0; const check = (ok, msg) => { console.log((ok ? 'OK   ' : 'FAIL ')
   await p.evaluate(() => { for (let i = 0; i < 5; i++) { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: i < 4 ? '1' : '0' } }); } }); s = await st(); check(s.card === 'Przykładowa nagroda 4', 'egzamin 4/5 → zaliczony');
   await p.evaluate(() => { ACTIONS['duo-done'](); for (let i = 0; i < 5; i++) { ACTIONS['duo-show'](); ACTIONS['duo-ans']({ dataset: { v: i < 3 ? '1' : '0' } }); } }); s = await st(); check(s.card === 'Przykładowy fant', 'egzamin 3/5 → niezaliczony');
   await p.evaluate(() => ACTIONS['duo-done']()); s = await st(); check(s.ph === 'end', 'koniec sesji');
-  await go('#/duo/admin'); check((await view()).includes('Przykładowa nagroda'), 'admin: lista kart');
+  await go('#/duo/admin'); check((await view()).includes('Przykładowa nagroda'), 'lista kart');
   check(!errs.length, 'brak wyjątków JS' + (errs.length ? ': ' + errs.join(' | ') : ''));
   await b.close(); console.log(fails ? `${fails} błędów` : 'Wszystko OK'); process.exit(fails ? 1 : 0);
 })();

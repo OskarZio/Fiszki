@@ -61,14 +61,7 @@ Z czego zbudowany jest mięsień trójgłowy łydki? | z mięśnia brzuchatego �
 [obraz: assets/imports/anatomia-kolos/reka.webp] Ryc. 9 (ręka od strony dłoniowej) – kość nr 4 | czworoboczna większa
 [obraz: assets/imports/anatomia-kolos/reka.webp] Ryc. 9 (ręka od strony dłoniowej) – kość nr 9 | trójgraniasta (wg klucza)
 // ---------- ryciny – mięśnie (zad. 17)
-[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 1 – nr 11 | mięsień nadgrzbietowy
-[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 1 – nr 4 | mięsień dwugłowy ramienia – głowa krótka
-[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 1 – nr 14 | mięsień łokciowy
-[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 1 – nr 16 | mięsień zginacz łokciowy nadgarstka
-[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 2 – nr 10 | mięsień obszerny przyśrodkowy
-[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 2 – nr 11 | mięsień pośladkowy wielki
-[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 2 – nr 13 | mięsień półścięgnisty
-[obraz: assets/imports/anatomia-kolos/miesnie.webp] Mięśnie, strona 2 – nr 20 | mięsień biodrowy (wg klucza)
+[luki: assets/imports/anatomia-kolos/miesnie.webp | Mięśnie – ryciny z kolokwium (strona 1 i 2)] 18.9,37.5,2.4,3.0=mięsień dwugłowy ramienia – głowa krótka; 25.0,6.8,2.4,3.0=mięsień nadgrzebieniowy; 7.1,62.6,2.4,3.0=mięsień łokciowy; 8.0,68.6,2.4,3.0=mięsień zginacz łokciowy nadgarstka; 62.4,50.5,2.4,3.0=mięsień obszerny przyśrodkowy; 76.1,15.1,2.4,3.0=mięsień pośladkowy wielki; 74.9,25.1,2.4,3.0=mięsień półścięgnisty; 57.6,72.7,2.4,3.0=mięsień biodrowy (wg klucza)
 Mięśnie, strona 3 – nr 1 | mięsień dźwigacz łopatki
 Mięśnie, strona 3 – nr 4 | mięsień równoległoboczny większy
 Mięśnie, strona 3 – nr 6 | mięsień piersiowy mniejszy
